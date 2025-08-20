@@ -1,0 +1,89 @@
+<!-- Main Grid View - Show when not on part detail route -->
+<div class="app-container">
+  <!-- Header -->
+  <div class="app-header">
+    <h2>MBOM</h2>
+  </div>
+
+  <!-- Controls Section -->
+  <div class="controls-section">
+    <!-- Criteria Display and Controls -->
+    <div class="controls-row">
+      <div class="criteria-display">
+        <strong>Criteria:</strong> Parts of SKUs chosen - {{ dataService.getProductInfo()?.productId || '100690' }}
+      </div>
+      
+            <!-- Column Visibility Toggle -->
+      <div class="column-visibility-controls">
+        <!-- Save Changes Button -->
+        <button 
+          (click)="saveChanges()" 
+          class="save-changes-btn"
+          [disabled]="editedRows.size === 0">
+          <i class="fas fa-save"></i> Save Changes ({{ editedRows.size }})
+        </button>
+        
+        <button (click)="toggleColumnVisibility()" class="toggle-columns-btn">
+          <i class="fas fa-columns"></i> Toggle Columns
+        </button>
+        
+
+        
+        <!-- Column Visibility Panel - Positioned near toggle button -->
+        <div *ngIf="showColumnVisibilityPanel" class="column-visibility-panel-container">
+          <div class="column-visibility-panel" (click)="$event.stopPropagation()">
+            <div class="column-visibility-header">
+              <h4>Visible Columns</h4>
+              <button (click)="showColumnVisibilityPanel = false" class="close-panel-btn">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="column-checkboxes">
+              <div *ngFor="let col of columnDefs" class="column-checkbox">
+                <label>
+                  <input type="checkbox" 
+                         [checked]="!col.hide" 
+                         (change)="toggleColumnVisibility(col, $event)">
+                  <span class="column-name">{{ getColumnDisplayName(col) }}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Save Status Message -->
+    <div *ngIf="saveMessage" class="save-message" [class]="saveMessageType">
+      <span class="save-message-text">{{ saveMessage }}</span>
+      <button (click)="clearSaveMessage()" class="save-message-close">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+  <!-- AG Grid -->
+  <div class="ag-grid-container-wrapper">
+    <div class="ag-grid-container">
+      <ag-grid-angular 
+        style="width: 100%; height: 700px; min-width: 100%;" 
+        class="ag-theme-alpine"
+        [gridOptions]="gridOptions"
+        [columnDefs]="columnDefs" 
+        [defaultColDef]="defaultColDef" 
+        [rowData]="rowData"
+        (gridReady)="onGridReady($event)"
+        (cellClicked)="onCellClicked($event)">
+      </ag-grid-angular>
+      
+
+    </div>
+  </div>
+</div>
+
+<!-- Part Detail Modal -->
+<app-part-modal 
+  *ngIf="showPartModal"
+  [partData]="selectedPartData"
+  [skuData]="selectedPartSkuData"
+  (close)="closePartModal()">
+</app-part-modal>

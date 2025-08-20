@@ -1,0 +1,808 @@
+
+@import "ag-grid-community/styles/ag-grid.css";
+@import "ag-grid-community/styles/ag-theme-alpine.css";
+
+/* Basic reset */
+* { 
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+margin: 0;
+padding: 0;
+background-color: #f8fafc;
+color: #1e293b;
+}
+
+/* App layout - Professional spacing */
+.app-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 20px;
+  background: white;
+  min-height: 100vh;
+  height: 100vh;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.app-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+/* Controls Section - Clean layout */
+.controls-section {
+  background: #f8fafc;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 20px;
+  border: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.controls-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.criteria-display {
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+  flex: 1;
+  min-width: 300px;
+}
+
+/* Column Visibility Controls - Better spacing */
+.column-visibility-controls {
+  position: relative;
+  margin: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+
+
+.toggle-columns-btn {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  height: 36px;
+}
+
+.toggle-columns-btn:hover {
+  background: #4b5563;
+}
+
+/* Save Changes Button */
+.save-changes-btn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+  height: 36px;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2);
+}
+
+.save-changes-btn:hover:not(:disabled) {
+  background: #059669;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+  transform: translateY(-1px);
+}
+
+.save-changes-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.save-changes-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2);
+}
+
+/* Save Message Styling */
+.save-message {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin: 12px 0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  animation: slideInDown 0.3s ease-out;
+}
+
+.save-message.success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border-left: 4px solid #047857;
+}
+
+.save-message.error {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border-left: 4px solid #b91c1c;
+}
+
+.save-message.info {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border-left: 4px solid #1d4ed8;
+}
+
+.save-message-text {
+  flex: 1;
+  margin-right: 12px;
+}
+
+.save-message-close {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 16px;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.save-message-close:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+
+/* Column visibility panel container - positioned near toggle button */
+.column-visibility-panel-container {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 9999;
+  margin-top: 8px;
+}
+
+/* Column visibility panel - positioned near toggle button */
+.column-visibility-panel {
+  background: white;
+  border: 2px solid #3b82f6;
+  border-radius: 8px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  padding: 16px;
+  width: 350px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.column-visibility-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.column-visibility-header h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #1a202c;
+  font-weight: 600;
+}
+
+.close-panel-btn {
+  background: none;
+  border: none;
+  color: #718096;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.close-panel-btn:hover {
+  background: #f7fafc;
+  color: #4a5568;
+}
+
+.column-checkboxes {
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.column-checkbox {
+  margin: 6px 0;
+  padding: 4px 0;
+}
+
+.column-checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #2d3748;
+  transition: color 0.2s;
+  padding: 4px 8px;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.column-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.column-checkbox label:hover {
+  color: #3b82f6;
+  background: #f8fafc;
+}
+
+.column-checkbox input[type="checkbox"] {
+  margin-right: 6px;
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+}
+
+/* AG Grid container - Clean design */
+.ag-grid-container-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: white;
+  flex: 1;
+  min-height: 500px;
+  max-height: none;
+  position: relative;
+  will-change: scroll-position;
+}
+
+.ag-grid-container {
+  min-width: 100%;
+  width: max-content;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: white;
+}
+
+/* AG Grid theme - Professional styling */
+.ag-theme-alpine {
+  --ag-row-height: 24px;
+  --ag-header-height: 60px;
+  --ag-cell-horizontal-border: solid #e2e8f0;
+  --ag-cell-horizontal-border-width: 1px;
+  --ag-row-border-color: #e2e8f0;
+  --ag-row-border-width: 1px;
+  --ag-pinned-row-border: solid #e2e8f0;
+  --ag-pinned-row-border-width: 1px;
+  --ag-font-size: 13px;
+  --ag-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ag-filter-tool-panel-group-indent-size: 10px;
+  --ag-filter-tool-panel-group-title-padding: 10px;
+  --ag-row-hover-color: #f8fafc;
+}
+
+/* Firefox 102 ESR compatibility fixes */
+@-moz-document url-prefix() {
+  .ag-theme-alpine {
+    /* Ensure CSS variables work in older Firefox */
+    row-height: 24px;
+    header-height: 60px;
+  }
+  
+  /* Fix flexbox issues in older Firefox */
+  .part-cell-content {
+    display: -moz-box;
+    -moz-box-align: center;
+    -moz-box-pack: start;
+  }
+  
+  /* Ensure transforms work properly */
+  .add-row-btn {
+    -moz-transform: translateY(-50%);
+  }
+  
+  .add-row-btn:hover {
+    -moz-transform: translateY(-50%) scale(1.2);
+  }
+}
+
+/* Filter input styling */
+.ag-theme-alpine .ag-filter-tool-panel-header,
+.ag-theme-alpine .ag-filter-tool-panel-search-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.ag-theme-alpine .ag-filter-tool-panel-header:focus,
+.ag-theme-alpine .ag-filter-tool-panel-search-box:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* Column filter inputs - integrated in headers */
+.ag-theme-alpine .ag-filter-body input,
+.ag-theme-alpine .ag-filter-body select {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ag-theme-alpine .ag-filter-body input:focus,
+.ag-theme-alpine .ag-filter-body select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* Filter menu styling */
+.ag-theme-alpine .ag-filter-menu {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  padding: 12px;
+  min-width: 250px;
+}
+
+/* Filter condition styling */
+.ag-theme-alpine .ag-filter-condition {
+  margin-bottom: 8px;
+}
+
+.ag-theme-alpine .ag-filter-condition-operator {
+  margin: 8px 0;
+  padding: 4px 0;
+}
+
+/* Filter buttons styling */
+.ag-theme-alpine .ag-filter-apply-panel {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.ag-theme-alpine .ag-filter-apply-panel button {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #374151;
+  transition: all 0.2s;
+}
+
+.ag-theme-alpine .ag-filter-apply-panel button:hover {
+  background: #f8fafc;
+  border-color: #9ca3af;
+}
+
+.ag-theme-alpine .ag-filter-apply-panel button.ag-filter-apply-panel-button {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.ag-theme-alpine .ag-filter-apply-panel button.ag-filter-apply-panel-button:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+/* Reset button specific styling */
+.ag-theme-alpine .ag-filter-apply-panel button.ag-filter-reset-button {
+  background: #6b7280;
+  color: white;
+  border-color: #6b7280;
+}
+
+.ag-theme-alpine .ag-filter-apply-panel button.ag-filter-reset-button:hover {
+  background: #4b5563;
+  border-color: #4b5563;
+}
+
+/* Ensure filter buttons are properly spaced */
+.ag-theme-alpine .ag-filter-apply-panel {
+  gap: 12px !important;
+}
+
+/* Filter input focus states */
+.ag-theme-alpine .ag-filter-body input:focus,
+.ag-theme-alpine .ag-filter-body select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* Filter icon styling */
+.ag-theme-alpine .ag-header-cell-filtered {
+  background: #eff6ff !important;
+}
+
+.ag-theme-alpine .ag-header-cell-filtered .ag-header-cell-text {
+  color: #1d4ed8 !important;
+  font-weight: 600 !important;
+}
+
+/* Header cell - Clean styling */
+.ag-header-cell {
+  min-width: 120px !important;
+  max-width: 300px !important;
+  padding: 8px 12px !important;
+  border-right: 1px solid #e2e8f0 !important;
+  background: #f8f9fa !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+  color: #374151 !important;
+  min-height: 60px !important;
+  white-space: normal !important;
+  word-wrap: break-word !important;
+}
+
+/* Cell - Clean styling */
+.ag-cell {
+  min-width: 120px !important;
+  max-width: 250px !important;
+  padding: 2px 6px !important;
+  line-height: 1.1 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-right: 1px solid #e2e8f0 !important;
+  vertical-align: middle !important;
+  font-size: 11px !important;
+  color: #374151 !important;
+  height: 24px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+}
+
+/* Qty column specific styling */
+.ag-cell[col-id="qty"] {
+  text-align: right !important;
+  font-weight: 500 !important;
+  background-color: #f8fafc !important;
+  color: #1e293b !important;
+  padding: 6px 10px !important;
+  min-width: 80px !important;
+  max-width: 120px !important;
+  border-right: 1px solid #e2e8f0 !important;
+  font-size: 12px !important;
+}
+
+/* Qty column header styling */
+.ag-header-cell[col-id="qty"] {
+  text-align: center !important;
+  font-weight: 600 !important;
+  background-color: #f8f9fa !important;
+  color: #374151 !important;
+  padding: 8px 10px !important;
+  min-width: 80px !important;
+  max-width: 120px !important;
+  border-right: 1px solid #e2e8f0 !important;
+  font-size: 12px !important;
+}
+
+/* Qty column hover effect */
+.ag-cell[col-id="qty"]:hover {
+  background-color: #f1f5f9 !important;
+  color: #1e293b !important;
+}
+
+/* Qty header class styling */
+.qty-header {
+  background: #f8f9fa !important;
+  color: #374151 !important;
+  font-weight: 600 !important;
+  border-right: 2px solid #e2e8f0 !important;
+}
+
+/* Ensure horizontal scrolling works properly */
+.ag-body-horizontal-scroll-viewport {
+  overflow-x: auto !important;
+  min-width: max-content !important;
+  width: max-content !important;
+}
+
+.ag-body-horizontal-scroll {
+  min-width: max-content !important;
+}
+
+/* Remove right spacer */
+.ag-horizontal-right-spacer {
+  display: none !important;
+}
+
+/* Edited row highlighting - Subtle */
+.ag-row.edited-row {
+  background: #f8fafc !important;
+  border-left: 2px solid #e2e8f0 !important;
+  position: relative;
+}
+
+.ag-row.edited-row:hover {
+  background: #f1f5f9 !important;
+}
+
+/* New row styling - Subtle */
+.new-row-text {
+  color: #6b7280 !important;
+  font-style: italic !important;
+}
+
+.ag-row.new-row {
+  background: #f0fdf4 !important;
+  border-left: 4px solid #10b981 !important;
+  animation: highlightNewRow 2s ease-out;
+}
+
+.ag-row.new-row .ag-cell {
+  background: #f0fdf4 !important;
+}
+
+@keyframes highlightNewRow {
+  0% {
+    background: #dcfce7 !important;
+    border-left-color: #22c55e !important;
+  }
+  100% {
+    background: #f0fdf4 !important;
+    border-left-color: #10b981 !important;
+  }
+}
+
+/* Part text styles - Clean */
+.part-text {
+  color: #374151 !important;
+  cursor: default;
+  text-decoration: none !important;
+  font-weight: normal !important;
+}
+
+/* Clickable part links - Professional */
+.part-link.clickable {
+  color: #3b82f6 !important;
+  cursor: pointer;
+  text-decoration: underline !important;
+  font-weight: 500 !important;
+  transition: color 0.2s;
+}
+
+.part-link.clickable:hover {
+  color: #1d4ed8 !important;
+  background-color: #eff6ff !important;
+  padding: 2px 4px !important;
+  border-radius: 3px !important;
+  text-decoration: none !important;
+}
+
+/* Part cell content layout */
+.part-cell-content {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  position: relative;
+  height: 24px;
+  overflow: hidden;
+  padding-left: 20px;
+}
+
+/* Add row button styling - On the left */
+.add-row-btn {
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  opacity: 0.9;
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  border: 1px solid #fff;
+}
+
+.add-row-btn:hover {
+  background: #059669;
+  transform: translateY(-50%) scale(1.2);
+  opacity: 1;
+  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.5);
+}
+
+/* Row spacing and add button positioning */
+.ag-row {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  height: 24px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+  overflow: hidden;
+}
+
+/* Ensure no gaps between rows */
+.ag-body-viewport {
+  overflow-x: auto;
+  overflow-y: auto;
+  background: white;
+}
+
+.ag-body-viewport-wrapper {
+  overflow: hidden;
+  background: white;
+}
+
+/* Fix scrolling issues and prevent black areas */
+.ag-body-vertical-scroll-viewport {
+  background: white;
+  overflow-y: auto;
+}
+
+.ag-body-horizontal-scroll-viewport {
+  background: white;
+  overflow-x: auto;
+}
+
+.ag-body-vertical-scroll {
+  background: white;
+}
+
+.ag-body-horizontal-scroll {
+  background: white;
+}
+
+/* Ensure grid content is always visible */
+.ag-root-wrapper {
+  background: white;
+}
+
+.ag-root {
+  background: white;
+}
+
+/* Fix for Firefox 102 ESR scrolling issues */
+@-moz-document url-prefix() {
+  .ag-body-viewport {
+    background: white !important;
+    -moz-transform: translateZ(0);
+  }
+  
+  .ag-body-vertical-scroll-viewport {
+    background: white !important;
+    -moz-transform: translateZ(0);
+  }
+  
+  .ag-grid-container-wrapper {
+    background: white !important;
+  }
+}
+
+
+
+/* AG Grid resize handle - Clean */
+.ag-theme-alpine .ag-header-cell-resize {
+  background: #3b82f6 !important;
+  width: 3px !important;
+  opacity: 0.8;
+}
+
+.ag-theme-alpine .ag-header-cell-resize:hover {
+  background: #1d4ed8 !important;
+  width: 4px !important;
+  opacity: 1;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .app-container {
+    padding: 15px;
+    margin: 10px;
+  }
+  
+  .controls-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .column-visibility-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .criteria-display {
+    min-width: auto;
+  }
+}
