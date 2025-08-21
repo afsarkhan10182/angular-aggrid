@@ -387,22 +387,74 @@ color: #1e293b;
     -moz-overflow-scrolling: touch;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f1f5f9;
+    /* Force scrollbar to always be visible */
+    scrollbar-width: auto;
+    /* Ensure proper scrolling behavior */
+    -moz-user-select: none;
+    -moz-user-drag: none;
   }
   
   .ag-body-horizontal-scroll {
     min-width: max-content !important;
     -moz-transform: translateZ(0);
+    /* Force proper sizing */
+    width: max-content !important;
+    display: block !important;
   }
   
   /* Force hardware acceleration for smooth scrolling */
   .ag-grid-container-wrapper {
     -moz-transform: translateZ(0);
     will-change: scroll-position;
+    /* Ensure proper overflow handling */
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
   }
   
   .ag-body-viewport {
     -moz-transform: translateZ(0);
     will-change: scroll-position;
+    /* Force proper scrolling */
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    /* Ensure scrollbars are visible */
+    scrollbar-width: auto;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+  }
+  
+  /* Force horizontal scrollbar to always be visible */
+  .ag-body-horizontal-scroll-viewport::-webkit-scrollbar {
+    height: 12px !important;
+    background-color: #f1f5f9 !important;
+  }
+  
+  .ag-body-horizontal-scroll-viewport::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1 !important;
+    border-radius: 6px !important;
+    border: 2px solid #f1f5f9 !important;
+  }
+  
+  .ag-body-horizontal-scroll-viewport::-webkit-scrollbar-track {
+    background-color: #f1f5f9 !important;
+  }
+  
+  /* Ensure grid container allows proper scrolling */
+  .ag-grid-container {
+    overflow: visible !important;
+    position: relative !important;
+  }
+  
+  /* Force proper cell sizing for horizontal scroll */
+  .ag-cell {
+    min-width: 120px !important;
+    max-width: 250px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* Ensure header cells don't shrink */
+  .ag-header-cell {
+    flex-shrink: 0 !important;
+    min-width: 120px !important;
   }
 }
 
@@ -645,10 +697,40 @@ color: #1e293b;
   overflow-x: auto !important;
   min-width: max-content !important;
   width: max-content !important;
+  /* Force scrollbar to always be visible */
+  scrollbar-width: auto !important;
+  scrollbar-color: #cbd5e1 #f1f5f9 !important;
+  /* Ensure proper scrolling behavior */
+  -webkit-overflow-scrolling: touch;
+  -moz-overflow-scrolling: touch;
 }
 
 .ag-body-horizontal-scroll {
   min-width: max-content !important;
+  width: max-content !important;
+  display: block !important;
+}
+
+/* Force horizontal scrollbar styling for all browsers */
+.ag-body-horizontal-scroll-viewport::-webkit-scrollbar {
+  height: 12px !important;
+  background-color: #f1f5f9 !important;
+}
+
+.ag-body-horizontal-scroll-viewport::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1 !important;
+  border-radius: 6px !important;
+  border: 2px solid #f1f5f9 !important;
+}
+
+.ag-body-horizontal-scroll-viewport::-webkit-scrollbar-track {
+  background-color: #f1f5f9 !important;
+}
+
+/* Firefox-specific scrollbar styling */
+.ag-body-horizontal-scroll-viewport {
+  scrollbar-width: auto !important;
+  scrollbar-color: #cbd5e1 #f1f5f9 !important;
 }
 
 /* Remove right spacer */
@@ -674,9 +756,8 @@ color: #1e293b;
 }
 
 .ag-row.new-row {
-  background: #f0fdf4 !important;
-  border-left: 4px solid #10b981 !important;
-  animation: highlightNewRow 2s ease-out;
+  background: white !important;
+  border-left: 4px solid #007bff !important;
   margin: 0 !important;
   padding: 0 !important;
   height: 24px !important;
@@ -685,7 +766,7 @@ color: #1e293b;
 }
 
 .ag-row.new-row .ag-cell {
-  background: #f0fdf4 !important;
+  background: white !important;
   height: 100% !important;
   min-height: 100% !important;
   max-height: 100% !important;
@@ -698,16 +779,7 @@ color: #1e293b;
   box-sizing: border-box !important;
 }
 
-@keyframes highlightNewRow {
-  0% {
-    background: #dcfce7 !important;
-    border-left-color: #22c55e !important;
-  }
-  100% {
-    background: #f0fdf4 !important;
-    border-left-color: #10b981 !important;
-  }
-}
+
 
 /* Part text styles - Clean */
 .part-text {

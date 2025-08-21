@@ -1,0 +1,46 @@
+/* Simple highlighting for editable fields in new rows */
+.ag-cell[col-id="part"] .ag-cell-wrapper {
+  border: 1px solid #007bff !important;
+}
+
+.ag-cell[col-id="feature"] .ag-cell-wrapper {
+  border: 1px solid #007bff !important;
+}
+
+.ag-cell[col-id="startDate"] .ag-cell-wrapper {
+  border: 1px solid #007bff !important;
+}
+
+.ag-cell[col-id="qty"] .ag-cell-wrapper {
+  border: 1px solid #007bff !important;
+}
+
+/* Simple styling for new rows - light blue border for editable fields */
+.ag-row.new-row .ag-cell[col-id="part"],
+.ag-row.new-row .ag-cell[col-id="feature"],
+.ag-row.new-row .ag-cell[col-id="startDate"],
+.ag-row.new-row .ag-cell[col-id="qty"] {
+  border: 1px solid #007bff !important;
+  background: white !important;
+}
+
+/* Ensure all sides have blue borders for editable cells in new rows */
+.ag-row.new-row .ag-cell[col-id="part"] {
+  border: 1px solid #007bff !important;
+  background: white !important;
+}
+
+.ag-row.new-row .ag-cell[col-id="feature"] {
+  border: 1px solid #007bff !important;
+  background: white !important;
+}
+
+.ag-row.new-row .ag-cell[col-id="startDate"] {
+  border: 1px solid #007bff !important;
+  background: white !important;
+}
+
+.ag-row.new-row .ag-cell[col-id="qty"] {
+  border: 1px solid #007bff !important;
+  background: white !important;
+}

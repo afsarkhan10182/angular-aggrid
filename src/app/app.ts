@@ -2,14 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef, GridReadyEvent, GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
+import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { PartModalComponent } from './part-modal/part-modal.component';
 import { DataService } from './services/data.service';
+// AutocompleteCellEditorComponent is used in column definitions, not in template
+// @ts-ignore - Used in column definitions
+import { AutocompleteCellEditorComponent } from './autocomplete-cell-editor/autocomplete-cell-editor.component';
+
+// AutocompleteCellEditorComponent usage examples available in component documentation
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterModule, AgGridAngular, PartModalComponent],
+  imports: [CommonModule, RouterModule, AgGridAngular, PartModalComponent, AutocompleteCellEditorComponent], // AutocompleteCellEditorComponent used in column definitions
   templateUrl: './app.html'
 })
 export class App implements OnInit {
@@ -45,36 +50,66 @@ export class App implements OnInit {
     suppressContextMenu: false,
     suppressScrollOnNewData: false,
     allowDragFromColumnsToolPanel: true,
-    suppressAnimationFrame: false,
     suppressRowVirtualisation: false,
+    // Firefox 102 ESR compatibility settings
+    // Force horizontal scroll to always be visible
+    // Enable native scrolling for better Firefox compatibility
+    enableRangeSelection: false,
+    // Disable animations that might cause issues in older Firefox
+    suppressAnimationFrame: true,
+    context: {
+      dataService: null // Will be set in constructor
+    },
+    // Removed getRowClass to improve scroll performance
+    // New row styling is now handled via cell-level styling in column definitions
     onGridReady: (params) => {
       this.gridApi = params.api;
       // Don't auto-size columns on ready to preserve manual resizing
+      
+      // Force horizontal scrollbar visibility for Firefox 102 ESR
+      setTimeout(() => {
+        this.forceHorizontalScrollbarVisibility();
+      }, 100);
     },
     onCellValueChanged: (params) => {
-      if (params.colDef.field === 'qty') {
-        this.onQtyChanged(params);
+      // Track changes for all editable fields
+      this.trackFieldChange(params);
+      
+      // Handle part number changes for auto-populating feature
+      if (params.colDef.field === 'part') {
+        this.onNewRowValueChanged(params);
+        
+        // Force refresh to ensure the value is displayed
+        setTimeout(() => {
+          this.gridApi.refreshCells({
+            rowNodes: [params.node],
+            force: true
+          });
+        }, 100);
       }
-      // Handle new row value changes
-      this.onNewRowValueChanged(params);
+      
+      // Ensure values are properly saved for new rows
+      if (params.data && params.data.isNewRow && params.colDef.field) {
+        // Force update the data model to ensure values persist
+        params.node.setDataValue(params.colDef.field, params.newValue);
+        
+        // Also update the data object directly
+        if (params.node.data) {
+          (params.node.data as any)[params.colDef.field] = params.newValue;
+        }
+      }
     },
     
     onFilterChanged: (params) => {
-      console.log('Filter changed:', params);
+      // Filter changed event
     },
     
     onFilterModified: (params) => {
-      console.log('Filter modified:', params);
+      // Filter modified event
     },
     
-    onBodyScroll: (params) => {
-      // Force redraw on scroll to prevent black areas
-      setTimeout(() => {
-        this.gridApi.redrawRows();
-      }, 10);
-    },
-
-
+    // Removed onBodyScroll handler to improve performance
+    // AG-Grid handles scrolling efficiently by default
   };
 
   // Helper method to size columns to fit
@@ -102,6 +137,40 @@ export class App implements OnInit {
         this.gridApi.autoSizeColumns([lastCol.getColId()]);
       }
     }, 100);
+  }
+
+  // Force horizontal scrollbar visibility for Firefox 102 ESR
+  private forceHorizontalScrollbarVisibility(): void {
+    if (!this.gridApi) return;
+    
+    // Force refresh to ensure proper rendering
+    this.gridApi.refreshCells({ force: true });
+    
+    // Ensure horizontal scroll is enabled
+    const horizontalScrollViewport = document.querySelector('.ag-body-horizontal-scroll-viewport') as HTMLElement;
+    if (horizontalScrollViewport) {
+      horizontalScrollViewport.style.overflowX = 'auto';
+      horizontalScrollViewport.style.minWidth = 'max-content';
+      horizontalScrollViewport.style.width = 'max-content';
+      
+      // Force scrollbar to be visible
+      horizontalScrollViewport.style.scrollbarWidth = 'auto';
+      horizontalScrollViewport.style.scrollbarColor = '#cbd5e1 #f1f5f9';
+      
+      // Add Firefox-specific styles
+      horizontalScrollViewport.style.setProperty('-moz-overflow-scrolling', 'touch');
+      horizontalScrollViewport.style.setProperty('-moz-user-select', 'none');
+      horizontalScrollViewport.style.setProperty('-moz-user-drag', 'none');
+    }
+    
+    // Ensure grid container allows proper scrolling
+    const gridContainer = document.querySelector('.ag-grid-container') as HTMLElement;
+    if (gridContainer) {
+      gridContainer.style.overflow = 'visible';
+      gridContainer.style.position = 'relative';
+    }
+    
+    console.log('Forced horizontal scrollbar visibility for Firefox 102 ESR');
   }
 
   // Date formatter function for MM/DD/YYYY format
@@ -140,24 +209,7 @@ export class App implements OnInit {
         borderRight: '1px solid #e2e8f0'
       };
       
-      // Add new row styling
-      if (params.data.isNewRow) {
-        return {
-          ...baseStyle,
-          backgroundColor: '#f9fafb',
-          fontStyle: 'italic'
-        };
-      }
-      
-      // Add edited row styling
-      if (this.editedRows.has(params.data.part)) {
-        return {
-          ...baseStyle,
-          backgroundColor: '#fef3c7',
-          fontWeight: '500'
-        };
-      }
-      
+      // Temporarily removed custom styling for testing
       return baseStyle;
     }
   };
@@ -169,6 +221,10 @@ export class App implements OnInit {
   public totalRows = 1000;
 
   constructor(private router: Router, public dataService: DataService) {
+    // Set the data service in grid context immediately
+    this.gridOptions.context = {
+      dataService: this.dataService
+    };
     this.loadData();
   }
 
@@ -193,7 +249,7 @@ export class App implements OnInit {
 
   initializeClickableParts(): void {
     // Make approximately 30% of parts from first 20 rows clickable
-    const first20Parts = this.rowData.slice(0, 20).map(row => row.part);
+    const first20Parts = this.rowData.slice(0, 20).map(row => row.part.toString());
     const clickableCount = Math.floor(first20Parts.length * 0.3); // 30% of first 20
     
     // Randomly select parts to be clickable
@@ -237,9 +293,12 @@ export class App implements OnInit {
         filter: false,
         cellRenderer: (params: any) => {
           if (params.data.isNewRow) {
-            return `<span class="delete-row-btn" data-part-id="${params.data.part}">−</span>`;
+            // For new rows, use the newRowId as identifier since part is empty
+            const newRowId = params.data.newRowId;
+            return `<span class="delete-row-btn" data-new-row-id="${newRowId}">−</span>`;
           }
-          return `<span class="add-row-btn" data-part-id="${params.data.part}">+</span>`;
+          const partId = params.data.part || '';
+          return `<span class="add-row-btn" data-part-id="${partId}">+</span>`;
         },
         cellStyle: {
           textAlign: 'center',
@@ -252,8 +311,9 @@ export class App implements OnInit {
         field: 'part',
         filter: 'agTextColumnFilter',
         cellRenderer: (params: any) => {
+          // Always show the value, whether it's a new row or existing row
           if (params.data.isNewRow) {
-            return `<span class="new-row-text" style="color: #6b7280; font-style: italic;">New Row</span>`;
+            return params.value || ''; // Show the selected value for new rows
           }
           const isClickable = this.clickableParts.has(params.value);
           const className = isClickable ? 'part-link clickable' : 'part-text';
@@ -264,14 +324,20 @@ export class App implements OnInit {
         maxWidth: 180,
         pinned: 'left',
         resizable: true,
-        editable: (params) => params.data.isNewRow,
-        cellEditor: 'agAutocompleteCellEditor',
+        editable: (params) => params.data.isNewRow, // Only editable for new rows
+        cellEditor: AutocompleteCellEditorComponent,
         cellEditorParams: (params: any) => ({
           values: this.getAvailablePartNumbers(),
-          maxResults: 5,
-          filterList: true,
-          searchDebounceDelay: 0
-        })
+          placeholder: 'Enter part number...'
+        }),
+        cellStyle: (params: any) => {
+          if (params.data && params.data.isNewRow) {
+            return {
+              border: '1px solid #007bff'
+            };
+          }
+          return null;
+        }
       },
       {
         headerName: 'Supplier',
@@ -281,8 +347,10 @@ export class App implements OnInit {
         minWidth: 140,
         maxWidth: 200,
         resizable: true,
-        editable: (params) => params.data.isNewRow,
-        cellEditor: 'agTextCellEditor'
+        editable: false, // Make supplier non-editable
+        cellRenderer: (params: any) => {
+          return params.value || '';
+        }
       },
       {
         headerName: 'Color',
@@ -292,8 +360,10 @@ export class App implements OnInit {
         minWidth: 120,
         maxWidth: 180,
         resizable: true,
-        editable: (params) => params.data.isNewRow,
-        cellEditor: 'agTextCellEditor'
+        editable: false, // Make color non-editable
+        cellRenderer: (params: any) => {
+          return params.value || '';
+        }
       },
       {
         headerName: 'Feature',
@@ -305,11 +375,26 @@ export class App implements OnInit {
         resizable: true,
         suppressSizeToFit: false,
         suppressAutoSize: false,
-        editable: (params) => params.data.isNewRow,
+        editable: (params) => params.data.isNewRow, // Make feature editable for new rows
         cellEditor: 'agSelectCellEditor',
-        cellEditorParams: (params: any) => ({
-          values: this.getUniqueFeatures()
-        })
+        cellEditorParams: (params: any) => {
+          const features = this.getUniqueFeatures();
+          console.log('Available features for dropdown:', features);
+          return {
+            values: features
+          };
+        },
+        cellRenderer: (params: any) => {
+          return params.value || '';
+        },
+        cellStyle: (params: any) => {
+          if (params.data && params.data.isNewRow) {
+            return {
+              border: '1px solid #007bff'
+            };
+          }
+          return null;
+        }
       },
       {
         headerName: 'Start Date',
@@ -321,9 +406,39 @@ export class App implements OnInit {
         resizable: true,
         suppressSizeToFit: false,
         suppressAutoSize: false,
-        editable: (params) => params.data.isNewRow,
+        editable: true, // Make start date editable for all rows
         cellEditor: 'agDateCellEditor',
         valueFormatter: this.dateFormatter.bind(this),
+        cellRenderer: (params: any) => {
+          return this.dateFormatter(params);
+        },
+        cellStyle: (params: any) => {
+          const baseStyle = {
+            borderRight: '1px solid #e2e8f0',
+            padding: '6px 10px',
+            fontSize: '12px'
+          };
+          
+          // Add new row styling
+          if (params.data && params.data.isNewRow) {
+            return {
+              ...baseStyle,
+              border: '1px solid #007bff',
+              fontStyle: 'italic'
+            };
+          }
+          
+          // Add edited row styling
+          if (this.editedRows.has(params.data.part.toString())) {
+            return {
+              ...baseStyle,
+              backgroundColor: '#f8fafc',
+              fontWeight: '500'
+            };
+          }
+          
+          return baseStyle;
+        },
         filterParams: {
           comparator: (filterLocalDateAtMidnight: Date, cellValue: string) => {
             const [month, day, year] = cellValue.split('/').map(Number);
@@ -345,9 +460,11 @@ export class App implements OnInit {
         resizable: true,
         suppressSizeToFit: false,
         suppressAutoSize: false,
-        editable: (params) => params.data.isNewRow,
-        cellEditor: 'agDateCellEditor',
+        editable: false, // Make end date non-editable
         valueFormatter: this.dateFormatter.bind(this),
+        cellRenderer: (params: any) => {
+          return this.dateFormatter(params);
+        },
         filterParams: {
           comparator: (filterLocalDateAtMidnight: Date, cellValue: string) => {
             const [month, day, year] = cellValue.split('/').map(Number);
@@ -383,13 +500,13 @@ export class App implements OnInit {
           if (params.data.isNewRow) {
             return {
               ...baseStyle,
-              backgroundColor: '#f9fafb',
+              border: '1px solid #007bff',
               fontStyle: 'italic'
             };
           }
           
           // Add edited row styling
-          if (this.editedRows.has(params.data.part)) {
+          if (this.editedRows.has(params.data.part.toString())) {
             return {
               ...baseStyle,
               backgroundColor: '#f8fafc',
@@ -400,7 +517,7 @@ export class App implements OnInit {
           return baseStyle;
         },
         resizable: true,
-        editable: true,
+        editable: true, // Qty is always editable (existing and new rows)
         cellEditor: 'agNumberCellEditor',
         cellEditorParams: {
           min: 0,
@@ -514,20 +631,33 @@ export class App implements OnInit {
   onCellClicked(event: any): void {
     if (event.colDef.field === 'actions') {
       const target = event.event?.target as HTMLElement;
+      
       if (target && target.classList.contains('add-row-btn')) {
-        const partId = parseInt(target.getAttribute('data-part-id') || '0');
+        const partId = target.getAttribute('data-part-id') || '';
         if (partId) {
           this.addRowAfter(partId);
           return;
         }
       } else if (target && target.classList.contains('delete-row-btn')) {
-        const partId = parseInt(target.getAttribute('data-part-id') || '0');
-        if (partId) {
+        const partId = target.getAttribute('data-part-id');
+        const newRowId = target.getAttribute('data-new-row-id');
+        
+        if (newRowId !== null) {
+          // Delete by new row ID for new rows
+          this.deleteRowById(parseInt(newRowId));
+          return;
+        } else if (partId) {
+          // Delete by part ID for existing rows
           this.deleteRow(partId);
           return;
         }
       }
     } else if (event.colDef.field === 'part') {
+      // Don't open modal for new rows - they are in edit mode
+      if (event.data && event.data.isNewRow) {
+        return; // Skip modal opening for new rows
+      }
+      
       // Check if it's a clickable part for modal
       if (this.clickableParts.has(event.value)) {
         this.openPartModal(event.value);
@@ -535,9 +665,9 @@ export class App implements OnInit {
     }
   }
 
-  openPartModal(partId: number): void {
+  openPartModal(partId: string): void {
     // Find the part data from the current row data
-    const partData = this.rowData.find(row => row.part === partId);
+    const partData = this.rowData.find(row => row.part.toString() === partId);
     if (partData) {
       this.selectedPartData = partData;
       this.selectedPartSkuData = this.dataService.getSkuDataForPart(partData);
@@ -551,8 +681,9 @@ export class App implements OnInit {
     this.selectedPartSkuData = [];
   }
 
-  onQtyChanged(params: any): void {
-    const partId = params.data.part;
+  trackFieldChange(params: any): void {
+    const partId = params.data.part.toString();
+    const fieldName = params.colDef.field;
     
     // Mark row as edited
     this.editedRows.add(partId);
@@ -563,7 +694,7 @@ export class App implements OnInit {
       force: true
     });
     
-    console.log(`Qty changed for part ${partId}: ${params.oldValue} -> ${params.newValue}`);
+    console.log(`${fieldName} changed for part ${partId}: ${params.oldValue} -> ${params.newValue}`);
   }
 
   saveChanges(): void {
@@ -618,10 +749,10 @@ export class App implements OnInit {
 
 
 
-  addRowAfter(partId: number): void {
+  addRowAfter(partId: string): void {
     const newRowId = this.nextRowId++;
     const newRow = {
-      part: newRowId,
+      part: '', // Start with empty string for part
       supplier: '',
       color: '',
       feature: '',
@@ -629,6 +760,7 @@ export class App implements OnInit {
       endDate: '',
       qty: 0,
       isNewRow: true,
+      newRowId: newRowId, // Add the unique ID to the row data
       insertAfter: partId
     };
 
@@ -642,7 +774,7 @@ export class App implements OnInit {
     
     // Add the new row to the data
     const currentData = [...this.rowData];
-    const insertIndex = currentData.findIndex(row => row.part === partId);
+    const insertIndex = currentData.findIndex(row => row.part.toString() === partId);
     if (insertIndex !== -1) {
       currentData.splice(insertIndex + 1, 0, newRow);
       this.rowData = currentData;
@@ -678,25 +810,66 @@ export class App implements OnInit {
       }, 100);
     }
     
-    console.log('Added new row after part:', partId, 'New row ID:', newRowId);
+    // Row added successfully
   }
 
-  deleteRow(partId: number): void {
-    // Remove from newRows if it exists
-    this.newRows.delete(partId);
-    
-    // Remove from rowData
+  deleteRowById(newRowId: number): void {
+    // Find the row to be deleted by newRowId
     const currentData = [...this.rowData];
-    const rowIndex = currentData.findIndex(row => row.part === partId);
+    const rowIndex = currentData.findIndex(row => row.newRowId === newRowId);
+    
+    if (rowIndex === -1) {
+      return;
+    }
+    
+    const rowToDelete = currentData[rowIndex];
+    
+    // Only allow deletion of new rows
+    if (!rowToDelete.isNewRow) {
+      return;
+    }
+    
+    // Remove from newRows if it exists
+    this.newRows.delete(newRowId);
+    
+    // Remove the row from the data
+    currentData.splice(rowIndex, 1);
+    this.rowData = currentData;
+    
+    // Update the grid with the new data
+    if (this.gridApi) {
+      setTimeout(() => {
+        this.gridApi.refreshCells({ force: true });
+      }, 0);
+    }
+  }
+
+  deleteRow(partId: string): void {
+    // Find the row to be deleted
+    const currentData = [...this.rowData];
+    const rowIndex = currentData.findIndex(row => row.part.toString() === partId);
+    
     if (rowIndex !== -1) {
+      const rowToDelete = currentData[rowIndex];
+      
+      // Only allow deletion of new rows
+      if (!rowToDelete.isNewRow) {
+        return;
+      }
+      
+      // Remove from newRows if it exists
+      this.newRows.delete(parseInt(partId));
+      
+      // Remove the row from the data
       currentData.splice(rowIndex, 1);
       this.rowData = currentData;
       
-      // Force complete grid refresh
-      this.gridApi.refreshCells({ force: true });
-      this.gridApi.refreshHeader();
-      
-      console.log('Deleted row with part ID:', partId);
+      // Update the grid with the new data
+      if (this.gridApi) {
+        setTimeout(() => {
+          this.gridApi.refreshCells({ force: true });
+        }, 0);
+      }
     }
   }
 
@@ -707,7 +880,9 @@ export class App implements OnInit {
         features.add(row.feature);
       }
     });
-    return Array.from(features).sort();
+    const result = Array.from(features).sort();
+    console.log('Available features:', result);
+    return result;
   }
 
   getAvailablePartNumbers(): string[] {
@@ -718,7 +893,29 @@ export class App implements OnInit {
         partNumbers.add(row.part.toString());
       }
     });
-    return Array.from(partNumbers).sort((a, b) => parseInt(a) - parseInt(b));
+    const result = Array.from(partNumbers).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    console.log('Available part numbers:', result);
+    return result;
+  }
+
+  getUniqueSuppliers(): string[] {
+    const suppliers = new Set<string>();
+    this.rowData.forEach(row => {
+      if (row.supplier && !row.isNewRow) {
+        suppliers.add(row.supplier);
+      }
+    });
+    return Array.from(suppliers).sort();
+  }
+
+  getUniqueColors(): string[] {
+    const colors = new Set<string>();
+    this.rowData.forEach(row => {
+      if (row.color && !row.isNewRow) {
+        colors.add(row.color);
+      }
+    });
+    return Array.from(colors).sort();
   }
 
   // Method for future API integration
@@ -738,36 +935,69 @@ export class App implements OnInit {
   }
 
   onNewRowValueChanged(params: any): void {
-    if (params.data.isNewRow) {
-      const rowId = params.data.part;
-      const updatedRow = { ...params.data };
+    console.log('=== onNewRowValueChanged called ===');
+    console.log('Field:', params.field);
+    console.log('New value:', params.newValue);
+    
+    // If part number is changed, populate the feature from existing data
+    if (params.field === 'part' && params.newValue) {
+      console.log('Part field changed to:', params.newValue);
       
-      // If part number is changed, populate ONLY the feature from existing data
-      if (params.field === 'part' && params.newValue) {
-        const partNumber = parseInt(params.newValue);
-        if (!isNaN(partNumber)) {
-          const existingPart = this.rowData.find(row => row.part === partNumber && !row.isNewRow);
-          if (existingPart) {
-            // Only populate the feature field
-            updatedRow.feature = existingPart.feature;
-            
-            // Update the grid to reflect the changes
+      // Get the original mock data from the data service
+      const mockData = this.dataService.getMockData();
+      console.log('Mock data available:', !!mockData);
+      console.log('Mock data object:', mockData);
+      
+      if (mockData && mockData.mbom) {
+        console.log('Mock data mbom length:', mockData.mbom.length);
+        console.log('First few parts in mock data:', mockData.mbom.slice(0, 3).map(p => ({ part: p.part, feature: p.feature })));
+        
+        // Search in the original mock data
+        const existingPart = mockData.mbom.find(part => 
+          part.part === params.newValue
+        );
+        
+        if (existingPart) {
+          console.log('Found existing part in mock data:', existingPart);
+          console.log('Auto-populating feature:', existingPart.feature);
+          
+          // Update the feature field in the grid
+          params.node.setDataValue('feature', existingPart.feature);
+          
+          // Also update the data object directly
+          if (params.node.data) {
+            params.node.data.feature = existingPart.feature;
+            console.log('Updated node data feature:', params.node.data.feature);
+          }
+          
+          // Refresh the row to show the updated feature
+          setTimeout(() => {
             this.gridApi.refreshCells({
               rowNodes: [params.node],
               force: true
             });
-            
-            console.log('Auto-populated feature for part', params.newValue, ':', existingPart.feature);
-          }
+            console.log('Refreshed cells to show feature value');
+          }, 100);
+          
+          console.log('Auto-populated feature for part', params.newValue, ':', existingPart.feature);
+        } else {
+          console.log('No existing part found in mock data for:', params.newValue);
+          console.log('Available parts in mock data:', mockData.mbom.slice(0, 5).map(p => p.part));
         }
+      } else {
+        console.log('Mock data not available');
       }
-      
-      // Update the new row data
-      this.newRows.set(rowId, updatedRow);
-      
-      console.log('New row value changed:', params.field, params.newValue);
+    }
+    
+    // Track edited rows for styling
+    if (!params.data.isNewRow) {
+      this.editedRows.add(params.data.part.toString());
     }
   }
+
+
+
+
 
 
 

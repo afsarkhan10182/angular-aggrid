@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, map, catchError, throwError } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface PartData {
   part: string;
@@ -39,12 +40,31 @@ export class DataService {
   constructor(private http: HttpClient) {}
 
   loadMockData(): Observable<MockData> {
-    return this.http.get<MockData>('/mock.json').pipe(
+    return this.http.get<MockData>(environment.mockDataPath).pipe(
       map(data => {
         this.mockData = data;
+        console.log('Mock data loaded successfully from:', environment.mockDataPath);
         return data;
-      })
+      }),
+      catchError(this.handleError)
     );
+  }
+
+  private handleError(error: HttpErrorResponse) {
+    let errorMessage = 'Unknown error occurred';
+    
+    if (error.error instanceof ErrorEvent) {
+      // Client-side error
+      errorMessage = `Client Error: ${error.error.message}`;
+    } else {
+      // Server-side error
+      errorMessage = `Server Error: ${error.status} - ${error.message}`;
+      console.error('Error loading mock data from:', environment.mockDataPath);
+      console.error('Full error:', error);
+    }
+    
+    console.error('DataService Error:', errorMessage);
+    return throwError(() => new Error(errorMessage));
   }
 
   getMockData(): MockData | null {
@@ -67,7 +87,7 @@ export class DataService {
     
     return parts.map(part => {
       const row: any = {
-        part: parseInt(part.part),
+        part: part.part, // Keep as string to match the original data
         supplier: part.supplier,
         color: part.color,
         feature: part.feature,
@@ -92,9 +112,9 @@ export class DataService {
     const baseSkuInfo = this.getSkuInfo();
     
     for (let i = baseParts.length; i < targetCount; i++) {
-      const partNum = 5289555 + i;
-      const supplierNum = (i % 20) + 1;
-      const colorNum = (i % 20) + 1;
+      const partNum = (5289555 + i).toString(); // Keep as string
+      const supplierNum = i + 1; // Continue numbering beyond 20
+      const colorNum = i + 1; // Continue numbering beyond 20
       
       // Generate feature based on pattern
       let feature = '';
@@ -127,7 +147,7 @@ export class DataService {
       baseSkuInfo.forEach(sku => {
         const fieldName = `sku${sku.sku}`;
         // Randomly assign SKU data to some columns
-        dataRow[fieldName] = hasSkuData && Math.random() > 0.7 ? partNum.toString() : '';
+        dataRow[fieldName] = hasSkuData && Math.random() > 0.7 ? partNum : '';
       });
       
       additionalData.push(dataRow);
@@ -151,7 +171,7 @@ export class DataService {
         color: sku.color,
         size: sku.size,
         value: partRow[`sku${sku.sku}`],
-        partNumber: partRow.part
+        partNumber: partRow.part.toString()
       }));
   }
 }

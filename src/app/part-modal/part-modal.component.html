@@ -1,7 +1,7 @@
 <div class="modal-overlay" (click)="closeModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Part Details - {{ partData.part }}</h2>
+      <h2>Part Details - {{ partData.part || 'N/A' }}</h2>
       <button class="close-btn" (click)="closeModal()" aria-label="Close modal">×</button>
     </div>
     
@@ -12,7 +12,7 @@
           <div class="info-grid">
             <div class="info-item">
               <label>Part Number:</label>
-              <span class="value">{{ partData.part }}</span>
+              <span class="value">{{ partData.part || 'N/A' }}</span>
             </div>
             <div class="info-item">
               <label>Supplier:</label>
