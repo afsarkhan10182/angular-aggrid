@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { PartModalComponent } from './part-modal/part-modal.component';
@@ -14,12 +15,14 @@ import { AutocompleteCellEditorComponent } from './autocomplete-cell-editor/auto
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterModule, AgGridAngular, PartModalComponent, AutocompleteCellEditorComponent], // AutocompleteCellEditorComponent used in column definitions
-  templateUrl: './app.html'
+  imports: [CommonModule, RouterModule, FormsModule, AgGridAngular, PartModalComponent, AutocompleteCellEditorComponent], // AutocompleteCellEditorComponent used in column definitions
+  templateUrl: './app.html',
+  styleUrls: ['./app.css']
 })
 export class App implements OnInit {
   private gridApi!: GridApi;
   public showColumnVisibilityPanel = false;
+  public showExpiredData = false;
 
   // Modal state
   public showPartModal = false;
@@ -51,6 +54,12 @@ export class App implements OnInit {
     suppressScrollOnNewData: false,
     allowDragFromColumnsToolPanel: true,
     suppressRowVirtualisation: false,
+    getRowClass: (params) => {
+      if (params.data && params.data.isExpired) {
+        return 'expired-row';
+      }
+      return '';
+    },
     // Firefox 102 ESR compatibility settings
     // Force horizontal scroll to always be visible
     // Enable native scrolling for better Firefox compatibility
@@ -225,6 +234,11 @@ export class App implements OnInit {
     this.gridOptions.context = {
       dataService: this.dataService
     };
+    
+    // Load expired data state from localStorage
+    const savedState = localStorage.getItem('showExpiredData');
+    this.showExpiredData = savedState === 'true';
+    
     this.loadData();
   }
 
@@ -233,9 +247,16 @@ export class App implements OnInit {
   loadData(): void {
     this.dataService.loadMockData().subscribe(data => {
       // Transform mock data to grid format
-      const baseData = this.dataService.transformToGridData(data.mbom);
-      const additionalData = this.dataService.generateAdditionalData(data.mbom, 1000);
-      this.rowData = [...baseData, ...additionalData];
+      let baseData = this.dataService.transformToGridData(data.mbom);
+      let additionalData = this.dataService.generateAdditionalData(data.mbom, 1000);
+      
+      if (this.showExpiredData) {
+        // Add some expired entries at the beginning
+        const expiredEntries = this.generateExpiredEntries();
+        this.rowData = [...expiredEntries, ...baseData, ...additionalData];
+      } else {
+        this.rowData = [...baseData, ...additionalData];
+      }
       
       // Initialize columns after data is loaded
       this.initializeColumns();
@@ -245,6 +266,52 @@ export class App implements OnInit {
       
       console.log('Loaded data:', this.rowData.length, 'rows');
     });
+  }
+
+  generateExpiredEntries(): any[] {
+    const today = new Date();
+    const expiredEntries = [
+      {
+        part: '5000001',
+        supplier: 'Expired Supplier 1',
+        color: 'Red',
+        feature: 'Expired Frame',
+        startDate: '01/01/2023',
+        endDate: '12/31/2023',
+        qty: 5,
+        isExpired: true
+      },
+      {
+        part: '5000002',
+        supplier: 'Expired Supplier 2',
+        color: 'Orange',
+        feature: 'Expired Hardware',
+        startDate: '02/01/2023',
+        endDate: '11/30/2023',
+        qty: 3,
+        isExpired: true
+      },
+      {
+        part: '5000003',
+        supplier: 'Expired Supplier 3',
+        color: 'Yellow',
+        feature: 'Expired Label',
+        startDate: '03/01/2023',
+        endDate: '10/31/2023',
+        qty: 8,
+        isExpired: true
+      }
+    ];
+
+    // Add SKU columns with empty values for expired entries
+    const skuInfo = this.dataService.getSkuInfo();
+    expiredEntries.forEach(entry => {
+      skuInfo.forEach(sku => {
+        (entry as any)[`sku${sku.sku}`] = '';
+      });
+    });
+
+    return expiredEntries;
   }
 
   initializeClickableParts(): void {
@@ -589,6 +656,21 @@ export class App implements OnInit {
   getColumnDisplayName(col: any): string {
     // Return the exact same header name as shown in the grid
     return col.headerName || col.field;
+  }
+
+  isSkuColumn(col: any): boolean {
+    // Check if the column is a SKU column by examining the field name
+    return col.field && col.field.startsWith('sku');
+  }
+
+  toggleExpiredData(): void {
+    console.log('Toggle expired data clicked, current state:', this.showExpiredData);
+    
+    // Save state to localStorage
+    localStorage.setItem('showExpiredData', this.showExpiredData.toString());
+    
+    // Reload data with or without expired entries
+    this.loadData();
   }
 
   toggleColumnVisibility(col?: any, event?: Event): void {

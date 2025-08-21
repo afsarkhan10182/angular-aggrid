@@ -333,9 +333,11 @@ color: #1e293b;
   background: white;
 }
 
-/* AG Grid theme - Professional styling */
+/* AG Grid theme - CLEAN & ADJUSTABLE */
 .ag-theme-alpine {
-  --ag-row-height: 24px;
+  /* 🎯 IMPROVED ROW HEIGHT - Better readability while staying compact */
+  --ag-row-height: 28px;
+  
   --ag-header-height: 60px;
   --ag-cell-horizontal-border: solid #e5e7eb;
   --ag-cell-horizontal-border-width: 1px;
@@ -343,7 +345,7 @@ color: #1e293b;
   --ag-row-border-width: 1px;
   --ag-pinned-row-border: solid #e5e7eb;
   --ag-pinned-row-border-width: 1px;
-  --ag-font-size: 13px;
+  --ag-font-size: 14px;
   --ag-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --ag-filter-tool-panel-group-indent-size: 10px;
   --ag-filter-tool-panel-group-title-padding: 10px;
@@ -617,51 +619,48 @@ color: #1e293b;
   color: #6b7280 !important;
 }
 
-/* Cell - Styling with horizontal lines */
+/* Cell - Improved styling with better readability */
 .ag-cell {
   min-width: 120px !important;
   max-width: 250px !important;
   padding: 4px 8px !important;
-  line-height: 1.2 !important;
+  line-height: 1.3 !important;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  border-right: 1px solid #e5e7eb !important;
-  border-bottom: none !important;
+  border: 1px solid #e5e7eb !important;
   vertical-align: middle !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   color: #374151 !important;
-  height: 24px !important;
-  min-height: 24px !important;
-  max-height: 24px !important;
+  height: var(--ag-row-height) !important;
+  min-height: var(--ag-row-height) !important;
+  max-height: var(--ag-row-height) !important;
   background: white !important;
   box-sizing: border-box !important;
   display: flex !important;
   align-items: center !important;
 }
 
-/* Actions column cell styling */
+/* Actions column cell styling - Improved */
 .ag-cell[col-id="actions"] {
   min-width: 40px !important;
   max-width: 40px !important;
   padding: 4px !important;
-  border-right: 1px solid #d1d5db !important;
-  border-bottom: none !important;
+  border: 1px solid #e5e7eb !important;
   background: #f9fafb !important;
 }
 
-/* Qty column specific styling */
+/* Qty column specific styling - Improved */
 .ag-cell[col-id="qty"] {
   text-align: right !important;
   font-weight: 500 !important;
   background-color: #f8fafc !important;
   color: #374151 !important;
-  padding: 6px 10px !important;
+  padding: 4px 8px !important;
   min-width: 80px !important;
   max-width: 120px !important;
-  border-right: 1px solid #d1d5db !important;
-  border-bottom: none !important;
-  font-size: 12px !important;
+  border: 1px solid #e5e7eb !important;
+  font-size: 13px !important;
 }
 
 /* Qty column header styling */
@@ -760,9 +759,9 @@ color: #1e293b;
   border-left: 4px solid #007bff !important;
   margin: 0 !important;
   padding: 0 !important;
-  height: 24px !important;
-  min-height: 24px !important;
-  max-height: 24px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
 }
 
 .ag-row.new-row .ag-cell {
@@ -812,7 +811,7 @@ color: #1e293b;
   align-items: center;
   justify-content: flex-start;
   width: 100%;
-  height: 24px;
+  height: 28px;
   overflow: hidden;
 }
 
@@ -835,12 +834,14 @@ color: #1e293b;
   border: 1px solid #fff;
   margin: 0 auto;
   position: absolute;
-    top: 1px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .add-row-btn:hover {
   background: #059669;
-  transform: scale(1.2);
+  transform: translate(-50%, -50%) scale(1.2);
   box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
 }
 
@@ -851,24 +852,8 @@ color: #1e293b;
 
 .delete-row-btn:hover {
   background: #dc2626;
-  transform: scale(1.2);
+  transform: translate(-50%, -50%) scale(1.2);
   box-shadow: 0 4px 8px rgba(239, 68, 68, 0.4);
-}
-
-/* Row spacing and add button positioning */
-.ag-row {
-  position: relative;
-  margin: 0;
-  padding: 0;
-  height: 24px !important;
-  min-height: 24px !important;
-  max-height: 24px !important;
-  overflow: hidden;
-  border-bottom: 1px solid #e5e7eb !important;
-  border-top: none !important;
-  box-sizing: border-box !important;
-  display: flex !important;
-  align-items: stretch !important;
 }
 
 /* Ensure no gaps between rows */
@@ -890,22 +875,16 @@ color: #1e293b;
   box-sizing: border-box !important;
 }
 
-/* Remove any default spacing between rows */
-.ag-body-viewport .ag-row {
+/* Clean border styling - Consistent grid lines */
+.ag-theme-alpine .ag-cell {
+  border: 1px solid #e5e7eb !important;
   margin: 0 !important;
-  padding: 0 !important;
-  border-spacing: 0 !important;
-  height: 24px !important;
-  min-height: 24px !important;
-  max-height: 24px !important;
-  display: flex !important;
-  align-items: stretch !important;
-  box-sizing: border-box !important;
 }
 
-/* Ensure proper border alignment */
-.ag-body-viewport .ag-row:last-child {
-  border-bottom: none !important;
+.ag-theme-alpine .ag-row {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
 }
 
 /* Force row content to fill entire height */
