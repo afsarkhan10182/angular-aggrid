@@ -225,7 +225,28 @@ export class App implements OnInit {
 
   buildColumnDefinitions(skuColumns: any[]): ColDef[] {
     const baseColumns: ColDef[] = [
-
+      {
+        headerName: '',
+        field: 'actions',
+        width: 40,
+        minWidth: 40,
+        maxWidth: 40,
+        pinned: 'left',
+        resizable: false,
+        sortable: false,
+        filter: false,
+        cellRenderer: (params: any) => {
+          if (params.data.isNewRow) {
+            return `<span class="delete-row-btn" data-part-id="${params.data.part}">−</span>`;
+          }
+          return `<span class="add-row-btn" data-part-id="${params.data.part}">+</span>`;
+        },
+        cellStyle: {
+          textAlign: 'center',
+          padding: '4px',
+          borderRight: '1px solid #e2e8f0'
+        }
+      },
       {
         headerName: 'Part',
         field: 'part',
@@ -236,16 +257,21 @@ export class App implements OnInit {
           }
           const isClickable = this.clickableParts.has(params.value);
           const className = isClickable ? 'part-link clickable' : 'part-text';
-          return `<div class="part-cell-content">
-            <span class="add-row-btn" data-part-id="${params.value}">+</span>
-            <span class="${className}">${params.value}</span>
-          </div>`;
+          return `<span class="${className}">${params.value}</span>`;
         },
         width: 140,
         minWidth: 120,
         maxWidth: 180,
         pinned: 'left',
-        resizable: true
+        resizable: true,
+        editable: (params) => params.data.isNewRow,
+        cellEditor: 'agAutocompleteCellEditor',
+        cellEditorParams: (params: any) => ({
+          values: this.getAvailablePartNumbers(),
+          maxResults: 5,
+          filterList: true,
+          searchDebounceDelay: 0
+        })
       },
       {
         headerName: 'Supplier',
@@ -486,8 +512,7 @@ export class App implements OnInit {
   }
 
   onCellClicked(event: any): void {
-    if (event.colDef.field === 'part') {
-      // Check if click was on the add row button
+    if (event.colDef.field === 'actions') {
       const target = event.event?.target as HTMLElement;
       if (target && target.classList.contains('add-row-btn')) {
         const partId = parseInt(target.getAttribute('data-part-id') || '0');
@@ -495,8 +520,14 @@ export class App implements OnInit {
           this.addRowAfter(partId);
           return;
         }
+      } else if (target && target.classList.contains('delete-row-btn')) {
+        const partId = parseInt(target.getAttribute('data-part-id') || '0');
+        if (partId) {
+          this.deleteRow(partId);
+          return;
+        }
       }
-      
+    } else if (event.colDef.field === 'part') {
       // Check if it's a clickable part for modal
       if (this.clickableParts.has(event.value)) {
         this.openPartModal(event.value);
@@ -616,22 +647,57 @@ export class App implements OnInit {
       currentData.splice(insertIndex + 1, 0, newRow);
       this.rowData = currentData;
       
-      // Force complete grid refresh to handle new row properly
+      // Update the grid data and refresh
       this.gridApi.refreshCells({ force: true });
-      this.gridApi.refreshHeader();
       
-      // Scroll to the new row and ensure proper positioning
+      // Logical scroll behavior: scroll to the new row with smooth animation
       setTimeout(() => {
+        // Get the row index after insertion
+        const newRowIndex = insertIndex + 1;
+        
+        // Check if the new row is currently visible
+        const firstVisibleRow = this.gridApi.getFirstDisplayedRowIndex();
+        const lastVisibleRow = this.gridApi.getLastDisplayedRowIndex();
+        
+        if (newRowIndex < firstVisibleRow || newRowIndex > lastVisibleRow) {
+          // Row is not visible, scroll to it smoothly
+          this.gridApi.ensureIndexVisible(newRowIndex, 'middle');
+        } else {
+          // Row is already visible, just ensure it's properly positioned
+          this.gridApi.ensureIndexVisible(newRowIndex, 'middle');
+        }
+        
+        // Add a subtle highlight effect by refreshing the specific row
         const rowNode = this.gridApi.getRowNode(newRowId.toString());
         if (rowNode) {
-          this.gridApi.ensureIndexVisible(insertIndex + 1, 'middle');
-          // Force a redraw to fix any rendering issues
-          this.gridApi.redrawRows();
+          this.gridApi.refreshCells({
+            rowNodes: [rowNode],
+            force: true
+          });
         }
-      }, 50);
+      }, 100);
     }
     
     console.log('Added new row after part:', partId, 'New row ID:', newRowId);
+  }
+
+  deleteRow(partId: number): void {
+    // Remove from newRows if it exists
+    this.newRows.delete(partId);
+    
+    // Remove from rowData
+    const currentData = [...this.rowData];
+    const rowIndex = currentData.findIndex(row => row.part === partId);
+    if (rowIndex !== -1) {
+      currentData.splice(rowIndex, 1);
+      this.rowData = currentData;
+      
+      // Force complete grid refresh
+      this.gridApi.refreshCells({ force: true });
+      this.gridApi.refreshHeader();
+      
+      console.log('Deleted row with part ID:', partId);
+    }
   }
 
   getUniqueFeatures(): string[] {
@@ -644,10 +710,57 @@ export class App implements OnInit {
     return Array.from(features).sort();
   }
 
+  getAvailablePartNumbers(): string[] {
+    // This method can be easily modified to make API calls later
+    const partNumbers = new Set<string>();
+    this.rowData.forEach(row => {
+      if (!row.isNewRow) {
+        partNumbers.add(row.part.toString());
+      }
+    });
+    return Array.from(partNumbers).sort((a, b) => parseInt(a) - parseInt(b));
+  }
+
+  // Method for future API integration
+  async searchPartNumbers(searchTerm: string): Promise<string[]> {
+    // TODO: Replace with actual API call
+    // Example: return this.dataService.searchParts(searchTerm);
+    
+    // For now, filter existing data
+    const allParts = this.getAvailablePartNumbers();
+    if (!searchTerm) {
+      return allParts.slice(0, 5); // Return first 5 if no search term
+    }
+    
+    return allParts
+      .filter(part => part.includes(searchTerm))
+      .slice(0, 5); // Limit to 5 results
+  }
+
   onNewRowValueChanged(params: any): void {
     if (params.data.isNewRow) {
       const rowId = params.data.part;
       const updatedRow = { ...params.data };
+      
+      // If part number is changed, populate ONLY the feature from existing data
+      if (params.field === 'part' && params.newValue) {
+        const partNumber = parseInt(params.newValue);
+        if (!isNaN(partNumber)) {
+          const existingPart = this.rowData.find(row => row.part === partNumber && !row.isNewRow);
+          if (existingPart) {
+            // Only populate the feature field
+            updatedRow.feature = existingPart.feature;
+            
+            // Update the grid to reflect the changes
+            this.gridApi.refreshCells({
+              rowNodes: [params.node],
+              force: true
+            });
+            
+            console.log('Auto-populated feature for part', params.newValue, ':', existingPart.feature);
+          }
+        }
+      }
       
       // Update the new row data
       this.newRows.set(rowId, updatedRow);

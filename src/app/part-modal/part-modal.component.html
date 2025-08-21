@@ -1,0 +1,76 @@
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Part Details - {{ partData.part }}</h2>
+      <button class="close-btn" (click)="closeModal()" aria-label="Close modal">×</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="part-info-grid">
+        <section class="info-section basic-info">
+          <h3>Basic Information</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Part Number:</label>
+              <span class="value">{{ partData.part }}</span>
+            </div>
+            <div class="info-item">
+              <label>Supplier:</label>
+              <span class="value">{{ partData.supplier }}</span>
+            </div>
+            <div class="info-item">
+              <label>Color:</label>
+              <span class="value">{{ partData.color }}</span>
+            </div>
+            <div class="info-item">
+              <label>Feature:</label>
+              <span class="value">{{ partData.feature }}</span>
+            </div>
+            <div class="info-item">
+              <label>Quantity:</label>
+              <span class="value quantity">{{ partData.qty }}</span>
+            </div>
+            <div class="info-item">
+              <label>Start Date:</label>
+              <span class="value">{{ partData.startDate }}</span>
+            </div>
+            <div class="info-item">
+              <label>End Date:</label>
+              <span class="value">{{ partData.endDate }}</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="info-section sku-info">
+          <h3>SKU Information</h3>
+          <div class="sku-grid" *ngIf="skuData.length > 0">
+            <article class="sku-card" *ngFor="let sku of skuData">
+              <header class="sku-header">SKU-{{ sku.skuNumber }}</header>
+              <div class="sku-details">
+                <div class="sku-detail-item">
+                  <strong>Product:</strong> {{ sku.product }}
+                </div>
+                <div class="sku-detail-item">
+                  <strong>Manufacturer:</strong> {{ sku.manufacturer }}
+                </div>
+                <div class="sku-detail-item">
+                  <strong>Color:</strong> {{ sku.color }}
+                </div>
+                <div class="sku-detail-item">
+                  <strong>Size:</strong> {{ sku.size }}
+                </div>
+                <div class="sku-detail-item" *ngIf="sku.partNumber">
+                  <strong>Part Number:</strong> {{ sku.partNumber }}
+                </div>
+              </div>
+            </article>
+          </div>
+          <div *ngIf="skuData.length === 0" class="no-sku">
+            <div class="no-data-icon">📦</div>
+            <p>No SKU data available for this part.</p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>

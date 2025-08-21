@@ -321,6 +321,7 @@ color: #1e293b;
   max-height: none;
   position: relative;
   will-change: scroll-position;
+  line-height: 1;
 }
 
 .ag-grid-container {
@@ -336,17 +337,22 @@ color: #1e293b;
 .ag-theme-alpine {
   --ag-row-height: 24px;
   --ag-header-height: 60px;
-  --ag-cell-horizontal-border: solid #e2e8f0;
+  --ag-cell-horizontal-border: solid #e5e7eb;
   --ag-cell-horizontal-border-width: 1px;
-  --ag-row-border-color: #e2e8f0;
+  --ag-row-border-color: #e5e7eb;
   --ag-row-border-width: 1px;
-  --ag-pinned-row-border: solid #e2e8f0;
+  --ag-pinned-row-border: solid #e5e7eb;
   --ag-pinned-row-border-width: 1px;
   --ag-font-size: 13px;
   --ag-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --ag-filter-tool-panel-group-indent-size: 10px;
   --ag-filter-tool-panel-group-title-padding: 10px;
   --ag-row-hover-color: #f8fafc;
+  --ag-row-border-style: solid;
+  --ag-cell-vertical-border: none;
+  --ag-cell-vertical-border-width: 0px;
+  --ag-row-hover-border-color: #e5e7eb;
+  --ag-row-hover-border-width: 1px;
 }
 
 /* Firefox 102 ESR compatibility fixes */
@@ -365,12 +371,38 @@ color: #1e293b;
   }
   
   /* Ensure transforms work properly */
-  .add-row-btn {
-    -moz-transform: translateY(-50%);
+  .add-row-btn, .delete-row-btn {
+    -moz-transform: scale(1);
   }
   
-  .add-row-btn:hover {
-    -moz-transform: translateY(-50%) scale(1.2);
+  .add-row-btn:hover, .delete-row-btn:hover {
+    -moz-transform: scale(1.2);
+  }
+  
+  /* Enhanced horizontal scroll fixes for Firefox 102 ESR */
+  .ag-body-horizontal-scroll-viewport {
+    overflow-x: auto !important;
+    min-width: max-content !important;
+    width: max-content !important;
+    -moz-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+  }
+  
+  .ag-body-horizontal-scroll {
+    min-width: max-content !important;
+    -moz-transform: translateZ(0);
+  }
+  
+  /* Force hardware acceleration for smooth scrolling */
+  .ag-grid-container-wrapper {
+    -moz-transform: translateZ(0);
+    will-change: scroll-position;
+  }
+  
+  .ag-body-viewport {
+    -moz-transform: translateZ(0);
+    will-change: scroll-position;
   }
 }
 
@@ -503,39 +535,67 @@ color: #1e293b;
   font-weight: 600 !important;
 }
 
-/* Header cell - Clean styling */
+/* Header cell - Visually distinct styling */
 .ag-header-cell {
   min-width: 120px !important;
   max-width: 300px !important;
-  padding: 8px 12px !important;
-  border-right: 1px solid #e2e8f0 !important;
-  background: #f8f9fa !important;
+  padding: 12px 16px !important;
+  border-right: 1px solid #d1d5db !important;
+  background: #f3f4f6 !important;
   font-weight: 600 !important;
   text-align: center !important;
-  font-size: 12px !important;
-  line-height: 1.2 !important;
-  color: #374151 !important;
-  min-height: 60px !important;
+  font-size: 14px !important;
+  line-height: 1.3 !important;
+  color: #6b7280 !important;
+  min-height: 55px !important;
   white-space: normal !important;
   word-wrap: break-word !important;
+  border-bottom: 2px solid #d1d5db !important;
 }
 
-/* Cell - Clean styling */
+/* Actions column header - distinct styling */
+.ag-header-cell[col-id="actions"] {
+  background: #e5e7eb !important;
+  border-right: 1px solid #d1d5db !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  padding: 12px 4px !important;
+  border-bottom: 2px solid #d1d5db !important;
+  font-size: 14px !important;
+  color: #6b7280 !important;
+}
+
+/* Cell - Styling with horizontal lines */
 .ag-cell {
   min-width: 120px !important;
   max-width: 250px !important;
-  padding: 2px 6px !important;
-  line-height: 1.1 !important;
+  padding: 4px 8px !important;
+  line-height: 1.2 !important;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  border-right: 1px solid #e2e8f0 !important;
+  border-right: 1px solid #e5e7eb !important;
+  border-bottom: none !important;
   vertical-align: middle !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
   color: #374151 !important;
   height: 24px !important;
   min-height: 24px !important;
   max-height: 24px !important;
+  background: white !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Actions column cell styling */
+.ag-cell[col-id="actions"] {
+  min-width: 40px !important;
+  max-width: 40px !important;
+  padding: 4px !important;
+  border-right: 1px solid #d1d5db !important;
+  border-bottom: none !important;
+  background: #f9fafb !important;
 }
 
 /* Qty column specific styling */
@@ -543,11 +603,12 @@ color: #1e293b;
   text-align: right !important;
   font-weight: 500 !important;
   background-color: #f8fafc !important;
-  color: #1e293b !important;
+  color: #374151 !important;
   padding: 6px 10px !important;
   min-width: 80px !important;
   max-width: 120px !important;
-  border-right: 1px solid #e2e8f0 !important;
+  border-right: 1px solid #d1d5db !important;
+  border-bottom: none !important;
   font-size: 12px !important;
 }
 
@@ -555,13 +616,14 @@ color: #1e293b;
 .ag-header-cell[col-id="qty"] {
   text-align: center !important;
   font-weight: 600 !important;
-  background-color: #f8f9fa !important;
-  color: #374151 !important;
-  padding: 8px 10px !important;
+  background: #f3f4f6 !important;
+  color: #6b7280 !important;
+  padding: 12px 10px !important;
   min-width: 80px !important;
   max-width: 120px !important;
-  border-right: 1px solid #e2e8f0 !important;
-  font-size: 12px !important;
+  border-right: 1px solid #d1d5db !important;
+  font-size: 14px !important;
+  border-bottom: 2px solid #d1d5db !important;
 }
 
 /* Qty column hover effect */
@@ -615,10 +677,25 @@ color: #1e293b;
   background: #f0fdf4 !important;
   border-left: 4px solid #10b981 !important;
   animation: highlightNewRow 2s ease-out;
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 24px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
 }
 
 .ag-row.new-row .ag-cell {
   background: #f0fdf4 !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  max-height: 100% !important;
+  margin: 0 !important;
+  padding: 4px 8px !important;
+  line-height: 1.2 !important;
+  border-bottom: none !important;
+  display: flex !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
 }
 
 @keyframes highlightNewRow {
@@ -657,49 +734,53 @@ color: #1e293b;
   text-decoration: none !important;
 }
 
-/* Part cell content layout */
+/* Part cell content layout - simplified */
 .part-cell-content {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   width: 100%;
-  position: relative;
   height: 24px;
   overflow: hidden;
-  padding-left: 20px;
 }
 
-/* Add row button styling - On the left */
-.add-row-btn {
+/* Add/Delete row button styling */
+.add-row-btn, .delete-row-btn {
   background: #10b981;
   color: white;
   border: none;
   border-radius: 50%;
-  width: 16px;
-  height: 16px;
-  font-size: 10px;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
   font-weight: bold;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
-  flex-shrink: 0;
-  opacity: 0.9;
-  position: absolute;
-  left: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 100;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   border: 1px solid #fff;
+  margin: 0 auto;
+  position: absolute;
+    top: 1px;
 }
 
 .add-row-btn:hover {
   background: #059669;
-  transform: translateY(-50%) scale(1.2);
-  opacity: 1;
-  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.5);
+  transform: scale(1.2);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
+}
+
+.delete-row-btn {
+  background: #ef4444;
+  font-size: 14px;
+}
+
+.delete-row-btn:hover {
+  background: #dc2626;
+  transform: scale(1.2);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.4);
 }
 
 /* Row spacing and add button positioning */
@@ -711,6 +792,11 @@ color: #1e293b;
   min-height: 24px !important;
   max-height: 24px !important;
   overflow: hidden;
+  border-bottom: 1px solid #e5e7eb !important;
+  border-top: none !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: stretch !important;
 }
 
 /* Ensure no gaps between rows */
@@ -718,6 +804,43 @@ color: #1e293b;
   overflow-x: auto;
   overflow-y: auto;
   background: white;
+  line-height: 1;
+  border-collapse: collapse;
+}
+
+/* Force cells to fill entire row height */
+.ag-body-viewport .ag-cell {
+  height: 100% !important;
+  min-height: 100% !important;
+  max-height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+}
+
+/* Remove any default spacing between rows */
+.ag-body-viewport .ag-row {
+  margin: 0 !important;
+  padding: 0 !important;
+  border-spacing: 0 !important;
+  height: 24px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+  display: flex !important;
+  align-items: stretch !important;
+  box-sizing: border-box !important;
+}
+
+/* Ensure proper border alignment */
+.ag-body-viewport .ag-row:last-child {
+  border-bottom: none !important;
+}
+
+/* Force row content to fill entire height */
+.ag-body-viewport .ag-row > * {
+  height: 100% !important;
+  min-height: 100% !important;
+  max-height: 100% !important;
 }
 
 .ag-body-viewport-wrapper {
@@ -747,10 +870,40 @@ color: #1e293b;
 /* Ensure grid content is always visible */
 .ag-root-wrapper {
   background: white;
+  line-height: 1;
 }
 
 .ag-root {
   background: white;
+  line-height: 1;
+}
+
+/* Ensure no gaps in the grid body */
+.ag-body {
+  line-height: 1;
+  border-collapse: collapse;
+}
+
+.ag-body-viewport-wrapper {
+  line-height: 1;
+  border-collapse: collapse;
+}
+
+/* Override AG Grid's internal cell height calculation */
+.ag-theme-alpine .ag-cell-wrapper {
+  height: 100% !important;
+  min-height: 100% !important;
+  max-height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.ag-theme-alpine .ag-cell-value {
+  height: 100% !important;
+  min-height: 100% !important;
+  max-height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 /* Fix for Firefox 102 ESR scrolling issues */
