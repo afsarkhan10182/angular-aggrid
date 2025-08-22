@@ -688,26 +688,43 @@ export class App implements OnInit {
       // Toggle visibility panel
       this.showColumnVisibilityPanel = !this.showColumnVisibilityPanel;
       
+      // Remove existing listener first to prevent duplicates
+      document.removeEventListener('click', this.handleClickOutside, true);
+      
       // Add click outside handler when panel opens
       if (this.showColumnVisibilityPanel) {
+        // Use setTimeout to avoid immediate closure
         setTimeout(() => {
-          document.addEventListener('click', this.closePanelOnClickOutside.bind(this), true);
-        }, 0);
-      } else {
-        document.removeEventListener('click', this.closePanelOnClickOutside.bind(this), true);
+          document.addEventListener('click', this.handleClickOutside, true);
+        }, 150);
       }
     }
   }
 
-  closePanelOnClickOutside(event: Event): void {
-    const panel = document.querySelector('.column-visibility-panel');
-    const toggleBtn = document.querySelector('.toggle-columns-btn');
+  private handleClickOutside = (event: Event): void => {
+    const target = event.target as Element;
+    const panel = document.querySelector('.grid-column-visibility-panel-container');
+    const toggleBtn = document.querySelector('.grid-toggle-columns-btn');
+    const toggleContainer = document.querySelector('.grid-toggle-button-container');
     
-    if (panel && !panel.contains(event.target as Node) && 
-        toggleBtn && !toggleBtn.contains(event.target as Node)) {
+    // Check if click is outside all relevant elements
+    const clickedOutside = panel && !panel.contains(target) && 
+                          toggleBtn && !toggleBtn.contains(target) &&
+                          toggleContainer && !toggleContainer.contains(target);
+    
+    if (clickedOutside) {
       this.showColumnVisibilityPanel = false;
-      document.removeEventListener('click', this.closePanelOnClickOutside.bind(this), true);
+      document.removeEventListener('click', this.handleClickOutside, true);
+      // Force change detection since we're outside Angular zone
+      setTimeout(() => {
+        // This ensures Angular detects the change
+      }, 0);
     }
+  }
+
+  closePanelOnClickOutside(event: Event): void {
+    // Legacy method - keeping for compatibility
+    this.handleClickOutside(event);
   }
 
   onCellClicked(event: any): void {

@@ -78,72 +78,28 @@ color: #1e293b;
   min-width: 300px;
 }
 
-/* Column Visibility Controls - Better spacing */
-.column-visibility-controls {
-  position: relative;
-  margin: 0;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
+/* Legacy column visibility controls - removed, now integrated with grid */
 
-
-
-.toggle-columns-btn {
-  background: #6b7280;
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  transition: background-color 0.2s;
-  height: 36px;
-}
-
-.toggle-columns-btn:hover {
-  background: #4b5563;
-}
-
-/* Save Changes Button */
+/* Save Changes Button - Minimal */
 .save-changes-btn {
   background: #10b981;
   color: white;
   border: none;
-  padding: 8px 16px;
+  padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
+  gap: 4px;
+  font-size: 12px;
   font-weight: 500;
-  transition: all 0.2s;
-  height: 36px;
-  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2);
-}
-
-.save-changes-btn:hover:not(:disabled) {
-  background: #059669;
-  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
-  transform: translateY(-1px);
+  height: 32px;
 }
 
 .save-changes-btn:disabled {
   background: #9ca3af;
   cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.save-changes-btn:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2);
+  opacity: 0.7;
 }
 
 /* Save Message Styling */
@@ -213,26 +169,7 @@ color: #1e293b;
 
 
 
-/* Column visibility panel container - positioned near toggle button */
-.column-visibility-panel-container {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  z-index: 9999;
-  margin-top: 8px;
-}
-
-/* Column visibility panel - positioned near toggle button */
-.column-visibility-panel {
-  background: white;
-  border: 2px solid #3b82f6;
-  border-radius: 8px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  padding: 16px;
-  width: 350px;
-  max-height: 400px;
-  overflow-y: auto;
-}
+/* Old column visibility panel CSS - replaced by grid-integrated version */
 
 .column-visibility-header {
   display: flex;
@@ -309,7 +246,7 @@ color: #1e293b;
   height: 14px;
 }
 
-/* AG Grid container - Clean design */
+/* AG Grid container - Clean design with integrated toggle button */
 .ag-grid-container-wrapper {
   width: 100%;
   overflow-x: auto;
@@ -989,6 +926,92 @@ color: #1e293b;
   opacity: 1;
 }
 
+/* Grid-integrated Toggle Columns Button */
+.grid-toggle-button-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 32px;
+  background: #f3f4f6 !important; /* Match AG Grid header background exactly */
+  border-left: 1px solid #d1d5db;
+  border-radius: 0 6px 6px 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 8px;
+  z-index: 10;
+  box-shadow: inset 2px 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.grid-toggle-columns-btn {
+  background: #6b7280;
+  color: white;
+  border: none;
+  width: 28px;
+  height: 140px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 500;
+  position: relative;
+  border: 1px solid #9ca3af;
+}
+
+/* Active state when panel is open - minimal */
+.grid-toggle-button-container.panel-open .grid-toggle-columns-btn {
+  background: #4b5563;
+  border-color: #6b7280;
+}
+
+.toggle-button-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  writing-mode: horizontal-tb;
+}
+
+.toggle-button-content i {
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+
+.toggle-button-text {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Grid Column Visibility Panel - positioned from grid button */
+.grid-column-visibility-panel-container {
+  position: absolute;
+  top: 90px;
+  right: 40px;
+  z-index: 9999;
+}
+
+/* Update existing panel styling to work with new positioning - minimal */
+.grid-column-visibility-panel-container .column-visibility-panel {
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  width: 350px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
 /* Responsive improvements */
 @media (max-width: 768px) {
   .app-container {
@@ -1008,5 +1031,25 @@ color: #1e293b;
   
   .criteria-display {
     min-width: auto;
+  }
+  
+  /* Adjust grid toggle button for mobile */
+  .grid-toggle-button-container {
+    width: 28px;
+  }
+  
+  .grid-toggle-columns-btn {
+    width: 26px;
+    height: 60px;
+    font-size: 10px;
+  }
+  
+  .grid-column-visibility-panel-container {
+    right: 35px;
+    top: 70px;
+  }
+  
+  .grid-column-visibility-panel-container .column-visibility-panel {
+    width: 280px;
   }
 }

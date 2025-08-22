@@ -19,44 +19,13 @@
           <span class="toggle-slider"></span>
         </label>
       </div>
-            <!-- Column Visibility Toggle -->
-      <div class="column-visibility-controls">
         <!-- Save Changes Button -->
         <button 
           (click)="saveChanges()" 
           class="save-changes-btn"
           [disabled]="editedRows.size === 0">
-          <i class="fas fa-save"></i> Save Changes ({{ editedRows.size }})
+          <i class="fas fa-save"></i> Save ({{ editedRows.size }})
         </button>
-        
-        <button (click)="toggleColumnVisibility()" class="toggle-columns-btn">
-          <i class="fas fa-columns"></i> Toggle Columns
-        </button>
-        
-        <!-- Column Visibility Panel - Positioned near toggle button -->
-        <div *ngIf="showColumnVisibilityPanel" class="column-visibility-panel-container">
-          <div class="column-visibility-panel" (click)="$event.stopPropagation()">
-            <div class="column-visibility-header">
-              <h4>Visible Columns</h4>
-              <button (click)="showColumnVisibilityPanel = false" class="close-panel-btn">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-            <div class="column-checkboxes">
-              <ng-container *ngFor="let col of columnDefs">
-                <div *ngIf="!isSkuColumn(col)" class="column-checkbox">
-                  <label>
-                    <input type="checkbox" 
-                           [checked]="!col.hide" 
-                           (change)="toggleColumnVisibility(col, $event)">
-                    <span class="column-name">{{ getColumnDisplayName(col) }}</span>
-                  </label>
-                </div>
-              </ng-container>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
     
     <!-- Save Status Message -->
@@ -80,8 +49,40 @@
         (gridReady)="onGridReady($event)"
         (cellClicked)="onCellClicked($event)">
       </ag-grid-angular>
-      
-
+    </div>
+    
+    <!-- Toggle Columns Button - Integrated with AG Grid -->
+    <div class="grid-toggle-button-container" [class.panel-open]="showColumnVisibilityPanel">
+      <button (click)="toggleColumnVisibility()" class="grid-toggle-columns-btn" title="Show/Hide Columns">
+        <div class="toggle-button-content">
+          <i class="fas fa-columns"></i>
+          <span class="toggle-button-text">Toggle Columns</span>
+        </div>
+      </button>
+    </div>
+    
+    <!-- Column Visibility Panel - Positioned near grid toggle button -->
+    <div *ngIf="showColumnVisibilityPanel" class="grid-column-visibility-panel-container">
+      <div class="column-visibility-panel" (click)="$event.stopPropagation()">
+        <div class="column-visibility-header">
+          <h4>Visible Columns</h4>
+          <button (click)="showColumnVisibilityPanel = false" class="close-panel-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="column-checkboxes">
+          <ng-container *ngFor="let col of columnDefs">
+            <div *ngIf="!isSkuColumn(col)" class="column-checkbox">
+              <label>
+                <input type="checkbox" 
+                       [checked]="!col.hide" 
+                       (change)="toggleColumnVisibility(col, $event)">
+                <span class="column-name">{{ getColumnDisplayName(col) }}</span>
+              </label>
+            </div>
+          </ng-container>
+        </div>
+      </div>
     </div>
   </div>
 </div>
