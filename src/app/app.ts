@@ -23,6 +23,7 @@ export class App implements OnInit {
   private gridApi!: GridApi;
   public showColumnVisibilityPanel = false;
   public showExpiredData = false;
+  public expiredDataCount = 0;
 
   // Modal state
   public showPartModal = false;
@@ -108,6 +109,15 @@ export class App implements OnInit {
         if (params.node.data) {
           (params.node.data as any)[params.colDef.field] = params.newValue;
         }
+        
+        // Update placeholder styling after value change
+        setTimeout(() => {
+          this.gridApi.refreshCells({
+            rowNodes: [params.node],
+            columns: params.colDef.field ? [params.colDef.field] : undefined,
+            force: true
+          });
+        }, 50);
       }
     },
     
@@ -258,11 +268,15 @@ export class App implements OnInit {
       let baseData = this.dataService.transformToGridData(data.mbom);
       let additionalData = this.dataService.generateAdditionalData(data.mbom, 1000);
       
+      // Always generate expired entries to get the count
+      const expiredEntries = this.generateExpiredEntries();
+      this.expiredDataCount = expiredEntries.length;
+      
       if (this.showExpiredData) {
-        // Add some expired entries at the beginning
-        const expiredEntries = this.generateExpiredEntries();
+        // Show expired entries when toggle is on
         this.rowData = [...expiredEntries, ...baseData, ...additionalData];
       } else {
+        // Hide expired entries when toggle is off
         this.rowData = [...baseData, ...additionalData];
       }
       
@@ -370,10 +384,16 @@ export class App implements OnInit {
           if (params.data.isNewRow) {
             // For new rows, use the newRowId as identifier since part is empty
             const newRowId = params.data.newRowId;
-            return `<span class="delete-row-btn" data-new-row-id="${newRowId}">−</span>`;
+            return `<span class="delete-row-btn" data-new-row-id="${newRowId}" title="Delete">−</span>`;
           }
+          
+          // Show red "e" for expired data
+          if (params.data.isExpired) {
+            return `<span class="expired-indicator" title="Expired">e</span>`;
+          }
+          
           const partId = params.data.part || '';
-          return `<span class="add-row-btn" data-part-id="${partId}">+</span>`;
+          return `<span class="add-row-btn" data-part-id="${partId}" title="Add">+</span>`;
         },
         cellStyle: {
           textAlign: 'center',
@@ -388,7 +408,10 @@ export class App implements OnInit {
         cellRenderer: (params: any) => {
           // Always show the value, whether it's a new row or existing row
           if (params.data.isNewRow) {
-            return params.value || ''; // Show the selected value for new rows
+            if (!params.value) {
+              return '<span class="new-row-placeholder">Click to enter part number...</span>';
+            }
+            return params.value; // Show the selected value for new rows
           }
           
           // Check if this part matches the first SKU to determine color
@@ -422,13 +445,15 @@ export class App implements OnInit {
         cellEditor: AutocompleteCellEditorComponent,
         cellEditorParams: (params: any) => ({
           values: this.getAvailablePartNumbers(),
-          placeholder: 'Enter part number...'
+          placeholder: 'Type to search part numbers...'
         }),
         cellStyle: (params: any) => {
-          // Simple styling for new rows
+          // Enhanced styling for new rows
           if (params.data && params.data.isNewRow) {
             return {
-              border: '1px solid #007bff'
+              border: '2px solid #007bff',
+              backgroundColor: '#f8fbff',
+              fontStyle: params.value ? 'normal' : 'italic'
             };
           }
           return null;
@@ -605,8 +630,19 @@ export class App implements OnInit {
           if (params.data.isNewRow) {
             return {
               ...baseStyle,
-              border: '1px solid #007bff',
-              fontStyle: 'italic'
+              border: '1px solid #007bff'
+              // Removed fontStyle: 'italic' for normal text appearance
+            };
+          }
+          
+          // Add expired row styling - make it look disabled
+          if (params.data && params.data.isExpired) {
+            return {
+              ...baseStyle,
+              backgroundColor: '#f9fafb',
+              color: '#9ca3af',
+              fontWeight: '400',
+              cursor: 'not-allowed'
             };
           }
           
@@ -622,7 +658,13 @@ export class App implements OnInit {
           return baseStyle;
         },
         resizable: true,
-        editable: true, // Qty is always editable (existing and new rows)
+        editable: (params) => {
+          // Don't allow editing expired rows
+          if (params.data && params.data.isExpired) {
+            return false;
+          }
+          return true; // Allow editing for all other rows (existing and new rows)
+        },
         cellEditor: 'agNumberCellEditor',
         cellEditorParams: {
           min: 0,

@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ICellEditorAngularComp } from 'ag-grid-angular';
@@ -8,7 +8,7 @@ import { ICellEditorAngularComp } from 'ag-grid-angular';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div style="position: relative; width: 100%; height: 100%;">
+    <div class="autocomplete-container" style="position: relative; width: 100%; height: 100%;">
       <input
         #input
         type="text"
@@ -19,23 +19,22 @@ import { ICellEditorAngularComp } from 'ag-grid-angular';
         (click)="onInputClick()"
         (focus)="onInputFocus()"
         [placeholder]="placeholder"
-        style="width: 100%; height: 100%; border: none; outline: none; padding: 8px 12px; font-size: 14px; background: transparent; box-sizing: border-box;"
+        class="autocomplete-input"
+        style="width: 100%; height: 100%; border: 1px solid #007bff; outline: none; padding: 4px 8px; font-size: 13px; background: white; box-sizing: border-box; border-radius: 2px;"
       />
       <div 
         *ngIf="showDropdown && filteredOptions.length > 0" 
         class="autocomplete-dropdown"
-        style="position: absolute; top: 100%; left: 0; right: 0; background: #ffffff; border: 2px solid #007bff; border-top: none; max-height: 200px; overflow-y: auto; z-index: 999999; box-shadow: 0 4px 12px rgba(0,0,0,0.5); border-radius: 0 0 4px 4px;"
+        #dropdown
         (click)="$event.stopPropagation()"
       >
-        <div style="padding: 6px 8px; background: #f8f9fa; font-size: 12px; color: #495057; border-bottom: 1px solid #dee2e6; font-weight: bold;">
-          Select a part number ({{ filteredOptions.length }} available):
+        <div class="dropdown-header">
+          Select part number ({{ filteredOptions.length }} available)
         </div>
         <div
           *ngFor="let option of filteredOptions; let i = index"
-          [style.background-color]="i === selectedIndex ? '#007bff' : '#ffffff'"
-          [style.color]="i === selectedIndex ? '#ffffff' : '#000000'"
+          [class.selected]="i === selectedIndex"
           class="dropdown-option"
-          style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #e9ecef; font-size: 14px; transition: background-color 0.2s;"
           (click)="selectOption(option); $event.stopPropagation()"
           (mouseenter)="selectedIndex = i"
         >
@@ -45,42 +44,82 @@ import { ICellEditorAngularComp } from 'ag-grid-angular';
     </div>
   `,
   styles: [`
+    .autocomplete-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+    
+    .autocomplete-input {
+      width: 100% !important;
+      height: 100% !important;
+      border: 1px solid #007bff !important;
+      outline: none !important;
+      padding: 4px 8px !important;
+      font-size: 13px !important;
+      background: white !important;
+      box-sizing: border-box !important;
+      border-radius: 2px !important;
+    }
+    
+    .autocomplete-input:focus {
+      border-color: #0056b3 !important;
+      box-shadow: 0 0 3px rgba(0, 123, 255, 0.3) !important;
+    }
+    
     .autocomplete-dropdown {
-      position: absolute !important;
-      z-index: 999999 !important;
+      position: fixed !important;
       background: #ffffff !important;
-      border: 2px solid #007bff !important;
-      border-top: none !important;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
-      border-radius: 0 0 4px 4px !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 4px !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
       max-height: 200px !important;
       overflow-y: auto !important;
-      width: 100% !important;
+      z-index: 999999 !important;
+      min-width: 200px !important;
+      max-width: 300px !important;
+    }
+    
+    .dropdown-header {
+      padding: 8px 12px !important;
+      background: #f8fafc !important;
+      font-size: 12px !important;
+      color: #64748b !important;
+      border-bottom: 1px solid #e2e8f0 !important;
+      font-weight: 500 !important;
+      text-align: center !important;
     }
     
     .dropdown-option {
       padding: 8px 12px !important;
       cursor: pointer !important;
-      border-bottom: 1px solid #e9ecef !important;
-      font-size: 14px !important;
-      transition: background-color 0.2s !important;
+      border-bottom: 1px solid #f1f5f9 !important;
+      font-size: 13px !important;
+      color: #374151 !important;
       background: #ffffff !important;
-      color: #000000 !important;
+      transition: all 0.2s ease !important;
     }
     
-    .dropdown-option:hover {
-      background: #007bff !important;
-      color: #ffffff !important;
+    .dropdown-option:hover,
+    .dropdown-option.selected {
+      background: #f0f9ff !important;
+      color: #1e40af !important;
     }
     
     .dropdown-option:last-child {
       border-bottom: none !important;
+      border-radius: 0 0 4px 4px !important;
+    }
+    
+    .dropdown-option:first-child {
+      border-radius: 0 !important;
     }
   `]
 })
-export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, OnInit, AfterViewInit {
+export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, OnInit, AfterViewInit, OnDestroy {
   @ViewChild('input') input!: ElementRef<HTMLInputElement>;
-  @ViewChild('container') container!: ElementRef<HTMLDivElement>;
+  @ViewChild('dropdown') dropdown!: ElementRef<HTMLDivElement>;
 
   public value: string = '';
   public placeholder: string = '';
@@ -104,7 +143,17 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
       this.input.nativeElement.select();
       // Show dropdown immediately when focused
       this.showDropdown = this.filteredOptions.length > 0;
+      
+      // Position dropdown if it's visible
+      if (this.showDropdown) {
+        this.positionDropdown();
+      }
     }, 0);
+  }
+
+  ngOnDestroy() {
+    // Clean up any potential memory leaks
+    this.closeDropdown();
   }
 
   agInit(params: any): void {
@@ -149,6 +198,11 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
     this.filterOptions();
     this.showDropdown = this.filteredOptions.length > 0;
     this.selectedIndex = -1;
+    
+    // Reposition dropdown when content changes
+    if (this.showDropdown) {
+      setTimeout(() => this.positionDropdown(), 0);
+    }
   }
 
   onKeyDown(event: KeyboardEvent): void {
@@ -200,12 +254,20 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
     // Show dropdown when input is clicked
     this.filterOptions();
     this.showDropdown = this.filteredOptions.length > 0;
+    
+    if (this.showDropdown) {
+      setTimeout(() => this.positionDropdown(), 0);
+    }
   }
 
   onInputFocus(): void {
     // Show dropdown when input is focused
     this.filterOptions();
     this.showDropdown = this.filteredOptions.length > 0;
+    
+    if (this.showDropdown) {
+      setTimeout(() => this.positionDropdown(), 0);
+    }
   }
 
   selectOption(option: string): void {
@@ -312,28 +374,78 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
   }
 
   private filterOptions(): void {
-    const searchValue = String(this.value || '').toLowerCase();
+    const searchValue = String(this.value || '').toLowerCase().trim();
     
     if (this.customFilterFunction) {
       // Use custom filtering function if provided
       this.filteredOptions = this.customFilterFunction(searchValue, this.options);
     } else {
-      // Default filtering behavior
+      // Enhanced filtering behavior
       if (!searchValue) {
-        this.filteredOptions = this.options.slice(0, 10); // Show first 10 if no input
+        // Show first 8 options when no search term
+        this.filteredOptions = this.options.slice(0, 8);
       } else {
-        this.filteredOptions = this.options
-          .filter(option => String(option).toLowerCase().includes(searchValue))
-          .slice(0, 10); // Limit to 10 results
+        // Filter options with priority: starts with, then contains
+        const startsWithMatches = this.options
+          .filter(option => String(option).toLowerCase().startsWith(searchValue))
+          .slice(0, 6);
+        
+        const containsMatches = this.options
+          .filter(option => {
+            const optionLower = String(option).toLowerCase();
+            return optionLower.includes(searchValue) && !optionLower.startsWith(searchValue);
+          })
+          .slice(0, 4);
+        
+        this.filteredOptions = [...startsWithMatches, ...containsMatches];
       }
     }
     
     this.showDropdown = this.filteredOptions.length > 0;
+    this.selectedIndex = this.filteredOptions.length > 0 ? 0 : -1; // Auto-select first option
   }
 
   private closeDropdown(): void {
     this.showDropdown = false;
     this.selectedIndex = -1;
+  }
+
+  private positionDropdown(): void {
+    if (!this.dropdown || !this.input) {
+      return;
+    }
+
+    // Get input element's position
+    const inputRect = this.input.nativeElement.getBoundingClientRect();
+    const dropdownElement = this.dropdown.nativeElement;
+    
+    // Position dropdown below the input
+    dropdownElement.style.top = `${inputRect.bottom + 2}px`;
+    dropdownElement.style.left = `${inputRect.left}px`;
+    
+    // Set width to match input or be at least as wide
+    const minWidth = Math.max(inputRect.width, 200);
+    dropdownElement.style.width = `${minWidth}px`;
+    
+    // Check if dropdown would go off-screen and adjust if needed
+    const viewportHeight = window.innerHeight;
+    const dropdownHeight = 200; // max-height from CSS
+    
+    if (inputRect.bottom + dropdownHeight > viewportHeight) {
+      // Position above the input if there's not enough space below
+      if (inputRect.top - dropdownHeight > 0) {
+        dropdownElement.style.top = `${inputRect.top - dropdownHeight - 2}px`;
+      }
+    }
+    
+    // Ensure dropdown doesn't go off-screen horizontally
+    const viewportWidth = window.innerWidth;
+    const dropdownWidth = minWidth;
+    
+    if (inputRect.left + dropdownWidth > viewportWidth) {
+      const adjustedLeft = Math.max(0, viewportWidth - dropdownWidth - 10);
+      dropdownElement.style.left = `${adjustedLeft}px`;
+    }
   }
 
   // Public method to refresh options (useful for dynamic data)
