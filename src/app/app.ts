@@ -32,6 +32,8 @@ export class App implements OnInit {
   // Save message state
   public saveMessage: string = '';
   public saveMessageType: string = '';
+  // Last saved timestamp
+  public lastSavedAt: Date | null = null;
   // Track which parts are clickable (random selection)
   private clickableParts = new Set<number>();
   // Editable state
@@ -239,6 +241,12 @@ export class App implements OnInit {
     const savedState = localStorage.getItem('showExpiredData');
     this.showExpiredData = savedState === 'true';
     
+    // Load last saved timestamp from localStorage
+    const savedTimestamp = localStorage.getItem('lastSavedAt');
+    if (savedTimestamp) {
+      this.lastSavedAt = new Date(savedTimestamp);
+    }
+    
     this.loadData();
   }
 
@@ -382,9 +390,28 @@ export class App implements OnInit {
           if (params.data.isNewRow) {
             return params.value || ''; // Show the selected value for new rows
           }
+          
+          // Check if this part matches the first SKU to determine color
+          const skuInfo = this.dataService.getSkuInfo();
+          let isMatching = false;
+          if (skuInfo && skuInfo.length > 0) {
+            const firstSkuField = `sku${skuInfo[0].sku}`;
+            const firstSkuValue = params.data[firstSkuField];
+            isMatching = firstSkuValue && String(params.value) === String(firstSkuValue);
+          }
+          
           const isClickable = this.clickableParts.has(params.value);
-          const className = isClickable ? 'part-link clickable' : 'part-text';
-          return `<span class="${className}">${params.value}</span>`;
+          
+          if (isMatching) {
+            // Matching values get red text, regardless of clickability
+            return `<span class="part-text matching-value" style="color: #d32f2f !important; font-weight: 600;">${params.value}</span>`;
+          } else if (isClickable) {
+            // Non-matching clickable parts get blue link
+            return `<span class="part-link clickable">${params.value}</span>`;
+          } else {
+            // Non-matching, non-clickable parts get gray text
+            return `<span class="part-text">${params.value}</span>`;
+          }
         },
         width: 140,
         minWidth: 120,
@@ -398,13 +425,15 @@ export class App implements OnInit {
           placeholder: 'Enter part number...'
         }),
         cellStyle: (params: any) => {
+          // Simple styling for new rows
           if (params.data && params.data.isNewRow) {
             return {
               border: '1px solid #007bff'
             };
           }
           return null;
-        }
+        },
+        headerClass: 'part-column-header'
       },
       {
         headerName: 'Supplier',
@@ -417,6 +446,15 @@ export class App implements OnInit {
         editable: false, // Make supplier non-editable
         cellRenderer: (params: any) => {
           return params.value || '';
+        },
+        cellStyle: (params: any) => {
+          // Ensure consistent styling with Part column
+          if (params.data && params.data.isNewRow) {
+            return {
+              border: '1px solid #007bff'
+            };
+          }
+          return null;
         }
       },
       {
@@ -609,16 +647,46 @@ export class App implements OnInit {
     ];
 
     // Add dynamic SKU columns
-    const dynamicSkuColumns: ColDef[] = skuColumns.map(sku => ({
+    const dynamicSkuColumns: ColDef[] = skuColumns.map((sku, index) => ({
       headerName: `SKU - ${sku.skuId}\nProduct - ${sku.product}\nManufacturer - ${sku.manufacturer}\nColor - ${sku.color}\nSize - ${sku.size}`,
       field: sku.fieldName,
       filter: 'agTextColumnFilter',
-      width: 180,
-      minWidth: 160,
-      maxWidth: 220,
+      width: 200,
+      minWidth: 200,
+      maxWidth: 200,
       resizable: true,
+      suppressSizeToFit: true,
+      suppressAutoSize: true,
+      headerClass: index === 0 ? 'first-sku-column-header' : '',
+      cellClass: index === 0 ? 'first-sku-column-cell' : '',
 
       cellStyle: (params: any) => {
+        // First SKU column styling
+        if (index === 0) {
+          // Check if this SKU value matches the Part value in the same row
+          if (params.data && params.value && params.data.part) {
+            if (String(params.value) === String(params.data.part)) {
+              return {
+                color: '#d32f2f', // Red text for matching values
+                fontWeight: '600',
+                backgroundColor: '#fff9c4', // Yellow background for first SKU column
+                textAlign: 'left',
+                padding: '0 8px'
+              };
+            }
+          }
+          
+          // Non-matching or empty values get yellow background too
+          return {
+            color: '#374151', // Default gray text
+            fontWeight: '400',
+            backgroundColor: '#fff9c4', // Yellow background for first SKU column
+            textAlign: 'left',
+            padding: '0 8px'
+          };
+        }
+        
+        // Other SKU columns keep original styling
         if (params.value) {
           return { 
             backgroundColor: '#f0f9ff', 
@@ -661,6 +729,15 @@ export class App implements OnInit {
   isSkuColumn(col: any): boolean {
     // Check if the column is a SKU column by examining the field name
     return col.field && col.field.startsWith('sku');
+  }
+
+  getFirstSkuFieldName(): string {
+    // Get the first SKU column field name
+    const skuInfo = this.dataService.getSkuInfo();
+    if (skuInfo && skuInfo.length > 0) {
+      return `sku${skuInfo[0].sku}`;
+    }
+    return '';
   }
 
   toggleExpiredData(): void {
@@ -822,6 +899,12 @@ export class App implements OnInit {
         force: true
       });
       
+      // Update last saved timestamp
+      this.lastSavedAt = new Date();
+      
+      // Save timestamp to localStorage for persistence
+      localStorage.setItem('lastSavedAt', this.lastSavedAt.toISOString());
+      
       // Show success message with correct count
       this.showSaveMessage(`Successfully saved ${changesCount} changes!`, 'success');
       
@@ -871,104 +954,130 @@ export class App implements OnInit {
 
     this.newRows.set(newRowId, newRow);
     
-    // Add the new row to the data
-    const currentData = [...this.rowData];
-    const insertIndex = currentData.findIndex(row => row.part.toString() === partId);
+    // Find the target row in the current data
+    const insertIndex = this.rowData.findIndex(row => row.part.toString() === partId);
     if (insertIndex !== -1) {
-      currentData.splice(insertIndex + 1, 0, newRow);
-      this.rowData = currentData;
+      // Store current scroll context
+      const currentFirstVisibleRow = this.gridApi.getFirstDisplayedRowIndex();
+      const currentLastVisibleRow = this.gridApi.getLastDisplayedRowIndex();
+      const newRowIndex = insertIndex + 1;
       
-      // Update the grid data and refresh
-      this.gridApi.refreshCells({ force: true });
+      // Use AG Grid's transaction API for efficient updates
+      const transaction = {
+        addIndex: newRowIndex,  // Insert after the target row
+        add: [newRow]
+      };
       
-      // Logical scroll behavior: scroll to the new row with smooth animation
+      // Apply the transaction - AG Grid handles the update efficiently
+      this.gridApi.applyTransaction(transaction);
+      
+      // Update our local rowData to stay in sync
+      this.rowData.splice(newRowIndex, 0, newRow);
+      
+      // Smart scroll behavior - show new row without jumping away from current area
       setTimeout(() => {
-        // Get the row index after insertion
-        const newRowIndex = insertIndex + 1;
-        
-        // Check if the new row is currently visible
-        const firstVisibleRow = this.gridApi.getFirstDisplayedRowIndex();
-        const lastVisibleRow = this.gridApi.getLastDisplayedRowIndex();
-        
-        if (newRowIndex < firstVisibleRow || newRowIndex > lastVisibleRow) {
-          // Row is not visible, scroll to it smoothly
-          this.gridApi.ensureIndexVisible(newRowIndex, 'middle');
-        } else {
-          // Row is already visible, just ensure it's properly positioned
-          this.gridApi.ensureIndexVisible(newRowIndex, 'middle');
+        // If the new row is within or near the currently visible area
+        if (newRowIndex >= currentFirstVisibleRow - 2 && newRowIndex <= currentLastVisibleRow + 2) {
+          // If the new row is below the current visible area, scroll just enough to show it
+          if (newRowIndex > currentLastVisibleRow) {
+            this.gridApi.ensureIndexVisible(newRowIndex, 'bottom');
+          }
+          // If the new row is above the current visible area, scroll just enough to show it
+          else if (newRowIndex < currentFirstVisibleRow) {
+            this.gridApi.ensureIndexVisible(newRowIndex, 'top');
+          }
+          // If the new row is already visible, don't scroll at all
         }
-        
-        // Add a subtle highlight effect by refreshing the specific row
-        const rowNode = this.gridApi.getRowNode(newRowId.toString());
-        if (rowNode) {
-          this.gridApi.refreshCells({
-            rowNodes: [rowNode],
-            force: true
-          });
-        }
-      }, 100);
+        // Otherwise, don't scroll - let the user stay where they are
+      }, 50);
     }
-    
-    // Row added successfully
   }
 
   deleteRowById(newRowId: number): void {
     // Find the row to be deleted by newRowId
-    const currentData = [...this.rowData];
-    const rowIndex = currentData.findIndex(row => row.newRowId === newRowId);
+    const rowIndex = this.rowData.findIndex(row => row.newRowId === newRowId);
     
     if (rowIndex === -1) {
       return;
     }
     
-    const rowToDelete = currentData[rowIndex];
+    const rowToDelete = this.rowData[rowIndex];
     
     // Only allow deletion of new rows
     if (!rowToDelete.isNewRow) {
       return;
     }
     
-    // Remove from newRows if it exists
+    // Store current scroll context BEFORE deletion
+    const currentFirstVisibleRow = this.gridApi.getFirstDisplayedRowIndex();
+    const currentLastVisibleRow = this.gridApi.getLastDisplayedRowIndex();
+    
+    // Remove from newRows map
     this.newRows.delete(newRowId);
     
-    // Remove the row from the data
-    currentData.splice(rowIndex, 1);
-    this.rowData = currentData;
+    // Use AG Grid's transaction API for efficient deletion
+    const transaction = {
+      remove: [rowToDelete]
+    };
     
-    // Update the grid with the new data
-    if (this.gridApi) {
-      setTimeout(() => {
-        this.gridApi.refreshCells({ force: true });
-      }, 0);
-    }
+    // Apply the transaction - AG Grid handles the update efficiently
+    this.gridApi.applyTransaction(transaction);
+    
+    // Update our local rowData to stay in sync
+    this.rowData.splice(rowIndex, 1);
+    
+    // Minimal scroll behavior after deletion - only adjust if absolutely necessary
+    setTimeout(() => {
+      // Only adjust scroll if we deleted a row above the current view
+      if (rowIndex < currentFirstVisibleRow) {
+        // Deleted above view - shift current view up by 1 to compensate
+        const adjustedFirstRow = Math.max(0, currentFirstVisibleRow - 1);
+        this.gridApi.ensureIndexVisible(adjustedFirstRow, 'top');
+      }
+      // If row was within or below current view, let AG Grid handle naturally - no forced scrolling
+    }, 30);
   }
 
   deleteRow(partId: string): void {
     // Find the row to be deleted
-    const currentData = [...this.rowData];
-    const rowIndex = currentData.findIndex(row => row.part.toString() === partId);
+    const rowIndex = this.rowData.findIndex(row => row.part.toString() === partId);
     
     if (rowIndex !== -1) {
-      const rowToDelete = currentData[rowIndex];
+      const rowToDelete = this.rowData[rowIndex];
       
       // Only allow deletion of new rows
       if (!rowToDelete.isNewRow) {
         return;
       }
       
+      // Store current scroll context BEFORE deletion
+      const currentFirstVisibleRow = this.gridApi.getFirstDisplayedRowIndex();
+      const currentLastVisibleRow = this.gridApi.getLastDisplayedRowIndex();
+      
       // Remove from newRows if it exists
       this.newRows.delete(parseInt(partId));
       
-      // Remove the row from the data
-      currentData.splice(rowIndex, 1);
-      this.rowData = currentData;
+      // Use AG Grid's transaction API for efficient deletion
+      const transaction = {
+        remove: [rowToDelete]
+      };
       
-      // Update the grid with the new data
-      if (this.gridApi) {
-        setTimeout(() => {
-          this.gridApi.refreshCells({ force: true });
-        }, 0);
-      }
+      // Apply the transaction - AG Grid handles the update efficiently
+      this.gridApi.applyTransaction(transaction);
+      
+      // Update our local rowData to stay in sync
+      this.rowData.splice(rowIndex, 1);
+      
+      // Minimal scroll behavior after deletion - only adjust if absolutely necessary
+      setTimeout(() => {
+        // Only adjust scroll if we deleted a row above the current view
+        if (rowIndex < currentFirstVisibleRow) {
+          // Deleted above view - shift current view up by 1 to compensate
+          const adjustedFirstRow = Math.max(0, currentFirstVisibleRow - 1);
+          this.gridApi.ensureIndexVisible(adjustedFirstRow, 'top');
+        }
+        // If row was within or below current view, let AG Grid handle naturally - no forced scrolling
+      }, 30);
     }
   }
 
@@ -1094,11 +1203,19 @@ export class App implements OnInit {
     }
   }
 
-
-
-
-
-
-
+  formatLastSavedTime(date: Date): string {
+    // Always show full date and time only
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    };
+    
+    return date.toLocaleDateString('en-US', options);
+  }
 
 }
