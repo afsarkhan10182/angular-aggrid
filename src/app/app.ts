@@ -30,6 +30,9 @@ export class App implements OnInit {
   public selectedPartData: any = {};
   public selectedPartSkuData: any[] = [];
   
+  // Search functionality
+  public searchText: string = '';
+  
   // Save message state
   public saveMessage: string = '';
   public saveMessageType: string = '';
@@ -57,6 +60,12 @@ export class App implements OnInit {
     suppressScrollOnNewData: false,
     allowDragFromColumnsToolPanel: true,
     suppressRowVirtualisation: false,
+    // Quick filter configuration
+    quickFilterText: '', // Enable quick filter functionality
+    includeHiddenColumnsInQuickFilter: false, // Don't search hidden columns
+    cacheQuickFilter: true, // Improve performance for large datasets
+    // Ensure client-side row model for quick filter to work
+    rowModelType: 'clientSide',
     getRowClass: (params) => {
       if (params.data && params.data.isExpired) {
         return 'expired-row';
@@ -1258,6 +1267,73 @@ export class App implements OnInit {
     };
     
     return date.toLocaleDateString('en-US', options);
+  }
+
+  // Search functionality methods
+  onSearchTextChange(): void {
+    // Auto-apply filter as user types (debounced)
+    if (this.searchTextDebounceTimer) {
+      clearTimeout(this.searchTextDebounceTimer);
+    }
+    
+    this.searchTextDebounceTimer = setTimeout(() => {
+      this.applyQuickFilter();
+    }, 300); // 300ms debounce
+  }
+
+  private searchTextDebounceTimer: any;
+
+  applyQuickFilter(): void {
+    if (!this.gridApi) return;
+    
+    // Log current state for debugging
+    console.log('=== QUICK FILTER DEBUG ===');
+    console.log('Search text:', this.searchText);
+    console.log('Grid API exists:', !!this.gridApi);
+    console.log('Row count before filter:', this.gridApi.getDisplayedRowCount());
+    
+    // Apply AG Grid's quick filter using the correct method for v34
+    this.gridApi.setGridOption('quickFilterText', this.searchText);
+    
+    // Log results after filter
+    setTimeout(() => {
+      console.log('Row count after filter:', this.gridApi.getDisplayedRowCount());
+      console.log('Current quick filter:', this.gridApi.getGridOption('quickFilterText'));
+      
+      // Check if any rows are displayed and log their data
+      const displayedRows: any[] = [];
+      this.gridApi.forEachNodeAfterFilterAndSort((node) => {
+        if (displayedRows.length < 3) { // Log first 3 rows
+          displayedRows.push({
+            part: node.data?.part,
+            color: node.data?.color,
+            supplier: node.data?.supplier
+          });
+        }
+      });
+      console.log('Displayed rows after filter:', displayedRows);
+      
+      // Also check total row data in grid
+      console.log('Total rows in grid:', this.rowData.length);
+      console.log('Sample row from rowData:', this.rowData[0]);
+    }, 100);
+    
+    // Log for debugging
+    if (this.searchText) {
+      console.log('Applied quick filter:', this.searchText);
+    } else {
+      console.log('Cleared quick filter');
+    }
+  }
+
+  clearSearch(): void {
+    this.searchText = '';
+    this.applyQuickFilter();
+    
+    // Clear the debounce timer if active
+    if (this.searchTextDebounceTimer) {
+      clearTimeout(this.searchTextDebounceTimer);
+    }
   }
 
 }
