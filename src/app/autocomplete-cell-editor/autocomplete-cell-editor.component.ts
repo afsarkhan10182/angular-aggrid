@@ -49,6 +49,8 @@ import { ICellEditorAngularComp } from 'ag-grid-angular';
       width: 100%;
       height: 100%;
       overflow: visible;
+      /* Firefox compatibility */
+      -moz-box-sizing: border-box;
     }
     
     .autocomplete-input {
@@ -61,6 +63,9 @@ import { ICellEditorAngularComp } from 'ag-grid-angular';
       background: white !important;
       box-sizing: border-box !important;
       border-radius: 2px !important;
+      /* Firefox compatibility */
+      -moz-box-sizing: border-box !important;
+      -moz-border-radius: 2px !important;
     }
     
     .autocomplete-input:focus {
@@ -68,8 +73,19 @@ import { ICellEditorAngularComp } from 'ag-grid-angular';
       box-shadow: 0 0 3px rgba(0, 123, 255, 0.3) !important;
     }
     
+    /* Text selection styling for autocomplete input */
+    .autocomplete-input::selection {
+      background-color: #007bff !important;
+      color: white !important;
+    }
+    
+    .autocomplete-input::-moz-selection {
+      background-color: #007bff !important;
+      color: white !important;
+    }
+    
     .autocomplete-dropdown {
-      position: fixed !important;
+      position: absolute !important;
       background: #ffffff !important;
       border: 1px solid #e2e8f0 !important;
       border-radius: 4px !important;
@@ -79,6 +95,9 @@ import { ICellEditorAngularComp } from 'ag-grid-angular';
       z-index: 999999 !important;
       min-width: 200px !important;
       max-width: 300px !important;
+      /* Firefox compatibility */
+      -moz-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+      -moz-border-radius: 4px !important;
     }
     
     .dropdown-header {
@@ -99,6 +118,8 @@ import { ICellEditorAngularComp } from 'ag-grid-angular';
       color: #374151 !important;
       background: #ffffff !important;
       transition: all 0.2s ease !important;
+      /* Firefox compatibility */
+      -moz-transition: all 0.2s ease !important;
     }
     
     .dropdown-option:hover,
@@ -415,37 +436,76 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
       return;
     }
 
-    // Get input element's position
-    const inputRect = this.input.nativeElement.getBoundingClientRect();
     const dropdownElement = this.dropdown.nativeElement;
+    const inputElement = this.input.nativeElement;
     
-    // Position dropdown below the input
-    dropdownElement.style.top = `${inputRect.bottom + 2}px`;
-    dropdownElement.style.left = `${inputRect.left}px`;
-    
-    // Set width to match input or be at least as wide
-    const minWidth = Math.max(inputRect.width, 200);
-    dropdownElement.style.width = `${minWidth}px`;
-    
-    // Check if dropdown would go off-screen and adjust if needed
-    const viewportHeight = window.innerHeight;
-    const dropdownHeight = 200; // max-height from CSS
-    
-    if (inputRect.bottom + dropdownHeight > viewportHeight) {
-      // Position above the input if there's not enough space below
-      if (inputRect.top - dropdownHeight > 0) {
-        dropdownElement.style.top = `${inputRect.top - dropdownHeight - 2}px`;
+    try {
+      // Get container position for absolute positioning
+      const containerRect = inputElement.parentElement?.getBoundingClientRect();
+      const inputRect = inputElement.getBoundingClientRect();
+      
+      if (!containerRect) {
+        // Fallback positioning for older browsers
+        this.positionDropdownFallback();
+        return;
       }
+      
+      // Calculate position relative to container
+      const relativeTop = inputRect.bottom - containerRect.top + 2;
+      const relativeLeft = inputRect.left - containerRect.left;
+      
+      // Position dropdown below the input
+      dropdownElement.style.top = `${relativeTop}px`;
+      dropdownElement.style.left = `${relativeLeft}px`;
+      
+      // Set width to match input or be at least as wide
+      const minWidth = Math.max(inputRect.width, 200);
+      dropdownElement.style.width = `${minWidth}px`;
+      
+      // Check if dropdown would go off-screen and adjust if needed
+      const viewportHeight = window.innerHeight;
+      const dropdownHeight = 200; // max-height from CSS
+      
+      if (inputRect.bottom + dropdownHeight > viewportHeight) {
+        // Position above the input if there's not enough space below
+        if (inputRect.top - dropdownHeight > 0) {
+          const relativeTopAbove = inputRect.top - containerRect.top - dropdownHeight - 2;
+          dropdownElement.style.top = `${relativeTopAbove}px`;
+        }
+      }
+      
+      // Ensure dropdown doesn't go off-screen horizontally
+      const viewportWidth = window.innerWidth;
+      const dropdownWidth = minWidth;
+      
+      if (inputRect.left + dropdownWidth > viewportWidth) {
+        const adjustedLeft = Math.max(0, viewportWidth - dropdownWidth - 10);
+        const relativeAdjustedLeft = adjustedLeft - containerRect.left;
+        dropdownElement.style.left = `${relativeAdjustedLeft}px`;
+      }
+      
+      // Force reflow for Firefox compatibility
+      dropdownElement.offsetHeight;
+      
+    } catch (error) {
+      console.warn('Error positioning dropdown, using fallback:', error);
+      this.positionDropdownFallback();
     }
-    
-    // Ensure dropdown doesn't go off-screen horizontally
-    const viewportWidth = window.innerWidth;
-    const dropdownWidth = minWidth;
-    
-    if (inputRect.left + dropdownWidth > viewportWidth) {
-      const adjustedLeft = Math.max(0, viewportWidth - dropdownWidth - 10);
-      dropdownElement.style.left = `${adjustedLeft}px`;
+  }
+
+  private positionDropdownFallback(): void {
+    if (!this.dropdown || !this.input) {
+      return;
     }
+
+    const dropdownElement = this.dropdown.nativeElement;
+    const inputElement = this.input.nativeElement;
+    
+    // Simple fallback positioning
+    dropdownElement.style.top = '100%';
+    dropdownElement.style.left = '0';
+    dropdownElement.style.width = '100%';
+    dropdownElement.style.position = 'absolute';
   }
 
   // Public method to refresh options (useful for dynamic data)

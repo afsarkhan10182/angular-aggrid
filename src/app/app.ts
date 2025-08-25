@@ -9,13 +9,15 @@ import { DataService } from './services/data.service';
 // AutocompleteCellEditorComponent is used in column definitions, not in template
 // @ts-ignore - Used in column definitions
 import { AutocompleteCellEditorComponent } from './autocomplete-cell-editor/autocomplete-cell-editor.component';
+// @ts-ignore - Used in column definitions
+import { SkuHeaderComponent } from './sku-header.component';
 
 // AutocompleteCellEditorComponent usage examples available in component documentation
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, AgGridAngular, PartModalComponent, AutocompleteCellEditorComponent], // AutocompleteCellEditorComponent used in column definitions
+  imports: [CommonModule, RouterModule, FormsModule, AgGridAngular, PartModalComponent, AutocompleteCellEditorComponent, SkuHeaderComponent], // AutocompleteCellEditorComponent used in column definitions
   templateUrl: './app.html',
   styleUrls: ['./app.css']
 })
@@ -52,14 +54,20 @@ export class App implements OnInit {
     enableCellTextSelection: true,
     rowSelection: 'single' as const,
     suppressColumnVirtualisation: false,
-    suppressHorizontalScroll: false,
-    suppressColumnMoveAnimation: true,
-    suppressDragLeaveHidesColumns: true,
+    suppressHorizontalScroll: false, // Ensure horizontal scroll is enabled
+    suppressColumnMoveAnimation: false, // Enable smooth column move animation
+    suppressDragLeaveHidesColumns: false, // Allow normal drag behavior
     suppressFieldDotNotation: true,
     suppressContextMenu: false,
     suppressScrollOnNewData: false,
     allowDragFromColumnsToolPanel: true,
     suppressRowVirtualisation: false,
+    // Force horizontal scroll to be visible
+    domLayout: 'normal',
+    // Register custom components
+    components: {
+      skuHeader: SkuHeaderComponent
+    },
     // Quick filter configuration
     quickFilterText: '', // Enable quick filter functionality
     includeHiddenColumnsInQuickFilter: false, // Don't search hidden columns
@@ -142,70 +150,48 @@ export class App implements OnInit {
     // AG-Grid handles scrolling efficiently by default
   };
 
-  // Helper method to size columns to fit
+  // Helper method to size columns to fit with improved experience
   private sizeColumnsToFit() {
     if (!this.gridApi) return;
     
-    this.gridApi.sizeColumnsToFit({
-      defaultMinWidth: 140,
-      columnLimits: [
-        { key: 'part', minWidth: 140 },
-        { key: 'supplier', minWidth: 160 },
-        { key: 'color', minWidth: 140 },
-        { key: 'feature', minWidth: 180 },
-        { key: 'startDate', minWidth: 150 },
-        { key: 'endDate', minWidth: 150 },
-        { key: 'qty', minWidth: 100 }
-      ]
-    });
+    // Use auto-sizing for better initial column widths
+    this.gridApi.autoSizeAllColumns();
     
-    // Ensure the last column is fully visible
-    setTimeout(() => {
-      const allColumns = this.gridApi.getColumns();
-      if (allColumns && allColumns.length > 0) {
-        const lastCol = allColumns[allColumns.length - 1];
-        this.gridApi.autoSizeColumns([lastCol.getColId()]);
-      }
-    }, 100);
+    // Refresh the grid to apply changes
+    this.gridApi.refreshHeader();
   }
 
-  // Force horizontal scrollbar visibility for Firefox 102 ESR
+  // Force horizontal scrollbar visibility for Firefox
   private forceHorizontalScrollbarVisibility(): void {
     if (!this.gridApi) return;
     
     // Force refresh to ensure proper rendering
     this.gridApi.refreshCells({ force: true });
     
-    // Ensure horizontal scroll is enabled
+    // Simple approach: ensure horizontal scroll viewport is properly configured
     const horizontalScrollViewport = document.querySelector('.ag-body-horizontal-scroll-viewport') as HTMLElement;
     if (horizontalScrollViewport) {
       horizontalScrollViewport.style.overflowX = 'auto';
-      horizontalScrollViewport.style.minWidth = 'max-content';
-      horizontalScrollViewport.style.width = 'max-content';
-      
-      // Force scrollbar to be visible
       horizontalScrollViewport.style.scrollbarWidth = 'auto';
-      horizontalScrollViewport.style.scrollbarColor = '#cbd5e1 #f1f5f9';
-      
-      // Add Firefox-specific styles
-      horizontalScrollViewport.style.setProperty('-moz-overflow-scrolling', 'touch');
-      horizontalScrollViewport.style.setProperty('-moz-user-select', 'none');
-      horizontalScrollViewport.style.setProperty('-moz-user-drag', 'none');
     }
     
-    // Ensure grid container allows proper scrolling
-    const gridContainer = document.querySelector('.ag-grid-container') as HTMLElement;
-    if (gridContainer) {
-      gridContainer.style.overflow = 'visible';
-      gridContainer.style.position = 'relative';
-    }
-    
-    console.log('Forced horizontal scrollbar visibility for Firefox 102 ESR');
+    console.log('Horizontal scrollbar visibility configured for Firefox');
   }
 
   // Date formatter function for MM/DD/YYYY format
   private dateFormatter(params: any): string {
     if (!params.value) return '';
+    
+    // Handle string dates in MM/DD/YYYY format from mock data
+    if (typeof params.value === 'string') {
+      // Check if it's already in MM/DD/YYYY format
+      const mmddyyyyPattern = /^\d{2}\/\d{2}\/\d{4}$/;
+      if (mmddyyyyPattern.test(params.value)) {
+        return params.value; // Already in correct format
+      }
+    }
+    
+    // Handle Date objects or other string formats
     const date = new Date(params.value);
     if (isNaN(date.getTime())) return params.value; // Return original if invalid date
     
@@ -218,8 +204,10 @@ export class App implements OnInit {
 
   public defaultColDef = {
     sortable: true,
-    filter: 'agTextColumnFilter',
+    // Remove the default filter type to allow individual columns to specify their own
     resizable: true,
+    suppressSizeToFit: false,
+    suppressAutoSize: false,
     floatingFilter: false,
     wrapHeaderText: true,
     autoHeaderHeight: true,
@@ -227,12 +215,12 @@ export class App implements OnInit {
     filterParams: {
       suppressAndOrCondition: true,   // removes AND/OR + 2nd filter
       buttons: ['reset', 'apply'],    // shows Apply / Reset
-      defaultOption: 'contains'       // sets default filter type
+      defaultOption: 'contains'       // sets default filter type for text columns
     },
     width: 140,
-    minWidth: 120,
+    minWidth: 100,
+    maxWidth: 300,
     wrapText: false,
-    suppressSizeToFit: false,
     cellStyle: (params: any) => {
       const baseStyle = {
         padding: '8px 12px',
@@ -432,7 +420,7 @@ export class App implements OnInit {
             isMatching = firstSkuValue && String(params.value) === String(firstSkuValue);
           }
           
-          const isClickable = this.clickableParts.has(params.value);
+          const isClickable = this.clickableParts.has(params.value?.toString());
           
           if (isMatching) {
             // Matching values get red text, regardless of clickability
@@ -445,11 +433,13 @@ export class App implements OnInit {
             return `<span class="part-text">${params.value}</span>`;
           }
         },
-        width: 140,
+        width: 130,
         minWidth: 120,
-        maxWidth: 180,
+        maxWidth: 250,
         pinned: 'left',
         resizable: true,
+        suppressSizeToFit: false,
+        suppressAutoSize: false,
         editable: (params) => params.data.isNewRow, // Only editable for new rows
         cellEditor: AutocompleteCellEditorComponent,
         cellEditorParams: (params: any) => ({
@@ -473,10 +463,12 @@ export class App implements OnInit {
         headerName: 'Supplier',
         field: 'supplier',
         filter: 'agTextColumnFilter',
-        width: 160,
+        width: 130,
         minWidth: 140,
-        maxWidth: 200,
+        maxWidth: 250,
         resizable: true,
+        suppressSizeToFit: false,
+        suppressAutoSize: false,
         editable: false, // Make supplier non-editable
         cellRenderer: (params: any) => {
           return params.value || '';
@@ -497,8 +489,10 @@ export class App implements OnInit {
         filter: 'agTextColumnFilter',
         width: 140,
         minWidth: 120,
-        maxWidth: 180,
+        maxWidth: 200,
         resizable: true,
+        suppressSizeToFit: false,
+        suppressAutoSize: false,
         editable: false, // Make color non-editable
         cellRenderer: (params: any) => {
           return params.value || '';
@@ -508,9 +502,9 @@ export class App implements OnInit {
         headerName: 'Feature',
         field: 'feature',
         filter: 'agTextColumnFilter',
-        width: 180,
+        width: 140,
         minWidth: 160,
-        maxWidth: 220,
+        maxWidth: 300,
         resizable: true,
         suppressSizeToFit: false,
         suppressAutoSize: false,
@@ -539,7 +533,7 @@ export class App implements OnInit {
         headerName: 'Start Date',
         field: 'startDate',
         filter: 'agDateColumnFilter',
-        width: 150,
+        width: 130,
         minWidth: 130,
         maxWidth: 170,
         resizable: true,
@@ -547,7 +541,27 @@ export class App implements OnInit {
         suppressAutoSize: false,
         editable: true, // Make start date editable for all rows
         cellEditor: 'agDateCellEditor',
+        cellEditorParams: {
+          useFormatter: false,
+          useValueFormatterForExport: false
+        },
         valueFormatter: this.dateFormatter.bind(this),
+        valueSetter: (params: any) => {
+          // Handle date value setting properly
+          if (params.newValue) {
+            // If it's a Date object, convert to MM/DD/YYYY string
+            if (params.newValue instanceof Date) {
+              const month = (params.newValue.getMonth() + 1).toString().padStart(2, '0');
+              const day = params.newValue.getDate().toString().padStart(2, '0');
+              const year = params.newValue.getFullYear();
+              params.data[params.colDef.field] = `${month}/${day}/${year}`;
+            } else {
+              params.data[params.colDef.field] = params.newValue;
+            }
+            return true;
+          }
+          return false;
+        },
         cellRenderer: (params: any) => {
           return this.dateFormatter(params);
         },
@@ -579,6 +593,10 @@ export class App implements OnInit {
           return baseStyle;
         },
         filterParams: {
+          filterOptions: ['equals', 'notEqual', 'lessThan', 'lessThanOrEqual', 'greaterThan', 'greaterThanOrEqual', 'inRange'],
+          defaultOption: 'equals',
+          buttons: ['reset', 'apply'],
+          suppressAndOrCondition: true,
           comparator: (filterLocalDateAtMidnight: Date, cellValue: string) => {
             const [month, day, year] = cellValue.split('/').map(Number);
             const cellDate = new Date(year, month - 1, day);
@@ -593,9 +611,9 @@ export class App implements OnInit {
         headerName: 'End Date',
         field: 'endDate',
         filter: 'agDateColumnFilter',
-        width: 150,
+        width: 130,
         minWidth: 130,
-        maxWidth: 170,
+        maxWidth: 200,
         resizable: true,
         suppressSizeToFit: false,
         suppressAutoSize: false,
@@ -605,6 +623,10 @@ export class App implements OnInit {
           return this.dateFormatter(params);
         },
         filterParams: {
+          filterOptions: ['equals', 'notEqual', 'lessThan', 'lessThanOrEqual', 'greaterThan', 'greaterThanOrEqual', 'inRange'],
+          defaultOption: 'equals',
+          buttons: ['reset', 'apply'],
+          suppressAndOrCondition: true,
           comparator: (filterLocalDateAtMidnight: Date, cellValue: string) => {
             const [month, day, year] = cellValue.split('/').map(Number);
             const cellDate = new Date(year, month - 1, day);
@@ -620,10 +642,11 @@ export class App implements OnInit {
         field: 'qty',
         headerClass: 'qty-header',
         filter: 'agNumberColumnFilter',
-        width: 100,
+        width: 90,
         minWidth: 80,
         maxWidth: 120,
         type: 'numericColumn',
+        suppressMovable: false, // Allow column to be moved
         cellStyle: (params: any) => {
           const baseStyle = {
             textAlign: 'right',
@@ -680,19 +703,35 @@ export class App implements OnInit {
           max: 9999
         },
         valueFormatter: (params: any) => {
+          // Handle null, undefined, or empty string, but allow 0
           if (params.value === null || params.value === undefined || params.value === '') {
             return '';
           }
-          return params.value.toString();
+          // Convert to number and check if it's a valid number (including 0)
+          const numValue = Number(params.value);
+          if (isNaN(numValue)) {
+            return '';
+          }
+          return numValue.toString();
         },
         cellRenderer: (params: any) => {
+          // Handle null, undefined, or empty string, but allow 0
           if (params.value === null || params.value === undefined || params.value === '') {
             return '';
           }
-          return `<span style="display: inline-block; width: 100%; text-align: right; font-weight: 500;">${params.value}</span>`;
+          // Convert to number and check if it's a valid number (including 0)
+          const numValue = Number(params.value);
+          if (isNaN(numValue)) {
+            return '';
+          }
+          // Use a simpler renderer to avoid dragging conflicts
+          return numValue.toString();
         },
         filterParams: {
-          filterOptions: ['equals', 'notEqual', 'lessThan', 'lessThanOrEqual', 'greaterThan', 'greaterThanOrEqual', 'inRange']
+          filterOptions: ['equals', 'notEqual', 'lessThan', 'lessThanOrEqual', 'greaterThan', 'greaterThanOrEqual', 'inRange'],
+          defaultOption: 'equals',
+          buttons: ['reset', 'apply'],
+          suppressAndOrCondition: true
         }
       }
     ];
@@ -703,13 +742,15 @@ export class App implements OnInit {
       field: sku.fieldName,
       filter: 'agTextColumnFilter',
       width: 200,
-      minWidth: 200,
-      maxWidth: 200,
+      minWidth: 180,
+      maxWidth: 280,
       resizable: true,
       suppressSizeToFit: true,
       suppressAutoSize: true,
       headerClass: index === 0 ? 'first-sku-column-header' : '',
       cellClass: index === 0 ? 'first-sku-column-cell' : '',
+      // headerTooltip: `SKU: ${sku.skuId}\nProduct: ${sku.product}\nManufacturer: ${sku.manufacturer}\nColor: ${sku.color}\nSize: ${sku.size}`,
+      // headerComponent: 'skuHeader',
 
       cellStyle: (params: any) => {
         // First SKU column styling
@@ -886,8 +927,8 @@ export class App implements OnInit {
       }
       
       // Check if it's a clickable part for modal
-      if (this.clickableParts.has(event.value)) {
-        this.openPartModal(event.value);
+      if (this.clickableParts.has(event.value?.toString())) {
+        this.openPartModal(event.value?.toString());
       }
     }
   }

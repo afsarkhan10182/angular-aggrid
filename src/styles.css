@@ -300,13 +300,12 @@ color: #1e293b;
 /* AG Grid container - Clean design with proper scrolling */
 .ag-grid-container-wrapper {
   flex: 1;
-  overflow-x: auto;
+  overflow: visible;
   border: 1px solid #e2e8f0;
   border-right: none; /* No right border - toggle button will provide it */
   border-radius: 6px 0 0 6px;
   background: white;
   position: relative;
-  will-change: scroll-position;
   line-height: 1;
 }
 
@@ -315,7 +314,7 @@ color: #1e293b;
   width: max-content;
   height: 100%;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   background: white;
 }
 
@@ -325,6 +324,10 @@ color: #1e293b;
   --ag-row-height: 28px;
   
   --ag-header-height: 60px;
+  
+  /* Ensure internal horizontal scrollbar is visible */
+  --ag-scrollbar-track-color: #f1f5f9;
+  --ag-scrollbar-thumb-color: #cbd5e1;
   /* ✅ VISIBLE HORIZONTAL BORDERS - Light grey for clear table structure */
   --ag-cell-horizontal-border: solid #d1d5db;
   --ag-cell-horizontal-border-width: 1px;
@@ -380,47 +383,21 @@ color: #1e293b;
     -moz-transform: scale(1.2);
   }
   
-  /* Enhanced horizontal scroll fixes for Firefox 102 ESR */
+  /* AG Grid internal horizontal scroll for Firefox */
   .ag-body-horizontal-scroll-viewport {
     overflow-x: auto !important;
-    min-width: max-content !important;
-    width: max-content !important;
-    -moz-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 #f1f5f9;
-    /* Force scrollbar to always be visible */
-    scrollbar-width: auto;
-    /* Ensure proper scrolling behavior */
-    -moz-user-select: none;
-    -moz-user-drag: none;
+    scrollbar-width: auto !important;
+    scrollbar-color: #cbd5e1 #f1f5f9 !important;
   }
   
   .ag-body-horizontal-scroll {
     min-width: max-content !important;
-    -moz-transform: translateZ(0);
-    /* Force proper sizing */
-    width: max-content !important;
-    display: block !important;
   }
   
-  /* Force hardware acceleration for smooth scrolling */
-  .ag-grid-container-wrapper {
-    -moz-transform: translateZ(0);
-    will-change: scroll-position;
-    /* Ensure proper overflow handling */
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-  }
-  
+  /* Ensure AG Grid internal scrolling works */
   .ag-body-viewport {
-    -moz-transform: translateZ(0);
-    will-change: scroll-position;
-    /* Force proper scrolling */
     overflow-x: auto !important;
     overflow-y: auto !important;
-    /* Ensure scrollbars are visible */
-    scrollbar-width: auto;
-    scrollbar-color: #cbd5e1 #f1f5f9;
   }
   
   /* Force horizontal scrollbar to always be visible */
@@ -620,12 +597,12 @@ color: #1e293b;
   color: #374151 !important;
 }
 
-/* Cell - Improved styling with VISIBLE grid lines */
+/* Cell - Improved styling with VISIBLE grid lines and better resizing */
 .ag-cell {
-  min-width: 120px !important;
-  max-width: 250px !important;
-  padding: 4px 8px !important;
-  line-height: 1.3 !important;
+  min-width: 80px !important;
+  max-width: 300px !important;
+  padding: 6px 10px !important;
+  line-height: 1.4 !important;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -644,6 +621,57 @@ color: #1e293b;
   box-sizing: border-box !important;
   display: flex !important;
   align-items: center !important;
+  /* Enable text selection */
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}
+
+/* Improved column resizing experience */
+.ag-theme-alpine .ag-header-cell-resize {
+  background-color: #3b82f6 !important;
+  width: 3px !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.ag-theme-alpine .ag-header-cell-resize:hover {
+  background-color: #1d4ed8 !important;
+  width: 4px !important;
+}
+
+/* Better column header styling for resizing */
+.ag-theme-alpine .ag-header-cell {
+  transition: background-color 0.2s ease !important;
+}
+
+.ag-theme-alpine .ag-header-cell:hover {
+  background-color: #f8fafc !important;
+}
+
+/* Fix column dragging issues */
+.ag-theme-alpine .ag-header-cell-moving {
+  background-color: #f1f5f9 !important;
+  opacity: 0.8 !important;
+}
+
+.ag-theme-alpine .ag-header-cell-moving .ag-header-cell-text {
+  color: #374151 !important;
+  font-weight: 700 !important;
+}
+
+/* Ensure Qty column header text stays visible during drag */
+
+.ag-theme-alpine .ag-header-cell.qty-header.ag-header-cell-moving {
+  background-color: #e2e8f0 !important;
+}
+
+.ag-theme-alpine .ag-header-cell.qty-header .ag-header-cell-text {
+  color: #374151 !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 /* Actions column cell styling - Improved with visible borders */
@@ -665,9 +693,9 @@ color: #1e293b;
   font-weight: 500 !important;
   background-color: #f8fafc !important;
   color: #374151 !important;
-  padding: 4px 8px !important;
+  padding: 6px 10px !important;
   min-width: 80px !important;
-  max-width: 120px !important;
+  max-width: 150px !important;
   /* ✅ VISIBLE BORDERS - Consistent with other cells */
   border-right: var(--ag-cell-vertical-border-width) var(--ag-row-border-style) var(--ag-row-border-color) !important;
   border-bottom: var(--ag-cell-horizontal-border-width) var(--ag-row-border-style) var(--ag-row-border-color) !important;
@@ -702,7 +730,7 @@ color: #1e293b;
   background: #f8f9fa !important;
   color: #374151 !important;
   font-weight: 700 !important;
-  border-right: 1px solid #e5e7eb !important;
+  border-right: 1px solid #d1d5db !important; /* Consistent with other columns */
 }
 
 /* Ensure horizontal scrolling works properly */
@@ -829,10 +857,68 @@ color: #1e293b;
   font-weight: normal !important;
 }
 
+/* Text selection styling for editable cells */
+.ag-cell ::selection {
+  background-color: #3b82f6 !important;
+  color: white !important;
+}
+
+.ag-cell ::-moz-selection {
+  background-color: #3b82f6 !important;
+  color: white !important;
+}
+
+/* Specific selection styling for part column */
+.ag-cell[col-id="part"] ::selection {
+  background-color: #007bff !important;
+  color: white !important;
+}
+
+.ag-cell[col-id="part"] ::-moz-selection {
+  background-color: #007bff !important;
+  color: white !important;
+}
+
+/* Ensure part column allows text selection */
+.ag-cell[col-id="part"] {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  cursor: text !important;
+}
+
+/* Exception: Clickable parts should show pointer cursor */
+.ag-cell[col-id="part"] .part-link.clickable {
+  cursor: pointer !important;
+}
+
+/* Part column when editing */
+.ag-cell[col-id="part"].ag-cell-edit-input {
+  background-color: #ffffff !important;
+  border: 2px solid #007bff !important;
+  border-radius: 2px !important;
+}
+
+/* Selection styling for autocomplete input */
+.autocomplete-input ::selection {
+  background-color: #007bff !important;
+  color: white !important;
+}
+
+.autocomplete-input ::-moz-selection {
+  background-color: #007bff !important;
+  color: white !important;
+}
+
+/* Simple rule: Any clickable element shows pointer cursor */
+.clickable {
+  cursor: pointer !important;
+}
+
 /* Clickable part links - Minimal */
 .part-link.clickable {
   color: #3b82f6 !important;
-  cursor: pointer;
   text-decoration: underline !important;
   font-weight: 500 !important;
 }
@@ -1135,10 +1221,8 @@ color: #1e293b;
 
 /* Column Header Highlighting */
 .part-column-header {
-  background-color: #f8fafc !important; /* Neutral background for Part header */
-  color: #374151 !important; /* Default text color */
   font-weight: 700 !important;
-  border-right: 1px solid #e5e7eb !important;
+  border-right: 1px solid #d1d5db !important; /* Consistent with other columns */
 }
 
 /* Ensure Part and Supplier columns have consistent cell backgrounds */
@@ -1146,6 +1230,7 @@ color: #1e293b;
 .ag-theme-alpine .ag-cell[col-id="supplier"] {
   background: white !important;
   background-color: white !important;
+  border-right: 1px solid #d1d5db !important; /* Consistent with other columns */
 }
 
 .first-sku-column-header {
@@ -1153,8 +1238,7 @@ color: #1e293b;
   background: #fff9c4 !important; /* Alternative background property */
   color: #374151 !important; /* Default text color */
   font-weight: 700 !important;
-  border-right: 1px solid #f59e0b !important; /* Darker yellow border */
-  border-left: 1px solid #f59e0b !important; /* Left border to emphasize the column */
+  border-right: 1px solid #d1d5db !important; /* Consistent with other columns */
 }
 
 /* Force yellow background for first SKU column cells */
@@ -1166,7 +1250,7 @@ color: #1e293b;
 /* All SKU column headers - ensure bold and consistent styling */
 .ag-theme-alpine .ag-header-cell[col-id*="sku"] {
   font-weight: 700 !important;
-  border-right: 1px solid #e5e7eb !important;
+  border-right: 1px solid #d1d5db !important; /* Consistent with other columns */
 }
 
 /* General rule for all header cells to ensure bold text */
@@ -1322,4 +1406,15 @@ color: #1e293b;
   margin-left: 6px !important;
   line-height: 1 !important;
   box-shadow: 0 1px 3px rgba(220, 38, 38, 0.4) !important;
+}
+.ag-header-cell-text {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.sku-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
