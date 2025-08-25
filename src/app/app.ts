@@ -168,14 +168,61 @@ export class App implements OnInit {
     // Force refresh to ensure proper rendering
     this.gridApi.refreshCells({ force: true });
     
-    // Simple approach: ensure horizontal scroll viewport is properly configured
+    // Comprehensive approach for old Firefox
     const horizontalScrollViewport = document.querySelector('.ag-body-horizontal-scroll-viewport') as HTMLElement;
     if (horizontalScrollViewport) {
       horizontalScrollViewport.style.overflowX = 'auto';
       horizontalScrollViewport.style.scrollbarWidth = 'auto';
+      horizontalScrollViewport.style.scrollbarColor = '#cbd5e1 #f1f5f9';
+      horizontalScrollViewport.style.minWidth = 'max-content';
+      horizontalScrollViewport.style.width = 'max-content';
+      horizontalScrollViewport.style.setProperty('-moz-overflow-scrolling', 'touch');
+      horizontalScrollViewport.style.setProperty('-moz-box-sizing', 'border-box');
+      horizontalScrollViewport.style.setProperty('-moz-transform', 'translateZ(0)');
+      horizontalScrollViewport.style.display = 'block';
     }
     
-    console.log('Horizontal scrollbar visibility configured for Firefox');
+    // Also ensure the grid container allows scrolling
+    const gridContainer = document.querySelector('.ag-grid-container-wrapper') as HTMLElement;
+    if (gridContainer) {
+      gridContainer.style.overflowX = 'auto';
+      gridContainer.style.setProperty('-moz-overflow-scrolling', 'touch');
+    }
+    
+    // Force a reflow to ensure Firefox applies the styles
+    setTimeout(() => {
+      if (horizontalScrollViewport) {
+        horizontalScrollViewport.style.display = 'block';
+        horizontalScrollViewport.offsetHeight; // Force reflow
+        // Additional force for old Firefox
+        horizontalScrollViewport.style.setProperty('overflow-x', 'auto');
+        horizontalScrollViewport.style.setProperty('scrollbar-width', 'auto');
+      }
+    }, 100);
+    
+    // Additional attempts specifically for old Firefox
+    setTimeout(() => {
+      this.forceOldFirefoxScroll();
+    }, 200);
+    
+    console.log('Comprehensive horizontal scrollbar visibility configured for old Firefox');
+  }
+
+  // Additional method specifically for old Firefox
+  private forceOldFirefoxScroll(): void {
+    const horizontalScrollViewport = document.querySelector('.ag-body-horizontal-scroll-viewport') as HTMLElement;
+    if (horizontalScrollViewport) {
+      // Force scrollbar visibility with multiple approaches
+      horizontalScrollViewport.style.setProperty('overflow-x', 'auto', 'important');
+      horizontalScrollViewport.style.setProperty('scrollbar-width', 'auto', 'important');
+      horizontalScrollViewport.style.setProperty('min-width', 'max-content', 'important');
+      
+      // Force a scroll to trigger scrollbar visibility
+      horizontalScrollViewport.scrollLeft = 1;
+      horizontalScrollViewport.scrollLeft = 0;
+    }
+    
+    console.log('Old Firefox scroll fix applied');
   }
 
   // Date formatter function for MM/DD/YYYY format
@@ -427,13 +474,13 @@ export class App implements OnInit {
             return `<span class="part-text matching-value" style="color: #d32f2f !important; font-weight: 600;">${params.value}</span>`;
           } else if (isClickable) {
             // Non-matching clickable parts get blue link
-            return `<span class="part-link clickable">${params.value}</span>`;
+            return `<span class="part-link clickable clickable-part" style="cursor: pointer !important;">${params.value}</span>`;
           } else {
             // Non-matching, non-clickable parts get gray text
             return `<span class="part-text">${params.value}</span>`;
           }
         },
-        width: 130,
+        width: 120,
         minWidth: 120,
         maxWidth: 250,
         pinned: 'left',
@@ -464,7 +511,7 @@ export class App implements OnInit {
         field: 'supplier',
         filter: 'agTextColumnFilter',
         width: 130,
-        minWidth: 140,
+        minWidth: 120,
         maxWidth: 250,
         resizable: true,
         suppressSizeToFit: false,
@@ -487,7 +534,7 @@ export class App implements OnInit {
         headerName: 'Color',
         field: 'color',
         filter: 'agTextColumnFilter',
-        width: 140,
+        width: 120,
         minWidth: 120,
         maxWidth: 200,
         resizable: true,
@@ -503,7 +550,7 @@ export class App implements OnInit {
         field: 'feature',
         filter: 'agTextColumnFilter',
         width: 140,
-        minWidth: 160,
+        minWidth: 140,
         maxWidth: 300,
         resizable: true,
         suppressSizeToFit: false,
@@ -534,7 +581,7 @@ export class App implements OnInit {
         field: 'startDate',
         filter: 'agDateColumnFilter',
         width: 130,
-        minWidth: 130,
+        minWidth: 120,
         maxWidth: 170,
         resizable: true,
         suppressSizeToFit: false,
@@ -612,7 +659,7 @@ export class App implements OnInit {
         field: 'endDate',
         filter: 'agDateColumnFilter',
         width: 130,
-        minWidth: 130,
+        minWidth: 120,
         maxWidth: 200,
         resizable: true,
         suppressSizeToFit: false,
@@ -643,7 +690,7 @@ export class App implements OnInit {
         headerClass: 'qty-header',
         filter: 'agNumberColumnFilter',
         width: 90,
-        minWidth: 80,
+        minWidth: 90,
         maxWidth: 120,
         type: 'numericColumn',
         suppressMovable: false, // Allow column to be moved

@@ -383,21 +383,61 @@ color: #1e293b;
     -moz-transform: scale(1.2);
   }
   
-  /* AG Grid internal horizontal scroll for Firefox */
+  /* Comprehensive horizontal scroll fix for old Firefox */
   .ag-body-horizontal-scroll-viewport {
     overflow-x: auto !important;
     scrollbar-width: auto !important;
     scrollbar-color: #cbd5e1 #f1f5f9 !important;
+    min-width: max-content !important;
+    width: max-content !important;
+    -moz-overflow-scrolling: touch !important;
+    display: block !important;
   }
   
   .ag-body-horizontal-scroll {
     min-width: max-content !important;
+    width: max-content !important;
+    display: block !important;
   }
   
   /* Ensure AG Grid internal scrolling works */
   .ag-body-viewport {
     overflow-x: auto !important;
     overflow-y: auto !important;
+    -moz-overflow-scrolling: touch !important;
+  }
+  
+  /* Force horizontal scrollbar visibility in old Firefox */
+  .ag-body-horizontal-scroll-viewport {
+    scrollbar-width: auto !important;
+    scrollbar-color: #cbd5e1 #f1f5f9 !important;
+  }
+  
+  /* Ensure grid container allows horizontal scrolling */
+  .ag-grid-container-wrapper {
+    overflow-x: auto !important;
+    -moz-overflow-scrolling: touch !important;
+  }
+  
+  /* Additional fixes for very old Firefox versions */
+  .ag-body-horizontal-scroll-viewport {
+    -moz-box-sizing: border-box !important;
+    -moz-transform: translateZ(0) !important;
+  }
+  
+  /* Force scrollbar to always be visible in old Firefox */
+  .ag-body-horizontal-scroll-viewport::-moz-scrollbar {
+    width: 12px !important;
+    height: 12px !important;
+  }
+  
+  .ag-body-horizontal-scroll-viewport::-moz-scrollbar-thumb {
+    background-color: #cbd5e1 !important;
+    border-radius: 6px !important;
+  }
+  
+  .ag-body-horizontal-scroll-viewport::-moz-scrollbar-track {
+    background-color: #f1f5f9 !important;
   }
   
   /* Force horizontal scrollbar to always be visible */
@@ -893,6 +933,11 @@ color: #1e293b;
   cursor: pointer !important;
 }
 
+/* Override text cursor for clickable parts in part column */
+.ag-cell[col-id="part"] .clickable {
+  cursor: pointer !important;
+}
+
 /* Part column when editing */
 .ag-cell[col-id="part"].ag-cell-edit-input {
   background-color: #ffffff !important;
@@ -916,11 +961,57 @@ color: #1e293b;
   cursor: pointer !important;
 }
 
+/* Force pointer cursor for clickable elements in AG Grid cells */
+.ag-cell .clickable {
+  cursor: pointer !important;
+}
+
+/* Most aggressive cursor override for clickable parts */
+.ag-cell[col-id="part"] span.clickable,
+.ag-cell[col-id="part"] .part-link.clickable,
+.ag-cell[col-id="part"] span[style*="cursor: pointer"] {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
+
+/* Ultra-specific rule for clickable parts */
+.ag-cell[col-id="part"] .clickable-part,
+.ag-cell[col-id="part"] span.clickable-part {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
+
+/* Override any inline styles for clickable parts */
+.ag-cell[col-id="part"] span[style*="cursor: pointer"] {
+  cursor: pointer !important;
+}
+
+/* Force pointer cursor on hover for clickable parts */
+.ag-cell[col-id="part"] .clickable:hover,
+.ag-cell[col-id="part"] .clickable-part:hover {
+  cursor: pointer !important;
+}
+
+/* Force pointer cursor regardless of grid focus state */
+.ag-theme-alpine .ag-cell[col-id="part"] .clickable,
+.ag-theme-alpine .ag-cell[col-id="part"] .clickable-part,
+.ag-theme-alpine .ag-cell[col-id="part"] .part-link.clickable {
+  cursor: pointer !important;
+}
+
+/* Override AG Grid's focus-based cursor styles */
+.ag-theme-alpine.ag-focus-managed .ag-cell[col-id="part"] .clickable,
+.ag-theme-alpine.ag-focus-managed .ag-cell[col-id="part"] .clickable-part,
+.ag-theme-alpine.ag-focus-managed .ag-cell[col-id="part"] .part-link.clickable {
+  cursor: pointer !important;
+}
+
 /* Clickable part links - Minimal */
 .part-link.clickable {
   color: #3b82f6 !important;
   text-decoration: underline !important;
   font-weight: 500 !important;
+  cursor: pointer !important;
 }
 
 /* Part cell content layout - simplified */
@@ -1253,9 +1344,15 @@ color: #1e293b;
   border-right: 1px solid #d1d5db !important; /* Consistent with other columns */
 }
 
-/* General rule for all header cells to ensure bold text */
+/* General rule for all header cells to ensure bold text and left alignment */
 .ag-theme-alpine .ag-header-cell-text {
   font-weight: 700 !important;
+  text-align: left !important;
+}
+
+/* All header cells left aligned */
+.ag-theme-alpine .ag-header-cell {
+  text-align: left !important;
 }
 
 /* Target first SKU column cells specifically */
