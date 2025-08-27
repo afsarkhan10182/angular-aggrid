@@ -3,17 +3,17 @@
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "BG-Sand(EL101)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -21,31 +21,30 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "BG-Supernova(TK714-M)",
+      "shortDesc": "FRM GCM, MARLIN, 2023, L, AL",
+      "longDesc": "FRM GCM, MARLIN, 2023, L, AL",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "BK-Black Hole(EL026)",
+      "shortDesc": "FRAME, TREK MARLIN, 2023, GCM, 6061,",
+      "longDesc": "FRAME, TREK MARLIN, 2023, GCM, 6061,",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -53,15 +52,14 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "BK-Black Licorice(EL022)",
+      "shortDesc": "FRM GCM, MARLIN, 2023, ML, AL",
+      "longDesc": "FRM GCM, MARLIN, 2023, ML, AL",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
@@ -69,14 +67,15 @@
       "feature": "",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "BK-Dark Prismatic(TK016-P)",
+      "shortDesc": "FRM APR, ROSCO, 2022, XS, 6061",
+      "longDesc": "FRM APR, ROSCO, 2022, XS, 6061",
       "startDate": "",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134569",
         "5134570",
-        "5134571",
-        "5134572"
+        "5134571"
       ]
     },
     {
@@ -84,30 +83,31 @@
       "feature": "",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "BK-Shark Grey(EL025)",
+      "shortDesc": "FKSUS SUN SF19 XCE28 29 100",
+      "longDesc": "FKSUS SUN SF19 XCE28 29 100",
       "startDate": "",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134569",
         "5134570",
-        "5134571",
-        "5134572"
+        "5134571"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "RD-Sedona Red(TK434-S)",
+      "shortDesc": "RIM GLM LNC30 29D 28H CBK/BK",
+      "longDesc": "RIM GLM LNC30 29D 28H CBK/BK",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -115,31 +115,30 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "RD-Spicy(EL438)",
+      "shortDesc": "HDPT GWH ADJEXP OD22.5 BK",
+      "longDesc": "HDPT GWH ADJEXP OD22.5 BK",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "SK-test color(8889999)",
+      "shortDesc": "FRM XDS, PWRFLY, 2025, SM, AL",
+      "longDesc": "FRM XDS, PWRFLY, 2025, SM, AL",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -147,31 +146,30 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "SL-Chrome(1215)",
+      "shortDesc": "Testing",
+      "longDesc": "Testing",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "SL-Silver(1038)",
+      "shortDesc": "FRMMN GNT AL TOP FUEL 2025 S",
+      "longDesc": "FRMMN GNT AL TOP FUEL 2025 S",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -179,31 +177,30 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "SL-irredescent yellow pearl(TK-SM0342214)",
+      "shortDesc": "AKIT OUT MY19ONE+ BUNGEE FRONT",
+      "longDesc": "AKIT OUT MY19ONE+ BUNGEE FRONT",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "WT-Era White(TK101-S)",
+      "shortDesc": "PTFM QCT CHKMTE SLR S BK-SK",
+      "longDesc": "PTFM QCT CHKMTE SLR S BK-SK",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -211,31 +208,30 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "WT-Stardust(EL111)",
+      "shortDesc": "PTFM QCT CHKMTE SLR M BK-SK",
+      "longDesc": "PTFM QCT CHKMTE SLR M BK-SK",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "PTFM QCT CHKMTE SLR L BK-SK",
+      "longDesc": "PTFM QCT CHKMTE SLR L BK-SK",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -243,31 +239,30 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "PTFM QCT CHKMTE SLR XL BK-SK",
+      "longDesc": "PTFM QCT CHKMTE SLR XL BK-SK",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "FRME QCT GRVL RACE SLR 25 XS",
+      "longDesc": "FRME QCT GRVL RACE SLR 25 XS",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -275,31 +270,30 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "FRME QCT GRVL RACE SLR 25 S",
+      "longDesc": "FRME QCT GRVL RACE SLR 25 S",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "FRME QCT GRVL RACE SLR 25 M",
+      "longDesc": "FRME QCT GRVL RACE SLR 25 M",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -307,15 +301,14 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "FRME QCT GRVL RACE SLR 25 M/L",
+      "longDesc": "FRME QCT GRVL RACE SLR 25 M/L",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
@@ -323,47 +316,46 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "FRME QCT GRVL RACE SLR 25 L",
+      "longDesc": "FRME QCT GRVL RACE SLR 25 L",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "FRME QCT GRVL RACE SLR 25 XL",
+      "longDesc": "FRME QCT GRVL RACE SLR 25 XL",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "PFF MAD SLR DSC MY25 FRCST XS",
+      "longDesc": "PFF MAD SLR DSC MY25 FRCST XS",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -371,31 +363,30 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "PFF MAD SLR DSC MY25 FRCST S",
+      "longDesc": "PFF MAD SLR DSC MY25 FRCST S",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "PFF MAD SLR DSC MY25 FRCST M",
+      "longDesc": "PFF MAD SLR DSC MY25 FRCST M",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -403,15 +394,14 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "PFF MAD SLR DSC MY25 FRCST ML",
+      "longDesc": "PFF MAD SLR DSC MY25 FRCST ML",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
@@ -419,47 +409,46 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "PFF MAD SLR DSC MY25 FRCST L",
+      "longDesc": "PFF MAD SLR DSC MY25 FRCST L",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "PFF MAD SLR DSC MY25 FRCST XL",
+      "longDesc": "PFF MAD SLR DSC MY25 FRCST XL",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR XS CN",
+      "longDesc": "PFF QCT MAD SLR XS CN",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -467,31 +456,30 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR XS BL",
+      "longDesc": "PFF QCT MAD SLR XS BL",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR XS PR",
+      "longDesc": "PFF QCT MAD SLR XS PR",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -499,15 +487,14 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR XS WT",
+      "longDesc": "PFF QCT MAD SLR XS WT",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
@@ -515,47 +502,46 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR S CN",
+      "longDesc": "PFF QCT MAD SLR S CN",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR S BL",
+      "longDesc": "PFF QCT MAD SLR S BL",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR S PR",
+      "longDesc": "PFF QCT MAD SLR S PR",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -563,31 +549,30 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR S WT",
+      "longDesc": "PFF QCT MAD SLR S WT",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR M CN",
+      "longDesc": "PFF QCT MAD SLR M CN",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -595,15 +580,14 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR M BL",
+      "longDesc": "PFF QCT MAD SLR M BL",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
@@ -611,47 +595,46 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR M PR",
+      "longDesc": "PFF QCT MAD SLR M PR",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR M WT",
+      "longDesc": "PFF QCT MAD SLR M WT",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR ML CN",
+      "longDesc": "PFF QCT MAD SLR ML CN",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -659,31 +642,30 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR ML BL",
+      "longDesc": "PFF QCT MAD SLR ML BL",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR ML PR",
+      "longDesc": "PFF QCT MAD SLR ML PR",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -691,15 +673,14 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR ML WT",
+      "longDesc": "PFF QCT MAD SLR ML WT",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
@@ -707,47 +688,46 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR L CN",
+      "longDesc": "PFF QCT MAD SLR L CN",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR L BL",
+      "longDesc": "PFF QCT MAD SLR L BL",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR L PR",
+      "longDesc": "PFF QCT MAD SLR L PR",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -755,31 +735,30 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR L WT",
+      "longDesc": "PFF QCT MAD SLR L WT",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR XL CN",
+      "longDesc": "PFF QCT MAD SLR XL CN",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -787,15 +766,14 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR XL BL",
+      "longDesc": "PFF QCT MAD SLR XL BL",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
@@ -803,47 +781,46 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR XL PR",
+      "longDesc": "PFF QCT MAD SLR XL PR",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "PFF QCT MAD SLR XL WT",
+      "longDesc": "PFF QCT MAD SLR XL WT",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "FRM XDS, MARLIN, 2023, XXS, AL",
+      "longDesc": "FRM XDS, MARLIN, 2023, XXS, AL",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -851,15 +828,14 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
@@ -867,14 +843,15 @@
       "feature": "frameHardware",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-04 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134570",
         "5134571",
-        "5134572",
-        "5134573"
+        "5134572"
       ]
     },
     {
@@ -882,12 +859,16 @@
       "feature": "",
       "supplier": "Lee Chi - Lee Chi Enterprises Co - 81578",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134571",
-        "5134572"
+        "5134572",
+        "5134573",
+        "5134574"
       ]
     },
     {
@@ -895,13 +876,17 @@
       "feature": "spokeProtector",
       "supplier": "YUNG FANG PLASTIC (KUNSHAN) CO LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-06 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134572",
         "5134573",
-        "5134574"
+        "5134574",
+        "5134575",
+        "5134576"
       ]
     },
     {
@@ -909,13 +894,17 @@
       "feature": "cSGuard",
       "supplier": "Bright Glory Inc - 32185",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134573",
         "5134574",
-        "5134575"
+        "5134575",
+        "5134576",
+        "5134577"
       ]
     },
     {
@@ -923,15 +912,15 @@
       "feature": "",
       "supplier": "Glory Wheel Enterprise Co. LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134574",
         "5134575",
-        "5134576",
-        "5134577",
-        "5134578"
+        "5134576"
       ]
     },
     {
@@ -939,6 +928,8 @@
       "feature": "",
       "supplier": "Glory Wheel Enterprise Co. LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
@@ -952,6 +943,8 @@
       "feature": "",
       "supplier": "Glory Wheel Enterprise Co. LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
@@ -965,13 +958,17 @@
       "feature": "headbadge",
       "supplier": "Oriole Graphic Design Co. Ltd - Oriole Graphic Design Co. Ltd. - 378183",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134576",
         "5134577",
-        "5134578"
+        "5134578",
+        "5134579",
+        "5134580"
       ]
     },
     {
@@ -979,14 +976,15 @@
       "feature": "frameHardware",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-04 00:00 GMT",
       "endDate": "",
       "qty": 2,
       "skus": [
         "5134570",
         "5134571",
-        "5134572",
-        "5134573"
+        "5134572"
       ]
     },
     {
@@ -994,15 +992,15 @@
       "feature": "",
       "supplier": "Sr Suntour Inc",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134577",
         "5134578",
-        "5134579",
-        "5134580",
-        "5134581"
+        "5134579"
       ]
     },
     {
@@ -1010,14 +1008,15 @@
       "feature": "",
       "supplier": "Full Speed Ahead",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134578",
         "5134579",
-        "5134580",
-        "5134581"
+        "5134580"
       ]
     },
     {
@@ -1025,12 +1024,17 @@
       "feature": "",
       "supplier": "VP Components CO. LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134579",
-        "5134580"
+        "5134580",
+        "5134581",
+        "5134582",
+        "5134583"
       ]
     },
     {
@@ -1038,6 +1042,8 @@
       "feature": "reflectorRear",
       "supplier": "Kozaki Trading Co Ltd - 80738",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
@@ -1053,13 +1059,14 @@
       "feature": "reflectorRearBracket",
       "supplier": "Trek Approved",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134581",
-        "5134582",
-        "5134583"
+        "5134582"
       ]
     },
     {
@@ -1067,15 +1074,15 @@
       "feature": "",
       "supplier": "KENDA RUBBER IND CO (TAIWAN) - Kenda Rubber (China) Co Ltd",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134582",
         "5134583",
-        "5134584",
-        "5134585",
-        "5134586"
+        "5134584"
       ]
     },
     {
@@ -1083,15 +1090,15 @@
       "feature": "",
       "supplier": "KENDA RUBBER IND CO (TAIWAN) - Kenda Rubber (China) Co Ltd",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134582",
         "5134583",
-        "5134584",
-        "5134585",
-        "5134586"
+        "5134584"
       ]
     },
     {
@@ -1099,15 +1106,14 @@
       "feature": "ownersManual",
       "supplier": "Badger Graphic Systems - Quality Resource Group Inc - 384957",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134583",
-        "5134584",
-        "5134585",
-        "5134586",
-        "5134587"
+        "5134584"
       ]
     },
     {
@@ -1115,15 +1121,14 @@
       "feature": "carton",
       "supplier": "Trek Approved",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134584",
-        "5134585",
-        "5134586",
-        "5134587",
-        "5134588"
+        "5134585"
       ]
     },
     {
@@ -1131,13 +1136,14 @@
       "feature": "",
       "supplier": "KENDA RUBBER IND CO (TAIWAN) - Kenda Rubber (China) Co Ltd",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134585",
-        "5134586",
-        "5134587"
+        "5134586"
       ]
     },
     {
@@ -1145,15 +1151,15 @@
       "feature": "",
       "supplier": "Glory Wheel Enterprise Co. LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134574",
         "5134575",
-        "5134576",
-        "5134577",
-        "5134578"
+        "5134576"
       ]
     },
     {
@@ -1161,15 +1167,15 @@
       "feature": "",
       "supplier": "Glory Wheel Enterprise Co. LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134574",
         "5134575",
-        "5134576",
-        "5134577",
-        "5134578"
+        "5134576"
       ]
     },
     {
@@ -1177,13 +1183,17 @@
       "feature": "spokeProtector",
       "supplier": "YUNG FANG PLASTIC (KUNSHAN) CO LTD",
       "color": "NA-RAW(1083)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-06 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134572",
         "5134573",
-        "5134574"
+        "5134574",
+        "5134575",
+        "5134576"
       ]
     },
     {
@@ -1191,14 +1201,14 @@
       "feature": "reflectorFrontBracket",
       "supplier": "Kozaki Trading Co Ltd - 80738",
       "color": "BK-Black(TK100)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134586",
-        "5134587",
-        "5134588",
-        "5134589"
+        "5134587"
       ]
     },
     {
@@ -1206,14 +1216,14 @@
       "feature": "reflectorFront",
       "supplier": "Kozaki Trading Co Ltd - 80738",
       "color": "BK-Black(TK100)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134587",
-        "5134588",
-        "5134589",
-        "5134590"
+        "5134588"
       ]
     },
     {
@@ -1221,13 +1231,17 @@
       "feature": "headbadge",
       "supplier": "Oriole Graphic Design Co. Ltd - Oriole Graphic Design Co. Ltd. - 378183",
       "color": "BK-Black(TK100)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134576",
         "5134577",
-        "5134578"
+        "5134578",
+        "5134579",
+        "5134580"
       ]
     },
     {
@@ -1235,13 +1249,17 @@
       "feature": "cSGuard",
       "supplier": "Bright Glory Inc - 32185",
       "color": "BK-Black(TK100)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134573",
         "5134574",
-        "5134575"
+        "5134575",
+        "5134576",
+        "5134577"
       ]
     },
     {
@@ -1249,31 +1267,30 @@
       "feature": "carton",
       "supplier": "Trek Approved",
       "color": "NA-RAW(1083)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134584",
-        "5134585",
-        "5134586",
-        "5134587",
-        "5134588"
+        "5134585"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -1281,13 +1298,14 @@
       "feature": "reflectorRearBracket",
       "supplier": "Trek Approved",
       "color": "BK-Black(TK100)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134581",
-        "5134582",
-        "5134583"
+        "5134582"
       ]
     },
     {
@@ -1295,15 +1313,14 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
@@ -1311,6 +1328,8 @@
       "feature": "reflectorRear",
       "supplier": "Kozaki Trading Co Ltd - 80738",
       "color": "BK-Black(TK100)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
@@ -1326,14 +1345,15 @@
       "feature": "frameHardware",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "BK-Black(TK100)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-04 00:00 GMT",
       "endDate": "",
       "qty": 2,
       "skus": [
         "5134570",
         "5134571",
-        "5134572",
-        "5134573"
+        "5134572"
       ]
     },
     {
@@ -1341,15 +1361,14 @@
       "feature": "ownersManual",
       "supplier": "Badger Graphic Systems - Quality Resource Group Inc - 384957",
       "color": "BK-Black(TK100)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134583",
-        "5134584",
-        "5134585",
-        "5134586",
-        "5134587"
+        "5134584"
       ]
     },
     {
@@ -1357,28 +1376,121 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
+        "5134569"
+      ]
+    },
+    {
+      "part": "305728",
+      "feature": "hubRear",
+      "supplier": "Hubtec International Limited",
+      "color": "",
+      "shortDesc": "",
+      "longDesc": "",
+      "startDate": "2025-04-01 00:00 GMT",
+      "endDate": "",
+      "qty": 1,
+      "skus": [
+        "5134567",
+        "5134568",
+        "5134569"
+      ]
+    },
+    {
+      "part": "301743",
+      "feature": "hubFront",
+      "supplier": "A&J (VIETNAM) CO.,LTD",
+      "color": "",
+      "shortDesc": "",
+      "longDesc": "",
+      "startDate": "2025-04-01 00:00 GMT",
+      "endDate": "",
+      "qty": 1,
+      "skus": [
+        "5134568",
+        "5134569"
+      ]
+    },
+    {
+      "part": "305728",
+      "feature": "hubRear",
+      "supplier": "Hubtec International Limited",
+      "color": "",
+      "shortDesc": "",
+      "longDesc": "",
+      "startDate": "2025-04-01 00:00 GMT",
+      "endDate": "",
+      "qty": 1,
+      "skus": [
+        "5134567",
+        "5134568",
+        "5134569"
+      ]
+    },
+    {
+      "part": "301743",
+      "feature": "hubFront",
+      "supplier": "A&J (VIETNAM) CO.,LTD",
+      "color": "",
+      "shortDesc": "",
+      "longDesc": "",
+      "startDate": "2025-04-01 00:00 GMT",
+      "endDate": "",
+      "qty": 1,
+      "skus": [
+        "5134568",
+        "5134569"
+      ]
+    },
+    {
+      "part": "601132",
+      "feature": "",
+      "supplier": "A&J (VIETNAM) CO.,LTD",
+      "color": "",
+      "shortDesc": "",
+      "longDesc": "",
+      "startDate": "",
+      "endDate": "",
+      "qty": 0,
+      "skus": [
+        "5134569",
+        "5134570",
+        "5134571"
+      ]
+    },
+    {
+      "part": "601132",
+      "feature": "",
+      "supplier": "A&J (VIETNAM) CO.,LTD",
+      "color": "",
+      "shortDesc": "",
+      "longDesc": "",
+      "startDate": "",
+      "endDate": "",
+      "qty": 0,
+      "skus": [
         "5134569",
         "5134570",
         "5134571"
@@ -1387,17 +1499,17 @@
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -1405,31 +1517,62 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
-      "qty": 1,
+      "qty": 0,
       "skus": [
         "5134568",
+        "5134569"
+      ]
+    },
+    {
+      "part": "601132",
+      "feature": "",
+      "supplier": "A&J (VIETNAM) CO.,LTD",
+      "color": "",
+      "shortDesc": "",
+      "longDesc": "",
+      "startDate": "",
+      "endDate": "",
+      "qty": 0,
+      "skus": [
         "5134569",
         "5134570",
-        "5134571",
-        "5134572"
+        "5134571"
+      ]
+    },
+    {
+      "part": "601132",
+      "feature": "",
+      "supplier": "A&J (VIETNAM) CO.,LTD",
+      "color": "",
+      "shortDesc": "",
+      "longDesc": "",
+      "startDate": "",
+      "endDate": "",
+      "qty": 0,
+      "skus": [
+        "5134569",
+        "5134570",
+        "5134571"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -1437,15 +1580,14 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
-      "qty": 1,
+      "qty": 0,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
@@ -1453,14 +1595,15 @@
       "feature": "",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134569",
         "5134570",
-        "5134571",
-        "5134572"
+        "5134571"
       ]
     },
     {
@@ -1468,30 +1611,31 @@
       "feature": "",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134569",
         "5134570",
-        "5134571",
-        "5134572"
+        "5134571"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -1499,15 +1643,14 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
@@ -1515,14 +1658,15 @@
       "feature": "",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134569",
         "5134570",
-        "5134571",
-        "5134572"
+        "5134571"
       ]
     },
     {
@@ -1530,30 +1674,31 @@
       "feature": "",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134569",
         "5134570",
-        "5134571",
-        "5134572"
+        "5134571"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -1561,15 +1706,14 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
@@ -1577,14 +1721,15 @@
       "feature": "",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134569",
         "5134570",
-        "5134571",
-        "5134572"
+        "5134571"
       ]
     },
     {
@@ -1592,30 +1737,31 @@
       "feature": "",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134569",
         "5134570",
-        "5134571",
-        "5134572"
+        "5134571"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -1623,15 +1769,14 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
@@ -1639,14 +1784,15 @@
       "feature": "",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134569",
         "5134570",
-        "5134571",
-        "5134572"
+        "5134571"
       ]
     },
     {
@@ -1654,30 +1800,31 @@
       "feature": "",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134569",
         "5134570",
-        "5134571",
-        "5134572"
+        "5134571"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -1685,15 +1832,14 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
@@ -1701,14 +1847,15 @@
       "feature": "",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134569",
         "5134570",
-        "5134571",
-        "5134572"
+        "5134571"
       ]
     },
     {
@@ -1716,30 +1863,31 @@
       "feature": "",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134569",
         "5134570",
-        "5134571",
-        "5134572"
+        "5134571"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -1747,139 +1895,14 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
-      "color": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
-      "color": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
@@ -1887,6 +1910,8 @@
       "feature": "skewerFront",
       "supplier": "Hubtec International Limited",
       "color": "GN-Blue Sage(TK630-S)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "2025-03-27 00:00 GMT",
       "qty": 1,
@@ -1902,15 +1927,15 @@
       "feature": "skewerFront",
       "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134589",
         "5134590",
-        "5134591",
-        "5134592",
-        "5134593"
+        "5134591"
       ]
     },
     {
@@ -1918,31 +1943,30 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -1950,6 +1974,8 @@
       "feature": "skewerFront",
       "supplier": "Hubtec International Limited",
       "color": "Blue Sage",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "2025-03-27 00:00 GMT",
       "qty": 1,
@@ -1965,14 +1991,15 @@
       "feature": "bottomBracket",
       "supplier": "VP Components CO. LTD",
       "color": "Dark Star",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "2025-03-27 00:00 GMT",
       "qty": 0,
       "skus": [
         "5134590",
         "5134591",
-        "5134592",
-        "5134593"
+        "5134592"
       ]
     },
     {
@@ -1980,13 +2007,17 @@
       "feature": "derailleurHangerBolt",
       "supplier": "Chia Cherne Industry Co",
       "color": "Black",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 2,
       "skus": [
         "5134591",
         "5134592",
-        "5134593"
+        "5134593",
+        "5134594",
+        "5134595"
       ]
     },
     {
@@ -1994,15 +2025,15 @@
       "feature": "skewerFront",
       "supplier": "Hubtec International Limited",
       "color": "Blue Sage",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134589",
         "5134590",
-        "5134591",
-        "5134592",
-        "5134593"
+        "5134591"
       ]
     },
     {
@@ -2010,12 +2041,16 @@
       "feature": "chain",
       "supplier": "KMC (Kuei Meng) International Inc",
       "color": "Dark Start",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "2025-03-27 00:00 GMT",
       "qty": 0,
       "skus": [
         "5134592",
-        "5134593"
+        "5134593",
+        "5134594",
+        "5134595"
       ]
     },
     {
@@ -2023,6 +2058,8 @@
       "feature": "skewerFront",
       "supplier": "Hubtec International Limited",
       "color": "GN-Blue Sage(TK630-S)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "2025-03-27 00:00 GMT",
       "qty": 1,
@@ -2038,15 +2075,15 @@
       "feature": "skewerFront",
       "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134589",
         "5134590",
-        "5134591",
-        "5134592",
-        "5134593"
+        "5134591"
       ]
     },
     {
@@ -2054,31 +2091,30 @@
       "feature": "hubFront",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 0,
       "skus": [
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571",
-        "5134572"
+        "5134569"
       ]
     },
     {
       "part": "305728",
       "feature": "hubRear",
-      "supplier": "Formula - Hubtec International Limited",
+      "supplier": "Hubtec International Limited",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-04-01 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134567",
         "5134568",
-        "5134569",
-        "5134570",
-        "5134571"
+        "5134569"
       ]
     },
     {
@@ -2086,6 +2122,8 @@
       "feature": "skewerFront",
       "supplier": "Hubtec International Limited",
       "color": "Blue Sage",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "2025-03-27 00:00 GMT",
       "qty": 1,
@@ -2101,14 +2139,15 @@
       "feature": "bottomBracket",
       "supplier": "VP Components CO. LTD",
       "color": "Dark Star",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "2025-03-27 00:00 GMT",
       "qty": 0,
       "skus": [
         "5134590",
         "5134591",
-        "5134592",
-        "5134593"
+        "5134592"
       ]
     },
     {
@@ -2116,13 +2155,17 @@
       "feature": "derailleurHangerBolt",
       "supplier": "Chia Cherne Industry Co",
       "color": "Black",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 2,
       "skus": [
         "5134591",
         "5134592",
-        "5134593"
+        "5134593",
+        "5134594",
+        "5134595"
       ]
     },
     {
@@ -2130,15 +2173,15 @@
       "feature": "skewerFront",
       "supplier": "Hubtec International Limited",
       "color": "Blue Sage",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134589",
         "5134590",
-        "5134591",
-        "5134592",
-        "5134593"
+        "5134591"
       ]
     },
     {
@@ -2146,12 +2189,16 @@
       "feature": "chain",
       "supplier": "KMC (Kuei Meng) International Inc",
       "color": "Dark Start",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "2025-03-27 00:00 GMT",
       "qty": 0,
       "skus": [
         "5134592",
-        "5134593"
+        "5134593",
+        "5134594",
+        "5134595"
       ]
     },
     {
@@ -2159,15 +2206,14 @@
       "feature": "",
       "supplier": "AURIGA HuiZhou Technology Co. LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134593",
-        "5134594",
-        "5134595",
-        "5134596",
-        "5134597"
+        "5134594"
       ]
     },
     {
@@ -2175,14 +2221,14 @@
       "feature": "reflectorFrontBracket",
       "supplier": "Kozaki Trading Co Ltd - 80738",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134586",
-        "5134587",
-        "5134588",
-        "5134589"
+        "5134587"
       ]
     },
     {
@@ -2190,14 +2236,14 @@
       "feature": "reflectorFront",
       "supplier": "Kozaki Trading Co Ltd - 80738",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134587",
-        "5134588",
-        "5134589",
-        "5134590"
+        "5134588"
       ]
     },
     {
@@ -2205,14 +2251,15 @@
       "feature": "frameHardware",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-04 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134570",
         "5134571",
-        "5134572",
-        "5134573"
+        "5134572"
       ]
     },
     {
@@ -2220,12 +2267,16 @@
       "feature": "",
       "supplier": "Lee Chi - Lee Chi Enterprises Co - 81578",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134571",
-        "5134572"
+        "5134572",
+        "5134573",
+        "5134574"
       ]
     },
     {
@@ -2233,13 +2284,17 @@
       "feature": "spokeProtector",
       "supplier": "YUNG FANG PLASTIC (KUNSHAN) CO LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-06 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134572",
         "5134573",
-        "5134574"
+        "5134574",
+        "5134575",
+        "5134576"
       ]
     },
     {
@@ -2247,13 +2302,17 @@
       "feature": "cSGuard",
       "supplier": "Bright Glory Inc - 32185",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134573",
         "5134574",
-        "5134575"
+        "5134575",
+        "5134576",
+        "5134577"
       ]
     },
     {
@@ -2261,15 +2320,15 @@
       "feature": "",
       "supplier": "Glory Wheel Enterprise Co. LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134574",
         "5134575",
-        "5134576",
-        "5134577",
-        "5134578"
+        "5134576"
       ]
     },
     {
@@ -2277,6 +2336,8 @@
       "feature": "",
       "supplier": "Glory Wheel Enterprise Co. LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
@@ -2290,6 +2351,8 @@
       "feature": "",
       "supplier": "Glory Wheel Enterprise Co. LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
@@ -2303,13 +2366,17 @@
       "feature": "headbadge",
       "supplier": "Oriole Graphic Design Co. Ltd - Oriole Graphic Design Co. Ltd. - 378183",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134576",
         "5134577",
-        "5134578"
+        "5134578",
+        "5134579",
+        "5134580"
       ]
     },
     {
@@ -2317,14 +2384,15 @@
       "feature": "frameHardware",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-04 00:00 GMT",
       "endDate": "",
       "qty": 2,
       "skus": [
         "5134570",
         "5134571",
-        "5134572",
-        "5134573"
+        "5134572"
       ]
     },
     {
@@ -2332,15 +2400,15 @@
       "feature": "",
       "supplier": "Sr Suntour Inc",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134577",
         "5134578",
-        "5134579",
-        "5134580",
-        "5134581"
+        "5134579"
       ]
     },
     {
@@ -2348,14 +2416,15 @@
       "feature": "",
       "supplier": "Full Speed Ahead",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134578",
         "5134579",
-        "5134580",
-        "5134581"
+        "5134580"
       ]
     },
     {
@@ -2363,12 +2432,17 @@
       "feature": "",
       "supplier": "VP Components CO. LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134579",
-        "5134580"
+        "5134580",
+        "5134581",
+        "5134582",
+        "5134583"
       ]
     },
     {
@@ -2376,6 +2450,8 @@
       "feature": "reflectorRear",
       "supplier": "Kozaki Trading Co Ltd - 80738",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
@@ -2391,13 +2467,14 @@
       "feature": "reflectorRearBracket",
       "supplier": "Trek Approved",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134581",
-        "5134582",
-        "5134583"
+        "5134582"
       ]
     },
     {
@@ -2405,15 +2482,15 @@
       "feature": "",
       "supplier": "KENDA RUBBER IND CO (TAIWAN) - Kenda Rubber (China) Co Ltd",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134582",
         "5134583",
-        "5134584",
-        "5134585",
-        "5134586"
+        "5134584"
       ]
     },
     {
@@ -2421,15 +2498,15 @@
       "feature": "",
       "supplier": "KENDA RUBBER IND CO (TAIWAN) - Kenda Rubber (China) Co Ltd",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134582",
         "5134583",
-        "5134584",
-        "5134585",
-        "5134586"
+        "5134584"
       ]
     },
     {
@@ -2437,15 +2514,14 @@
       "feature": "ownersManual",
       "supplier": "Badger Graphic Systems - Quality Resource Group Inc - 384957",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134583",
-        "5134584",
-        "5134585",
-        "5134586",
-        "5134587"
+        "5134584"
       ]
     },
     {
@@ -2453,15 +2529,14 @@
       "feature": "carton",
       "supplier": "Trek Approved",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134584",
-        "5134585",
-        "5134586",
-        "5134587",
-        "5134588"
+        "5134585"
       ]
     },
     {
@@ -2469,13 +2544,14 @@
       "feature": "",
       "supplier": "KENDA RUBBER IND CO (TAIWAN) - Kenda Rubber (China) Co Ltd",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134585",
-        "5134586",
-        "5134587"
+        "5134586"
       ]
     },
     {
@@ -2483,15 +2559,15 @@
       "feature": "",
       "supplier": "Glory Wheel Enterprise Co. LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134574",
         "5134575",
-        "5134576",
-        "5134577",
-        "5134578"
+        "5134576"
       ]
     },
     {
@@ -2499,15 +2575,15 @@
       "feature": "",
       "supplier": "Glory Wheel Enterprise Co. LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134574",
         "5134575",
-        "5134576",
-        "5134577",
-        "5134578"
+        "5134576"
       ]
     },
     {
@@ -2515,13 +2591,17 @@
       "feature": "spokeProtector",
       "supplier": "YUNG FANG PLASTIC (KUNSHAN) CO LTD",
       "color": "NA-RAW(1083)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-06 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134572",
         "5134573",
-        "5134574"
+        "5134574",
+        "5134575",
+        "5134576"
       ]
     },
     {
@@ -2529,14 +2609,14 @@
       "feature": "reflectorFrontBracket",
       "supplier": "Kozaki Trading Co Ltd - 80738",
       "color": "BK-Black(TK100)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134586",
-        "5134587",
-        "5134588",
-        "5134589"
+        "5134587"
       ]
     },
     {
@@ -2544,14 +2624,14 @@
       "feature": "reflectorFront",
       "supplier": "Kozaki Trading Co Ltd - 80738",
       "color": "BK-Black(TK100)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134587",
-        "5134588",
-        "5134589",
-        "5134590"
+        "5134588"
       ]
     },
     {
@@ -2559,13 +2639,17 @@
       "feature": "headbadge",
       "supplier": "Oriole Graphic Design Co. Ltd - Oriole Graphic Design Co. Ltd. - 378183",
       "color": "BK-Black(TK100)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134576",
         "5134577",
-        "5134578"
+        "5134578",
+        "5134579",
+        "5134580"
       ]
     },
     {
@@ -2573,13 +2657,17 @@
       "feature": "cSGuard",
       "supplier": "Bright Glory Inc - 32185",
       "color": "BK-Black(TK100)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134573",
         "5134574",
-        "5134575"
+        "5134575",
+        "5134576",
+        "5134577"
       ]
     },
     {
@@ -2587,15 +2675,14 @@
       "feature": "carton",
       "supplier": "Trek Approved",
       "color": "NA-RAW(1083)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134584",
-        "5134585",
-        "5134586",
-        "5134587",
-        "5134588"
+        "5134585"
       ]
     },
     {
@@ -2603,13 +2690,14 @@
       "feature": "reflectorRearBracket",
       "supplier": "Trek Approved",
       "color": "BK-Black(TK100)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134581",
-        "5134582",
-        "5134583"
+        "5134582"
       ]
     },
     {
@@ -2617,6 +2705,8 @@
       "feature": "reflectorRear",
       "supplier": "Kozaki Trading Co Ltd - 80738",
       "color": "BK-Black(TK100)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
@@ -2632,14 +2722,15 @@
       "feature": "frameHardware",
       "supplier": "A&J (VIETNAM) CO.,LTD",
       "color": "BK-Black(TK100)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-04 00:00 GMT",
       "endDate": "",
       "qty": 2,
       "skus": [
         "5134570",
         "5134571",
-        "5134572",
-        "5134573"
+        "5134572"
       ]
     },
     {
@@ -2647,15 +2738,14 @@
       "feature": "ownersManual",
       "supplier": "Badger Graphic Systems - Quality Resource Group Inc - 384957",
       "color": "BK-Black(TK100)",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134583",
-        "5134584",
-        "5134585",
-        "5134586",
-        "5134587"
+        "5134584"
       ]
     },
     {
@@ -2663,15 +2753,14 @@
       "feature": "",
       "supplier": "AURIGA HuiZhou Technology Co. LTD",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134593",
-        "5134594",
-        "5134595",
-        "5134596",
-        "5134597"
+        "5134594"
       ]
     },
     {
@@ -2679,14 +2768,14 @@
       "feature": "reflectorFrontBracket",
       "supplier": "Kozaki Trading Co Ltd - 80738",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134586",
-        "5134587",
-        "5134588",
-        "5134589"
+        "5134587"
       ]
     },
     {
@@ -2694,14 +2783,14 @@
       "feature": "reflectorFront",
       "supplier": "Kozaki Trading Co Ltd - 80738",
       "color": "",
+      "shortDesc": "",
+      "longDesc": "",
       "startDate": "2025-06-10 00:00 GMT",
       "endDate": "",
       "qty": 1,
       "skus": [
         "5134587",
-        "5134588",
-        "5134589",
-        "5134590"
+        "5134588"
       ]
     }
   ],
@@ -2712,121 +2801,121 @@
       {
         "sku": "5134567",
         "product": "100690",
-        "manufacturer": "Formula ",
+        "manufacturer": "Hubtec International Limited",
         "color": "Generic Color",
         "size": "Size 1"
       },
       {
         "sku": "5134568",
         "product": "100690",
-        "manufacturer": "Formula ",
+        "manufacturer": "Hubtec International Limited",
         "color": "Generic Color",
         "size": "Size 2"
       },
       {
         "sku": "5134569",
         "product": "100690",
-        "manufacturer": "Formula ",
+        "manufacturer": "Hubtec International Limited",
         "color": "Generic Color",
         "size": "Size 3"
       },
       {
         "sku": "5134570",
         "product": "100690",
-        "manufacturer": "Formula ",
+        "manufacturer": "A&J (VIETNAM) CO.,LTD",
         "color": "Generic Color",
-        "size": "Size 4"
+        "size": "Size 2"
       },
       {
         "sku": "5134571",
         "product": "100690",
-        "manufacturer": "Formula ",
+        "manufacturer": "A&J (VIETNAM) CO.,LTD",
         "color": "Generic Color",
-        "size": "Size 5"
+        "size": "Size 3"
       },
       {
         "sku": "5134572",
         "product": "100690",
         "manufacturer": "A&J (VIETNAM) CO.,LTD",
         "color": "Generic Color",
-        "size": "Size 5"
+        "size": "Size 3"
       },
       {
         "sku": "5134573",
         "product": "100690",
-        "manufacturer": "A&J (VIETNAM) CO.,LTD",
+        "manufacturer": "Lee Chi ",
         "color": "Generic Color",
-        "size": "Size 4"
+        "size": "Size 3"
       },
       {
         "sku": "5134574",
         "product": "100690",
-        "manufacturer": "YUNG FANG PLASTIC (KUNSHAN) CO LTD",
+        "manufacturer": "Lee Chi ",
         "color": "Generic Color",
-        "size": "Size 3"
+        "size": "Size 4"
       },
       {
         "sku": "5134575",
         "product": "100690",
-        "manufacturer": "Bright Glory Inc ",
+        "manufacturer": "YUNG FANG PLASTIC (KUNSHAN) CO LTD",
         "color": "Generic Color",
-        "size": "Size 3"
+        "size": "Size 4"
       },
       {
         "sku": "5134576",
         "product": "100690",
-        "manufacturer": "Glory Wheel Enterprise Co. LTD",
+        "manufacturer": "YUNG FANG PLASTIC (KUNSHAN) CO LTD",
         "color": "Generic Color",
-        "size": "Size 3"
+        "size": "Size 5"
       },
       {
         "sku": "5134577",
         "product": "100690",
-        "manufacturer": "Glory Wheel Enterprise Co. LTD",
+        "manufacturer": "Bright Glory Inc ",
         "color": "Generic Color",
-        "size": "Size 4"
+        "size": "Size 5"
       },
       {
         "sku": "5134578",
         "product": "100690",
-        "manufacturer": "Glory Wheel Enterprise Co. LTD",
+        "manufacturer": "Oriole Graphic Design Co. Ltd ",
         "color": "Generic Color",
-        "size": "Size 5"
+        "size": "Size 3"
       },
       {
         "sku": "5134579",
         "product": "100690",
-        "manufacturer": "Sr Suntour Inc",
+        "manufacturer": "Oriole Graphic Design Co. Ltd ",
         "color": "Generic Color",
-        "size": "Size 3"
+        "size": "Size 4"
       },
       {
         "sku": "5134580",
         "product": "100690",
-        "manufacturer": "Sr Suntour Inc",
-        "color": "Generic Color",
-        "size": "Size 4"
-      },
-      {
-        "sku": "5134581",
-        "product": "100690",
-        "manufacturer": "Sr Suntour Inc",
+        "manufacturer": "Oriole Graphic Design Co. Ltd ",
         "color": "Generic Color",
         "size": "Size 5"
       },
       {
-        "sku": "5134582",
+        "sku": "5134581",
         "product": "100690",
-        "manufacturer": "Kozaki Trading Co Ltd ",
+        "manufacturer": "VP Components CO. LTD",
         "color": "Generic Color",
         "size": "Size 3"
       },
       {
-        "sku": "5134583",
+        "sku": "5134582",
         "product": "100690",
-        "manufacturer": "Kozaki Trading Co Ltd ",
+        "manufacturer": "VP Components CO. LTD",
         "color": "Generic Color",
         "size": "Size 4"
+      },
+      {
+        "sku": "5134583",
+        "product": "100690",
+        "manufacturer": "VP Components CO. LTD",
+        "color": "Generic Color",
+        "size": "Size 5"
       },
       {
         "sku": "5134584",
@@ -2838,44 +2927,44 @@
       {
         "sku": "5134585",
         "product": "100690",
-        "manufacturer": "KENDA RUBBER IND CO (TAIWAN) ",
+        "manufacturer": "Trek Approved",
         "color": "Generic Color",
-        "size": "Size 4"
+        "size": "Size 2"
       },
       {
         "sku": "5134586",
         "product": "100690",
         "manufacturer": "KENDA RUBBER IND CO (TAIWAN) ",
         "color": "Generic Color",
-        "size": "Size 5"
+        "size": "Size 2"
       },
       {
         "sku": "5134587",
         "product": "100690",
-        "manufacturer": "Badger Graphic Systems ",
+        "manufacturer": "Kozaki Trading Co Ltd ",
         "color": "Generic Color",
-        "size": "Size 5"
+        "size": "Size 2"
       },
       {
         "sku": "5134588",
         "product": "100690",
-        "manufacturer": "Trek Approved",
+        "manufacturer": "Kozaki Trading Co Ltd ",
         "color": "Generic Color",
-        "size": "Size 5"
+        "size": "Size 2"
       },
       {
         "sku": "5134589",
         "product": "100690",
-        "manufacturer": "Kozaki Trading Co Ltd ",
+        "manufacturer": "Hubtec International Limited",
         "color": "Generic Color",
-        "size": "Size 4"
+        "size": "Size 2"
       },
       {
         "sku": "5134590",
         "product": "100690",
-        "manufacturer": "Kozaki Trading Co Ltd ",
+        "manufacturer": "Hubtec International Limited",
         "color": "Generic Color",
-        "size": "Size 4"
+        "size": "Size 3"
       },
       {
         "sku": "5134591",
@@ -2887,42 +2976,28 @@
       {
         "sku": "5134592",
         "product": "100690",
-        "manufacturer": "Hubtec International Limited",
-        "color": "Generic Color",
-        "size": "Size 4"
-      },
-      {
-        "sku": "5134593",
-        "product": "100690",
-        "manufacturer": "Hubtec International Limited",
-        "color": "Generic Color",
-        "size": "Size 5"
-      },
-      {
-        "sku": "5134594",
-        "product": "100690",
-        "manufacturer": "AURIGA HuiZhou Technology Co. LTD",
-        "color": "Generic Color",
-        "size": "Size 2"
-      },
-      {
-        "sku": "5134595",
-        "product": "100690",
-        "manufacturer": "AURIGA HuiZhou Technology Co. LTD",
+        "manufacturer": "VP Components CO. LTD",
         "color": "Generic Color",
         "size": "Size 3"
       },
       {
-        "sku": "5134596",
+        "sku": "5134593",
         "product": "100690",
-        "manufacturer": "AURIGA HuiZhou Technology Co. LTD",
+        "manufacturer": "Chia Cherne Industry Co",
+        "color": "Generic Color",
+        "size": "Size 3"
+      },
+      {
+        "sku": "5134594",
+        "product": "100690",
+        "manufacturer": "Chia Cherne Industry Co",
         "color": "Generic Color",
         "size": "Size 4"
       },
       {
-        "sku": "5134597",
+        "sku": "5134595",
         "product": "100690",
-        "manufacturer": "AURIGA HuiZhou Technology Co. LTD",
+        "manufacturer": "Chia Cherne Industry Co",
         "color": "Generic Color",
         "size": "Size 5"
       }

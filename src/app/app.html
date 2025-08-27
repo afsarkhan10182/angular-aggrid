@@ -21,7 +21,7 @@
                 <input 
                   type="text" 
                   class="search-input"
-                  placeholder="Search parts, suppliers, features..."
+                  placeholder="Search All Columns"
                   [(ngModel)]="searchText"
                   (input)="onSearchTextChange()"
                   (keyup.enter)="applyQuickFilter()"
@@ -106,7 +106,7 @@
       <button (click)="toggleColumnVisibility()" class="grid-toggle-columns-btn" title="Show/Hide Columns">
         <div class="toggle-button-content">
           <i class="fas fa-columns"></i>
-          <span class="toggle-button-text">TOGGLE COLUMNS</span>
+          <span class="toggle-button-text">COLUMNS</span>
         </div>
       </button>
     </div>
@@ -121,13 +121,28 @@
           </button>
         </div>
         <div class="column-checkboxes">
-          <ng-container *ngFor="let col of columnDefs">
+          <!-- Select All Checkbox -->
+          <!-- <div class="column-checkbox select-all-checkbox">
+            <label>
+              <input type="checkbox" 
+                     [checked]="selectAllState === true"
+                     [indeterminate]="selectAllState === null"
+                     (change)="toggleSelectAll($event)">
+              <span class="column-name select-all-text"><strong>Select All</strong></span>
+            </label>
+          </div> -->
+          
+          <!-- Divider -->
+          <!-- <div class="column-divider"></div> -->
+          
+          <!-- Individual Column Checkboxes -->
+          <ng-container *ngFor="let col of allColumns">
             <div *ngIf="!isSkuColumn(col)" class="column-checkbox">
               <label>
                 <input type="checkbox" 
                        [checked]="!col.hide" 
                        (change)="toggleColumnVisibility(col, $event)">
-                <span class="column-name">{{ getColumnDisplayName(col) }}</span>
+                <span class="column-name">{{ col.headerName }}</span>
               </label>
             </div>
           </ng-container>

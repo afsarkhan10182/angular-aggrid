@@ -47,6 +47,46 @@ export class App implements OnInit {
   // Add row state
   public newRows = new Map<number, any>();
   public nextRowId = 10000; // Unique ID for new rows
+  
+  // Master list for column visibility panel (includes both real and virtual columns)
+  public allColumns = [
+    // Core Part Information
+    { field: 'actions', headerName: '', hide: false, isVirtual: false },
+    { field: 'SpecSheet', headerName: 'Include In Spec Sheet', hide: true, isVirtual: true },
+    { field: 'part', headerName: 'Part Number', hide: false, isVirtual: false },
+    { field: 'type', headerName: 'Type', hide: true, isVirtual: true },
+    { field: 'manufacturerPartNumber', headerName: 'Manufacturer Part Number', hide: true, isVirtual: true },
+    
+    // Descriptions
+    { field: 'shortDesc', headerName: 'Short Description', hide: false, isVirtual: false },
+    { field: 'longDesc', headerName: 'Long Description', hide: false, isVirtual: false },
+    { field: 'serviceDescription', headerName: 'Service Description', hide: true, isVirtual: true },
+    
+    // Features and Specifications
+    { field: 'feature', headerName: 'BOM Feature', hide: false, isVirtual: false },
+    { field: 'includeInSpecSheet', headerName: 'Include In Spec Sheet', hide: true, isVirtual: true },
+    
+    // Service Information
+    { field: 'tcgEquivalent', headerName: 'TCG Equivalent', hide: true, isVirtual: true },
+    { field: 'serviceSub1', headerName: 'Service Sub1', hide: true, isVirtual: true },
+    { field: 'serviceSub2', headerName: 'Service Sub2', hide: true, isVirtual: true },
+    { field: 'colorFinish', headerName: 'Color Finish', hide: true, isVirtual: true },
+    
+    // Supplier and Origin
+    { field: 'supplier', headerName: 'Supplier', hide: false, isVirtual: false },
+    { field: 'countryOfOrigin', headerName: 'Country Of Origin', hide: true, isVirtual: true },
+    
+    // Physical Properties
+    { field: 'color', headerName: 'Color', hide: false, isVirtual: false },
+    
+    // Quantity and Units
+    { field: 'qty', headerName: 'Qty', hide: false, isVirtual: false },
+    { field: 'uom', headerName: 'UoM', hide: true, isVirtual: true },
+    
+    // Dates
+    { field: 'startDate', headerName: 'Start Date', hide: false, isVirtual: false },
+    { field: 'endDate', headerName: 'End Date', hide: false, isVirtual: false }
+  ];
   // Grid configuration - client-side
   public gridOptions: GridOptions = {
     theme: 'legacy', // Use legacy theme for Firefox 102 ESR compatibility
@@ -445,7 +485,7 @@ export class App implements OnInit {
         }
       },
       {
-        headerName: 'Part',
+        headerName: 'Part Name',
         field: 'part',
         filter: 'agTextColumnFilter',
         cellRenderer: (params: any) => {
@@ -479,7 +519,7 @@ export class App implements OnInit {
             return `<span class="part-text">${params.value}</span>`;
           }
         },
-        width: 120,
+        width: 130,
         minWidth: 120,
         maxWidth: 250,
         pinned: 'left',
@@ -545,11 +585,11 @@ export class App implements OnInit {
         }
       },
       {
-        headerName: 'Feature',
+        headerName: 'BOM Feature',
         field: 'feature',
         filter: 'agTextColumnFilter',
-        width: 140,
-        minWidth: 140,
+        width: 150,
+        minWidth: 150,
         maxWidth: 300,
         resizable: true,
         suppressSizeToFit: false,
@@ -576,6 +616,52 @@ export class App implements OnInit {
         }
       },
       {
+        headerName: 'Short Desc',
+        field: 'shortDesc',
+        filter: 'agTextColumnFilter',
+        width: 200,
+        minWidth: 150,
+        maxWidth: 350,
+        resizable: true,
+        suppressSizeToFit: false,
+        suppressAutoSize: false,
+        editable: false, // Make short description non-editable
+        cellRenderer: (params: any) => {
+          return params.value || '';
+        },
+        cellStyle: (params: any) => {
+          if (params.data && params.data.isNewRow) {
+            return {
+              border: '1px solid #007bff'
+            };
+          }
+          return null;
+        }
+      },
+      {
+        headerName: 'Long Desc',
+        field: 'longDesc',
+        filter: 'agTextColumnFilter',
+        width: 250,
+        minWidth: 200,
+        maxWidth: 400,
+        resizable: true,
+        suppressSizeToFit: false,
+        suppressAutoSize: false,
+        editable: false, // Make long description non-editable
+        cellRenderer: (params: any) => {
+          return params.value || '';
+        },
+        cellStyle: (params: any) => {
+          if (params.data && params.data.isNewRow) {
+            return {
+              border: '1px solid #007bff'
+            };
+          }
+          return null;
+        }
+      },
+      {
         headerName: 'Start Date',
         field: 'startDate',
         filter: 'agDateColumnFilter',
@@ -585,7 +671,7 @@ export class App implements OnInit {
         resizable: true,
         suppressSizeToFit: false,
         suppressAutoSize: false,
-        editable: true, // Make start date editable for all rows
+        editable: (params) => params.data.isNewRow, // Make start date editable for new rows
         cellEditor: 'agDateCellEditor',
         cellEditorParams: {
           useFormatter: false,
@@ -866,7 +952,7 @@ export class App implements OnInit {
 
   isSkuColumn(col: any): boolean {
     // Check if the column is a SKU column by examining the field name
-    return col.field && col.field.startsWith('sku');
+    return col.field && (col.field.startsWith('sku') || col.field.startsWith('actions'));
   }
 
   getFirstSkuFieldName(): string {
@@ -890,14 +976,15 @@ export class App implements OnInit {
 
   toggleColumnVisibility(col?: any, event?: Event): void {
     if (col && event) {
-      // Toggle single column
       const visible = (event.target as HTMLInputElement).checked;
-      this.gridApi.setColumnsVisible([col.field], visible);
-      
-      // Update the column definition to reflect the change
-      const columnDef = this.columnDefs.find(c => c.field === col.field);
-      if (columnDef) {
-        columnDef.hide = !visible;
+
+      if (col.isVirtual) {
+        // Just update metadata for virtual columns
+        col.hide = !visible;
+      } else {
+        // Real AG Grid column
+        this.gridApi.setColumnsVisible([col.field], visible);
+        col.hide = !visible;
       }
     } else {
       // Toggle visibility panel
@@ -1229,6 +1316,40 @@ export class App implements OnInit {
     const result = Array.from(features).sort();
     console.log('Available features:', result);
     return result;
+  }
+
+  // Get all columns for the visibility panel (real + virtual)
+  get allColumnsForPanel() {
+    return this.allColumns;
+  }
+
+  // Get only real columns for AG Grid (filter out virtual ones)
+  get realColumnsForGrid() {
+    return this.allColumns.filter(col => !col.isVirtual);
+  }
+
+  // Get select all state
+  get selectAllState() {
+    const visibleColumns = this.allColumns.filter(col => !col.isVirtual && !col.hide);
+    const totalColumns = this.allColumns.filter(col => !col.isVirtual);
+    
+    if (visibleColumns.length === 0) return false;
+    if (visibleColumns.length === totalColumns.length) return true;
+    return null; // indeterminate state
+  }
+
+  // Toggle select all
+  toggleSelectAll(event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    
+    this.allColumns.forEach(col => {
+      if (!col.isVirtual) {
+        col.hide = !checked;
+        if (this.gridApi) {
+          this.gridApi.setColumnsVisible([col.field], checked);
+        }
+      }
+    });
   }
 
   getAvailablePartNumbers(): string[] {

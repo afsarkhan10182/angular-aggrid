@@ -8,6 +8,8 @@ export interface PartData {
   supplier: string;
   color: string;
   feature: string;
+  shortDesc: string;
+  longDesc: string;
   startDate: string;
   endDate: string;
   qty: number;
@@ -91,6 +93,8 @@ export class DataService {
         supplier: part.supplier,
         color: part.color,
         feature: part.feature,
+        shortDesc: part.shortDesc,
+        longDesc: part.longDesc,
         startDate: part.startDate,
         endDate: part.endDate,
         qty: part.qty
@@ -138,6 +142,8 @@ export class DataService {
         supplier: `Supplier ${supplierNum}`,
         color: `Color ${colorNum}`,
         feature: feature,
+        shortDesc: `Short description for ${partNum}`,
+        longDesc: `Long description for part ${partNum} with feature ${feature}`,
         startDate: '08/18/2024',
         endDate: '08/18/2026',
         qty: Math.floor(Math.random() * 50) + 5
