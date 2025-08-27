@@ -1,0 +1,177 @@
+part,feature,supplier,color,shortDesc,longDesc,startDate,endDate,qty
+305728,hubRear,Hubtec International Limited,BG-Sand(EL101),,,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",BG-Supernova(TK714-M),"FRM GCM, MARLIN, 2023, L, AL","FRM GCM, MARLIN, 2023, L, AL",2025-04-01 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,BK-Black Hole(EL026),"FRAME, TREK MARLIN, 2023, GCM, 6061,","FRAME, TREK MARLIN, 2023, GCM, 6061,",2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",BK-Black Licorice(EL022),"FRM GCM, MARLIN, 2023, ML, AL","FRM GCM, MARLIN, 2023, ML, AL",2025-04-01 00:00 GMT,,1
+601132,,"A&J (VIETNAM) CO.,LTD",BK-Dark Prismatic(TK016-P),"FRM APR, ROSCO, 2022, XS, 6061","FRM APR, ROSCO, 2022, XS, 6061",,,0
+601132,,"A&J (VIETNAM) CO.,LTD",BK-Shark Grey(EL025),FKSUS SUN SF19 XCE28 29 100,FKSUS SUN SF19 XCE28 29 100,,,0
+305728,hubRear,Hubtec International Limited,RD-Sedona Red(TK434-S),RIM GLM LNC30 29D 28H CBK/BK,RIM GLM LNC30 29D 28H CBK/BK,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",RD-Spicy(EL438),HDPT GWH ADJEXP OD22.5 BK,HDPT GWH ADJEXP OD22.5 BK,2025-04-01 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,SK-test color(8889999),"FRM XDS, PWRFLY, 2025, SM, AL","FRM XDS, PWRFLY, 2025, SM, AL",2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",SL-Chrome(1215),Testing,Testing,2025-04-01 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,SL-Silver(1038),FRMMN GNT AL TOP FUEL 2025 S,FRMMN GNT AL TOP FUEL 2025 S,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",SL-irredescent yellow pearl(TK-SM0342214),AKIT OUT MY19ONE+ BUNGEE FRONT,AKIT OUT MY19ONE+ BUNGEE FRONT,2025-04-01 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,WT-Era White(TK101-S),PTFM QCT CHKMTE SLR S BK-SK,PTFM QCT CHKMTE SLR S BK-SK,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",WT-Stardust(EL111),PTFM QCT CHKMTE SLR M BK-SK,PTFM QCT CHKMTE SLR M BK-SK,2025-04-01 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,,PTFM QCT CHKMTE SLR L BK-SK,PTFM QCT CHKMTE SLR L BK-SK,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,PTFM QCT CHKMTE SLR XL BK-SK,PTFM QCT CHKMTE SLR XL BK-SK,2025-04-01 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,,FRME QCT GRVL RACE SLR 25 XS,FRME QCT GRVL RACE SLR 25 XS,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,FRME QCT GRVL RACE SLR 25 S,FRME QCT GRVL RACE SLR 25 S,2025-04-01 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,,FRME QCT GRVL RACE SLR 25 M,FRME QCT GRVL RACE SLR 25 M,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,FRME QCT GRVL RACE SLR 25 M/L,FRME QCT GRVL RACE SLR 25 M/L,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,FRME QCT GRVL RACE SLR 25 L,FRME QCT GRVL RACE SLR 25 L,2025-04-01 00:00 GMT,,0
+305728,hubRear,Hubtec International Limited,,FRME QCT GRVL RACE SLR 25 XL,FRME QCT GRVL RACE SLR 25 XL,2025-04-01 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,,PFF MAD SLR DSC MY25 FRCST XS,PFF MAD SLR DSC MY25 FRCST XS,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,PFF MAD SLR DSC MY25 FRCST S,PFF MAD SLR DSC MY25 FRCST S,2025-04-01 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,,PFF MAD SLR DSC MY25 FRCST M,PFF MAD SLR DSC MY25 FRCST M,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,PFF MAD SLR DSC MY25 FRCST ML,PFF MAD SLR DSC MY25 FRCST ML,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,PFF MAD SLR DSC MY25 FRCST L,PFF MAD SLR DSC MY25 FRCST L,2025-04-01 00:00 GMT,,0
+305728,hubRear,Hubtec International Limited,,PFF MAD SLR DSC MY25 FRCST XL,PFF MAD SLR DSC MY25 FRCST XL,2025-04-01 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,,PFF QCT MAD SLR XS CN,PFF QCT MAD SLR XS CN,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,PFF QCT MAD SLR XS BL,PFF QCT MAD SLR XS BL,2025-04-01 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,,PFF QCT MAD SLR XS PR,PFF QCT MAD SLR XS PR,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,PFF QCT MAD SLR XS WT,PFF QCT MAD SLR XS WT,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,PFF QCT MAD SLR S CN,PFF QCT MAD SLR S CN,2025-04-01 00:00 GMT,,0
+305728,hubRear,Hubtec International Limited,,PFF QCT MAD SLR S BL,PFF QCT MAD SLR S BL,2025-04-01 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,,PFF QCT MAD SLR S PR,PFF QCT MAD SLR S PR,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,PFF QCT MAD SLR S WT,PFF QCT MAD SLR S WT,2025-04-01 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,,PFF QCT MAD SLR M CN,PFF QCT MAD SLR M CN,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,PFF QCT MAD SLR M BL,PFF QCT MAD SLR M BL,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,PFF QCT MAD SLR M PR,PFF QCT MAD SLR M PR,2025-04-01 00:00 GMT,,0
+305728,hubRear,Hubtec International Limited,,PFF QCT MAD SLR M WT,PFF QCT MAD SLR M WT,2025-04-01 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,,PFF QCT MAD SLR ML CN,PFF QCT MAD SLR ML CN,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,PFF QCT MAD SLR ML BL,PFF QCT MAD SLR ML BL,2025-04-01 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,,PFF QCT MAD SLR ML PR,PFF QCT MAD SLR ML PR,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,PFF QCT MAD SLR ML WT,PFF QCT MAD SLR ML WT,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,PFF QCT MAD SLR L CN,PFF QCT MAD SLR L CN,2025-04-01 00:00 GMT,,0
+305728,hubRear,Hubtec International Limited,,PFF QCT MAD SLR L BL,PFF QCT MAD SLR L BL,2025-04-01 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,,PFF QCT MAD SLR L PR,PFF QCT MAD SLR L PR,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,PFF QCT MAD SLR L WT,PFF QCT MAD SLR L WT,2025-04-01 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,,PFF QCT MAD SLR XL CN,PFF QCT MAD SLR XL CN,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,PFF QCT MAD SLR XL BL,PFF QCT MAD SLR XL BL,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,PFF QCT MAD SLR XL PR,PFF QCT MAD SLR XL PR,2025-04-01 00:00 GMT,,0
+305728,hubRear,Hubtec International Limited,,PFF QCT MAD SLR XL WT,PFF QCT MAD SLR XL WT,2025-04-01 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,,"FRM XDS, MARLIN, 2023, XXS, AL","FRM XDS, MARLIN, 2023, XXS, AL",2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,,,2025-04-01 00:00 GMT,,1
+601132,frameHardware,"A&J (VIETNAM) CO.,LTD",,,,2025-06-04 00:00 GMT,,1
+530518,,Lee Chi - Lee Chi Enterprises Co - 81578,,,,,,1
+5319186,spokeProtector,YUNG FANG PLASTIC (KUNSHAN) CO LTD,,,,2025-06-06 00:00 GMT,,1
+5293689,cSGuard,Bright Glory Inc - 32185,,,,2025-06-10 00:00 GMT,,1
+535694,,Glory Wheel Enterprise Co. LTD,,,,,,1
+302359,,Glory Wheel Enterprise Co. LTD,,,,,,1
+302359,,Glory Wheel Enterprise Co. LTD,,,,,,1
+559003,headbadge,Oriole Graphic Design Co. Ltd - Oriole Graphic Design Co. Ltd. - 378183,,,,2025-06-10 00:00 GMT,,1
+601132,frameHardware,"A&J (VIETNAM) CO.,LTD",,,,2025-06-04 00:00 GMT,,2
+565970,,Sr Suntour Inc,,,,,,1
+5282013,,Full Speed Ahead,,,,,,1
+313066,,VP Components CO. LTD,,,,,,1
+320934,reflectorRear,Kozaki Trading Co Ltd - 80738,,,,2025-06-10 00:00 GMT,,1
+534844,reflectorRearBracket,Trek Approved,,,,2025-06-10 00:00 GMT,,1
+5327852,,KENDA RUBBER IND CO (TAIWAN) - Kenda Rubber (China) Co Ltd,,,,,,1
+5327852,,KENDA RUBBER IND CO (TAIWAN) - Kenda Rubber (China) Co Ltd,,,,,,1
+580969,ownersManual,Badger Graphic Systems - Quality Resource Group Inc - 384957,,,,2025-06-10 00:00 GMT,,1
+5264868,carton,Trek Approved,,,,2025-06-10 00:00 GMT,,1
+575356,,KENDA RUBBER IND CO (TAIWAN) - Kenda Rubber (China) Co Ltd,,,,,,1
+535694,,Glory Wheel Enterprise Co. LTD,,,,,,1
+535694,,Glory Wheel Enterprise Co. LTD,,,,,,1
+5319186,spokeProtector,YUNG FANG PLASTIC (KUNSHAN) CO LTD,NA-RAW(1083),,,2025-06-06 00:00 GMT,,1
+320929,reflectorFrontBracket,Kozaki Trading Co Ltd - 80738,BK-Black(TK100),,,2025-06-10 00:00 GMT,,1
+320865,reflectorFront,Kozaki Trading Co Ltd - 80738,BK-Black(TK100),,,2025-06-10 00:00 GMT,,1
+559003,headbadge,Oriole Graphic Design Co. Ltd - Oriole Graphic Design Co. Ltd. - 378183,BK-Black(TK100),,,2025-06-10 00:00 GMT,,1
+5293689,cSGuard,Bright Glory Inc - 32185,BK-Black(TK100),,,2025-06-10 00:00 GMT,,1
+5264868,carton,Trek Approved,NA-RAW(1083),,,2025-06-10 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,,,,2025-04-01 00:00 GMT,,1
+534844,reflectorRearBracket,Trek Approved,BK-Black(TK100),,,2025-06-10 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,,,2025-04-01 00:00 GMT,,1
+320934,reflectorRear,Kozaki Trading Co Ltd - 80738,BK-Black(TK100),,,2025-06-10 00:00 GMT,,1
+601132,frameHardware,"A&J (VIETNAM) CO.,LTD",BK-Black(TK100),,,2025-06-04 00:00 GMT,,2
+580969,ownersManual,Badger Graphic Systems - Quality Resource Group Inc - 384957,BK-Black(TK100),,,2025-06-10 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,,,2025-04-01 00:00 GMT,,0
+305728,hubRear,Hubtec International Limited,,,,2025-04-01 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,,,,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,,,2025-04-01 00:00 GMT,,1
+305728,hubRear,Hubtec International Limited,,,,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,,,2025-04-01 00:00 GMT,,1
+601132,,"A&J (VIETNAM) CO.,LTD",,,,,,0
+601132,,"A&J (VIETNAM) CO.,LTD",,,,,,0
+305728,hubRear,Hubtec International Limited,,,,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,,,2025-04-01 00:00 GMT,,0
+601132,,"A&J (VIETNAM) CO.,LTD",,,,,,0
+601132,,"A&J (VIETNAM) CO.,LTD",,,,,,0
+305728,hubRear,Hubtec International Limited,,,,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,,,2025-04-01 00:00 GMT,,0
+601132,,"A&J (VIETNAM) CO.,LTD",,,,,,0
+601132,,"A&J (VIETNAM) CO.,LTD",,,,,,0
+305728,hubRear,Hubtec International Limited,,,,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,,,2025-04-01 00:00 GMT,,0
+601132,,"A&J (VIETNAM) CO.,LTD",,,,,,0
+601132,,"A&J (VIETNAM) CO.,LTD",,,,,,0
+305728,hubRear,Hubtec International Limited,,,,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,,,2025-04-01 00:00 GMT,,0
+601132,,"A&J (VIETNAM) CO.,LTD",,,,,,0
+601132,,"A&J (VIETNAM) CO.,LTD",,,,,,0
+305728,hubRear,Hubtec International Limited,,,,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,,,2025-04-01 00:00 GMT,,0
+601132,,"A&J (VIETNAM) CO.,LTD",,,,,,0
+601132,,"A&J (VIETNAM) CO.,LTD",,,,,,0
+305728,hubRear,Hubtec International Limited,,,,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,,,2025-04-01 00:00 GMT,,0
+601132,,"A&J (VIETNAM) CO.,LTD",,,,,,0
+601132,,"A&J (VIETNAM) CO.,LTD",,,,,,0
+305728,hubRear,Hubtec International Limited,,,,2025-04-01 00:00 GMT,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,,,2025-04-01 00:00 GMT,,0
+286249,skewerFront,Hubtec International Limited,GN-Blue Sage(TK630-S),,,,2025-03-27 00:00 GMT,1
+517372,skewerFront,Hubtec International Limited,,,,,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,,,2025-04-01 00:00 GMT,,0
+305728,hubRear,Hubtec International Limited,,,,2025-04-01 00:00 GMT,,1
+286249,skewerFront,Hubtec International Limited,Blue Sage,,,,2025-03-27 00:00 GMT,1
+292031,bottomBracket,VP Components CO. LTD,Dark Star,,,,2025-03-27 00:00 GMT,0
+5257479,derailleurHangerBolt,Chia Cherne Industry Co,Black,,,,,2
+517372,skewerFront,Hubtec International Limited,Blue Sage,,,,,1
+598807,chain,KMC (Kuei Meng) International Inc,Dark Start,,,,2025-03-27 00:00 GMT,0
+286249,skewerFront,Hubtec International Limited,GN-Blue Sage(TK630-S),,,,2025-03-27 00:00 GMT,1
+517372,skewerFront,Hubtec International Limited,,,,,,1
+301743,hubFront,"A&J (VIETNAM) CO.,LTD",,,,2025-04-01 00:00 GMT,,0
+305728,hubRear,Hubtec International Limited,,,,2025-04-01 00:00 GMT,,1
+286249,skewerFront,Hubtec International Limited,Blue Sage,,,,2025-03-27 00:00 GMT,1
+292031,bottomBracket,VP Components CO. LTD,Dark Star,,,,2025-03-27 00:00 GMT,0
+5257479,derailleurHangerBolt,Chia Cherne Industry Co,Black,,,,,2
+517372,skewerFront,Hubtec International Limited,Blue Sage,,,,,1
+598807,chain,KMC (Kuei Meng) International Inc,Dark Start,,,,2025-03-27 00:00 GMT,0
+5319831,,AURIGA HuiZhou Technology Co. LTD,,,,,,1
+320929,reflectorFrontBracket,Kozaki Trading Co Ltd - 80738,,,,2025-06-10 00:00 GMT,,1
+320865,reflectorFront,Kozaki Trading Co Ltd - 80738,,,,2025-06-10 00:00 GMT,,1
+601132,frameHardware,"A&J (VIETNAM) CO.,LTD",,,,2025-06-04 00:00 GMT,,1
+530518,,Lee Chi - Lee Chi Enterprises Co - 81578,,,,,,1
+5319186,spokeProtector,YUNG FANG PLASTIC (KUNSHAN) CO LTD,,,,2025-06-06 00:00 GMT,,1
+5293689,cSGuard,Bright Glory Inc - 32185,,,,2025-06-10 00:00 GMT,,1
+535694,,Glory Wheel Enterprise Co. LTD,,,,,,1
+302359,,Glory Wheel Enterprise Co. LTD,,,,,,1
+302359,,Glory Wheel Enterprise Co. LTD,,,,,,1
+559003,headbadge,Oriole Graphic Design Co. Ltd - Oriole Graphic Design Co. Ltd. - 378183,,,,2025-06-10 00:00 GMT,,1
+601132,frameHardware,"A&J (VIETNAM) CO.,LTD",,,,2025-06-04 00:00 GMT,,2
+565970,,Sr Suntour Inc,,,,,,1
+5282013,,Full Speed Ahead,,,,,,1
+313066,,VP Components CO. LTD,,,,,,1
+320934,reflectorRear,Kozaki Trading Co Ltd - 80738,,,,2025-06-10 00:00 GMT,,1
+534844,reflectorRearBracket,Trek Approved,,,,2025-06-10 00:00 GMT,,1
+5327852,,KENDA RUBBER IND CO (TAIWAN) - Kenda Rubber (China) Co Ltd,,,,,,1
+5327852,,KENDA RUBBER IND CO (TAIWAN) - Kenda Rubber (China) Co Ltd,,,,,,1
+580969,ownersManual,Badger Graphic Systems - Quality Resource Group Inc - 384957,,,,2025-06-10 00:00 GMT,,1
+5264868,carton,Trek Approved,,,,2025-06-10 00:00 GMT,,1
+575356,,KENDA RUBBER IND CO (TAIWAN) - Kenda Rubber (China) Co Ltd,,,,,,1
+535694,,Glory Wheel Enterprise Co. LTD,,,,,,1
+535694,,Glory Wheel Enterprise Co. LTD,,,,,,1
+5319186,spokeProtector,YUNG FANG PLASTIC (KUNSHAN) CO LTD,NA-RAW(1083),,,2025-06-06 00:00 GMT,,1
+320929,reflectorFrontBracket,Kozaki Trading Co Ltd - 80738,BK-Black(TK100),,,2025-06-10 00:00 GMT,,1
+320865,reflectorFront,Kozaki Trading Co Ltd - 80738,BK-Black(TK100),,,2025-06-10 00:00 GMT,,1
+559003,headbadge,Oriole Graphic Design Co. Ltd - Oriole Graphic Design Co. Ltd. - 378183,BK-Black(TK100),,,2025-06-10 00:00 GMT,,1
+5293689,cSGuard,Bright Glory Inc - 32185,BK-Black(TK100),,,2025-06-10 00:00 GMT,,1
+5264868,carton,Trek Approved,NA-RAW(1083),,,2025-06-10 00:00 GMT,,1
+534844,reflectorRearBracket,Trek Approved,BK-Black(TK100),,,2025-06-10 00:00 GMT,,1
+320934,reflectorRear,Kozaki Trading Co Ltd - 80738,BK-Black(TK100),,,2025-06-10 00:00 GMT,,1
+601132,frameHardware,"A&J (VIETNAM) CO.,LTD",BK-Black(TK100),,,2025-06-04 00:00 GMT,,2
+580969,ownersManual,Badger Graphic Systems - Quality Resource Group Inc - 384957,BK-Black(TK100),,,2025-06-10 00:00 GMT,,1
+5319831,,AURIGA HuiZhou Technology Co. LTD,,,,,,1
+320929,reflectorFrontBracket,Kozaki Trading Co Ltd - 80738,,,,2025-06-10 00:00 GMT,,1
+320865,reflectorFront,Kozaki Trading Co Ltd - 80738,,,,2025-06-10 00:00 GMT,,1
