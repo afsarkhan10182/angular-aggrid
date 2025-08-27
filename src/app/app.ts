@@ -308,9 +308,8 @@ export class App implements OnInit {
 
   loadData(): void {
     this.dataService.loadMockData().subscribe(data => {
-      // Transform mock data to grid format
+      // Transform mock data to grid format - use only the base data (176 entries)
       let baseData = this.dataService.transformToGridData(data.mbom);
-      let additionalData = this.dataService.generateAdditionalData(data.mbom, 1000);
       
       // Always generate expired entries to get the count
       const expiredEntries = this.generateExpiredEntries();
@@ -318,10 +317,10 @@ export class App implements OnInit {
       
       if (this.showExpiredData) {
         // Show expired entries when toggle is on
-        this.rowData = [...expiredEntries, ...baseData, ...additionalData];
+        this.rowData = [...expiredEntries, ...baseData];
       } else {
         // Hide expired entries when toggle is off
-        this.rowData = [...baseData, ...additionalData];
+        this.rowData = [...baseData];
       }
       
       // Initialize columns after data is loaded
@@ -510,9 +509,9 @@ export class App implements OnInit {
         headerName: 'Supplier',
         field: 'supplier',
         filter: 'agTextColumnFilter',
-        width: 130,
+        width: 180,
         minWidth: 120,
-        maxWidth: 250,
+        maxWidth: 300,
         resizable: true,
         suppressSizeToFit: false,
         suppressAutoSize: false,
@@ -534,9 +533,9 @@ export class App implements OnInit {
         headerName: 'Color',
         field: 'color',
         filter: 'agTextColumnFilter',
-        width: 120,
+        width: 180,
         minWidth: 120,
-        maxWidth: 200,
+        maxWidth: 250,
         resizable: true,
         suppressSizeToFit: false,
         suppressAutoSize: false,
