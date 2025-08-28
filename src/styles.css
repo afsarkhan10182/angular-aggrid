@@ -608,7 +608,7 @@ color: #1e293b;
 /* Header cell - Bold and visually distinct styling with VISIBLE grid lines */
 .ag-header-cell {
   min-width: 120px !important;
-  max-width: 300px !important;
+  max-width: 350px !important;
   padding: 12px 16px !important;
   /* ✅ VISIBLE BORDERS - Consistent with cell borders */
   border-right: var(--ag-cell-vertical-border-width) var(--ag-row-border-style) var(--ag-row-border-color) !important;
@@ -640,7 +640,7 @@ color: #1e293b;
 /* Cell - Improved styling with VISIBLE grid lines and better resizing */
 .ag-cell {
   min-width: 80px !important;
-  max-width: 300px !important;
+  max-width: 350px !important;
   padding: 6px 10px !important;
   line-height: 1.4 !important;
   white-space: nowrap;
@@ -1338,10 +1338,25 @@ color: #1e293b;
   background: #fff9c4 !important;
 }
 
-/* All SKU column headers - ensure bold and consistent styling */
+/* All SKU column headers - multi-line with line-by-line truncation */
 .ag-theme-alpine .ag-header-cell[col-id*="sku"] {
   font-weight: 700 !important;
-  border-right: 1px solid #d1d5db !important; /* Consistent with other columns */
+  border-right: 1px solid #d1d5db !important;
+  white-space: pre !important;
+  line-height: 1.1 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-height: 120px !important;
+}
+
+/* SKU header text - prevent word wrapping, truncate with ellipsis */
+.ag-theme-alpine .ag-header-cell[col-id*="sku"] .ag-header-cell-text {
+  white-space: pre !important;
+  line-height: 1.1 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: block !important;
+  max-height: 120px !important;
 }
 
 /* General rule for all header cells to ensure bold text and left alignment */
