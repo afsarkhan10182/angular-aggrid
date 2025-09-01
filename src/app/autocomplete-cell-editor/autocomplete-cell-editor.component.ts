@@ -365,25 +365,56 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
       const existingPart = mockData.mbom.find((part: any) => part.part === partNumber);
       if (existingPart) {
         console.log('Found part for auto-population:', existingPart);
-        console.log('Auto-populating feature:', existingPart.feature);
+        console.log('Auto-populating all fields from existing part');
         
-        // Update the feature field in the grid
         if (this.params && this.params.node) {
-          this.params.node.setDataValue('feature', existingPart.feature);
+          // Auto-populate all available fields from the existing part
+          const fieldsToPopulate = ['supplier', 'color', 'feature', 'shortDesc', 'longDesc', 'startDate', 'endDate', 'qty'];
           
-          // Also update the data object directly
-          if (this.params.node.data) {
-            this.params.node.data.feature = existingPart.feature;
-            console.log('Updated node data feature:', this.params.node.data.feature);
+          // Temporarily disable cell value changed events
+          const oldData = { ...this.params.node.data };
+          
+          // Auto-populate base fields
+          fieldsToPopulate.forEach(fieldName => {
+            if (existingPart[fieldName] !== undefined && existingPart[fieldName] !== null) {
+              // Only update if value is different
+              if (oldData[fieldName] !== existingPart[fieldName]) {
+                this.params.node.setDataValue(fieldName, existingPart[fieldName]);
+                if (this.params.node.data) {
+                  this.params.node.data[fieldName] = existingPart[fieldName];
+                }
+                console.log(`Auto-populated ${fieldName}:`, existingPart[fieldName]);
+              }
+            }
+          });
+          
+          // Auto-populate SKU columns based on the skus array in the existing part
+          const skuInfo = dataService.getSkuInfo();
+          if (skuInfo && skuInfo.length > 0) {
+            skuInfo.forEach((sku: any) => {
+              const skuFieldName = `sku${sku.sku}`;
+              const newSkuValue = existingPart.skus && existingPart.skus.includes(sku.sku) 
+                ? existingPart.part // If SKU is included, use part number
+                : ''; // If SKU is not included, use empty string
+              
+              // Only update if value is different
+              if (oldData[skuFieldName] !== newSkuValue) {
+                this.params.node.setDataValue(skuFieldName, newSkuValue);
+                if (this.params.node.data) {
+                  this.params.node.data[skuFieldName] = newSkuValue;
+                }
+                console.log(`Auto-populated SKU ${sku.sku}:`, newSkuValue);
+              }
+            });
           }
           
-          // Refresh the row to show the updated feature
+          // Refresh the row to show all updated values
           if (this.params.api) {
             this.params.api.refreshCells({
               rowNodes: [this.params.node],
               force: true
             });
-            console.log('Refreshed cells to show feature value');
+            console.log('Refreshed cells to show all auto-populated values');
           }
         }
       } else {

@@ -48,6 +48,11 @@ export class App implements OnInit {
   public newRows = new Map<number, any>();
   public nextRowId = 10000; // Unique ID for new rows
   
+  // Copy/Paste state for SKU columns in new rows
+  public copiedSkuValue: string = '';
+  public copiedFromCellKey: string = ''; // Track which cell was copied from
+  public copiedCellIndicator: string = ''; // Visual indicator for copied cell
+  
   // Master list for column visibility panel (includes both real and virtual columns)
   public allColumns = [
     // Core Part Information
@@ -114,6 +119,20 @@ export class App implements OnInit {
     cacheQuickFilter: true, // Improve performance for large datasets
     // Ensure client-side row model for quick filter to work
     rowModelType: 'clientSide',
+    // Enable keyboard navigation and editing
+    navigateToNextCell: (params) => {
+      // Allow normal navigation
+      return params.nextCellPosition;
+    },
+    tabToNextCell: (params) => {
+      // Return false to prevent tabbing if we're at the last cell, otherwise return next position
+      return params.nextCellPosition || false;
+    },
+    enterNavigatesVertically: false,
+    enterNavigatesVerticallyAfterEdit: false,
+    stopEditingWhenCellsLoseFocus: false,
+    singleClickEdit: true,
+
     getRowClass: (params) => {
       if (params.data && params.data.isExpired) {
         return 'expired-row';
@@ -175,6 +194,16 @@ export class App implements OnInit {
             force: true
           });
         }, 50);
+      }
+    },
+    onCellKeyDown: (params) => {
+      // Handle Ctrl+V for paste in SKU columns of new rows
+      if (params.event && (params.event as KeyboardEvent).ctrlKey && 
+          (params.event as KeyboardEvent).key === 'v' && 
+          (params as any).colDef?.field && (params as any).colDef.field.startsWith('sku') &&
+          params.data && params.data.isNewRow) {
+        this.pasteSkuValue(params as any);
+        params.event.preventDefault();
       }
     },
     
@@ -464,18 +493,20 @@ export class App implements OnInit {
         sortable: false,
         filter: false,
         cellRenderer: (params: any) => {
-          if (params.data.isNewRow) {
-            // For new rows, use the newRowId as identifier since part is empty
-            const newRowId = params.data.newRowId;
-            return `<span class="delete-row-btn" data-new-row-id="${newRowId}" title="Delete">−</span>`;
-          }
-          
           // Show red "e" for expired data
           if (params.data.isExpired) {
             return `<span class="expired-indicator" title="Expired">e</span>`;
           }
           
           const partId = params.data.part || '';
+          
+          // For new rows, show delete button
+          if (params.data.isNewRow) {
+            const newRowId = params.data.newRowId;
+            return `<span class="delete-row-btn" data-new-row-id="${newRowId}" title="Delete">−</span>`;
+          }
+          
+          // For all other rows, show add button
           return `<span class="add-row-btn" data-part-id="${partId}" title="Add">+</span>`;
         },
         cellStyle: {
@@ -526,7 +557,7 @@ export class App implements OnInit {
         resizable: true,
         suppressSizeToFit: false,
         suppressAutoSize: false,
-        editable: (params) => params.data.isNewRow, // Only editable for new rows
+        editable: (params) => params.data && params.data.isNewRow, // Only editable for new rows
         cellEditor: AutocompleteCellEditorComponent,
         cellEditorParams: (params: any) => ({
           values: this.getAvailablePartNumbers(),
@@ -555,7 +586,7 @@ export class App implements OnInit {
         resizable: true,
         suppressSizeToFit: false,
         suppressAutoSize: false,
-        editable: false, // Make supplier non-editable
+        editable: (params) => params.data && params.data.isNewRow, // Editable for new rows
         cellRenderer: (params: any) => {
           return params.value || '';
         },
@@ -579,7 +610,7 @@ export class App implements OnInit {
         resizable: true,
         suppressSizeToFit: false,
         suppressAutoSize: false,
-        editable: false, // Make color non-editable
+        editable: (params) => params.data && params.data.isNewRow, // Editable for new rows
         cellRenderer: (params: any) => {
           return params.value || '';
         }
@@ -625,7 +656,7 @@ export class App implements OnInit {
         resizable: true,
         suppressSizeToFit: false,
         suppressAutoSize: false,
-        editable: false, // Make short description non-editable
+        editable: (params) => params.data && params.data.isNewRow, // Editable for new rows
         cellRenderer: (params: any) => {
           return params.value || '';
         },
@@ -648,7 +679,7 @@ export class App implements OnInit {
         resizable: true,
         suppressSizeToFit: false,
         suppressAutoSize: false,
-        editable: false, // Make long description non-editable
+        editable: (params) => params.data && params.data.isNewRow, // Editable for new rows
         cellRenderer: (params: any) => {
           return params.value || '';
         },
@@ -671,31 +702,35 @@ export class App implements OnInit {
         resizable: true,
         suppressSizeToFit: false,
         suppressAutoSize: false,
-        editable: (params) => params.data.isNewRow, // Make start date editable for new rows
+        editable: (params) => params.data.isNewRow,
         cellEditor: 'agDateCellEditor',
         cellEditorParams: {
-          useFormatter: false,
-          useValueFormatterForExport: false
+          // Configure the date picker
+          browserDatePicker: true,
+          minValidYear: 2000,
+          maxValidYear: 2050
         },
-        valueFormatter: this.dateFormatter.bind(this),
-        valueSetter: (params: any) => {
-          // Handle date value setting properly
-          if (params.newValue) {
-            // If it's a Date object, convert to MM/DD/YYYY string
-            if (params.newValue instanceof Date) {
-              const month = (params.newValue.getMonth() + 1).toString().padStart(2, '0');
-              const day = params.newValue.getDate().toString().padStart(2, '0');
-              const year = params.newValue.getFullYear();
-              params.data[params.colDef.field] = `${month}/${day}/${year}`;
-            } else {
-              params.data[params.colDef.field] = params.newValue;
-            }
-            return true;
-          }
-          return false;
+        valueFormatter: (params) => {
+          if (!params.value) return '';
+          const date = new Date(params.value);
+          if (isNaN(date.getTime())) return '';
+          return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          });
         },
-        cellRenderer: (params: any) => {
-          return this.dateFormatter(params);
+        valueParser: (params) => {
+          if (!params.newValue) return null;
+          const date = new Date(params.newValue);
+          return isNaN(date.getTime()) ? null : date.toISOString();
+        },
+        valueSetter: (params) => {
+          if (!params.newValue) return false;
+          const date = new Date(params.newValue);
+          if (isNaN(date.getTime())) return false;
+          params.data[params.colDef.field as string] = date.toISOString();
+          return true;
         },
         cellStyle: (params: any) => {
           const baseStyle = {
@@ -708,8 +743,7 @@ export class App implements OnInit {
           if (params.data && params.data.isNewRow) {
             return {
               ...baseStyle,
-              border: '1px solid #007bff',
-              fontStyle: 'italic'
+              border: '1px solid #007bff'
             };
           }
           
@@ -749,10 +783,34 @@ export class App implements OnInit {
         resizable: true,
         suppressSizeToFit: false,
         suppressAutoSize: false,
-        editable: false, // Make end date non-editable
-        valueFormatter: this.dateFormatter.bind(this),
-        cellRenderer: (params: any) => {
-          return this.dateFormatter(params);
+        editable: (params) => params.data && params.data.isNewRow,
+        cellEditor: 'agDateCellEditor',
+        cellEditorParams: {
+          browserDatePicker: true,
+          minValidYear: 2000,
+          maxValidYear: 2050
+        },
+        valueFormatter: (params) => {
+          if (!params.value) return '';
+          const date = new Date(params.value);
+          if (isNaN(date.getTime())) return '';
+          return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          });
+        },
+        valueParser: (params) => {
+          if (!params.newValue) return null;
+          const date = new Date(params.newValue);
+          return isNaN(date.getTime()) ? null : date.toISOString();
+        },
+        valueSetter: (params) => {
+          if (!params.newValue) return false;
+          const date = new Date(params.newValue);
+          if (isNaN(date.getTime())) return false;
+          params.data[params.colDef.field as string] = date.toISOString();
+          return true;
         },
         filterParams: {
           filterOptions: ['equals', 'notEqual', 'lessThan', 'lessThanOrEqual', 'greaterThan', 'greaterThanOrEqual', 'inRange'],
@@ -827,7 +885,8 @@ export class App implements OnInit {
           if (params.data && params.data.isExpired) {
             return false;
           }
-          return true; // Allow editing for all other rows (existing and new rows)
+          // Allow editing for new rows and quantity field for all rows
+          return true;
         },
         cellEditor: 'agNumberCellEditor',
         cellEditorParams: {
@@ -885,51 +944,230 @@ export class App implements OnInit {
       // headerComponent: 'skuHeader',
 
       cellStyle: (params: any) => {
+        const cellKey = `${params.node.rowIndex}-${params.colDef.field}`;
+        const isCopiedCell = this.copiedFromCellKey === cellKey;
+        const isNewRow = params.data && params.data.isNewRow;
+        
+        // Base style for all cells
+        const baseStyle = {
+          textAlign: 'left',
+          padding: '0 8px',
+          cursor: isNewRow && params.value ? 'copy' : 'default'
+        };
+
         // First SKU column styling
         if (index === 0) {
           // Check if this SKU value matches the Part value in the same row
-          if (params.data && params.value && params.data.part) {
-            if (String(params.value) === String(params.data.part)) {
-              return {
-                color: '#d32f2f', // Red text for matching values
-                fontWeight: '600',
-                backgroundColor: '#fff9c4', // Yellow background for first SKU column
-                textAlign: 'left',
-                padding: '0 8px'
-              };
-            }
+          if (params.data && params.value && params.data.part && String(params.value) === String(params.data.part)) {
+            return {
+              ...baseStyle,
+              color: '#d32f2f', // Red text for matching values
+              fontWeight: '600',
+              backgroundColor: isCopiedCell ? '#e8f5e9' : '#fff9c4', // Light green if copied, yellow background for first SKU column
+              border: isCopiedCell ? '2px solid #4caf50' : 'none'
+            };
           }
           
           // Non-matching or empty values get yellow background too
           return {
+            ...baseStyle,
             color: '#374151', // Default gray text
             fontWeight: '400',
-            backgroundColor: '#fff9c4', // Yellow background for first SKU column
-            textAlign: 'left',
-            padding: '0 8px'
+            backgroundColor: isCopiedCell ? '#e8f5e9' : '#fff9c4', // Light green if copied, yellow background for first SKU column
+            border: isCopiedCell ? '2px solid #4caf50' : 'none'
           };
         }
         
-        // Other SKU columns keep original styling
+        // Other SKU columns styling
         if (params.value) {
-          return { 
-            backgroundColor: '#f0f9ff', 
-            fontWeight: 'bold', 
+          return {
+            ...baseStyle,
+            backgroundColor: isCopiedCell ? '#e8f5e9' : '#f0f9ff',
+            fontWeight: 'bold',
             color: '#000000',
-            textAlign: 'left',
-            padding: '0 8px'
+            border: isCopiedCell ? '2px solid #4caf50' : isNewRow ? '1px solid #e2e8f0' : 'none'
           };
         } else {
-          return { 
-            backgroundColor: '#f9fafb', 
-            color: '#9ca3af', 
+          return {
+            ...baseStyle,
+            backgroundColor: isCopiedCell ? '#e8f5e9' : '#f9fafb',
+            color: '#9ca3af',
             fontWeight: 'normal',
-            textAlign: 'left',
-            padding: '0 8px'
+            border: isCopiedCell ? '2px solid #4caf50' : isNewRow ? '1px solid #e2e8f0' : 'none'
           };
         }
       },
-      cellRenderer: (params: any) => params.value || ''
+      cellRenderer: (params: any) => {
+        const cellKey = `${params.node.rowIndex}-${params.colDef.field}`;
+        const isCopiedCell = this.copiedFromCellKey === cellKey;
+        
+        if (!params.data.isNewRow) {
+          return params.value || '';
+        }
+        
+        const buttonStyles = `
+          opacity: 0;
+          transition: opacity 0.2s;
+          border-radius: 4px;
+          padding: 2px 6px;
+          margin-left: 8px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          font-size: 12px;
+          line-height: 1;
+        `;
+
+        // For empty cells in new rows that can receive paste
+        if (!params.value) {
+          const canPaste = this.copiedSkuValue !== '';
+          const pasteButton = canPaste ? `
+            <div class="paste-button" 
+              data-action="paste"
+              style="
+                ${buttonStyles}
+                background: #f0fdf4;
+                border: 1px solid #86efac;
+                color: #16a34a;
+                display: inline-flex;
+                gap: 6px;
+                align-items: center;
+                min-width: 120px;
+                height: 24px;
+                white-space: nowrap;
+                overflow: visible;
+                position: relative;
+                pointer-events: all;
+                z-index: 999;
+                cursor: pointer;
+                user-select: none;
+              "
+              title="Click to paste '${this.copiedSkuValue}' or press Ctrl+V"
+            >
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                </svg>
+                <span style="font-weight: 500;">Paste</span>
+              </div>
+              <div style="
+                background: #dcfce7;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 11px;
+                border: 1px solid #86efac;
+                max-width: 100px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                line-height: 1.2;
+              " title="${this.copiedSkuValue}">
+                ${this.copiedSkuValue}
+              </div>
+            </button>
+          ` : '';
+
+          return `
+            <div class="sku-cell" style="
+              display: flex;
+              align-items: center;
+              min-height: 28px;
+              padding: 2px;
+              ${canPaste ? `
+                background: #f0fdf4;
+                border: 1px dashed #86efac;
+                position: relative;
+              ` : ''}
+            ">
+              ${canPaste ? `
+                <div style="
+                  position: absolute;
+                  top: -6px;
+                  left: 8px;
+                  background: #dcfce7;
+                  padding: 0 6px;
+                  border-radius: 3px;
+                  font-size: 10px;
+                  color: #16a34a;
+                  border: 1px solid #86efac;
+                  opacity: 0;
+                  transition: opacity 0.2s;
+                  line-height: 14px;
+                  z-index: 1;
+                ">Can paste here</div>
+              ` : ''}
+              <div style="flex: 1; display: flex; justify-content: flex-end;">
+                ${pasteButton}
+              </div>
+              <style>
+                .sku-cell {
+                  transition: all 0.2s ease;
+                }
+                .sku-cell:hover .paste-button {
+                  opacity: 1 !important;
+                }
+                .sku-cell:hover > div > div:first-child {
+                  opacity: 1 !important;
+                }
+                .paste-button:hover {
+                  background: #dcfce7 !important;
+                  border-color: #4ade80 !important;
+                }
+                .paste-button:active {
+                  background: #bbf7d0 !important;
+                  transform: scale(0.98);
+                }
+              </style>
+            </div>
+          `;
+        }
+        
+        // For cells with values in new rows
+        const copyButton = `
+          <button class="copy-button" 
+            style="
+              ${buttonStyles}
+              background: #f0f9ff;
+              border: 1px solid #e2e8f0;
+              color: #3b82f6;
+            "
+            title="Copy SKU value"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span style="margin-left: 4px;">Copy</span>
+          </button>
+        `;
+        
+        // Add checkmark for copied cells
+        const checkmark = isCopiedCell 
+          ? '<span style="color: #4caf50; margin-left: 4px; display: flex; align-items: center;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>' 
+          : '';
+        
+        return `
+          <div class="sku-cell" style="display: flex; align-items: center; position: relative;">
+            <span style="flex: 1;">${params.value}</span>
+            ${isCopiedCell ? checkmark : copyButton}
+            <style>
+              .sku-cell:hover .copy-button {
+                opacity: 1 !important;
+              }
+              .copy-button:hover {
+                background: #e0f2fe !important;
+                border-color: #93c5fd !important;
+              }
+              .copy-button:active {
+                background: #bfdbfe !important;
+                transform: scale(0.98);
+              }
+            </style>
+          </div>
+        `;
+      },
+      editable: false, // Never editable - we handle paste through our custom button
     }));
 
     return [...baseColumns, ...dynamicSkuColumns];
@@ -1030,6 +1268,47 @@ export class App implements OnInit {
   }
 
   onCellClicked(event: any): void {
+    const target = event.event?.target as HTMLElement;
+
+    // Handle paste button click first
+    const pasteButton = target?.closest('[data-action="paste"]');
+    if (pasteButton) {
+      event.event.preventDefault();
+      event.event.stopPropagation();
+      if (event.colDef.field && event.colDef.field.startsWith('sku') && event.data && event.data.isNewRow) {
+        // Ensure we're not in edit mode
+        event.api.stopEditing(true);
+        
+        // Small delay to ensure edit mode is fully cleared
+        setTimeout(() => {
+          // Execute paste
+          this.pasteSkuValue(event);
+        }, 0);
+      }
+      return;
+    }
+
+    // Handle copy button click
+    if (target && (target.closest('.copy-button') || target.matches('.copy-button'))) {
+      event.event.preventDefault();
+      event.event.stopPropagation();
+      if (event.colDef.field && event.colDef.field.startsWith('sku') && event.data && event.data.isNewRow && event.value) {
+        this.copySkuValue(event);
+      }
+      return;
+    }
+
+    // Start editing for part field in new rows
+    if (event.colDef.field === 'part' && event.data && event.data.isNewRow) {
+      event.api.startEditingCell({
+        rowIndex: event.rowIndex,
+        colKey: event.column.getId(),
+        rowPinned: event.rowPinned,
+        keyPress: event.event?.key
+      });
+      return;
+    }
+    
     if (event.colDef.field === 'actions') {
       const target = event.event?.target as HTMLElement;
       
@@ -1083,8 +1362,18 @@ export class App implements OnInit {
   }
 
   trackFieldChange(params: any): void {
+    // Skip if values are the same (no actual change)
+    if (params.oldValue === params.newValue) {
+      return;
+    }
+
     const partId = params.data.part.toString();
     const fieldName = params.colDef.field;
+    
+    // Skip tracking during auto-population
+    if (params.data.isNewRow && fieldName !== 'part') {
+      return;
+    }
     
     // Mark row as edited
     this.editedRows.add(partId);
@@ -1095,7 +1384,10 @@ export class App implements OnInit {
       force: true
     });
     
-    console.log(`${fieldName} changed for part ${partId}: ${params.oldValue} -> ${params.newValue}`);
+    // Only log actual changes
+    if (params.oldValue !== params.newValue) {
+      console.log(`${fieldName} changed for part ${partId}: ${params.oldValue} -> ${params.newValue}`);
+    }
   }
 
   saveChanges(): void {
@@ -1116,12 +1408,32 @@ export class App implements OnInit {
     
     // Simulate API call delay
     setTimeout(() => {
+      // Update new rows to be regular rows after save
+      this.rowData = this.rowData.map(row => {
+        if (row.isNewRow) {
+          // Convert new row to regular row
+          const updatedRow = { ...row };
+          delete updatedRow.isNewRow;
+          delete updatedRow.newRowId;
+          delete updatedRow.insertAfter;
+          return updatedRow;
+        }
+        return row;
+      });
+      
       // Clear the edited state
       this.editedRows.clear();
       
-      // Refresh all rows to remove highlighting
+      // Clear copy state to remove copyable behavior after save
+      this.clearCopyState();
+      
+      // Clear new rows tracking
+      this.newRows.clear();
+      
+      // Refresh the grid to apply all changes
       this.gridApi.refreshCells({
-        force: true
+        force: true,
+        suppressFlash: false
       });
       
       // Update last saved timestamp
@@ -1152,6 +1464,97 @@ export class App implements OnInit {
   clearSaveMessage(): void {
     this.saveMessage = '';
     this.saveMessageType = '';
+  }
+
+  // Copy SKU value from a cell (only for new rows)
+  copySkuValue(params: any): void {
+    if (!params.data || !params.data.isNewRow || !params.value) {
+      return;
+    }
+
+    this.copiedSkuValue = params.value;
+    this.copiedFromCellKey = `${params.node.rowIndex}-${params.colDef.field}`;
+    
+    // Visual feedback - refresh cells to show copy indicator
+    this.gridApi.refreshCells({
+      force: true
+    });
+    
+    console.log('Copied SKU value:', this.copiedSkuValue, 'from cell:', this.copiedFromCellKey);
+  }
+
+  // Paste SKU value to a cell (only for new rows)
+  pasteSkuValue(params: any): void {
+    if (!params.data || !params.data.isNewRow || !this.copiedSkuValue) {
+      return;
+    }
+
+    // Don't paste if the cell already has the same value
+    if (params.value === this.copiedSkuValue) {
+      return;
+    }
+
+    // Stop any ongoing editing
+    this.gridApi.stopEditing();
+
+    // Set the value in the cell
+    params.node.setDataValue(params.colDef.field, this.copiedSkuValue);
+    
+    // Mark the row as edited
+    if (params.data.newRowId) {
+      this.editedRows.add(params.data.newRowId);
+    }
+
+    // Force immediate refresh of the entire row to ensure all values are visible
+    this.gridApi.redrawRows({
+      rowNodes: [params.node]
+    });
+    
+    // Additional refresh after a short delay to ensure visibility
+    setTimeout(() => {
+      // Refresh cells again
+      this.gridApi.refreshCells({
+        rowNodes: [params.node],
+        force: true
+      });
+      
+      // Flash the cell to show the paste was successful
+      this.gridApi.flashCells({
+        rowNodes: [params.node],
+        columns: [params.colDef.field]
+      });
+    }, 50);
+    
+    console.log('Pasted SKU value:', this.copiedSkuValue, 'to cell:', params.colDef.field);
+  }
+
+  // Handle keyboard events for the grid
+  onGridKeyDown(event: KeyboardEvent): void {
+    // Handle Ctrl+V (paste)
+    if (event.ctrlKey && event.key === 'v') {
+      const focusedCell = this.gridApi.getFocusedCell();
+      if (focusedCell && this.copiedSkuValue) {
+        const node = this.gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
+        if (node) {
+          this.pasteSkuValue({
+            data: node.data,
+            node: node,
+            colDef: { field: focusedCell.column.getColId() }
+          });
+        }
+      }
+    }
+  }
+
+  // Clear copy state and visual indicators
+  clearCopyState(): void {
+    this.copiedSkuValue = '';
+    this.copiedFromCellKey = '';
+    
+    // Refresh grid to remove visual indicators
+    this.gridApi.refreshCells({
+      force: true
+    });
   }
 
 
@@ -1426,27 +1829,69 @@ export class App implements OnInit {
         
         if (existingPart) {
           console.log('Found existing part in mock data:', existingPart);
-          console.log('Auto-populating feature:', existingPart.feature);
+          console.log('Auto-populating all fields from existing part');
           
-          // Update the feature field in the grid
-          params.node.setDataValue('feature', existingPart.feature);
+          // Auto-populate all available fields from the existing part
+          const fieldsToPopulate = ['supplier', 'color', 'feature', 'shortDesc', 'longDesc', 'startDate', 'endDate', 'qty'];
+          const existingPartData = existingPart as any; // Cast to any for dynamic field access
           
-          // Also update the data object directly
-          if (params.node.data) {
-            params.node.data.feature = existingPart.feature;
-            console.log('Updated node data feature:', params.node.data.feature);
+          // Temporarily disable cell value changed events
+          const oldData = { ...params.node.data };
+          
+          // Auto-populate base fields
+          fieldsToPopulate.forEach(fieldName => {
+            if (existingPartData[fieldName] !== undefined && existingPartData[fieldName] !== null) {
+              let valueToSet = existingPartData[fieldName];
+              
+              // Special handling for date fields
+              if (fieldName === 'startDate' || fieldName === 'endDate') {
+                const date = new Date(valueToSet);
+                if (!isNaN(date.getTime())) {
+                  valueToSet = date.toISOString();
+                }
+              }
+              
+              // Only update if value is different
+              if (oldData[fieldName] !== valueToSet) {
+                params.node.setDataValue(fieldName, valueToSet);
+                if (params.node.data) {
+                  (params.node.data as any)[fieldName] = valueToSet;
+                }
+                console.log(`Auto-populated ${fieldName}:`, valueToSet);
+              }
+            }
+          });
+          
+          // Auto-populate SKU columns based on the skus array in the existing part
+          const skuInfo = this.dataService.getSkuInfo();
+          if (skuInfo && skuInfo.length > 0) {
+            skuInfo.forEach(sku => {
+              const skuFieldName = `sku${sku.sku}`;
+              const newSkuValue = existingPartData.skus && existingPartData.skus.includes(sku.sku) 
+                ? existingPartData.part // If SKU is included, use part number
+                : ''; // If SKU is not included, use empty string
+              
+              // Only update if value is different
+              if (oldData[skuFieldName] !== newSkuValue) {
+                params.node.setDataValue(skuFieldName, newSkuValue);
+                if (params.node.data) {
+                  (params.node.data as any)[skuFieldName] = newSkuValue;
+                }
+                console.log(`Auto-populated SKU ${sku.sku}:`, newSkuValue);
+              }
+            });
           }
           
-          // Refresh the row to show the updated feature
+          // Refresh the row to show all updated values
           setTimeout(() => {
             this.gridApi.refreshCells({
               rowNodes: [params.node],
               force: true
             });
-            console.log('Refreshed cells to show feature value');
+            console.log('Refreshed cells to show all auto-populated values');
           }, 100);
           
-          console.log('Auto-populated feature for part', params.newValue, ':', existingPart.feature);
+          console.log('Auto-populated all fields for part', params.newValue);
         } else {
           console.log('No existing part found in mock data for:', params.newValue);
           console.log('Available parts in mock data:', mockData.mbom.slice(0, 5).map(p => p.part));
