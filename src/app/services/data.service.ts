@@ -45,7 +45,7 @@ export class DataService {
     return this.http.get<MockData>(environment.mockDataPath).pipe(
       map(data => {
         this.mockData = data;
-        console.log('Mock data loaded successfully from:', environment.mockDataPath);
+
         return data;
       }),
       catchError(this.handleError)

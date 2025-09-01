@@ -292,25 +292,21 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
   }
 
   selectOption(option: string): void {
-    console.log('=== SELECTING OPTION ===', option);
     this.value = option;
     this.closeDropdown();
     
     // Force the value to be set in AG Grid
     if (this.params && this.params.node) {
-      console.log('Setting data value in grid:', option);
       this.params.node.setDataValue(this.params.column.getColId(), option);
       
       // Also update the data object directly
       if (this.params.node.data) {
         this.params.node.data[this.params.column.getColId()] = option;
-        console.log('Updated node data:', this.params.node.data);
       }
     }
     
     // Stop editing immediately to commit the value
     if (this.params && this.params.api) {
-      console.log('Stopping editing with value:', this.value);
       this.params.api.stopEditing();
       
       // Force refresh of the cell to show the selected value
@@ -331,27 +327,18 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
   }
 
   private triggerFeatureAutoPopulation(partNumber: string): void {
-    console.log('=== TRIGGERING FEATURE AUTO-POPULATION ===', partNumber);
-    
     // Get the data service from the grid context
     const dataService = (this.params as any).context?.dataService;
-    console.log('Grid context:', (this.params as any).context);
-    console.log('Data service from context:', !!dataService);
     
     if (dataService) {
       this.triggerFeatureAutoPopulationWithService(partNumber, dataService);
     } else {
-      console.log('Data service not available in context');
-      
       // Fallback: try to get data service from grid API
       if (this.params && this.params.api) {
         const gridContext = this.params.api.getGridOption('context');
         const fallbackDataService = gridContext?.dataService;
         if (fallbackDataService) {
-          console.log('Found data service via grid API fallback');
           this.triggerFeatureAutoPopulationWithService(partNumber, fallbackDataService);
-        } else {
-          console.log('Data service not available via fallback either');
         }
       }
     }
@@ -359,13 +346,10 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
 
   private triggerFeatureAutoPopulationWithService(partNumber: string, dataService: any): void {
     const mockData = dataService.getMockData();
-    console.log('Mock data from service:', !!mockData);
     
     if (mockData && mockData.mbom) {
       const existingPart = mockData.mbom.find((part: any) => part.part === partNumber);
       if (existingPart) {
-        console.log('Found part for auto-population:', existingPart);
-        console.log('Auto-populating all fields from existing part');
         
         if (this.params && this.params.node) {
           // Auto-populate all available fields from the existing part
@@ -383,7 +367,7 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
                 if (this.params.node.data) {
                   this.params.node.data[fieldName] = existingPart[fieldName];
                 }
-                console.log(`Auto-populated ${fieldName}:`, existingPart[fieldName]);
+
               }
             }
           });
@@ -403,7 +387,7 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
                 if (this.params.node.data) {
                   this.params.node.data[skuFieldName] = newSkuValue;
                 }
-                console.log(`Auto-populated SKU ${sku.sku}:`, newSkuValue);
+
               }
             });
           }
@@ -414,14 +398,9 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
               rowNodes: [this.params.node],
               force: true
             });
-            console.log('Refreshed cells to show all auto-populated values');
           }
         }
-      } else {
-        console.log('Part not found for auto-population:', partNumber);
       }
-    } else {
-      console.log('Mock data not available for auto-population');
     }
   }
 
