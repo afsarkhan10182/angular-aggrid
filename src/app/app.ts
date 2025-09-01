@@ -9,15 +9,13 @@ import { DataService } from './services/data.service';
 // AutocompleteCellEditorComponent is used in column definitions, not in template
 // @ts-ignore - Used in column definitions
 import { AutocompleteCellEditorComponent } from './autocomplete-cell-editor/autocomplete-cell-editor.component';
-// @ts-ignore - Used in column definitions
-import { SkuHeaderComponent } from './sku-header.component';
 
 // AutocompleteCellEditorComponent usage examples available in component documentation
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, AgGridAngular, PartModalComponent, AutocompleteCellEditorComponent, SkuHeaderComponent], // AutocompleteCellEditorComponent used in column definitions
+  imports: [CommonModule, RouterModule, FormsModule, AgGridAngular, PartModalComponent, AutocompleteCellEditorComponent], // AutocompleteCellEditorComponent used in column definitions
   templateUrl: './app.html',
   styleUrls: ['./app.css']
 })
@@ -50,7 +48,8 @@ export class App implements OnInit {
   
   // Copy/Paste state for SKU columns in new rows
   public copiedSkuValue: string = '';
-  public copiedFromCellKey: string = ''; // Track which cell was copied from
+  public copiedFromRowId: number | null = null; // Track which row the value was copied from
+  public copiedFromCellKey: string = ''; // Track which cell was copied from (for visual indicator)
   public copiedCellIndicator: string = ''; // Visual indicator for copied cell
   
   // Master list for column visibility panel (includes both real and virtual columns)
@@ -109,10 +108,6 @@ export class App implements OnInit {
     suppressRowVirtualisation: false,
     // Force horizontal scroll to be visible
     domLayout: 'normal',
-    // Register custom components
-    components: {
-      skuHeader: SkuHeaderComponent
-    },
     // Quick filter configuration
     quickFilterText: '', // Enable quick filter functionality
     includeHiddenColumnsInQuickFilter: false, // Don't search hidden columns
@@ -940,9 +935,7 @@ export class App implements OnInit {
       suppressAutoSize: true,
       headerClass: index === 0 ? 'first-sku-column-header' : '',
       cellClass: index === 0 ? 'first-sku-column-cell' : '',
-      // headerTooltip: `SKU: ${sku.skuId}\nProduct: ${sku.product}\nManufacturer: ${sku.manufacturer}\nColor: ${sku.color}\nSize: ${sku.size}`,
-      // headerComponent: 'skuHeader',
-
+     
       cellStyle: (params: any) => {
         const cellKey = `${params.node.rowIndex}-${params.colDef.field}`;
         const isCopiedCell = this.copiedFromCellKey === cellKey;
@@ -1020,7 +1013,10 @@ export class App implements OnInit {
 
         // For empty cells in new rows that can receive paste
         if (!params.value) {
-          const canPaste = this.copiedSkuValue !== '';
+          // Only show paste button if value was copied from the same row
+          const canPaste = this.copiedSkuValue !== '' && 
+                          this.copiedFromRowId !== null && 
+                          params.data.newRowId === this.copiedFromRowId;
           const pasteButton = canPaste ? `
             <div class="paste-button" 
               data-action="paste"
@@ -1473,6 +1469,7 @@ export class App implements OnInit {
     }
 
     this.copiedSkuValue = params.value;
+    this.copiedFromRowId = params.data.newRowId; // Track the row ID where value was copied from
     this.copiedFromCellKey = `${params.node.rowIndex}-${params.colDef.field}`;
     
     // Visual feedback - refresh cells to show copy indicator
@@ -1480,12 +1477,18 @@ export class App implements OnInit {
       force: true
     });
     
-    console.log('Copied SKU value:', this.copiedSkuValue, 'from cell:', this.copiedFromCellKey);
+    console.log('Copied SKU value:', this.copiedSkuValue, 'from row:', this.copiedFromRowId, 'cell:', this.copiedFromCellKey);
   }
 
   // Paste SKU value to a cell (only for new rows)
   pasteSkuValue(params: any): void {
     if (!params.data || !params.data.isNewRow || !this.copiedSkuValue) {
+      return;
+    }
+
+    // Only allow pasting within the same row where the value was copied from
+    if (this.copiedFromRowId !== null && params.data.newRowId !== this.copiedFromRowId) {
+      console.log('Cannot paste: value was copied from a different row');
       return;
     }
 
@@ -1528,27 +1531,12 @@ export class App implements OnInit {
     console.log('Pasted SKU value:', this.copiedSkuValue, 'to cell:', params.colDef.field);
   }
 
-  // Handle keyboard events for the grid
-  onGridKeyDown(event: KeyboardEvent): void {
-    // Handle Ctrl+V (paste)
-    if (event.ctrlKey && event.key === 'v') {
-      const focusedCell = this.gridApi.getFocusedCell();
-      if (focusedCell && this.copiedSkuValue) {
-        const node = this.gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
-        if (node) {
-          this.pasteSkuValue({
-            data: node.data,
-            node: node,
-            colDef: { field: focusedCell.column.getColId() }
-          });
-        }
-      }
-    }
-  }
+
 
   // Clear copy state and visual indicators
   clearCopyState(): void {
     this.copiedSkuValue = '';
+    this.copiedFromRowId = null;
     this.copiedFromCellKey = '';
     
     // Refresh grid to remove visual indicators
