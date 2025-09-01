@@ -77,7 +77,8 @@ export class ColumnService {
             isMatching = firstSkuValue && String(params.value) === String(firstSkuValue);
           }
           
-          const isClickable = componentInstance.clickableParts.has(params.value?.toString());
+          const isClickable = componentInstance.clickableParts.has(params.value?.toString()) || 
+                              componentInstance.clickableParts.has(parseInt(params.value?.toString()));
           
           if (isMatching) {
             // Matching values get red text, regardless of clickability
@@ -251,14 +252,12 @@ export class ColumnService {
           maxValidYear: 2050
         },
         valueFormatter: (params) => {
-          if (!params.value) return '';
-          const date = new Date(params.value);
-          if (isNaN(date.getTime())) return '';
-          return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-          });
+          return componentInstance.formatDate ? componentInstance.formatDate(params) : 
+            (params.value ? new Date(params.value).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            }) : '');
         },
         valueParser: (params) => {
           if (!params.newValue) return null;
@@ -331,14 +330,12 @@ export class ColumnService {
           maxValidYear: 2050
         },
         valueFormatter: (params) => {
-          if (!params.value) return '';
-          const date = new Date(params.value);
-          if (isNaN(date.getTime())) return '';
-          return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-          });
+          return componentInstance.formatDate ? componentInstance.formatDate(params) : 
+            (params.value ? new Date(params.value).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            }) : '');
         },
         valueParser: (params) => {
           if (!params.newValue) return null;
