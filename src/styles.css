@@ -33,10 +33,13 @@ color: #1e293b;
 }
 
 .app-header {
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   margin-bottom: 20px;
   padding-bottom: 15px;
   border-bottom: 1px solid #e2e8f0;
+  position: relative;
 }
 
 .app-header h2 {
@@ -44,6 +47,16 @@ color: #1e293b;
   font-weight: 600;
   color: #1e293b;
   margin: 0;
+}
+
+.nav-button {
+  position: absolute;
+  right: 0;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
 }
 
 /* Controls Section - Clean layout */

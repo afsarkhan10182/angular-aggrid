@@ -1,0 +1,390 @@
+/* Shared Grid Styles - Common styles for AG-Grid components */
+
+/* Simple highlighting for editable fields in new rows */
+.ag-cell[col-id="part"] .ag-cell-wrapper {
+  border: 1px solid #007bff !important;
+}
+
+.ag-cell[col-id="feature"] .ag-cell-wrapper {
+  border: 1px solid #007bff !important;
+}
+
+.ag-cell[col-id="startDate"] .ag-cell-wrapper {
+  border: 1px solid #007bff !important;
+}
+
+.ag-cell[col-id="qty"] .ag-cell-wrapper {
+  border: 1px solid #007bff !important;
+}
+
+/* Simple styling for new rows - light blue border for editable fields */
+.ag-row.new-row .ag-cell[col-id="part"],
+.ag-row.new-row .ag-cell[col-id="feature"],
+.ag-row.new-row .ag-cell[col-id="startDate"],
+.ag-row.new-row .ag-cell[col-id="qty"] {
+  border: 1px solid #007bff !important;
+  background: white !important;
+}
+
+/* Ensure all sides have blue borders for editable cells in new rows */
+.ag-row.new-row .ag-cell[col-id="part"] {
+  border: 1px solid #007bff !important;
+  background: white !important;
+}
+
+.ag-row.new-row .ag-cell[col-id="feature"] {
+  border: 1px solid #007bff !important;
+  background: white !important;
+}
+
+.ag-row.new-row .ag-cell[col-id="startDate"] {
+  border: 1px solid #007bff !important;
+  background: white !important;
+}
+
+.ag-row.new-row .ag-cell[col-id="qty"] {
+  border: 1px solid #007bff !important;
+  background: white !important;
+}
+
+/* Toggle switch styling - Force override browser defaults */
+.toggle-switch-container {
+  display: inline-flex !important;
+  align-items: center !important;
+  margin-left: 8px;
+  gap: 8px;
+  background: #f8fafc !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.toggle-text {
+  font-size: 12px !important;
+  color: #374151 !important;
+  white-space: nowrap !important;
+  font-weight: 500 !important;
+}
+
+.toggle-switch {
+  position: relative !important;
+  display: inline-block !important;
+  width: 50px !important;
+  height: 24px !important;
+  cursor: pointer !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 12px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+
+.toggle-switch input[type="checkbox"] {
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+  visibility: hidden !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: none !important;
+}
+
+.toggle-slider {
+  position: absolute !important;
+  cursor: pointer !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background-color: #d1d5db !important;
+  transition: 0.3s ease !important;
+  border-radius: 12px !important;
+  border: 1px solid #9ca3af !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.toggle-slider:before {
+  position: absolute !important;
+  content: "" !important;
+  height: 18px !important;
+  width: 18px !important;
+  left: 2px !important;
+  bottom: 2px !important;
+  background-color: white !important;
+  transition: 0.3s ease !important;
+  border-radius: 50% !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid #d1d5db !important;
+  display: block !important;
+}
+
+.toggle-switch input[type="checkbox"]:checked + .toggle-slider {
+  background-color: #10b981 !important;
+  border-color: #059669 !important;
+}
+
+.toggle-switch input[type="checkbox"]:focus + .toggle-slider {
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+}
+
+.toggle-switch input[type="checkbox"]:checked + .toggle-slider:before {
+  transform: translateX(26px) !important;
+  -webkit-transform: translateX(26px) !important;
+  -moz-transform: translateX(26px) !important;
+}
+
+.toggle-label {
+  font-size: 12px !important;
+  color: #374151 !important;
+  white-space: nowrap !important;
+  margin-left: 8px !important;
+  font-weight: 500 !important;
+  min-width: 20px !important;
+  text-align: center !important;
+}
+
+/* Ensure toggle switch is visible and properly styled */
+.toggle-switch-container:hover {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.toggle-switch:hover .toggle-slider {
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15) !important;
+}
+
+.toggle-switch input[type="checkbox"]:checked + .toggle-slider:hover {
+  background-color: #059669 !important;
+}
+
+/* Additional overrides to ensure the checkbox doesn't show */
+.toggle-switch input[type="checkbox"]::-webkit-outer-spin-button,
+.toggle-switch input[type="checkbox"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+.toggle-switch input[type="checkbox"]::-moz-focus-inner {
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+/* Highlight expired rows */
+.ag-row.expired-row {
+  background-color: #fee2e2 !important;
+}
+
+.ag-row.expired-row .ag-cell {
+  background-color: #fee2e2 !important;
+}
+
+/* Search Filter Section Styling */
+.search-filter-section {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.search-filter-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  max-width: 320px;
+}
+
+.search-filter-container:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 0 8px;
+  transition: all 0.2s ease;
+  flex: 1;
+  height: 30px;
+  min-width: 200px;
+}
+
+.search-input-wrapper:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: #374151;
+  background: transparent;
+  font-family: inherit;
+  line-height: 1;
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
+  font-style: normal;
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #6b7280;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.clear-search-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.search-filter-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+  height: 30px;
+  min-width: 70px;
+}
+
+.search-filter-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.search-filter-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.search-filter-btn:disabled {
+  background: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.search-filter-btn i {
+  font-size: 11px;
+}
+
+/* Responsive adjustments for the controls row */
+.controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 32px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: #fafbfc;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  min-height: 60px;
+}
+
+/* Left Controls Group - Criteria and Search */
+.left-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1 1 auto;
+}
+
+.criteria-display {
+  flex: 0 0 auto;
+  min-width: 200px;
+  white-space: nowrap;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Right Controls Group - Show Expired, Last Saved, Save */
+.right-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.toggle-switch-container {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.search-filter-section {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-start;
+  max-width: 350px;
+}
+
+.save-section {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}

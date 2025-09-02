@@ -10,16 +10,18 @@ export class ColumnService {
   constructor() { }
 
   /**
-   * Builds column definitions for the MBOM grid
+   * Builds column definitions for the grid
    * @param skuColumns - Array of SKU column information
    * @param dataService - Data service instance for accessing data methods
    * @param componentInstance - Component instance for accessing component methods and properties
+   * @param includeSbomColumns - Whether to include SBOM-specific columns (SpecSheet, SpecSheetExtra)
    * @returns Array of column definitions
    */
   buildColumnDefinitions(
     skuColumns: any[], 
     dataService: any, 
-    componentInstance: any
+    componentInstance: any,
+    includeSbomColumns: boolean = false
   ): ColDef[] {
     const baseColumns: ColDef[] = [
       {
@@ -55,6 +57,77 @@ export class ColumnService {
           borderRight: '1px solid #e2e8f0'
         }
       },
+      // SBOM-specific columns - only include when requested
+      ...(includeSbomColumns ? [
+        {
+          headerName: 'Include In Spec Sheet',
+          field: 'SpecSheet',
+          filter: 'agTextColumnFilter',
+          width: 150,
+          minWidth: 120,
+          maxWidth: 200,
+          resizable: true,
+          suppressSizeToFit: false,
+          suppressAutoSize: false,
+          editable: (params: any) => {
+            // Don't allow editing expired rows
+            if (params.data && params.data.isExpired) {
+              return false;
+            }
+            // Allow editing for new rows and quantity field for all rows
+            return true;
+          },
+          cellEditor: 'agSelectCellEditor',
+          cellEditorParams: {
+            values: ['Y', 'N', 'C']
+          },
+          cellRenderer: (params: any) => {
+            return params.value || '';
+          },
+          cellStyle: (params: any) => {
+            if (params.data && params.data.isNewRow) {
+              return {
+                border: '1px solid #007bff'
+              };
+            }
+            return null;
+          }
+        },
+        {
+          headerName: 'SpecSheet Extra',
+          field: 'SpecSheetExtra',
+          filter: 'agTextColumnFilter',
+          width: 180,
+          minWidth: 150,
+          maxWidth: 250,
+          resizable: true,
+          suppressSizeToFit: false,
+          suppressAutoSize: false,
+          editable: (params: any) => {
+            // Don't allow editing expired rows
+            if (params.data && params.data.isExpired) {
+              return false;
+            }
+            // Allow editing for new rows and quantity field for all rows
+            return true;
+          },
+          cellEditor: 'agSelectCellEditor',
+          cellEditorParams: {
+            values: ['Y', 'N', 'C']
+          },
+          cellRenderer: (params: any) => {
+            return params.value || '';
+          },
+          cellStyle: (params: any) => {
+            if (params.data && params.data.isNewRow) {
+              return {
+                border: '1px solid #007bff'
+              };
+            }
+            return null;
+          }
+        }
+      ] : []),
       {
         headerName: 'Part Name',
         field: 'part',
@@ -423,7 +496,7 @@ export class ColumnService {
             return false;
           }
           // Allow editing for new rows and quantity field for all rows
-          return true;
+          return includeSbomColumns ? false : true;
         },
         cellEditor: 'agNumberCellEditor',
         cellEditorParams: {

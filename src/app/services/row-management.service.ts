@@ -12,7 +12,7 @@ export class RowManagementService {
   /**
    * Add row after a specific row index
    */
-  addRowAfter(rowIndex: number, rowData: any[], gridApi: GridApi, dataService: DataService, nextRowId: number): { newRow: any, newRowId: number } {
+  addRowAfter(rowIndex: number, rowData: any[], gridApi: GridApi, dataService: DataService, nextRowId: number, isSbom: boolean = false): { newRow: any, newRowId: number } {
     const newRowIdValue = nextRowId;
     const newRow = {
       part: '', // Start with empty string for part
@@ -26,6 +26,12 @@ export class RowManagementService {
       newRowId: newRowIdValue, // Add the unique ID to the row data
       insertAfter: rowIndex
     };
+
+    // Add SBOM-specific fields if needed
+    if (isSbom) {
+      (newRow as any).SpecSheet = ''; // Start empty for new rows
+      (newRow as any).SpecSheetExtra = ''; // Start empty for new rows
+    }
 
     // Add SKU columns with empty values
     const skuInfo = dataService.getSkuInfo();
@@ -281,6 +287,23 @@ export class RowManagementService {
                 if (params.node.data) {
                   (params.node.data as any)[fieldName] = valueToSet;
                 }
+              }
+            }
+          });
+          
+          // Auto-populate SBOM-specific fields with default values for new rows
+          // Since these fields don't exist in the original mock data, we'll set default values
+          const sbomFields = ['SpecSheet', 'SpecSheetExtra'];
+          sbomFields.forEach(fieldName => {
+            // Set default value 'N' for new rows (you can change this to 'Y' or 'C' as needed)
+            const valueToSet = 'N';
+            
+            // Only update if value is different
+            if (oldData[fieldName] !== valueToSet) {
+              console.log(`Setting ${fieldName} to ${valueToSet} for new row`);
+              params.node.setDataValue(fieldName, valueToSet);
+              if (params.node.data) {
+                (params.node.data as any)[fieldName] = valueToSet;
               }
             }
           });

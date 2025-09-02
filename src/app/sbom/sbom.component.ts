@@ -1,61 +1,65 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { GridApi, GridOptions, ColDef } from 'ag-grid-community';
 import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
-import { PartModalComponent } from './part-modal/part-modal.component';
-import { DataService } from './services/data.service';
-import { ColumnService } from './services/column.service';
-import { GridCommonService } from './services/grid-common.service';
-import { RowManagementService } from './services/row-management.service';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { DataService } from '../services/data.service';
+import { ColumnService } from '../services/column.service';
+import { GridCommonService } from '../services/grid-common.service';
+import { RowManagementService } from '../services/row-management.service';
+import { AutocompleteCellEditorComponent } from '../autocomplete-cell-editor/autocomplete-cell-editor.component';
+import { PartModalComponent } from '../part-modal/part-modal.component';
 
 @Component({
-  selector: 'app-root',
-  standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, AgGridAngular, PartModalComponent],
-  templateUrl: './app.html',
-  styleUrls: ['./app.css']
+  selector: 'app-sbom',
+  templateUrl: './sbom.component.html',
+  styleUrls: ['./sbom.component.css'],
+  imports: [CommonModule, FormsModule, AgGridAngular, PartModalComponent],
+  standalone: true
 })
-export class App implements OnInit {
-  private gridApi!: GridApi;
-  public showColumnVisibilityPanel = false;
+export class SbomComponent implements OnInit {
+  // Grid configuration
+  public gridOptions: GridOptions = {} as GridOptions;
+  public defaultColDef: any;
+  public columnDefs: ColDef[] = [];
+  public skuColumns: any[] = []; // Dynamic SKU columns
+
+  // Data
+  public rowData: any[] = [];
+  public totalRows = 1000;
+
+  // Grid API
+  public gridApi!: GridApi;
+
+  // State management
   public showExpiredData = false;
-  public expiredDataCount = 0;
+  public searchText = '';
+  public saveMessage: string = '';
+  public saveMessageType: string = '';
+  public lastSavedAt: Date | null = null;
+  public clickableParts = new Set<number>();
+  public editedRows = new Set<number>();
+  public newRows = new Map<number, any>();
+  public nextRowId = 10000;
+
+  // Copy/Paste state for SKU columns in new rows
+  public copiedSkuValue: string = '';
+  public copiedFromRowId: number | null = null;
+  public copiedFromCellKey: string = '';
+  public copiedCellIndicator: string = '';
 
   // Modal state
   public showPartModal = false;
   public selectedPartData: any = {};
   public selectedPartSkuData: any[] = [];
-  
-  // Search functionality
-  public searchText: string = '';
-  
-  // Save message state
-  public saveMessage: string = '';
-  public saveMessageType: string = '';
-  // Last saved timestamp
-  public lastSavedAt: Date | null = null;
-  // Track which parts are clickable (random selection)
-  public clickableParts = new Set<number>();
-  // Editable state
-  public editedRows = new Set<number>();
-  // Add row state
-  public newRows = new Map<number, any>();
-  public nextRowId = 10000; // Unique ID for new rows
-  
-  // Copy/Paste state for SKU columns in new rows
-  public copiedSkuValue: string = '';
-  public copiedFromRowId: number | null = null; // Track which row the value was copied from
-  public copiedFromCellKey: string = ''; // Track which cell was copied from (for visual indicator)
-  public copiedCellIndicator: string = ''; // Visual indicator for copied cell
-  
-  // Master list for column visibility panel (includes both real and virtual columns)
+
+  // Column visibility
   public allColumns = [
     // Core Part Information
     { field: 'actions', headerName: '', hide: false, isVirtual: false },
-    { field: 'SpecSheet', headerName: 'Include In Spec Sheet', hide: true, isVirtual: true },
-    // { field: 'SpecSheetExtra', headerName: 'SpecSheet Extra', hide: true, isVirtual: true },
+    { field: 'SpecSheet', headerName: 'Include In Spec Sheet', hide: false, isVirtual: false },
+    { field: 'SpecSheetExtra', headerName: 'SpecSheet Extra', hide: false, isVirtual: false },
     { field: 'part', headerName: 'Part Number', hide: false, isVirtual: false },
     { field: 'type', headerName: 'Type', hide: true, isVirtual: true },
     { field: 'manufacturerPartNumber', headerName: 'Manufacturer Part Number', hide: true, isVirtual: true },
@@ -89,22 +93,13 @@ export class App implements OnInit {
     { field: 'startDate', headerName: 'Start Date', hide: false, isVirtual: false },
     { field: 'endDate', headerName: 'End Date', hide: false, isVirtual: false }
   ];
-  // Grid configuration - client-side
-  public gridOptions: GridOptions = {} as GridOptions;
 
-
-
-  public defaultColDef: any;
-
-  public columnDefs: ColDef[] = [];
-  public skuColumns: any[] = []; // Dynamic SKU columns
-
-  public rowData: any[] = [];
-  public totalRows = 1000;
+  // Search debounce timer
+  private searchTextDebounceTimer: any;
 
   constructor(
-    public router: Router, 
-    public dataService: DataService, 
+    private router: Router,
+    public dataService: DataService,
     private columnService: ColumnService,
     private gridCommonService: GridCommonService,
     private rowManagementService: RowManagementService
@@ -114,12 +109,12 @@ export class App implements OnInit {
       dataService: this.dataService
     };
     
-    // Load expired data state from localStorage
-    const savedState = localStorage.getItem('showExpiredData');
+    // Load expired data state from localStorage (separate from MBOM)
+    const savedState = localStorage.getItem('sbom_showExpiredData');
     this.showExpiredData = savedState === 'true';
     
-    // Load last saved timestamp from localStorage
-    const savedTimestamp = localStorage.getItem('lastSavedAt');
+    // Load last saved timestamp from localStorage (separate from MBOM)
+    const savedTimestamp = localStorage.getItem('sbom_lastSavedAt');
     if (savedTimestamp) {
       this.lastSavedAt = new Date(savedTimestamp);
     }
@@ -134,10 +129,11 @@ export class App implements OnInit {
   loadData(): void {
     this.dataService.loadMockData().subscribe(data => {
       // Transform mock data to grid format - use only the base data (176 entries)
-      let baseData = this.dataService.transformToGridData(data.mbom);
+      // Pass isSbom=true to include SBOM-specific fields
+      let baseData = this.dataService.transformToGridData(data.mbom, true);
       
       // Always generate expired entries to get the count
-      const expiredEntries = this.gridCommonService.generateExpiredEntries(this.dataService);
+      const expiredEntries = this.gridCommonService.generateExpiredEntries(this.dataService, true);
       this.expiredDataCount = expiredEntries.length;
       
       if (this.showExpiredData) {
@@ -151,12 +147,10 @@ export class App implements OnInit {
       // Initialize columns after data is loaded
       this.initializeColumns();
       
-              // Make only some parts clickable (random selection from first 20 rows)
-        this.clickableParts = this.gridCommonService.initializeClickableParts(this.rowData);
+      // Make only some parts clickable (random selection from first 20 rows)
+      this.clickableParts = this.gridCommonService.initializeClickableParts(this.rowData);
     });
   }
-
-
 
   initializeColumns(): void {
     // Get SKU columns from data service
@@ -171,92 +165,15 @@ export class App implements OnInit {
     }));
     
     // Build column definitions using the column service
-    this.columnDefs = this.columnService.buildColumnDefinitions(skuColumns, this.dataService, this);
-
+    // Pass includeSbomColumns=true to include SBOM-specific columns
+    this.columnDefs = this.columnService.buildColumnDefinitions(skuColumns, this.dataService, this, true);
   }
 
+  // Grid event handlers
   onGridReady(params: any): void {
     this.gridApi = params.api;
     this.gridCommonService.sizeColumnsToFit(this.gridApi);
-    // Add Firefox compatibility
     this.gridCommonService.forceHorizontalScrollbarVisibility(this.gridApi);
-  }
-
-  getColumnDisplayName(col: any): string {
-    // Return the exact same header name as shown in the grid
-    return col.headerName || col.field;
-  }
-
-  isSkuColumn(col: any): boolean {
-    // Check if the column is a SKU column by examining the field name
-    return col.field && (col.field.startsWith('sku') || col.field.startsWith('actions'));
-  }
-
-  getFirstSkuFieldName(): string {
-    // Get the first SKU column field name
-    const skuInfo = this.dataService.getSkuInfo();
-    if (skuInfo && skuInfo.length > 0) {
-      return `sku${skuInfo[0].sku}`;
-    }
-    return '';
-  }
-
-  toggleExpiredData(): void {
-    // Save state to localStorage
-    localStorage.setItem('showExpiredData', this.showExpiredData.toString());
-    
-    // Reload data with or without expired entries
-    this.loadData();
-  }
-
-  toggleColumnVisibility(col?: any, event?: Event): void {
-    if (col && event) {
-      const visible = (event.target as HTMLInputElement).checked;
-
-      if (col.isVirtual) {
-        // Just update metadata for virtual columns
-        col.hide = !visible;
-      } else {
-        // Real AG Grid column
-        this.gridApi.setColumnsVisible([col.field], visible);
-        col.hide = !visible;
-      }
-    } else {
-      // Toggle visibility panel
-      this.showColumnVisibilityPanel = !this.showColumnVisibilityPanel;
-      
-      // Remove existing listener first to prevent duplicates
-      document.removeEventListener('click', this.handleClickOutside, true);
-      
-      // Add click outside handler when panel opens
-      if (this.showColumnVisibilityPanel) {
-        // Use setTimeout to avoid immediate closure
-        setTimeout(() => {
-          document.addEventListener('click', this.handleClickOutside, true);
-        }, 150);
-      }
-    }
-  }
-
-  private handleClickOutside = (event: Event): void => {
-    const target = event.target as Element;
-    const panel = document.querySelector('.grid-column-visibility-panel-container');
-    const toggleBtn = document.querySelector('.grid-toggle-columns-btn');
-    const toggleContainer = document.querySelector('.grid-toggle-button-container');
-    
-    // Check if click is outside all relevant elements
-    const clickedOutside = panel && !panel.contains(target) && 
-                          toggleBtn && !toggleBtn.contains(target) &&
-                          toggleContainer && !toggleContainer.contains(target);
-    
-    if (clickedOutside) {
-      this.showColumnVisibilityPanel = false;
-      document.removeEventListener('click', this.handleClickOutside, true);
-      // Force change detection since we're outside Angular zone
-      setTimeout(() => {
-        // This ensures Angular detects the change
-      }, 0);
-    }
   }
 
   onCellClicked(event: any): void {
@@ -338,22 +255,73 @@ export class App implements OnInit {
     }
   }
 
-  openPartModal(partId: string): void {
-    // Find the part data from the current row data
-    const partData = this.rowData.find(row => row.part.toString() === partId);
-    if (partData) {
-      this.selectedPartData = partData;
-      this.selectedPartSkuData = this.dataService.getSkuDataForPart(partData);
-      this.showPartModal = true;
+  // Row management methods
+  addRowAfter(rowIndex: number): void {
+    const result = this.rowManagementService.addRowAfter(rowIndex, this.rowData, this.gridApi, this.dataService, this.nextRowId, true);
+    this.nextRowId = result.newRowId;
+    this.newRows.set(result.newRow.newRowId, result.newRow);
+  }
+
+  deleteRowById(newRowId: number): void {
+    this.rowManagementService.deleteRowById(newRowId, this.rowData, this.gridApi);
+    this.newRows.delete(newRowId);
+  }
+
+  deleteRow(partId: string): void {
+    this.rowManagementService.deleteRow(partId, this.rowData, this.gridApi);
+    this.newRows.delete(parseInt(partId));
+  }
+
+  // Utility methods
+  getUniqueFeatures(): string[] {
+    return this.gridCommonService.getUniqueFeatures(this.rowData);
+  }
+
+  getAvailablePartNumbers(): string[] {
+    return this.gridCommonService.getAvailablePartNumbers(this.rowData);
+  }
+
+  getUniqueSuppliers(): string[] {
+    return this.gridCommonService.getUniqueSuppliers(this.rowData);
+  }
+
+  getUniqueColors(): string[] {
+    return this.gridCommonService.getUniqueColors(this.rowData);
+  }
+
+  async searchPartNumbers(searchTerm: string): Promise<string[]> {
+    return this.gridCommonService.searchPartNumbers(searchTerm, this.rowData);
+  }
+
+  onNewRowValueChanged(params: any): void {
+    this.rowManagementService.onNewRowValueChanged(params, this.dataService, this.editedRows);
+  }
+
+  formatLastSavedTime(date: Date): string {
+    return this.gridCommonService.formatLastSavedTime(date);
+  }
+
+  formatDate(params: any): string {
+    return this.gridCommonService.dateFormatter(params);
+  }
+
+  // Search functionality
+  onSearchTextChange(): void {
+    if (this.searchTextDebounceTimer) {
+      clearTimeout(this.searchTextDebounceTimer);
     }
+    
+    this.searchTextDebounceTimer = setTimeout(() => {
+      this.gridCommonService.applyQuickFilter(this.gridApi, this.searchText);
+    }, 300);
   }
 
-  closePartModal(): void {
-    this.showPartModal = false;
-    this.selectedPartData = {};
-    this.selectedPartSkuData = [];
+  clearSearch(): void {
+    this.searchText = '';
+    this.gridCommonService.clearSearch(this.gridApi, this);
   }
 
+  // Change tracking and save methods
   trackFieldChange(params: any): void {
     this.rowManagementService.trackFieldChange(params, this.editedRows);
   }
@@ -362,15 +330,9 @@ export class App implements OnInit {
     this.rowManagementService.saveChanges(this.rowData, this.editedRows, this.gridApi, this)
       .then(result => {
         if (result.success) {
-          // Update last saved timestamp
           this.lastSavedAt = new Date();
-          
-          // Save timestamp to localStorage for persistence
-          localStorage.setItem('lastSavedAt', this.lastSavedAt.toISOString());
-          
-          // Clear new rows tracking
+          localStorage.setItem('sbom_lastSavedAt', this.lastSavedAt.toISOString());
           this.newRows.clear();
-          
           this.rowManagementService.showSaveMessage(result.message, 'success', this);
         } else {
           this.rowManagementService.showSaveMessage(result.message, 'info', this);
@@ -386,7 +348,7 @@ export class App implements OnInit {
     this.rowManagementService.clearSaveMessage(this);
   }
 
-  // Copy SKU value from a cell (only for new rows)
+  // Copy/Paste methods
   copySkuValue(params: any): void {
     this.rowManagementService.copySkuValue(params, this);
   }
@@ -395,52 +357,44 @@ export class App implements OnInit {
     this.rowManagementService.pasteSkuValue(params, this);
   }
 
-  // Clear copy state and visual indicators
   clearCopyState(): void {
     this.rowManagementService.clearCopyState(this.gridApi, this);
   }
 
-  addRowAfter(rowIndex: number): void {
-    const result = this.rowManagementService.addRowAfter(rowIndex, this.rowData, this.gridApi, this.dataService, this.nextRowId);
-    this.nextRowId = result.newRowId;
-    this.newRows.set(result.newRow.newRowId, result.newRow);
+  // Modal methods
+  openPartModal(partId: string): void {
+    const partData = this.rowData.find(row => row.part.toString() === partId);
+    if (partData) {
+      this.selectedPartData = partData;
+      this.selectedPartSkuData = this.dataService.getSkuDataForPart(partData);
+      this.showPartModal = true;
+    }
   }
 
-  deleteRowById(newRowId: number): void {
-    this.rowManagementService.deleteRowById(newRowId, this.rowData, this.gridApi);
-    this.newRows.delete(newRowId);
+  closePartModal(): void {
+    this.showPartModal = false;
+    this.selectedPartData = {};
+    this.selectedPartSkuData = [];
   }
 
-  deleteRow(partId: string): void {
-    this.rowManagementService.deleteRow(partId, this.rowData, this.gridApi);
-    this.newRows.delete(parseInt(partId));
-  }
-
-  getUniqueFeatures(): string[] {
-    return this.gridCommonService.getUniqueFeatures(this.rowData);
-  }
-
-  // Get all columns for the visibility panel (real + virtual)
+  // Column visibility methods
   get allColumnsForPanel() {
     return this.allColumns;
   }
 
-  // Get only real columns for AG Grid (filter out virtual ones)
   get realColumnsForGrid() {
     return this.allColumns.filter(col => !col.isVirtual);
   }
 
-  // Get select all state
   get selectAllState() {
     const visibleColumns = this.allColumns.filter(col => !col.isVirtual && !col.hide);
     const totalColumns = this.allColumns.filter(col => !col.isVirtual);
     
     if (visibleColumns.length === 0) return false;
     if (visibleColumns.length === totalColumns.length) return true;
-    return null; // indeterminate state
+    return null;
   }
 
-  // Toggle select all
   toggleSelectAll(event: Event): void {
     const checked = (event.target as HTMLInputElement).checked;
     
@@ -454,61 +408,81 @@ export class App implements OnInit {
     });
   }
 
-  getAvailablePartNumbers(): string[] {
-    return this.gridCommonService.getAvailablePartNumbers(this.rowData);
-  }
-
-  getUniqueSuppliers(): string[] {
-    return this.gridCommonService.getUniqueSuppliers(this.rowData);
-  }
-
-  getUniqueColors(): string[] {
-    return this.gridCommonService.getUniqueColors(this.rowData);
-  }
-
-  // Method for future API integration
-  async searchPartNumbers(searchTerm: string): Promise<string[]> {
-    return this.gridCommonService.searchPartNumbers(searchTerm, this.rowData);
-  }
-
-  onNewRowValueChanged(params: any): void {
-    this.rowManagementService.onNewRowValueChanged(params, this.dataService, this.editedRows);
-  }
-
-  formatLastSavedTime(date: Date): string {
-    return this.gridCommonService.formatLastSavedTime(date);
-  }
-
-  // Date formatter utility method for use in column definitions
-  formatDate(params: any): string {
-    return this.gridCommonService.dateFormatter(params);
-  }
-
-  // Search functionality methods
-  onSearchTextChange(): void {
-    // Auto-apply filter as user types (debounced)
-    if (this.searchTextDebounceTimer) {
-      clearTimeout(this.searchTextDebounceTimer);
-    }
-    
-    this.searchTextDebounceTimer = setTimeout(() => {
-      this.gridCommonService.applyQuickFilter(this.gridApi, this.searchText);
-    }, 300); // 300ms debounce
-  }
-
-  private searchTextDebounceTimer: any;
-
+  // Additional methods needed for the HTML template
   applyQuickFilter(): void {
     this.gridCommonService.applyQuickFilter(this.gridApi, this.searchText);
   }
 
-  clearSearch(): void {
-    this.gridCommonService.clearSearch(this.gridApi, this);
+  toggleExpiredData(): void {
+    // The ngModel should have already updated showExpiredData
+    // Save state to localStorage
+    localStorage.setItem('sbom_showExpiredData', this.showExpiredData.toString());
+    
+    // Reload data with or without expired entries
+    this.loadData();
+  }
+
+  public expiredDataCount = 0;
+
+  showColumnVisibilityPanel = false;
+
+  toggleColumnVisibility(col?: any, event?: Event): void {
+    if (col && event) {
+      const visible = (event.target as HTMLInputElement).checked;
+
+      if (col.isVirtual) {
+        // Just update metadata for virtual columns
+        col.hide = !visible;
+      } else {
+        // Real AG Grid column
+        this.gridApi.setColumnsVisible([col.field], visible);
+        col.hide = !visible;
+      }
+    } else {
+      // Toggle visibility panel
+      this.showColumnVisibilityPanel = !this.showColumnVisibilityPanel;
+      
+      // Remove existing listener first to prevent duplicates
+      document.removeEventListener('click', this.handleClickOutside, true);
+      
+      // Add click outside handler when panel opens
+      if (this.showColumnVisibilityPanel) {
+        // Use setTimeout to avoid immediate closure
+        setTimeout(() => {
+          document.addEventListener('click', this.handleClickOutside, true);
+        }, 150);
+      }
+    }
+  }
+
+  private handleClickOutside = (event: Event): void => {
+    const target = event.target as Element;
+    const panel = document.querySelector('.grid-column-visibility-panel-container');
+    const toggleBtn = document.querySelector('.grid-toggle-columns-btn');
+    const toggleContainer = document.querySelector('.grid-toggle-button-container');
+    
+    // Check if click is outside all relevant elements
+    const clickedOutside = panel && !panel.contains(target) && 
+                          toggleBtn && !toggleBtn.contains(target) &&
+                          toggleContainer && !toggleContainer.contains(target);
+    
+    if (clickedOutside) {
+      this.showColumnVisibilityPanel = false;
+      document.removeEventListener('click', this.handleClickOutside, true);
+      // Force change detection since we're outside Angular zone
+      setTimeout(() => {
+        // This ensures Angular detects the change
+      }, 0);
+    }
+  }
+  
+  isSkuColumn(col: any): boolean {
+    // Check if the column is a SKU column by examining the field name
+    return col.field && (col.field.startsWith('sku') || col.field.startsWith('actions'));
   }
 
   // Navigation
-  goToSbom(): void {
-    this.router.navigate(['/sbom']);
+  goToMainApp(): void {
+    this.router.navigate(['/']);
   }
-
 }

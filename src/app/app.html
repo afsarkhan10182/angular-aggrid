@@ -1,8 +1,14 @@
-<!-- Main Grid View - Show when not on part detail route -->
-<div class="app-container">
+<!-- Router outlet for SBOM component -->
+<router-outlet *ngIf="router.url === '/sbom'"></router-outlet>
+
+<!-- Main Grid View -->
+<div class="app-container" *ngIf="router.url !== '/sbom'">
   <!-- Header -->
   <div class="app-header">
     <h2>MBOM</h2>
+    <button class="nav-button" style="display:flex;" (click)="goToSbom()">
+      <span>Go to SBOM →</span>
+    </button>
   </div>
 
       <!-- Controls Section -->

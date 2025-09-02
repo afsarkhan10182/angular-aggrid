@@ -82,7 +82,7 @@ export class DataService {
   }
 
   // Transform mock data to grid format with SKU columns
-  transformToGridData(parts: PartData[]): any[] {
+  transformToGridData(parts: PartData[], isSbom: boolean = false): any[] {
     if (!this.mockData) return [];
 
     const skuInfo = this.getSkuInfo();
@@ -100,6 +100,14 @@ export class DataService {
         qty: part.qty
       };
 
+      // Add SBOM-specific fields
+      if (isSbom) {
+        // Random values: Y, N, or C for both fields
+        const specSheetValues = ['Y', 'N', 'C'];
+        row.SpecSheet = specSheetValues[Math.floor(Math.random() * specSheetValues.length)];
+        row.SpecSheetExtra = specSheetValues[Math.floor(Math.random() * specSheetValues.length)];
+      }
+
       // Add SKU columns based on available SKUs
       skuInfo.forEach(sku => {
         const fieldName = `sku${sku.sku}`;
@@ -111,7 +119,7 @@ export class DataService {
   }
 
   // Generate additional mock data to reach 1000 rows
-  generateAdditionalData(baseParts: PartData[], targetCount: number = 1000): any[] {
+  generateAdditionalData(baseParts: PartData[], targetCount: number = 1000, isSbom: boolean = false): any[] {
     const additionalData = [];
     const baseSkuInfo = this.getSkuInfo();
     
@@ -148,6 +156,14 @@ export class DataService {
         endDate: '08/18/2026',
         qty: Math.floor(Math.random() * 50) + 5
       };
+      
+      // Add SBOM-specific fields
+      if (isSbom) {
+        // Random values: Y, N, or C for both fields
+        const specSheetValues = ['Y', 'N', 'C'];
+        dataRow.SpecSheet = specSheetValues[Math.floor(Math.random() * specSheetValues.length)];
+        dataRow.SpecSheetExtra = specSheetValues[Math.floor(Math.random() * specSheetValues.length)];
+      }
       
       // Add SKU columns for all 20 SKUs
       baseSkuInfo.forEach(sku => {

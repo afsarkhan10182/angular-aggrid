@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
+import { SbomComponent } from './sbom/sbom.component';
 
 export const routes: Routes = [
-  // No routes needed since we're using modal for part details
+  { path: 'sbom', component: SbomComponent }
 ];
