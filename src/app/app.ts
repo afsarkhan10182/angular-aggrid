@@ -143,16 +143,27 @@ export class App implements OnInit {
   ngOnInit(): void {}
 
   private checkAuthentication(): void {
-    // If authentication is enabled, prompt for credentials
-    if (environment.enableHttpBasicAuth && !this.sessionService.isAuthenticated()) {
-      // Add a small delay to ensure DOM is ready
-      setTimeout(() => {
-        this.promptForCredentials();
-      }, 100);
-    } else {
-      // Load data if authentication is disabled or user is already authenticated
+    if (!environment.enableHttpBasicAuth) {
+      // Authentication disabled - load data directly
       this.loadData();
+      return;
     }
+
+    // Try to authenticate with existing credentials first
+    this.sessionService.initSession().subscribe({
+      next: (user) => {
+        // If we get here, CSRF API succeeded (200 OK) - user is authenticated
+        console.log('CSRF API succeeded - user authenticated');
+        this.loadData();
+      },
+      error: (error) => {
+        // CSRF API failed (401, 403, network error, etc.) - show modal
+        console.log('CSRF API failed - showing modal', error);
+        setTimeout(() => {
+          this.promptForCredentials();
+        }, 100);
+      },
+    });
   }
 
   private async promptForCredentials(): Promise<void> {

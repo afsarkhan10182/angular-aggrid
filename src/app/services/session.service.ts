@@ -14,9 +14,10 @@ export interface LoggedInUserModel {
   providedIn: 'root',
 })
 export class SessionService {
-  static readonly userUrl = environment.useMockApi
-    ? environment.mockApiEndpoints.getUser
-    : `${environment.apiUrl}/getUser`;
+  // Use CSRF API for authentication since it requires credentials
+  static readonly authUrl = environment.useMockApi
+    ? environment.mockApiEndpoints.csrf
+    : `${environment.serverHostUrl}${environment.csrfUrl}`;
 
   private sessionSubject = new BehaviorSubject<LoggedInUserModel | null>(null);
   public session$ = this.sessionSubject.asObservable();
@@ -27,15 +28,21 @@ export class SessionService {
   constructor(private http: HttpClient) {}
 
   initSession(): Observable<LoggedInUserModel> {
-    return this.http.get<LoggedInUserModel>(SessionService.userUrl).pipe(
-      tap((user: LoggedInUserModel) => {
+    // Call CSRF API which requires authentication
+    return this.http.get<any>(SessionService.authUrl).pipe(
+      tap((response: any) => {
+        // If CSRF API returns successfully, user is authenticated
+        // CSRF API only returns nonce, so we create a default authenticated user
+        const user: LoggedInUserModel = {
+          name: 'authenticated',
+          fullName: 'Authenticated User',
+          id: 'authenticated-user',
+        };
         this.sessionSubject.next(user);
-        // Consider successful response as authenticated
         this.isAuthenticatedSubject.next(true);
       }),
       catchError((error) => {
-        console.log('Session initialization error:', error);
-        // Don't throw the error, just log it like the old app
+        console.log('Authentication failed:', error);
         this.sessionSubject.next(null);
         this.isAuthenticatedSubject.next(false);
         // Return a default user object to prevent the error from propagating

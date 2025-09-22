@@ -16,7 +16,7 @@ export class CsrfService {
     ? environment.mockApiEndpoints.csrf
     : `${environment.serverHostUrl}${environment.csrfUrl}`;
 
-  csrfHeaderName = 'csrf_nonce';
+  csrfHeaderName = 'CSRF_NONCE';
   csrfNonce: string | null = null;
 
   constructor(private http: HttpClient) {}
