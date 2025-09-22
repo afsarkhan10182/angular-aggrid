@@ -9,9 +9,7 @@ export const environment = {
   csrfUrl: '/Windchill/servlet/rest/security/csrf',
   mockDataPath: '/mock.json',
   serverHostUrl: '',
-  /**
-   * Credentials to be sent along with the Auth header.
-   */
+  // Development credentials for mock API validation
   credentials: {
     username: 'test',
     password: 'test',
@@ -23,7 +21,6 @@ export const environment = {
   // Mock API configuration for development
   useMockApi: true,
   mockApiEndpoints: {
-    getUser: '/api/getUser.json',
     csrf: '/api/csrf.json',
   },
 };
