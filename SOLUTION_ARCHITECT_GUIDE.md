@@ -2,44 +2,27 @@
 
 ### What Happens When User Opens App:
 
-1. **Sign-in modal appears** - user enters username/password (What username and password should users enter to log in?")
-2. **App converts credentials** to Base64 format (like: `Y2FydGVyczpjYXJ0ZXJz`)
-3. **App calls authentication API** with these credentials
-4. **If valid** - app loads with data
-5. **If invalid** - shows error message
+1. **App tries CSRF API first** with existing credentials (if any)
+2. **If CSRF succeeds** → User already logged in, load data directly
+3. **If CSRF fails** → Show sign-in modal for user to enter credentials
+4. **User enters credentials** → App calls CSRF API with new credentials
+5. **If valid** → App loads with data
+6. **If invalid** → Shows error message
+
+**Note:** In production, users enter their own credentials. No hardcoded credentials needed.
 
 ## What Backend Team Needs to Build
 
-### 1. Authentication API (Check User Login)
+### 1. Authentication API (CSRF API with Authentication)
 
-**URL:** `/Windchill/servlet/rest/bomCreator/getUser`
-**What we send:** `Authorization: Basic Y2FydGVyczpjYXJ0ZXJz` (Base64 encoded username:password check auth.interceptor.ts)
+**URL:** `http://plmctmig.plmtestlab.com:80/Windchill/servlet/rest/security/csrf`
+**What we send:** `Authorization: Basic Y2FydGVyczpjYXJ0ZXJz` (Base64 encoded username:password)
 **What backend should do:**
 
 - Decode the Base64 string to get username and password
 - Check if username/password is correct
-- If correct: return user info
+- If correct: return CSRF token (this proves user is authenticated)
 - If wrong: return 401 error
-
-**Response we expect:**
-
-```json
-{
-  "name": "ktest2",
-  "fullName": "test",
-  "id": "OR:wt.org.WTUser:15760737585"
-}
-```
-
-### 2. CSRF Token API (Get Security Token)
-
-**URL:** `/Windchill/servlet/rest/security/csrf`
-**What we send:** `Authorization: Basic Y2FydGVyczpjYXJ0ZXJz` (same Base64)
-**What backend should do:**
-
-- Check if user is logged in
-- Generate a CSRF token
-- Return the token
 
 **Response we expect:**
 
@@ -49,24 +32,33 @@
     {
       "id": "csrf",
       "attributes": {
-        "nonce_key": "CSRF_NONCE",
-        "nonce": "sdafasdfa"
+        "nonce_key": "CSRF NONCE",
+        "nonce": "G0OobsCrkv2A6jK...etc..."
       }
     }
   ]
 }
 ```
 
-### 3. Data APIs (Get Grid Data)
+**Note:** The CSRF API only returns the nonce token, not user details. If the API call succeeds, we know the user is authenticated.
+
+### 2. Data APIs (Get Grid Data)
 
 **URLs:** `/api/parts`, `/api/products`, etc.
 **What we send:** `Authorization: Basic Y2FydGVyczpjYXJ0ZXJz`
 **What backend should do:** Return the data
 
-### 4. Save/Update APIs (Write Operations)
+### 3. Save/Update APIs (Write Operations)
 
 **URLs:** `POST /Windchill/servlet/rest/bomCreator/updateBOM`, etc.
 **What we send:**
 
 - `Authorization: Basic Y2FydGVyczpjYXJ0ZXJz`
-- `csrf_nonce: <token-from-csrf-endpoint>`
+- `CSRF NONCE: <token-from-csrf-endpoint>`
+
+**What backend should do:**
+
+- Check if user is logged in
+- Check if CSRF token is valid
+- If both valid: save the data
+- If not valid: return error
