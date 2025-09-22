@@ -1,0 +1,11 @@
+{
+  "items": [
+    {
+      "id": "csrf",
+      "attributes": {
+        "nonce_key": "CSRF_NONCE",
+        "nonce": "Ogd3ukQ/4YSBiParC00d6BV2orPs47KYY0MfgzB6jPTkyY/bb24S8ABViMKwsZLYbTNH4yxroLm7ucGeAjNCjHYH0byyu8zpd34diyBR0MDJy7/eSHZF7wxZse6ywJnuCT9Ey30L1O+0yZ+eSDU52QlM3A=="
+      }
+    }
+  ]
+}
