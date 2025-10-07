@@ -152,13 +152,18 @@ export class App implements OnInit {
     // Try to authenticate with existing credentials first
     this.sessionService.initSession().subscribe({
       next: (user) => {
-        // If we get here, CSRF API succeeded (200 OK) - user is authenticated
-        console.log('CSRF API succeeded - user authenticated');
-        this.loadData();
+        // Only load data if user is properly authenticated
+        if (user) {
+          console.log('CSRF API succeeded - user authenticated');
+          this.loadData();
+        } else {
+          console.log('CSRF API succeeded but no valid user - showing modal');
+          this.promptForCredentials();
+        }
       },
       error: (error) => {
-        // CSRF API failed (401, 403, network error, etc.) - show modal
-        console.log('CSRF API failed - showing modal', error);
+        // CSRF API failed - show modal, NO DATA LOADING
+        console.log('CSRF API failed - showing modal, no data loaded', error);
         setTimeout(() => {
           this.promptForCredentials();
         }, 100);
@@ -205,8 +210,9 @@ export class App implements OnInit {
             this.promptForCredentials(); // Show modal again
           }
         },
-        error: () => {
-          // This shouldn't happen now since we handle errors in the service
+        error: (error) => {
+          // CSRF API failed after user entered credentials - NO DATA LOADING
+          console.log('CSRF API failed after credentials - no data loaded', error);
           alert('Authentication failed. Please check your credentials and try again.');
           this.promptForCredentials(); // Show modal again
         },
@@ -217,7 +223,7 @@ export class App implements OnInit {
   }
 
   loadData(): void {
-    this.dataService.loadMockData().subscribe((data) => {
+    this.dataService.loadData().subscribe((data) => {
       // Transform mock data to grid format - use only the base data (176 entries)
       let baseData = this.dataService.transformToGridData(data.mbom);
 

@@ -6,6 +6,7 @@ import { BaseService } from './base.service';
 import { CsrfService } from './csrf.service';
 
 export interface PartData {
+  id: string; // UUID for unique row key
   part: string;
   supplier: string;
   color: string;
@@ -15,7 +16,22 @@ export interface PartData {
   startDate: string;
   endDate: string;
   qty: number;
-  skus: string[];
+  isExpired: boolean;
+  isNew: boolean;
+  isEdited: boolean;
+  version: number;
+  lastSaved: string; // ISO timestamp
+  hasChanges: boolean;
+  copyable: boolean;
+  skus: SkuData[];
+  SpecSheet?: string; // Only for SBOM view
+  SpecSheetExtra?: string; // Only for SBOM view
+}
+
+export interface SkuData {
+  skuId: string;
+  value: string;
+  isActive: boolean;
 }
 
 export interface SkuInfo {
@@ -26,7 +42,7 @@ export interface SkuInfo {
   size: string;
 }
 
-export interface MockData {
+export interface ApiData {
   mbom: PartData[];
   productInfo: {
     productId: string;
@@ -39,16 +55,35 @@ export interface MockData {
   providedIn: 'root',
 })
 export class DataService extends BaseService {
-  private mockData: MockData | null = null;
+  private apiData: ApiData | null = null;
 
   constructor(http: HttpClient, csrfService: CsrfService) {
     super(http, csrfService);
   }
 
-  loadMockData(): Observable<MockData> {
-    return this.http.get<MockData>(environment.mockDataPath).pipe(
+  loadData(): Observable<ApiData> {
+    // Use full URL for production API
+    let apiUrl = environment.useMockApi
+      ? environment.dataApiPath
+      : `${environment.serverHostUrl}${environment.dataApiPath}`;
+
+    // In production, append bomId from JSP data attribute
+    if (!environment.useMockApi) {
+      const bomElement = document.getElementById('angular-root');
+      const bomId = bomElement?.getAttribute('data-bomid');
+
+      if (bomId) {
+        apiUrl += `/${bomId}`;
+        console.log('Using BOM ID:', bomId);
+        console.log('Full API URL:', apiUrl);
+      } else {
+        console.warn('No BOM ID found in data-bomid attribute');
+      }
+    }
+
+    return this.http.get<ApiData>(apiUrl).pipe(
       map((data) => {
-        this.mockData = data;
+        this.apiData = data;
 
         return data;
       }),
@@ -65,7 +100,7 @@ export class DataService extends BaseService {
     } else {
       // Server-side error
       errorMessage = `Server Error: ${error.status} - ${error.message}`;
-      console.error('Error loading mock data from:', environment.mockDataPath);
+      console.error('Error loading data from:', environment.dataApiPath);
       console.error('Full error:', error);
     }
 
@@ -73,27 +108,29 @@ export class DataService extends BaseService {
     return throwError(() => new Error(errorMessage));
   }
 
-  getMockData(): MockData | null {
-    return this.mockData;
+  getApiData(): ApiData | null {
+    return this.apiData;
   }
 
   getSkuInfo(): SkuInfo[] {
-    return this.mockData?.productInfo.skus || [];
+    return this.apiData?.productInfo.skus || [];
   }
 
   getProductInfo() {
-    return this.mockData?.productInfo;
+    return this.apiData?.productInfo;
   }
 
-  // Transform mock data to grid format with SKU columns
+  // Transform backend data to grid format with SKU columns
   transformToGridData(parts: PartData[], isSbom: boolean = false): any[] {
-    if (!this.mockData) return [];
+    if (!this.apiData) return [];
 
     const skuInfo = this.getSkuInfo();
 
     return parts.map((part) => {
       const row: any = {
-        part: part.part, // Keep as string to match the original data
+        // Backend provides all fields directly
+        id: part.id,
+        part: part.part,
         supplier: part.supplier,
         color: part.color,
         feature: part.feature,
@@ -102,20 +139,27 @@ export class DataService extends BaseService {
         startDate: part.startDate,
         endDate: part.endDate,
         qty: part.qty,
+        isExpired: part.isExpired,
+        isNew: part.isNew,
+        isEdited: part.isEdited,
+        version: part.version,
+        lastSaved: part.lastSaved,
+        hasChanges: part.hasChanges,
+        copyable: part.copyable,
       };
 
-      // Add SBOM-specific fields
+      // Add SBOM-specific fields (only if provided by backend)
       if (isSbom) {
-        // Random values: Y, N, or C for both fields
-        const specSheetValues = ['Y', 'N', 'C'];
-        row.SpecSheet = specSheetValues[Math.floor(Math.random() * specSheetValues.length)];
-        row.SpecSheetExtra = specSheetValues[Math.floor(Math.random() * specSheetValues.length)];
+        row.SpecSheet = part.SpecSheet || '';
+        row.SpecSheetExtra = part.SpecSheetExtra || '';
       }
 
-      // Add SKU columns based on available SKUs
+      // Add SKU columns based on backend SKU data
       skuInfo.forEach((sku) => {
         const fieldName = `sku${sku.sku}`;
-        row[fieldName] = part.skus.includes(sku.sku) ? part.part : '';
+        // Find matching SKU in backend data
+        const matchingSku = part.skus.find((s) => s.skuId === sku.sku);
+        row[fieldName] = matchingSku ? matchingSku.value : '';
       });
 
       return row;
@@ -189,7 +233,7 @@ export class DataService extends BaseService {
 
   // Get SKU metadata for a specific part
   getSkuDataForPart(partRow: any): any[] {
-    if (!partRow || !this.mockData) return [];
+    if (!partRow || !this.apiData) return [];
 
     const skuInfo = this.getSkuInfo();
 

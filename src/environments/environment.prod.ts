@@ -3,8 +3,8 @@ export const environment = {
   baseHref: '/Windchill/rfa/trek/jsp/bomcomposer/',
   apiUrl: '/Windchill/rfa/trek/jsp/bomcomposer/api',
   csrfUrl: '/Windchill/servlet/rest/security/csrf',
-  mockDataPath: '/Windchill/rfa/trek/jsp/bomcomposer/mock.json',
-  serverHostUrl: 'http://plmctmig.plmtestlab.com:80',
+  dataApiPath: '/Windchill/servlet/rest/trek/bomlink',
+  serverHostUrl: 'http://plmcntimg.plmtestlab.com',
   // Empty credentials - users enter their own in the modal
   credentials: {
     username: '',

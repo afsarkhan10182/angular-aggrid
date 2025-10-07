@@ -22,8 +22,8 @@ import { ICellEditorAngularComp } from 'ag-grid-angular';
         class="autocomplete-input"
         style="width: 100%; height: 100%; border: 1px solid #007bff; outline: none; padding: 4px 8px; font-size: 13px; background: white; box-sizing: border-box; border-radius: 2px;"
       />
-      <div 
-        *ngIf="showDropdown && filteredOptions.length > 0" 
+      <div
+        *ngIf="showDropdown && filteredOptions.length > 0"
         class="autocomplete-dropdown"
         #dropdown
         (click)="$event.stopPropagation()"
@@ -43,102 +43,106 @@ import { ICellEditorAngularComp } from 'ag-grid-angular';
       </div>
     </div>
   `,
-  styles: [`
-    .autocomplete-container {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      overflow: visible;
-      /* Firefox compatibility */
-      -moz-box-sizing: border-box;
-    }
-    
-    .autocomplete-input {
-      width: 100% !important;
-      height: 100% !important;
-      border: 1px solid #007bff !important;
-      outline: none !important;
-      padding: 4px 8px !important;
-      font-size: 13px !important;
-      background: white !important;
-      box-sizing: border-box !important;
-      border-radius: 2px !important;
-      /* Firefox compatibility */
-      -moz-box-sizing: border-box !important;
-      -moz-border-radius: 2px !important;
-    }
-    
-    .autocomplete-input:focus {
-      border-color: #0056b3 !important;
-      box-shadow: 0 0 3px rgba(0, 123, 255, 0.3) !important;
-    }
-    
-    /* Text selection styling for autocomplete input */
-    .autocomplete-input::selection {
-      background-color: #007bff !important;
-      color: white !important;
-    }
-    
-    .autocomplete-input::-moz-selection {
-      background-color: #007bff !important;
-      color: white !important;
-    }
-    
-    .autocomplete-dropdown {
-      position: absolute !important;
-      background: #ffffff !important;
-      border: 1px solid #e2e8f0 !important;
-      border-radius: 4px !important;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-      max-height: 200px !important;
-      overflow-y: auto !important;
-      z-index: 999999 !important;
-      min-width: 200px !important;
-      max-width: 300px !important;
-      /* Firefox compatibility */
-      -moz-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-      -moz-border-radius: 4px !important;
-    }
-    
-    .dropdown-header {
-      padding: 8px 12px !important;
-      background: #f8fafc !important;
-      font-size: 12px !important;
-      color: #64748b !important;
-      border-bottom: 1px solid #e2e8f0 !important;
-      font-weight: 500 !important;
-      text-align: center !important;
-    }
-    
-    .dropdown-option {
-      padding: 8px 12px !important;
-      cursor: pointer !important;
-      border-bottom: 1px solid #f1f5f9 !important;
-      font-size: 13px !important;
-      color: #374151 !important;
-      background: #ffffff !important;
-      transition: all 0.2s ease !important;
-      /* Firefox compatibility */
-      -moz-transition: all 0.2s ease !important;
-    }
-    
-    .dropdown-option:hover,
-    .dropdown-option.selected {
-      background: #f0f9ff !important;
-      color: #1e40af !important;
-    }
-    
-    .dropdown-option:last-child {
-      border-bottom: none !important;
-      border-radius: 0 0 4px 4px !important;
-    }
-    
-    .dropdown-option:first-child {
-      border-radius: 0 !important;
-    }
-  `]
+  styles: [
+    `
+      .autocomplete-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        /* Firefox compatibility */
+        -moz-box-sizing: border-box;
+      }
+
+      .autocomplete-input {
+        width: 100% !important;
+        height: 100% !important;
+        border: 1px solid #007bff !important;
+        outline: none !important;
+        padding: 4px 8px !important;
+        font-size: 13px !important;
+        background: white !important;
+        box-sizing: border-box !important;
+        border-radius: 2px !important;
+        /* Firefox compatibility */
+        -moz-box-sizing: border-box !important;
+        -moz-border-radius: 2px !important;
+      }
+
+      .autocomplete-input:focus {
+        border-color: #0056b3 !important;
+        box-shadow: 0 0 3px rgba(0, 123, 255, 0.3) !important;
+      }
+
+      /* Text selection styling for autocomplete input */
+      .autocomplete-input::selection {
+        background-color: #007bff !important;
+        color: white !important;
+      }
+
+      .autocomplete-input::-moz-selection {
+        background-color: #007bff !important;
+        color: white !important;
+      }
+
+      .autocomplete-dropdown {
+        position: absolute !important;
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 4px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        max-height: 200px !important;
+        overflow-y: auto !important;
+        z-index: 999999 !important;
+        min-width: 200px !important;
+        max-width: 300px !important;
+        /* Firefox compatibility */
+        -moz-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        -moz-border-radius: 4px !important;
+      }
+
+      .dropdown-header {
+        padding: 8px 12px !important;
+        background: #f8fafc !important;
+        font-size: 12px !important;
+        color: #64748b !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        font-weight: 500 !important;
+        text-align: center !important;
+      }
+
+      .dropdown-option {
+        padding: 8px 12px !important;
+        cursor: pointer !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        font-size: 13px !important;
+        color: #374151 !important;
+        background: #ffffff !important;
+        transition: all 0.2s ease !important;
+        /* Firefox compatibility */
+        -moz-transition: all 0.2s ease !important;
+      }
+
+      .dropdown-option:hover,
+      .dropdown-option.selected {
+        background: #f0f9ff !important;
+        color: #1e40af !important;
+      }
+
+      .dropdown-option:last-child {
+        border-bottom: none !important;
+        border-radius: 0 0 4px 4px !important;
+      }
+
+      .dropdown-option:first-child {
+        border-radius: 0 !important;
+      }
+    `,
+  ],
 })
-export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, OnInit, AfterViewInit, OnDestroy {
+export class AutocompleteCellEditorComponent
+  implements ICellEditorAngularComp, OnInit, AfterViewInit, OnDestroy
+{
   @ViewChild('input') input!: ElementRef<HTMLInputElement>;
   @ViewChild('dropdown') dropdown!: ElementRef<HTMLDivElement>;
 
@@ -164,7 +168,7 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
       this.input.nativeElement.select();
       // Show dropdown immediately when focused
       this.showDropdown = this.filteredOptions.length > 0;
-      
+
       // Position dropdown if it's visible
       if (this.showDropdown) {
         this.positionDropdown();
@@ -179,11 +183,11 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
 
   agInit(params: any): void {
     this.params = params;
-    
+
     // Ensure value is always a string
     this.value = params.value ? String(params.value) : '';
     this.placeholder = params.placeholder || 'Enter value...';
-    
+
     // Get options from params - support multiple formats
     if (params.values && Array.isArray(params.values)) {
       this.options = params.values.map((opt: any) => String(opt));
@@ -197,12 +201,12 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
     } else {
       this.options = [];
     }
-    
+
     // Support custom filtering
     if (params.filterFunction && typeof params.filterFunction === 'function') {
       this.customFilterFunction = params.filterFunction;
     }
-    
+
     this.filterOptions();
   }
 
@@ -219,7 +223,7 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
     this.filterOptions();
     this.showDropdown = this.filteredOptions.length > 0;
     this.selectedIndex = -1;
-    
+
     // Reposition dropdown when content changes
     if (this.showDropdown) {
       setTimeout(() => this.positionDropdown(), 0);
@@ -275,7 +279,7 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
     // Show dropdown when input is clicked
     this.filterOptions();
     this.showDropdown = this.filteredOptions.length > 0;
-    
+
     if (this.showDropdown) {
       setTimeout(() => this.positionDropdown(), 0);
     }
@@ -285,7 +289,7 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
     // Show dropdown when input is focused
     this.filterOptions();
     this.showDropdown = this.filteredOptions.length > 0;
-    
+
     if (this.showDropdown) {
       setTimeout(() => this.positionDropdown(), 0);
     }
@@ -294,32 +298,32 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
   selectOption(option: string): void {
     this.value = option;
     this.closeDropdown();
-    
+
     // Force the value to be set in AG Grid
     if (this.params && this.params.node) {
       this.params.node.setDataValue(this.params.column.getColId(), option);
-      
+
       // Also update the data object directly
       if (this.params.node.data) {
         this.params.node.data[this.params.column.getColId()] = option;
       }
     }
-    
+
     // Stop editing immediately to commit the value
     if (this.params && this.params.api) {
       this.params.api.stopEditing();
-      
+
       // Force refresh of the cell to show the selected value
       setTimeout(() => {
         if (this.params && this.params.node) {
           this.params.api.refreshCells({
             rowNodes: [this.params.node],
-            force: true
+            force: true,
           });
         }
       }, 50);
     }
-    
+
     // Trigger feature auto-population directly
     setTimeout(() => {
       this.triggerFeatureAutoPopulation(option);
@@ -329,7 +333,7 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
   private triggerFeatureAutoPopulation(partNumber: string): void {
     // Get the data service from the grid context
     const dataService = (this.params as any).context?.dataService;
-    
+
     if (dataService) {
       this.triggerFeatureAutoPopulationWithService(partNumber, dataService);
     } else {
@@ -345,21 +349,29 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
   }
 
   private triggerFeatureAutoPopulationWithService(partNumber: string, dataService: any): void {
-    const mockData = dataService.getMockData();
-    
-    if (mockData && mockData.mbom) {
-      const existingPart = mockData.mbom.find((part: any) => part.part === partNumber);
+    const apiData = dataService.getApiData();
+
+    if (apiData && apiData.mbom) {
+      const existingPart = apiData.mbom.find((part: any) => part.part === partNumber);
       if (existingPart) {
-        
         if (this.params && this.params.node) {
           // Auto-populate all available fields from the existing part
-          const fieldsToPopulate = ['supplier', 'color', 'feature', 'shortDesc', 'longDesc', 'startDate', 'endDate', 'qty'];
-          
+          const fieldsToPopulate = [
+            'supplier',
+            'color',
+            'feature',
+            'shortDesc',
+            'longDesc',
+            'startDate',
+            'endDate',
+            'qty',
+          ];
+
           // Temporarily disable cell value changed events
           const oldData = { ...this.params.node.data };
-          
+
           // Auto-populate base fields
-          fieldsToPopulate.forEach(fieldName => {
+          fieldsToPopulate.forEach((fieldName) => {
             if (existingPart[fieldName] !== undefined && existingPart[fieldName] !== null) {
               // Only update if value is different
               if (oldData[fieldName] !== existingPart[fieldName]) {
@@ -367,36 +379,35 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
                 if (this.params.node.data) {
                   this.params.node.data[fieldName] = existingPart[fieldName];
                 }
-
               }
             }
           });
-          
+
           // Auto-populate SKU columns based on the skus array in the existing part
           const skuInfo = dataService.getSkuInfo();
           if (skuInfo && skuInfo.length > 0) {
             skuInfo.forEach((sku: any) => {
               const skuFieldName = `sku${sku.sku}`;
-              const newSkuValue = existingPart.skus && existingPart.skus.includes(sku.sku) 
-                ? existingPart.part // If SKU is included, use part number
-                : ''; // If SKU is not included, use empty string
-              
+              const newSkuValue =
+                existingPart.skus && existingPart.skus.includes(sku.sku)
+                  ? existingPart.part // If SKU is included, use part number
+                  : ''; // If SKU is not included, use empty string
+
               // Only update if value is different
               if (oldData[skuFieldName] !== newSkuValue) {
                 this.params.node.setDataValue(skuFieldName, newSkuValue);
                 if (this.params.node.data) {
                   this.params.node.data[skuFieldName] = newSkuValue;
                 }
-
               }
             });
           }
-          
+
           // Refresh the row to show all updated values
           if (this.params.api) {
             this.params.api.refreshCells({
               rowNodes: [this.params.node],
-              force: true
+              force: true,
             });
           }
         }
@@ -405,8 +416,10 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
   }
 
   private filterOptions(): void {
-    const searchValue = String(this.value || '').toLowerCase().trim();
-    
+    const searchValue = String(this.value || '')
+      .toLowerCase()
+      .trim();
+
     if (this.customFilterFunction) {
       // Use custom filtering function if provided
       this.filteredOptions = this.customFilterFunction(searchValue, this.options);
@@ -418,20 +431,20 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
       } else {
         // Filter options with priority: starts with, then contains
         const startsWithMatches = this.options
-          .filter(option => String(option).toLowerCase().startsWith(searchValue))
+          .filter((option) => String(option).toLowerCase().startsWith(searchValue))
           .slice(0, 6);
-        
+
         const containsMatches = this.options
-          .filter(option => {
+          .filter((option) => {
             const optionLower = String(option).toLowerCase();
             return optionLower.includes(searchValue) && !optionLower.startsWith(searchValue);
           })
           .slice(0, 4);
-        
+
         this.filteredOptions = [...startsWithMatches, ...containsMatches];
       }
     }
-    
+
     this.showDropdown = this.filteredOptions.length > 0;
     this.selectedIndex = this.filteredOptions.length > 0 ? 0 : -1; // Auto-select first option
   }
@@ -448,34 +461,34 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
 
     const dropdownElement = this.dropdown.nativeElement;
     const inputElement = this.input.nativeElement;
-    
+
     try {
       // Get container position for absolute positioning
       const containerRect = inputElement.parentElement?.getBoundingClientRect();
       const inputRect = inputElement.getBoundingClientRect();
-      
+
       if (!containerRect) {
         // Fallback positioning for older browsers
         this.positionDropdownFallback();
         return;
       }
-      
+
       // Calculate position relative to container
       const relativeTop = inputRect.bottom - containerRect.top + 2;
       const relativeLeft = inputRect.left - containerRect.left;
-      
+
       // Position dropdown below the input
       dropdownElement.style.top = `${relativeTop}px`;
       dropdownElement.style.left = `${relativeLeft}px`;
-      
+
       // Set width to match input or be at least as wide
       const minWidth = Math.max(inputRect.width, 200);
       dropdownElement.style.width = `${minWidth}px`;
-      
+
       // Check if dropdown would go off-screen and adjust if needed
       const viewportHeight = window.innerHeight;
       const dropdownHeight = 200; // max-height from CSS
-      
+
       if (inputRect.bottom + dropdownHeight > viewportHeight) {
         // Position above the input if there's not enough space below
         if (inputRect.top - dropdownHeight > 0) {
@@ -483,20 +496,19 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
           dropdownElement.style.top = `${relativeTopAbove}px`;
         }
       }
-      
+
       // Ensure dropdown doesn't go off-screen horizontally
       const viewportWidth = window.innerWidth;
       const dropdownWidth = minWidth;
-      
+
       if (inputRect.left + dropdownWidth > viewportWidth) {
         const adjustedLeft = Math.max(0, viewportWidth - dropdownWidth - 10);
         const relativeAdjustedLeft = adjustedLeft - containerRect.left;
         dropdownElement.style.left = `${relativeAdjustedLeft}px`;
       }
-      
+
       // Force reflow for Firefox compatibility
       dropdownElement.offsetHeight;
-      
     } catch (error) {
       console.warn('Error positioning dropdown, using fallback:', error);
       this.positionDropdownFallback();
@@ -510,7 +522,7 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
 
     const dropdownElement = this.dropdown.nativeElement;
     const inputElement = this.input.nativeElement;
-    
+
     // Simple fallback positioning
     dropdownElement.style.top = '100%';
     dropdownElement.style.left = '0';
@@ -520,7 +532,7 @@ export class AutocompleteCellEditorComponent implements ICellEditorAngularComp, 
 
   // Public method to refresh options (useful for dynamic data)
   public refreshOptions(newOptions: string[]): void {
-    this.options = newOptions.map(opt => String(opt));
+    this.options = newOptions.map((opt) => String(opt));
     this.filterOptions();
   }
 

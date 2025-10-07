@@ -45,12 +45,8 @@ export class SessionService {
         console.log('Authentication failed:', error);
         this.sessionSubject.next(null);
         this.isAuthenticatedSubject.next(false);
-        // Return a default user object to prevent the error from propagating
-        return of({
-          name: '',
-          fullName: '',
-          id: '',
-        });
+        // Throw the error so app.ts can handle it properly
+        return throwError(() => error);
       })
     );
   }

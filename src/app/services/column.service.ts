@@ -3,11 +3,10 @@ import { ColDef } from 'ag-grid-community';
 import { AutocompleteCellEditorComponent } from '../autocomplete-cell-editor/autocomplete-cell-editor.component';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ColumnService {
-
-  constructor() { }
+  constructor() {}
 
   /**
    * Builds column definitions for the grid
@@ -18,8 +17,8 @@ export class ColumnService {
    * @returns Array of column definitions
    */
   buildColumnDefinitions(
-    skuColumns: any[], 
-    dataService: any, 
+    skuColumns: any[],
+    dataService: any,
     componentInstance: any,
     includeSbomColumns: boolean = false
   ): ColDef[] {
@@ -39,95 +38,97 @@ export class ColumnService {
           if (params.data.isExpired) {
             return `<span class="expired-indicator" title="Expired">e</span>`;
           }
-          
+
           const partId = params.data.part || '';
-          
+
           // For new rows, show delete button
           if (params.data.isNewRow) {
             const newRowId = params.data.newRowId;
             return `<span class="delete-row-btn" data-new-row-id="${newRowId}" title="Delete">−</span>`;
           }
-          
+
           // For all other rows, show add button
           return `<span class="add-row-btn" data-part-id="${partId}" title="Add">+</span>`;
         },
         cellStyle: {
           textAlign: 'center',
           padding: '4px',
-          borderRight: '1px solid #e2e8f0'
-        }
+          borderRight: '1px solid #e2e8f0',
+        },
       },
       // SBOM-specific columns - only include when requested
-      ...(includeSbomColumns ? [
-        {
-          headerName: 'Include In Spec Sheet',
-          field: 'SpecSheet',
-          filter: 'agTextColumnFilter',
-          width: 150,
-          minWidth: 120,
-          maxWidth: 200,
-          resizable: true,
-          suppressSizeToFit: false,
-          suppressAutoSize: false,
-          editable: (params: any) => {
-            // Don't allow editing expired rows
-            if (params.data && params.data.isExpired) {
-              return false;
-            }
-            // Allow editing for new rows and quantity field for all rows
-            return true;
-          },
-          cellEditor: 'agSelectCellEditor',
-          cellEditorParams: {
-            values: ['Y', 'N', 'C']
-          },
-          cellRenderer: (params: any) => {
-            return params.value || '';
-          },
-          cellStyle: (params: any) => {
-            if (params.data && params.data.isNewRow) {
-              return {
-                border: '1px solid #007bff'
-              };
-            }
-            return null;
-          }
-        },
-        {
-          headerName: 'SpecSheet Extra',
-          field: 'SpecSheetExtra',
-          filter: 'agTextColumnFilter',
-          width: 180,
-          minWidth: 150,
-          maxWidth: 250,
-          resizable: true,
-          suppressSizeToFit: false,
-          suppressAutoSize: false,
-          editable: (params: any) => {
-            // Don't allow editing expired rows
-            if (params.data && params.data.isExpired) {
-              return false;
-            }
-            // Allow editing for new rows and quantity field for all rows
-            return true;
-          },
-          cellEditor: 'agSelectCellEditor',
-          cellEditorParams: {
-            values: ['Y', 'N', 'C']
-          },
-          cellRenderer: (params: any) => {
-            return params.value || '';
-          },
-          cellStyle: (params: any) => {
-            if (params.data && params.data.isNewRow) {
-              return {
-                border: '1px solid #007bff'
-              };
-            }
-            return null;
-          }
-        }
-      ] : []),
+      ...(includeSbomColumns
+        ? [
+            {
+              headerName: 'Include In Spec Sheet',
+              field: 'SpecSheet',
+              filter: 'agTextColumnFilter',
+              width: 150,
+              minWidth: 120,
+              maxWidth: 200,
+              resizable: true,
+              suppressSizeToFit: false,
+              suppressAutoSize: false,
+              editable: (params: any) => {
+                // Don't allow editing expired rows
+                if (params.data && params.data.isExpired) {
+                  return false;
+                }
+                // Allow editing for new rows and quantity field for all rows
+                return true;
+              },
+              cellEditor: 'agSelectCellEditor',
+              cellEditorParams: {
+                values: ['Y', 'N', 'C'],
+              },
+              cellRenderer: (params: any) => {
+                return params.value || '';
+              },
+              cellStyle: (params: any) => {
+                if (params.data && params.data.isNewRow) {
+                  return {
+                    border: '1px solid #007bff',
+                  };
+                }
+                return null;
+              },
+            },
+            {
+              headerName: 'SpecSheet Extra',
+              field: 'SpecSheetExtra',
+              filter: 'agTextColumnFilter',
+              width: 180,
+              minWidth: 150,
+              maxWidth: 250,
+              resizable: true,
+              suppressSizeToFit: false,
+              suppressAutoSize: false,
+              editable: (params: any) => {
+                // Don't allow editing expired rows
+                if (params.data && params.data.isExpired) {
+                  return false;
+                }
+                // Allow editing for new rows and quantity field for all rows
+                return true;
+              },
+              cellEditor: 'agSelectCellEditor',
+              cellEditorParams: {
+                values: ['Y', 'N', 'C'],
+              },
+              cellRenderer: (params: any) => {
+                return params.value || '';
+              },
+              cellStyle: (params: any) => {
+                if (params.data && params.data.isNewRow) {
+                  return {
+                    border: '1px solid #007bff',
+                  };
+                }
+                return null;
+              },
+            },
+          ]
+        : []),
       {
         headerName: 'Part Name',
         field: 'part',
@@ -140,7 +141,7 @@ export class ColumnService {
             }
             return params.value; // Show the selected value for new rows
           }
-          
+
           // Check if this part matches the first SKU to determine color
           const skuInfo = dataService.getSkuInfo();
           let isMatching = false;
@@ -149,10 +150,11 @@ export class ColumnService {
             const firstSkuValue = params.data[firstSkuField];
             isMatching = firstSkuValue && String(params.value) === String(firstSkuValue);
           }
-          
-          const isClickable = componentInstance.clickableParts.has(params.value?.toString()) || 
-                              componentInstance.clickableParts.has(parseInt(params.value?.toString()));
-          
+
+          const isClickable =
+            componentInstance.clickableParts.has(params.value?.toString()) ||
+            componentInstance.clickableParts.has(parseInt(params.value?.toString()));
+
           if (isMatching) {
             // Matching values get red text, regardless of clickability
             return `<span class="part-text matching-value" style="color: #d32f2f !important; font-weight: 600;">${params.value}</span>`;
@@ -175,7 +177,7 @@ export class ColumnService {
         cellEditor: AutocompleteCellEditorComponent,
         cellEditorParams: (params: any) => ({
           values: componentInstance.getAvailablePartNumbers(),
-          placeholder: 'Type to search part numbers...'
+          placeholder: 'Type to search part numbers...',
         }),
         cellStyle: (params: any) => {
           // Enhanced styling for new rows
@@ -183,12 +185,12 @@ export class ColumnService {
             return {
               border: '2px solid #007bff',
               backgroundColor: '#f8fbff',
-              fontStyle: params.value ? 'normal' : 'italic'
+              fontStyle: params.value ? 'normal' : 'italic',
             };
           }
           return null;
         },
-        headerClass: 'part-column-header'
+        headerClass: 'part-column-header',
       },
       {
         headerName: 'Supplier',
@@ -208,11 +210,11 @@ export class ColumnService {
           // Ensure consistent styling with Part column
           if (params.data && params.data.isNewRow) {
             return {
-              border: '1px solid #007bff'
+              border: '1px solid #007bff',
             };
           }
           return null;
-        }
+        },
       },
       {
         headerName: 'Color',
@@ -227,7 +229,7 @@ export class ColumnService {
         editable: (params) => params.data && params.data.isNewRow, // Editable for new rows
         cellRenderer: (params: any) => {
           return params.value || '';
-        }
+        },
       },
       {
         headerName: 'BOM Feature',
@@ -245,7 +247,7 @@ export class ColumnService {
           const features = componentInstance.getUniqueFeatures();
 
           return {
-            values: features
+            values: features,
           };
         },
         cellRenderer: (params: any) => {
@@ -254,11 +256,11 @@ export class ColumnService {
         cellStyle: (params: any) => {
           if (params.data && params.data.isNewRow) {
             return {
-              border: '1px solid #007bff'
+              border: '1px solid #007bff',
             };
           }
           return null;
-        }
+        },
       },
       {
         headerName: 'Short Desc',
@@ -277,11 +279,11 @@ export class ColumnService {
         cellStyle: (params: any) => {
           if (params.data && params.data.isNewRow) {
             return {
-              border: '1px solid #007bff'
+              border: '1px solid #007bff',
             };
           }
           return null;
-        }
+        },
       },
       {
         headerName: 'Long Desc',
@@ -300,11 +302,11 @@ export class ColumnService {
         cellStyle: (params: any) => {
           if (params.data && params.data.isNewRow) {
             return {
-              border: '1px solid #007bff'
+              border: '1px solid #007bff',
             };
           }
           return null;
-        }
+        },
       },
       {
         headerName: 'Start Date',
@@ -322,15 +324,18 @@ export class ColumnService {
           // Configure the date picker
           browserDatePicker: true,
           minValidYear: 2000,
-          maxValidYear: 2050
+          maxValidYear: 2050,
         },
         valueFormatter: (params) => {
-          return componentInstance.formatDate ? componentInstance.formatDate(params) : 
-            (params.value ? new Date(params.value).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit'
-            }) : '');
+          return componentInstance.formatDate
+            ? componentInstance.formatDate(params)
+            : params.value
+            ? new Date(params.value).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+              })
+            : '';
         },
         valueParser: (params) => {
           if (!params.newValue) return null;
@@ -348,30 +353,38 @@ export class ColumnService {
           const baseStyle = {
             borderRight: '1px solid #e2e8f0',
             padding: '6px 10px',
-            fontSize: '12px'
+            fontSize: '12px',
           };
-          
+
           // Add new row styling
           if (params.data && params.data.isNewRow) {
             return {
               ...baseStyle,
-              border: '1px solid #007bff'
+              border: '1px solid #007bff',
             };
           }
-          
+
           // Add edited row styling
           if (componentInstance.editedRows.has(params.data.part.toString())) {
             return {
               ...baseStyle,
               backgroundColor: '#f8fafc',
-              fontWeight: '500'
+              fontWeight: '500',
             };
           }
-          
+
           return baseStyle;
         },
         filterParams: {
-          filterOptions: ['equals', 'notEqual', 'lessThan', 'lessThanOrEqual', 'greaterThan', 'greaterThanOrEqual', 'inRange'],
+          filterOptions: [
+            'equals',
+            'notEqual',
+            'lessThan',
+            'lessThanOrEqual',
+            'greaterThan',
+            'greaterThanOrEqual',
+            'inRange',
+          ],
           defaultOption: 'equals',
           buttons: ['reset', 'apply'],
           suppressAndOrCondition: true,
@@ -382,8 +395,8 @@ export class ColumnService {
               return 0;
             }
             return cellDate < filterLocalDateAtMidnight ? -1 : 1;
-          }
-        }
+          },
+        },
       },
       {
         headerName: 'End Date',
@@ -400,15 +413,18 @@ export class ColumnService {
         cellEditorParams: {
           browserDatePicker: true,
           minValidYear: 2000,
-          maxValidYear: 2050
+          maxValidYear: 2050,
         },
         valueFormatter: (params) => {
-          return componentInstance.formatDate ? componentInstance.formatDate(params) : 
-            (params.value ? new Date(params.value).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit'
-            }) : '');
+          return componentInstance.formatDate
+            ? componentInstance.formatDate(params)
+            : params.value
+            ? new Date(params.value).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+              })
+            : '';
         },
         valueParser: (params) => {
           if (!params.newValue) return null;
@@ -423,7 +439,15 @@ export class ColumnService {
           return true;
         },
         filterParams: {
-          filterOptions: ['equals', 'notEqual', 'lessThan', 'lessThanOrEqual', 'greaterThan', 'greaterThanOrEqual', 'inRange'],
+          filterOptions: [
+            'equals',
+            'notEqual',
+            'lessThan',
+            'lessThanOrEqual',
+            'greaterThan',
+            'greaterThanOrEqual',
+            'inRange',
+          ],
           defaultOption: 'equals',
           buttons: ['reset', 'apply'],
           suppressAndOrCondition: true,
@@ -434,8 +458,8 @@ export class ColumnService {
               return 0;
             }
             return cellDate < filterLocalDateAtMidnight ? -1 : 1;
-          }
-        }
+          },
+        },
       },
       {
         headerName: 'Qty',
@@ -455,18 +479,18 @@ export class ColumnService {
             backgroundColor: '#f8fafc',
             color: '#1e293b',
             padding: '6px 10px',
-            fontSize: '12px'
+            fontSize: '12px',
           };
-          
+
           // Add new row styling
-          if (params.data.isNewRow) {
+          if (params.data.isNew || params.data.isNewRow) {
             return {
               ...baseStyle,
-              border: '1px solid #007bff'
+              border: '1px solid #007bff',
               // Removed fontStyle: 'italic' for normal text appearance
             };
           }
-          
+
           // Add expired row styling - make it look disabled
           if (params.data && params.data.isExpired) {
             return {
@@ -474,19 +498,19 @@ export class ColumnService {
               backgroundColor: '#f9fafb',
               color: '#9ca3af',
               fontWeight: '400',
-              cursor: 'not-allowed'
+              cursor: 'not-allowed',
             };
           }
-          
+
           // Add edited row styling
           if (componentInstance.editedRows.has(params.data.part.toString())) {
             return {
               ...baseStyle,
               backgroundColor: '#f8fafc',
-              fontWeight: '500'
+              fontWeight: '500',
             };
           }
-          
+
           return baseStyle;
         },
         resizable: true,
@@ -501,7 +525,7 @@ export class ColumnService {
         cellEditor: 'agNumberCellEditor',
         cellEditorParams: {
           min: 0,
-          max: 9999
+          max: 9999,
         },
         valueFormatter: (params: any) => {
           // Handle null, undefined, or empty string, but allow 0
@@ -529,12 +553,20 @@ export class ColumnService {
           return numValue.toString();
         },
         filterParams: {
-          filterOptions: ['equals', 'notEqual', 'lessThan', 'lessThanOrEqual', 'greaterThan', 'greaterThanOrEqual', 'inRange'],
+          filterOptions: [
+            'equals',
+            'notEqual',
+            'lessThan',
+            'lessThanOrEqual',
+            'greaterThan',
+            'greaterThanOrEqual',
+            'inRange',
+          ],
           defaultOption: 'equals',
           buttons: ['reset', 'apply'],
-          suppressAndOrCondition: true
-        }
-      }
+          suppressAndOrCondition: true,
+        },
+      },
     ];
 
     // Add dynamic SKU columns
@@ -550,42 +582,47 @@ export class ColumnService {
       suppressAutoSize: true,
       headerClass: index === 0 ? 'first-sku-column-header' : '',
       cellClass: index === 0 ? 'first-sku-column-cell' : '',
-      
+
       cellStyle: (params: any) => {
         const cellKey = `${params.node.rowIndex}-${params.colDef.field}`;
         const isCopiedCell = componentInstance.copiedFromCellKey === cellKey;
         const isNewRow = params.data && params.data.isNewRow;
-        
+
         // Base style for all cells
         const baseStyle = {
           textAlign: 'left',
           padding: '0 8px',
-          cursor: isNewRow && params.value ? 'copy' : 'default'
+          cursor: isNewRow && params.value ? 'copy' : 'default',
         };
 
         // First SKU column styling
         if (index === 0) {
           // Check if this SKU value matches the Part value in the same row
-          if (params.data && params.value && params.data.part && String(params.value) === String(params.data.part)) {
+          if (
+            params.data &&
+            params.value &&
+            params.data.part &&
+            String(params.value) === String(params.data.part)
+          ) {
             return {
               ...baseStyle,
               color: '#d32f2f', // Red text for matching values
               fontWeight: '600',
               backgroundColor: isCopiedCell ? '#e8f5e9' : '#fff9c4', // Light green if copied, yellow background for first SKU column
-              border: isCopiedCell ? '2px solid #4caf50' : 'none'
+              border: isCopiedCell ? '2px solid #4caf50' : 'none',
             };
           }
-          
+
           // Non-matching or empty values get yellow background too
           return {
             ...baseStyle,
             color: '#374151', // Default gray text
             fontWeight: '400',
             backgroundColor: isCopiedCell ? '#e8f5e9' : '#fff9c4', // Light green if copied, yellow background for first SKU column
-            border: isCopiedCell ? '2px solid #4caf50' : 'none'
+            border: isCopiedCell ? '2px solid #4caf50' : 'none',
           };
         }
-        
+
         // Other SKU columns styling
         if (params.value) {
           return {
@@ -593,7 +630,7 @@ export class ColumnService {
             backgroundColor: isCopiedCell ? '#e8f5e9' : '#f0f9ff',
             fontWeight: 'bold',
             color: '#000000',
-            border: isCopiedCell ? '2px solid #4caf50' : isNewRow ? '1px solid #e2e8f0' : 'none'
+            border: isCopiedCell ? '2px solid #4caf50' : isNewRow ? '1px solid #e2e8f0' : 'none',
           };
         } else {
           return {
@@ -601,18 +638,18 @@ export class ColumnService {
             backgroundColor: isCopiedCell ? '#e8f5e9' : '#f9fafb',
             color: '#9ca3af',
             fontWeight: 'normal',
-            border: isCopiedCell ? '2px solid #4caf50' : isNewRow ? '1px solid #e2e8f0' : 'none'
+            border: isCopiedCell ? '2px solid #4caf50' : isNewRow ? '1px solid #e2e8f0' : 'none',
           };
         }
       },
       cellRenderer: (params: any) => {
         const cellKey = `${params.node.rowIndex}-${params.colDef.field}`;
         const isCopiedCell = componentInstance.copiedFromCellKey === cellKey;
-        
+
         if (!params.data.isNewRow) {
           return params.value || '';
         }
-        
+
         const buttonStyles = `
           opacity: 0;
           transition: opacity 0.2s;
@@ -629,10 +666,12 @@ export class ColumnService {
         // For empty cells in new rows that can receive paste
         if (!params.value) {
           // Only show paste button if value was copied from the same row
-          const canPaste = componentInstance.copiedSkuValue !== '' && 
-                          componentInstance.copiedFromRowId !== null && 
-                          params.data.newRowId === componentInstance.copiedFromRowId;
-          const pasteButton = canPaste ? `
+          const canPaste =
+            componentInstance.copiedSkuValue !== '' &&
+            componentInstance.copiedFromRowId !== null &&
+            params.data.newRowId === componentInstance.copiedFromRowId;
+          const pasteButton = canPaste
+            ? `
             <div class="paste-button" 
               data-action="paste"
               style="
@@ -677,7 +716,8 @@ export class ColumnService {
                 ${componentInstance.copiedSkuValue}
               </div>
             </button>
-          ` : '';
+          `
+            : '';
 
           return `
             <div class="sku-cell" style="
@@ -685,13 +725,19 @@ export class ColumnService {
               align-items: center;
               min-height: 28px;
               padding: 2px;
-              ${canPaste ? `
+              ${
+                canPaste
+                  ? `
                 background: #f0fdf4;
                 border: 1px dashed #86efac;
                 position: relative;
-              ` : ''}
+              `
+                  : ''
+              }
             ">
-              ${canPaste ? `
+              ${
+                canPaste
+                  ? `
                 <div style="
                   position: absolute;
                   top: -6px;
@@ -707,7 +753,9 @@ export class ColumnService {
                   line-height: 14px;
                   z-index: 1;
                 ">Can paste here</div>
-              ` : ''}
+              `
+                  : ''
+              }
               <div style="flex: 1; display: flex; justify-content: flex-end;">
                 ${pasteButton}
               </div>
@@ -733,7 +781,7 @@ export class ColumnService {
             </div>
           `;
         }
-        
+
         // For cells with values in new rows
         const copyButton = `
           <button class="copy-button" 
@@ -752,12 +800,12 @@ export class ColumnService {
             <span style="margin-left: 4px;">Copy</span>
           </button>
         `;
-        
+
         // Add checkmark for copied cells
-        const checkmark = isCopiedCell 
-          ? '<span style="color: #4caf50; margin-left: 4px; display: flex; align-items: center;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>' 
+        const checkmark = isCopiedCell
+          ? '<span style="color: #4caf50; margin-left: 4px; display: flex; align-items: center;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>'
           : '';
-        
+
         return `
           <div class="sku-cell" style="display: flex; align-items: center; position: relative;">
             <span style="flex: 1;">${params.value}</span>
@@ -801,9 +849,9 @@ export class ColumnService {
       autoHeaderHeight: true,
       headerClass: 'custom-header-with-border',
       filterParams: {
-        suppressAndOrCondition: true,   // removes AND/OR + 2nd filter
-        buttons: ['reset', 'apply'],    // shows Apply / Reset
-        defaultOption: 'contains'       // sets default filter type for text columns
+        suppressAndOrCondition: true, // removes AND/OR + 2nd filter
+        buttons: ['reset', 'apply'], // shows Apply / Reset
+        defaultOption: 'contains', // sets default filter type for text columns
       },
       width: 140,
       minWidth: 100,
@@ -812,12 +860,12 @@ export class ColumnService {
       cellStyle: (params: any) => {
         const baseStyle = {
           padding: '8px 12px',
-          borderRight: '1px solid #e2e8f0'
+          borderRight: '1px solid #e2e8f0',
         };
-        
+
         // Temporarily removed custom styling for testing
         return baseStyle;
-      }
+      },
     };
   }
 }

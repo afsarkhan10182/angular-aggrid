@@ -3,11 +3,10 @@ import { GridApi, GridOptions } from 'ag-grid-community';
 import { DataService } from './data.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class GridCommonService {
-
-  constructor() { }
+  constructor() {}
 
   /**
    * Helper method to size columns to fit with improved experience
@@ -23,10 +22,12 @@ export class GridCommonService {
    */
   forceHorizontalScrollbarVisibility(gridApi: GridApi): void {
     if (!gridApi) return;
-    
+
     gridApi.refreshCells({ force: true });
-    
-    const horizontalScrollViewport = document.querySelector('.ag-body-horizontal-scroll-viewport') as HTMLElement;
+
+    const horizontalScrollViewport = document.querySelector(
+      '.ag-body-horizontal-scroll-viewport'
+    ) as HTMLElement;
     if (horizontalScrollViewport) {
       horizontalScrollViewport.style.overflowX = 'auto';
       horizontalScrollViewport.style.scrollbarWidth = 'auto';
@@ -38,13 +39,13 @@ export class GridCommonService {
       horizontalScrollViewport.style.setProperty('-moz-transform', 'translateZ(0)');
       horizontalScrollViewport.style.display = 'block';
     }
-    
+
     const gridContainer = document.querySelector('.ag-grid-container-wrapper') as HTMLElement;
     if (gridContainer) {
       gridContainer.style.overflowX = 'auto';
       gridContainer.style.setProperty('-moz-overflow-scrolling', 'touch');
     }
-    
+
     setTimeout(() => {
       if (horizontalScrollViewport) {
         horizontalScrollViewport.style.display = 'block';
@@ -53,7 +54,7 @@ export class GridCommonService {
         horizontalScrollViewport.style.setProperty('scrollbar-width', 'auto');
       }
     }, 100);
-    
+
     setTimeout(() => {
       this.forceOldFirefoxScroll();
     }, 200);
@@ -63,12 +64,14 @@ export class GridCommonService {
    * Additional method specifically for old Firefox
    */
   private forceOldFirefoxScroll(): void {
-    const horizontalScrollViewport = document.querySelector('.ag-body-horizontal-scroll-viewport') as HTMLElement;
+    const horizontalScrollViewport = document.querySelector(
+      '.ag-body-horizontal-scroll-viewport'
+    ) as HTMLElement;
     if (horizontalScrollViewport) {
       horizontalScrollViewport.style.setProperty('overflow-x', 'auto', 'important');
       horizontalScrollViewport.style.setProperty('scrollbar-width', 'auto', 'important');
       horizontalScrollViewport.style.setProperty('min-width', 'max-content', 'important');
-      
+
       horizontalScrollViewport.scrollLeft = 1;
       horizontalScrollViewport.scrollLeft = 0;
     }
@@ -79,21 +82,21 @@ export class GridCommonService {
    */
   dateFormatter(params: any): string {
     if (!params.value) return '';
-    
+
     if (typeof params.value === 'string') {
       const mmddyyyyPattern = /^\d{2}\/\d{2}\/\d{4}$/;
       if (mmddyyyyPattern.test(params.value)) {
         return params.value;
       }
     }
-    
+
     const date = new Date(params.value);
     if (isNaN(date.getTime())) return params.value;
-    
+
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
     const year = date.getFullYear();
-    
+
     return `${month}/${day}/${year}`;
   }
 
@@ -108,9 +111,9 @@ export class GridCommonService {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
-      hour12: true
+      hour12: true,
     };
-    
+
     return date.toLocaleDateString('en-US', options);
   }
 
@@ -127,7 +130,7 @@ export class GridCommonService {
         startDate: '01/01/2023',
         endDate: '12/31/2023',
         qty: 5,
-        isExpired: true
+        isExpired: true,
       },
       {
         part: '5000002',
@@ -137,7 +140,7 @@ export class GridCommonService {
         startDate: '02/01/2023',
         endDate: '11/30/2023',
         qty: 3,
-        isExpired: true
+        isExpired: true,
       },
       {
         part: '5000003',
@@ -147,21 +150,21 @@ export class GridCommonService {
         startDate: '03/01/2023',
         endDate: '10/31/2023',
         qty: 8,
-        isExpired: true
-      }
+        isExpired: true,
+      },
     ];
 
     // Add SBOM-specific fields if needed
     if (isSbom) {
-      expiredEntries.forEach(entry => {
+      expiredEntries.forEach((entry) => {
         (entry as any).SpecSheet = 'N'; // Default to N for expired entries
         (entry as any).SpecSheetExtra = 'N'; // Default to N for expired entries
       });
     }
 
     const skuInfo = dataService.getSkuInfo();
-    expiredEntries.forEach(entry => {
-      skuInfo.forEach(sku => {
+    expiredEntries.forEach((entry) => {
+      skuInfo.forEach((sku) => {
         (entry as any)[`sku${sku.sku}`] = '';
       });
     });
@@ -174,10 +177,10 @@ export class GridCommonService {
    */
   initializeClickableParts(rowData: any[]): Set<number> {
     const clickableParts = new Set<number>();
-    
-    const first20Parts = rowData.slice(0, 20).map(row => row.part.toString());
+
+    const first20Parts = rowData.slice(0, 20).map((row) => row.part.toString());
     const clickableCount = Math.floor(first20Parts.length * 0.3);
-    
+
     for (let i = 0; i < clickableCount; i++) {
       const randomIndex = Math.floor(Math.random() * first20Parts.length);
       clickableParts.add(parseInt(first20Parts[randomIndex]));
@@ -191,7 +194,7 @@ export class GridCommonService {
    */
   getUniqueFeatures(rowData: any[]): string[] {
     const features = new Set<string>();
-    rowData.forEach(row => {
+    rowData.forEach((row) => {
       if (row.feature && !row.isNewRow) {
         features.add(row.feature);
       }
@@ -204,7 +207,7 @@ export class GridCommonService {
    */
   getAvailablePartNumbers(rowData: any[]): string[] {
     const partNumbers = new Set<string>();
-    rowData.forEach(row => {
+    rowData.forEach((row) => {
       if (!row.isNewRow) {
         partNumbers.add(row.part.toString());
       }
@@ -217,7 +220,7 @@ export class GridCommonService {
    */
   getUniqueSuppliers(rowData: any[]): string[] {
     const suppliers = new Set<string>();
-    rowData.forEach(row => {
+    rowData.forEach((row) => {
       if (row.supplier && !row.isNewRow) {
         suppliers.add(row.supplier);
       }
@@ -230,7 +233,7 @@ export class GridCommonService {
    */
   getUniqueColors(rowData: any[]): string[] {
     const colors = new Set<string>();
-    rowData.forEach(row => {
+    rowData.forEach((row) => {
       if (row.color && !row.isNewRow) {
         colors.add(row.color);
       }
@@ -246,10 +249,8 @@ export class GridCommonService {
     if (!searchTerm) {
       return allParts.slice(0, 5);
     }
-    
-    return allParts
-      .filter(part => part.includes(searchTerm))
-      .slice(0, 5);
+
+    return allParts.filter((part) => part.includes(searchTerm)).slice(0, 5);
   }
 
   /**
@@ -266,7 +267,7 @@ export class GridCommonService {
   clearSearch(gridApi: GridApi, componentInstance: any): void {
     componentInstance.searchText = '';
     this.applyQuickFilter(gridApi, componentInstance.searchText);
-    
+
     if (componentInstance.searchTextDebounceTimer) {
       clearTimeout(componentInstance.searchTextDebounceTimer);
     }
@@ -309,12 +310,18 @@ export class GridCommonService {
         if (params.data && params.data.isExpired) {
           return 'expired-row';
         }
+        if (params.data && params.data.isNew) {
+          return 'new-row';
+        }
+        if (params.data && params.data.isEdited) {
+          return 'edited-row';
+        }
         return '';
       },
       enableRangeSelection: false,
       suppressAnimationFrame: true,
       context: {
-        dataService: null
+        dataService: null,
       },
       onGridReady: (params) => {
         componentInstance.gridApi = params.api;
@@ -327,24 +334,33 @@ export class GridCommonService {
         if (componentInstance.trackFieldChange) {
           componentInstance.trackFieldChange(params);
         }
-        
+
         // Handle part number changes for auto-populating feature
         if (params.colDef.field === 'part') {
           if (componentInstance.onNewRowValueChanged) {
-            componentInstance.onNewRowValueChanged(params, componentInstance.dataService, componentInstance.editedRows);
+            componentInstance.onNewRowValueChanged(
+              params,
+              componentInstance.dataService,
+              componentInstance.editedRows
+            );
           }
-          
+
           // Force refresh to ensure the value is displayed
           setTimeout(() => {
             params.api.refreshCells({
               rowNodes: [params.node],
-              force: true
+              force: true,
             });
           }, 100);
         }
-        
+
         // Ensure values are properly saved for new rows (only for non-part fields to avoid infinite loop)
-        if (params.data && params.data.isNewRow && params.colDef.field && params.colDef.field !== 'part') {
+        if (
+          params.data &&
+          params.data.isNewRow &&
+          params.colDef.field &&
+          params.colDef.field !== 'part'
+        ) {
           // Only update the data object directly to avoid triggering another onCellValueChanged
           if (params.node.data) {
             (params.node.data as any)[params.colDef.field] = params.newValue;
@@ -353,10 +369,15 @@ export class GridCommonService {
       },
       onCellKeyDown: (params) => {
         // Handle Ctrl+V for paste in SKU columns of new rows
-        if (params.event && (params.event as KeyboardEvent).ctrlKey && 
-            (params.event as KeyboardEvent).key === 'v' && 
-            (params as any).colDef?.field && (params as any).colDef.field.startsWith('sku') &&
-            params.data && params.data.isNewRow) {
+        if (
+          params.event &&
+          (params.event as KeyboardEvent).ctrlKey &&
+          (params.event as KeyboardEvent).key === 'v' &&
+          (params as any).colDef?.field &&
+          (params as any).colDef.field.startsWith('sku') &&
+          params.data &&
+          params.data.isNewRow
+        ) {
           if (componentInstance.pasteSkuValue) {
             componentInstance.pasteSkuValue(params as any);
           }

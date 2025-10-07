@@ -7,7 +7,7 @@ export const environment = {
   baseHref: '/',
   apiUrl: '/api',
   csrfUrl: '/Windchill/servlet/rest/security/csrf',
-  mockDataPath: '/mock.json',
+  dataApiPath: '/mock.json',
   serverHostUrl: '',
   // Development credentials for mock API validation
   credentials: {
