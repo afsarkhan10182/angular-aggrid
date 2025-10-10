@@ -1,0 +1,227 @@
+{
+  "mbom": [
+    {
+      "branchID": "16",
+      "quantity": "0.0",
+      "bomLinkFeature": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "Material2",
+          "skuId": "100480"
+        }
+      ],
+      "color": "",
+      "part": "Material2",
+      "bomLinkEndDate": "",
+      "section": "Cockpit",
+      "partName": " ",
+      "materialDescription": "Material2",
+      "masterBranchID": "0",
+      "material": "Material2",
+      "bomLinkStartDate": "",
+      "supplier": "sup2",
+      "flexBomLinkID": "268953",
+      "linkedBom": "1",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "3",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "16-16",
+      "quantity": "0.0",
+      "bomLinkFeature": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "mat1",
+          "skuId": "100480"
+        },
+        {
+          "isActive": true,
+          "value": "mat1",
+          "skuId": "100484"
+        }
+      ],
+      "color": "",
+      "part": "mat1",
+      "bomLinkEndDate": "",
+      "section": "Fuselage",
+      "partName": "comp1",
+      "materialDescription": "mat1",
+      "masterBranchID": "16",
+      "material": "mat1",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "flexBomLinkID": "268909",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "16-16",
+      "quantity": "0.0",
+      "bomLinkFeature": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "mat2sub",
+          "skuId": "100480"
+        },
+        {
+          "isActive": true,
+          "value": "mat2sub",
+          "skuId": "100484"
+        }
+      ],
+      "color": "",
+      "part": "mat2sub",
+      "bomLinkEndDate": "10/10/2025",
+      "section": "Fuselage",
+      "partName": "comp2",
+      "materialDescription": "mat2sub",
+      "masterBranchID": "16",
+      "material": "mat2sub",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "flexBomLinkID": "269745",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "2",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "2",
+      "quantity": "1.0",
+      "bomLinkFeature": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "Material1",
+          "skuId": "100484"
+        }
+      ],
+      "color": "Test_Color",
+      "part": "Material1",
+      "bomLinkEndDate": "",
+      "section": "",
+      "partName": "",
+      "materialDescription": "Material1",
+      "masterBranchID": "0",
+      "material": "Material1",
+      "bomLinkStartDate": "",
+      "supplier": "Test_Supplier",
+      "flexBomLinkID": "268158",
+      "linkedBom": "1",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "colorDescription": "Test_Color"
+    },
+    {
+      "branchID": "1",
+      "quantity": "2.0",
+      "bomLinkFeature": "Bom Feature_1",
+      "bomLinkSpecSheetExtra": "Yes",
+      "bomLinkPart": "98876",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "Material1",
+          "skuId": "100484"
+        }
+      ],
+      "color": "Test_Color",
+      "part": "Material1",
+      "bomLinkEndDate": "10/11/2025",
+      "section": "",
+      "partName": "",
+      "materialDescription": "Material1",
+      "masterBranchID": "0",
+      "material": "Material1",
+      "bomLinkStartDate": "10/10/2025",
+      "supplier": "Test_Supplier",
+      "flexBomLinkID": "270201",
+      "linkedBom": "1",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "Y",
+      "sortingNumber": "1",
+      "colorDescription": "Test_Color"
+    },
+    {
+      "branchID": "16",
+      "quantity": "0.0",
+      "bomLinkFeature": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "Material2",
+          "skuId": "100484"
+        }
+      ],
+      "color": "Red",
+      "part": "Material2",
+      "bomLinkEndDate": "",
+      "section": "",
+      "partName": "",
+      "materialDescription": "",
+      "masterBranchID": "0",
+      "material": "Material2",
+      "bomLinkStartDate": "",
+      "supplier": "sup2",
+      "flexBomLinkID": "268941",
+      "linkedBom": "1",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "3",
+      "colorDescription": "Red"
+    }
+  ],
+  "columns": {
+    "bomLinkFeature": "Feature",
+    "bomLinkPart": "Part #",
+    "bomLinkSpecSheetExtra": "Spec Sheet Extra",
+    "quantity": "Quantity",
+    "material": "Part",
+    "color": "Color",
+    "bomLinkStartDate": "Start Date",
+    "supplier": "Supplier",
+    "bomLinkEndDate": "End Date",
+    "bomLinkIncludeInSpecSheet": "Spec Sheet",
+    "partName": "Component"
+  },
+  "productInfo": {
+    "skus": [
+      {
+        "product": "MF3",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size": "s",
+        "destination": "CA",
+        "sku": "100480",
+        "manufacturer": "sup1"
+      },
+      {
+        "product": "MF3",
+        "color": "RD-red(red) TL-yellow(yellow) (MF3)",
+        "size": "s",
+        "destination": "CA",
+        "sku": "100484",
+        "manufacturer": "sup1"
+      }
+    ],
+    "productId": "MF3",
+    "productName": "MF3"
+  }
+}

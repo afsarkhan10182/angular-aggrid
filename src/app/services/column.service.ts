@@ -833,6 +833,207 @@ export class ColumnService {
   }
 
   /**
+   * Builds dynamic column definitions based on backend column mapping
+   * @param dataService - Data service instance for accessing dynamic columns
+   * @param componentInstance - Component instance for accessing component methods and properties
+   * @param includeSbomColumns - Whether to include SBOM-specific columns
+   * @returns Array of column definitions
+   */
+  buildDynamicColumnDefinitions(
+    dataService: any,
+    componentInstance: any,
+    includeSbomColumns: boolean = false
+  ): ColDef[] {
+    const dynamicColumns = dataService.getDynamicColumns();
+    const baseColumns: ColDef[] = [
+      {
+        headerName: '',
+        field: 'actions',
+        width: 40,
+        minWidth: 40,
+        maxWidth: 40,
+        pinned: 'left',
+        resizable: false,
+        sortable: false,
+        filter: false,
+        cellRenderer: (params: any) => {
+          const partId = params.data.part || '';
+          if (params.data.isNewRow) {
+            const newRowId = params.data.newRowId;
+            return `<span class="delete-row-btn" data-new-row-id="${newRowId}" title="Delete">−</span>`;
+          }
+          return `<span class="add-row-btn" data-part-id="${partId}" title="Add">+</span>`;
+        },
+        cellStyle: {
+          textAlign: 'center',
+          padding: '4px',
+          borderRight: '1px solid #e2e8f0',
+        },
+      },
+    ];
+
+    // Add SBOM-specific columns if requested
+    if (includeSbomColumns) {
+      if (dynamicColumns['bomLinkIncludeInSpecSheet']) {
+        baseColumns.push({
+          headerName: dynamicColumns['bomLinkIncludeInSpecSheet'],
+          field: 'bomLinkIncludeInSpecSheet',
+          filter: 'agTextColumnFilter',
+          width: 150,
+          minWidth: 120,
+          maxWidth: 200,
+          resizable: true,
+          suppressSizeToFit: false,
+          suppressAutoSize: false,
+          editable: (params: any) => {
+            if (params.data && params.data.isExpired) {
+              return false;
+            }
+            return true;
+          },
+          cellEditor: 'agSelectCellEditor',
+          cellEditorParams: {
+            values: ['Y', 'N', 'C'],
+          },
+          cellRenderer: (params: any) => {
+            return params.value || '';
+          },
+        });
+      }
+      if (dynamicColumns['bomLinkSpecSheetExtra']) {
+        baseColumns.push({
+          headerName: dynamicColumns['bomLinkSpecSheetExtra'],
+          field: 'bomLinkSpecSheetExtra',
+          filter: 'agTextColumnFilter',
+          width: 180,
+          minWidth: 150,
+          maxWidth: 250,
+          resizable: true,
+          suppressSizeToFit: false,
+          suppressAutoSize: false,
+          editable: (params: any) => {
+            if (params.data && params.data.isExpired) {
+              return false;
+            }
+            return true;
+          },
+          cellEditor: 'agSelectCellEditor',
+          cellEditorParams: {
+            values: ['Y', 'N', 'C'],
+          },
+          cellRenderer: (params: any) => {
+            return params.value || '';
+          },
+        });
+      }
+    }
+
+    // Add dynamic columns based on backend mapping
+    Object.entries(dynamicColumns).forEach(([fieldKey, headerName]) => {
+      // Skip SBOM columns as they're handled above
+      if (
+        includeSbomColumns &&
+        (fieldKey === 'bomLinkIncludeInSpecSheet' || fieldKey === 'bomLinkSpecSheetExtra')
+      ) {
+        return;
+      }
+
+      const columnDef: ColDef = {
+        headerName: headerName as string,
+        field: fieldKey,
+        filter: 'agTextColumnFilter',
+        width: 160,
+        minWidth: 130,
+        maxWidth: 300,
+        resizable: true,
+        suppressSizeToFit: false,
+        suppressAutoSize: false,
+        editable: (params) => params.data && params.data.isNewRow,
+        cellRenderer: (params: any) => {
+          return params.value || '';
+        },
+      };
+
+      // Special handling for specific columns
+      if (fieldKey === 'part' || fieldKey === 'material') {
+        columnDef.pinned = 'left';
+        columnDef.width = 130;
+        columnDef.minWidth = 120;
+        columnDef.maxWidth = 250;
+        columnDef.cellEditor = AutocompleteCellEditorComponent;
+        columnDef.cellEditorParams = (params: any) => ({
+          values: componentInstance.getAvailablePartNumbers(),
+          placeholder: 'Type to search part numbers...',
+        });
+        columnDef.headerClass = 'part-column-header';
+      }
+
+      if (fieldKey === 'quantity') {
+        columnDef.filter = 'agNumberColumnFilter';
+        columnDef.type = 'numericColumn';
+        columnDef.width = 120;
+        columnDef.minWidth = 110;
+        columnDef.maxWidth = 150;
+        columnDef.cellStyle = (params: any) => ({
+          textAlign: 'right',
+          borderRight: '1px solid #e2e8f0',
+          fontWeight: '500',
+          backgroundColor: '#f8fafc',
+          color: '#1e293b',
+          padding: '6px 10px',
+          fontSize: '12px',
+        });
+        columnDef.cellEditor = 'agNumberCellEditor';
+        columnDef.cellEditorParams = {
+          min: 0,
+          max: 9999,
+        };
+        columnDef.valueFormatter = (params: any) => {
+          if (params.value === null || params.value === undefined || params.value === '') {
+            return '';
+          }
+          const numValue = Number(params.value);
+          if (isNaN(numValue)) {
+            return '';
+          }
+          return numValue.toString();
+        };
+      }
+
+      if (fieldKey === 'bomLinkStartDate' || fieldKey === 'bomLinkEndDate') {
+        columnDef.filter = 'agDateColumnFilter';
+        columnDef.width = 140;
+        columnDef.minWidth = 130;
+        columnDef.maxWidth = 180;
+        columnDef.cellEditor = 'agDateCellEditor';
+        columnDef.cellEditorParams = {
+          browserDatePicker: true,
+          minValidYear: 2000,
+          maxValidYear: 2050,
+        };
+        columnDef.valueFormatter = (params) => {
+          return params.value
+            ? new Date(params.value).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+              })
+            : '';
+        };
+        columnDef.valueParser = (params) => {
+          if (!params.newValue) return null;
+          const date = new Date(params.newValue);
+          return isNaN(date.getTime()) ? null : date.toISOString();
+        };
+      }
+
+      baseColumns.push(columnDef);
+    });
+
+    return baseColumns;
+  }
+
+  /**
    * Gets the default column definition for AG Grid
    * @param componentInstance - Component instance for accessing component properties
    * @returns Default column definition object

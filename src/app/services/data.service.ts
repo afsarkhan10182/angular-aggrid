@@ -6,26 +6,28 @@ import { BaseService } from './base.service';
 import { CsrfService } from './csrf.service';
 
 export interface PartData {
-  id: string; // UUID for unique row key
-  part: string;
-  supplier: string;
-  color: string;
-  feature: string;
-  shortDesc: string;
-  longDesc: string;
-  startDate: string;
-  endDate: string;
-  qty: number;
-  isExpired: boolean;
-  isNew: boolean;
-  isEdited: boolean;
-  version: number;
-  lastSaved: string; // ISO timestamp
-  hasChanges: boolean;
-  copyable: boolean;
+  branchID: string;
+  quantity: string;
+  bomLinkFeature: string;
+  bomLinkSpecSheetExtra: string;
+  bomLinkPart: string;
   skus: SkuData[];
-  SpecSheet?: string; // Only for SBOM view
-  SpecSheetExtra?: string; // Only for SBOM view
+  color: string;
+  part: string;
+  bomLinkEndDate: string;
+  section: string;
+  partName: string;
+  materialDescription: string;
+  masterBranchID: string;
+  material: string;
+  bomLinkStartDate: string;
+  supplier: string;
+  flexBomLinkID: string;
+  linkedBom: string;
+  supplierDescription: string;
+  bomLinkIncludeInSpecSheet: string;
+  sortingNumber: string;
+  colorDescription: string;
 }
 
 export interface SkuData {
@@ -44,6 +46,7 @@ export interface SkuInfo {
 
 export interface ApiData {
   mbom: PartData[];
+  columns: { [key: string]: string }; // Dynamic column mapping
   productInfo: {
     productId: string;
     productName: string;
@@ -120,39 +123,48 @@ export class DataService extends BaseService {
     return this.apiData?.productInfo;
   }
 
+  getDynamicColumns(): { [key: string]: string } {
+    return this.apiData?.columns || {};
+  }
+
   // Transform backend data to grid format with SKU columns
   transformToGridData(parts: PartData[], isSbom: boolean = false): any[] {
     if (!this.apiData) return [];
 
     const skuInfo = this.getSkuInfo();
 
-    return parts.map((part) => {
-      const row: any = {
-        // Backend provides all fields directly
-        id: part.id,
-        part: part.part,
-        supplier: part.supplier,
-        color: part.color,
-        feature: part.feature,
-        shortDesc: part.shortDesc,
-        longDesc: part.longDesc,
-        startDate: part.startDate,
-        endDate: part.endDate,
-        qty: part.qty,
-        isExpired: part.isExpired,
-        isNew: part.isNew,
-        isEdited: part.isEdited,
-        version: part.version,
-        lastSaved: part.lastSaved,
-        hasChanges: part.hasChanges,
-        copyable: part.copyable,
-      };
+    // Sort parts by sortingNumber before mapping
+    const sortedParts = [...parts].sort((a, b) => {
+      const sortA = parseInt(a.sortingNumber) || 0;
+      const sortB = parseInt(b.sortingNumber) || 0;
+      return sortA - sortB;
+    });
 
-      // Add SBOM-specific fields (only if provided by backend)
-      if (isSbom) {
-        row.SpecSheet = part.SpecSheet || '';
-        row.SpecSheetExtra = part.SpecSheetExtra || '';
-      }
+    return sortedParts.map((part) => {
+      const row: any = {
+        // Map all fields from the new backend structure
+        branchID: part.branchID,
+        quantity: part.quantity,
+        bomLinkFeature: part.bomLinkFeature,
+        bomLinkSpecSheetExtra: part.bomLinkSpecSheetExtra,
+        bomLinkPart: part.bomLinkPart,
+        color: part.color,
+        part: part.part,
+        bomLinkEndDate: part.bomLinkEndDate,
+        section: part.section,
+        partName: part.partName,
+        materialDescription: part.materialDescription,
+        masterBranchID: part.masterBranchID,
+        material: part.material,
+        bomLinkStartDate: part.bomLinkStartDate,
+        supplier: part.supplier,
+        flexBomLinkID: part.flexBomLinkID,
+        linkedBom: part.linkedBom,
+        supplierDescription: part.supplierDescription,
+        bomLinkIncludeInSpecSheet: part.bomLinkIncludeInSpecSheet,
+        sortingNumber: part.sortingNumber,
+        colorDescription: part.colorDescription,
+      };
 
       // Add SKU columns based on backend SKU data
       skuInfo.forEach((sku) => {
