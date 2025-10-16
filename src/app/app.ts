@@ -140,7 +140,62 @@ export class App implements OnInit {
     this.checkAuthentication();
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    // Make accordion function available globally
+    (window as any).toggleAccordion = (branchId: string) => {
+      this.toggleAccordion(branchId);
+    };
+  }
+
+  // Accordion toggle method
+  public toggleAccordion(branchId: string): void {
+    if (!this.gridApi) return;
+
+    const allRowData = this.rowData;
+    const parentRow = allRowData.find((row: any) => row.branchID === branchId);
+
+    if (!parentRow || !parentRow.isParent || !parentRow.hasChildren) return;
+
+    parentRow.isExpanded = !parentRow.isExpanded;
+
+    if (parentRow.isExpanded) {
+      // Show children
+      this.showChildren(parentRow, allRowData);
+    } else {
+      // Hide children
+      this.hideChildren(parentRow, allRowData);
+    }
+  }
+
+  private showChildren(parentRow: any, allRowData: any[]): void {
+    const parentIndex = allRowData.findIndex((row: any) => row.branchID === parentRow.branchID);
+
+    if (parentIndex === -1) return;
+
+    // Insert children after parent
+    const newRowData = [...allRowData];
+    parentRow.children.forEach((child: any, index: number) => {
+      child.isSubRow = true;
+      child.isVisible = true;
+      newRowData.splice(parentIndex + 1 + index, 0, child);
+    });
+
+    this.rowData = newRowData;
+    this.gridApi.setGridOption('rowData', newRowData);
+  }
+
+  private hideChildren(parentRow: any, allRowData: any[]): void {
+    const newRowData = allRowData.filter((row: any) => {
+      if (row.isSubRow && row.parent && row.parent.branchID === parentRow.branchID) {
+        row.isVisible = false;
+        return false; // Remove from display
+      }
+      return true;
+    });
+
+    this.rowData = newRowData;
+    this.gridApi.setGridOption('rowData', newRowData);
+  }
 
   private checkAuthentication(): void {
     if (!environment.enableHttpBasicAuth) {

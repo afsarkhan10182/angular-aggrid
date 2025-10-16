@@ -231,19 +231,27 @@ export class RowManagementService {
    */
   trackFieldChange(params: any, editedRows: Set<string | number>): void {
     // Skip if values are the same (no actual change)
-    if (params.oldValue === params.newValue) {
+    // Handle date comparison properly
+    let valuesAreSame = false;
+    if (params.oldValue instanceof Date && params.newValue instanceof Date) {
+      valuesAreSame = params.oldValue.getTime() === params.newValue.getTime();
+    } else {
+      valuesAreSame = params.oldValue === params.newValue;
+    }
+
+    if (valuesAreSame) {
       return;
     }
 
-    const partId = params.data.part.toString();
+    const partId = params.data.part;
     const fieldName = params.colDef.field;
 
-    // Skip tracking during auto-population
-    if (params.data.isNewRow && fieldName !== 'part') {
+    // Skip tracking during auto-population for SKU fields only
+    if (params.data.isNewRow && fieldName.startsWith('sku')) {
       return;
     }
 
-    // Mark row as edited
+    // Mark row as edited - use the part value directly (should be a number)
     editedRows.add(partId);
 
     // Refresh the row to apply styling

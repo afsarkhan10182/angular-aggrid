@@ -47,6 +47,11 @@ export class ColumnService {
             return `<span class="delete-row-btn" data-new-row-id="${newRowId}" title="Delete">−</span>`;
           }
 
+          // Don't show plus icon for sub-rows
+          if (params.data.isSubRow) {
+            return '';
+          }
+
           // For all other rows, show add button
           return `<span class="add-row-btn" data-part-id="${partId}" title="Add">+</span>`;
         },
@@ -327,20 +332,21 @@ export class ColumnService {
           maxValidYear: 2050,
         },
         valueFormatter: (params) => {
-          return componentInstance.formatDate
-            ? componentInstance.formatDate(params)
-            : params.value
-            ? new Date(params.value).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-              })
-            : '';
+          // Just return the value as-is, keeping the original string format
+          return params.value || '';
         },
         valueParser: (params) => {
-          if (!params.newValue) return null;
-          const date = new Date(params.newValue);
-          return isNaN(date.getTime()) ? null : date.toISOString();
+          if (!params.newValue) return '';
+          // Keep dates as strings to match mock2.json format
+          if (
+            params.newValue &&
+            typeof params.newValue === 'object' &&
+            'toLocaleDateString' in params.newValue
+          ) {
+            return (params.newValue as Date).toLocaleDateString('en-US');
+          }
+          // Return the string value as-is
+          return String(params.newValue);
         },
         valueSetter: (params) => {
           if (!params.newValue) return false;
@@ -416,20 +422,21 @@ export class ColumnService {
           maxValidYear: 2050,
         },
         valueFormatter: (params) => {
-          return componentInstance.formatDate
-            ? componentInstance.formatDate(params)
-            : params.value
-            ? new Date(params.value).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-              })
-            : '';
+          // Just return the value as-is, keeping the original string format
+          return params.value || '';
         },
         valueParser: (params) => {
-          if (!params.newValue) return null;
-          const date = new Date(params.newValue);
-          return isNaN(date.getTime()) ? null : date.toISOString();
+          if (!params.newValue) return '';
+          // Keep dates as strings to match mock2.json format
+          if (
+            params.newValue &&
+            typeof params.newValue === 'object' &&
+            'toLocaleDateString' in params.newValue
+          ) {
+            return (params.newValue as Date).toLocaleDateString('en-US');
+          }
+          // Return the string value as-is
+          return String(params.newValue);
         },
         valueSetter: (params) => {
           if (!params.newValue) return false;
@@ -862,12 +869,67 @@ export class ColumnService {
             const newRowId = params.data.newRowId;
             return `<span class="delete-row-btn" data-new-row-id="${newRowId}" title="Delete">−</span>`;
           }
+
+          // Don't show plus icon for sub-rows
+          if (params.data.isSubRow) {
+            return '';
+          }
+
           return `<span class="add-row-btn" data-part-id="${partId}" title="Add">+</span>`;
         },
         cellStyle: {
           textAlign: 'center',
           padding: '4px',
           borderRight: '1px solid #e2e8f0',
+        },
+      },
+      // Accordion expand/collapse column
+      {
+        headerName: '',
+        field: 'accordionIcon',
+        width: 30,
+        minWidth: 30,
+        maxWidth: 30,
+        pinned: 'left',
+        resizable: false,
+        sortable: false,
+        filter: false,
+        cellRenderer: (params: any) => {
+          if (params.data.isParent && params.data.hasChildren) {
+            const arrowIcon = params.data.isExpanded ? '🔽' : '▶️';
+            return arrowIcon;
+          } else if (params.data.isSubRow) {
+            return '└─';
+          }
+          return '';
+        },
+        cellStyle: (params: any) => {
+          if (params.data.isSubRow) {
+            return {
+              paddingLeft: '20px',
+              backgroundColor: '#f8f9fa',
+              borderLeft: '3px solid #28a745',
+              textAlign: 'left',
+              padding: '4px',
+            };
+          }
+          const baseStyle = {
+            textAlign: 'center',
+            padding: '4px',
+            paddingLeft: '0px',
+            backgroundColor: 'transparent',
+            borderLeft: 'none',
+          };
+
+          // Add cursor pointer for clickable accordion icons
+          if (params.data.isParent && params.data.hasChildren) {
+            return {
+              ...baseStyle,
+              cursor: 'pointer',
+            };
+          }
+
+          return baseStyle;
         },
       },
     ];
@@ -948,9 +1010,19 @@ export class ColumnService {
         resizable: true,
         suppressSizeToFit: false,
         suppressAutoSize: false,
-        editable: (params) => params.data && params.data.isNewRow,
+        editable: (params: any) => {
+          // Only editable for new rows, and not for SKU fields
+          if (fieldKey.startsWith('sku')) {
+            return false; // SKU fields are never editable
+          }
+          return params.data && params.data.isNewRow;
+        },
         cellRenderer: (params: any) => {
-          return params.value || '';
+          if (params.value === null || params.value === undefined) {
+            return '';
+          }
+          // Ensure we return a valid string
+          return String(params.value);
         },
       };
 
@@ -960,6 +1032,10 @@ export class ColumnService {
         columnDef.width = 130;
         columnDef.minWidth = 120;
         columnDef.maxWidth = 250;
+        columnDef.editable = (params: any) => {
+          // Only editable for new rows
+          return params.data && params.data.isNewRow;
+        };
         columnDef.cellEditor = AutocompleteCellEditorComponent;
         columnDef.cellEditorParams = (params: any) => ({
           values: componentInstance.getAvailablePartNumbers(),
@@ -974,6 +1050,10 @@ export class ColumnService {
         columnDef.width = 120;
         columnDef.minWidth = 110;
         columnDef.maxWidth = 150;
+        columnDef.editable = (params: any) => {
+          // Always editable for new rows, or if it's a new row
+          return params.data || params.data.isNewRow;
+        };
         columnDef.cellStyle = (params: any) => ({
           textAlign: 'right',
           borderRight: '1px solid #e2e8f0',
@@ -989,14 +1069,26 @@ export class ColumnService {
           max: 9999,
         };
         columnDef.valueFormatter = (params: any) => {
-          if (params.value === null || params.value === undefined || params.value === '') {
-            return '';
+          return params.value || '';
+        };
+        columnDef.valueParser = (params) => {
+          if (!params.newValue) return '';
+          // Convert to number for quantity field
+          const numValue = Number(params.newValue);
+          return isNaN(numValue) ? '' : numValue;
+        };
+        columnDef.valueSetter = (params) => {
+          // Store quantity values properly
+          if (params.colDef.field && params.data) {
+            if (params.newValue !== null && params.newValue !== undefined) {
+              const numValue = Number(params.newValue);
+              params.data[params.colDef.field] = isNaN(numValue) ? '' : numValue;
+              return true;
+            }
+            params.data[params.colDef.field] = '';
+            return true;
           }
-          const numValue = Number(params.value);
-          if (isNaN(numValue)) {
-            return '';
-          }
-          return numValue.toString();
+          return false;
         };
       }
 
@@ -1012,18 +1104,51 @@ export class ColumnService {
           maxValidYear: 2050,
         };
         columnDef.valueFormatter = (params) => {
-          return params.value
-            ? new Date(params.value).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-              })
-            : '';
+          // Just return the value as-is, keeping the original string format
+          return params.value || '';
         };
         columnDef.valueParser = (params) => {
-          if (!params.newValue) return null;
-          const date = new Date(params.newValue);
-          return isNaN(date.getTime()) ? null : date.toISOString();
+          if (!params.newValue) return '';
+          // Keep dates as strings to match mock2.json format
+          if (
+            params.newValue &&
+            typeof params.newValue === 'object' &&
+            'toLocaleDateString' in params.newValue
+          ) {
+            // Convert Date to MM/DD/YYYY format to match mock2.json exactly
+            const date = params.newValue as Date;
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            const year = date.getFullYear();
+            return `${month}/${day}/${year}`;
+          }
+          // Return the string value as-is
+          return String(params.newValue);
+        };
+        columnDef.valueSetter = (params) => {
+          // Store dates as strings to match mock2.json format
+          if (params.colDef.field && params.data) {
+            if (
+              params.newValue &&
+              typeof params.newValue === 'object' &&
+              'toLocaleDateString' in params.newValue
+            ) {
+              // Convert Date to MM/DD/YYYY format to match mock2.json exactly
+              const date = params.newValue as Date;
+              const month = (date.getMonth() + 1).toString().padStart(2, '0');
+              const day = date.getDate().toString().padStart(2, '0');
+              const year = date.getFullYear();
+              params.data[params.colDef.field] = `${month}/${day}/${year}`;
+              return true;
+            }
+            if (params.newValue) {
+              params.data[params.colDef.field] = String(params.newValue);
+              return true;
+            }
+            params.data[params.colDef.field] = '';
+            return true;
+          }
+          return false;
         };
       }
 

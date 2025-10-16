@@ -28,6 +28,9 @@ export interface PartData {
   bomLinkIncludeInSpecSheet: string;
   sortingNumber: string;
   colorDescription: string;
+  materialcolorLongDescription: string;
+  materialcolorShortDescription: string;
+  materialSupplierComments: string;
 }
 
 export interface SkuData {
@@ -77,8 +80,6 @@ export class DataService extends BaseService {
 
       if (bomId) {
         apiUrl += `/${bomId}`;
-        console.log('Using BOM ID:', bomId);
-        console.log('Full API URL:', apiUrl);
       } else {
         console.warn('No BOM ID found in data-bomid attribute');
       }
@@ -87,7 +88,6 @@ export class DataService extends BaseService {
     return this.http.get<ApiData>(apiUrl).pipe(
       map((data) => {
         this.apiData = data;
-
         return data;
       }),
       catchError(this.handleError)
@@ -127,7 +127,7 @@ export class DataService extends BaseService {
     return this.apiData?.columns || {};
   }
 
-  // Transform backend data to grid format with SKU columns
+  // Transform backend data to grid format with SKU columns and hierarchical structure
   transformToGridData(parts: PartData[], isSbom: boolean = false): any[] {
     if (!this.apiData) return [];
 
@@ -140,42 +140,167 @@ export class DataService extends BaseService {
       return sortA - sortB;
     });
 
-    return sortedParts.map((part) => {
-      const row: any = {
-        // Map all fields from the new backend structure
-        branchID: part.branchID,
-        quantity: part.quantity,
-        bomLinkFeature: part.bomLinkFeature,
-        bomLinkSpecSheetExtra: part.bomLinkSpecSheetExtra,
-        bomLinkPart: part.bomLinkPart,
-        color: part.color,
-        part: part.part,
-        bomLinkEndDate: part.bomLinkEndDate,
-        section: part.section,
-        partName: part.partName,
-        materialDescription: part.materialDescription,
-        masterBranchID: part.masterBranchID,
-        material: part.material,
-        bomLinkStartDate: part.bomLinkStartDate,
-        supplier: part.supplier,
-        flexBomLinkID: part.flexBomLinkID,
-        linkedBom: part.linkedBom,
-        supplierDescription: part.supplierDescription,
-        bomLinkIncludeInSpecSheet: part.bomLinkIncludeInSpecSheet,
-        sortingNumber: part.sortingNumber,
-        colorDescription: part.colorDescription,
-      };
+    // Create hierarchical structure
+    const hierarchicalData = this.createHierarchicalStructure(sortedParts, skuInfo);
 
-      // Add SKU columns based on backend SKU data
-      skuInfo.forEach((sku) => {
-        const fieldName = `sku${sku.sku}`;
-        // Find matching SKU in backend data
-        const matchingSku = part.skus.find((s) => s.skuId === sku.sku);
-        row[fieldName] = matchingSku ? matchingSku.value : '';
-      });
+    return hierarchicalData;
+  }
 
-      return row;
+  // Create hierarchical structure for parent-child relationships with accordion functionality
+  private createHierarchicalStructure(parts: PartData[], skuInfo: any[]): any[] {
+    const result: any[] = [];
+    const parentMap = new Map<string, any>();
+
+    // First pass: Create all rows and identify parents
+    parts.forEach((part) => {
+      const row = this.createRowData(part, skuInfo);
+
+      // Check if this is a parent row (has linkedBom: "1")
+      if (part.linkedBom === '1') {
+        row.isParent = true;
+        row.hasChildren = false; // Will be updated if children are found
+        row.isExpanded = false; // Accordion starts collapsed
+        row.children = [];
+        parentMap.set(part.branchID, row);
+      } else {
+        row.isChild = true;
+        row.parentBranchID = this.extractParentBranchID(part.branchID);
+        row.isVisible = false; // Children start hidden
+      }
+
+      result.push(row);
     });
+
+    // Second pass: Link children to parents
+    result.forEach((row) => {
+      if (row.isChild && row.parentBranchID) {
+        const parent = parentMap.get(row.parentBranchID);
+        if (parent) {
+          parent.hasChildren = true;
+          parent.children.push(row);
+          row.parent = parent;
+        }
+      }
+    });
+
+    // Third pass: Create accordion structure (only show parents initially)
+    const finalResult: any[] = [];
+    result.forEach((row) => {
+      if (row.isParent) {
+        // Use the parent from parentMap to ensure we have the children
+        const parentWithChildren = parentMap.get(row.branchID);
+        if (parentWithChildren) {
+          finalResult.push(parentWithChildren);
+        } else {
+          finalResult.push(row);
+        }
+      } else if (!row.isChild) {
+        // Standalone rows (no parent-child relationship)
+        finalResult.push(row);
+      }
+    });
+
+    return finalResult;
+  }
+
+  // Extract parent branch ID from child branch ID (e.g., "16-16" -> "16")
+  private extractParentBranchID(childBranchID: string): string | null {
+    const dashIndex = childBranchID.indexOf('-');
+    if (dashIndex > 0) {
+      return childBranchID.substring(0, dashIndex);
+    }
+    return null;
+  }
+
+  // Create individual row data
+  private createRowData(part: PartData, skuInfo: any[]): any {
+    const row: any = {
+      // Map all fields from the new backend structure
+      branchID: part.branchID,
+      quantity: part.quantity,
+      bomLinkFeature: part.bomLinkFeature,
+      bomLinkSpecSheetExtra: part.bomLinkSpecSheetExtra,
+      bomLinkPart: part.bomLinkPart,
+      color: part.color,
+      part: part.part,
+      bomLinkEndDate: part.bomLinkEndDate,
+      section: part.section,
+      partName: part.partName,
+      materialDescription: part.materialDescription,
+      masterBranchID: part.masterBranchID,
+      material: part.material,
+      bomLinkStartDate: part.bomLinkStartDate,
+      supplier: part.supplier,
+      flexBomLinkID: part.flexBomLinkID,
+      linkedBom: part.linkedBom,
+      supplierDescription: part.supplierDescription,
+      bomLinkIncludeInSpecSheet: part.bomLinkIncludeInSpecSheet,
+      sortingNumber: part.sortingNumber,
+      colorDescription: part.colorDescription,
+      // New fields from mock2.json
+      materialcolorLongDescription: part.materialcolorLongDescription,
+      materialcolorShortDescription: part.materialcolorShortDescription,
+      materialSupplierComments: part.materialSupplierComments,
+    };
+
+    // Add SKU columns based on backend SKU data
+    skuInfo.forEach((sku) => {
+      const fieldName = `sku${sku.sku}`;
+      // Find matching SKU in backend data
+      const matchingSku = part.skus.find((s) => s.skuId === sku.sku);
+      row[fieldName] = matchingSku ? matchingSku.value : '';
+    });
+
+    return row;
+  }
+
+  // Accordion functionality methods
+  toggleAccordion(parentRow: any, gridApi: any): void {
+    if (!parentRow.isParent || !parentRow.hasChildren) return;
+
+    parentRow.isExpanded = !parentRow.isExpanded;
+
+    if (parentRow.isExpanded) {
+      // Show children
+      this.showChildren(parentRow, gridApi);
+    } else {
+      // Hide children
+      this.hideChildren(parentRow, gridApi);
+    }
+  }
+
+  private showChildren(parentRow: any, gridApi: any): void {
+    const allRowData = gridApi
+      .getDisplayedRowModel()
+      .rootNode.children.map((node: any) => node.data);
+    const parentIndex = allRowData.findIndex((row: any) => row.branchID === parentRow.branchID);
+
+    if (parentIndex === -1) return;
+
+    // Insert children after parent
+    const newRowData = [...allRowData];
+    parentRow.children.forEach((child: any, index: number) => {
+      child.isSubRow = true;
+      child.isVisible = true;
+      newRowData.splice(parentIndex + 1 + index, 0, child);
+    });
+
+    gridApi.setGridOption('rowData', newRowData);
+  }
+
+  private hideChildren(parentRow: any, gridApi: any): void {
+    const allRowData = gridApi
+      .getDisplayedRowModel()
+      .rootNode.children.map((node: any) => node.data);
+    const newRowData = allRowData.filter((row: any) => {
+      if (row.isSubRow && row.parent && row.parent.branchID === parentRow.branchID) {
+        row.isVisible = false;
+        return false; // Remove from display
+      }
+      return true;
+    });
+
+    gridApi.setGridOption('rowData', newRowData);
   }
 
   // Generate additional mock data to reach 1000 rows

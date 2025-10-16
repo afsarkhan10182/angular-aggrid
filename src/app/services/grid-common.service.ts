@@ -304,19 +304,32 @@ export class GridCommonService {
       },
       enterNavigatesVertically: false,
       enterNavigatesVerticallyAfterEdit: false,
-      stopEditingWhenCellsLoseFocus: false,
+      stopEditingWhenCellsLoseFocus: true,
+      suppressClickEdit: false,
       singleClickEdit: true,
       getRowClass: (params) => {
+        let classes = [];
+
         if (params.data && params.data.isExpired) {
-          return 'expired-row';
+          classes.push('expired-row');
         }
         if (params.data && params.data.isNew) {
-          return 'new-row';
+          classes.push('new-row');
         }
         if (params.data && params.data.isEdited) {
-          return 'edited-row';
+          classes.push('edited-row');
         }
-        return '';
+        if (params.data && params.data.isParent) {
+          classes.push('parent-row');
+          if (params.data.isExpanded) {
+            classes.push('expanded');
+          }
+        }
+        if (params.data && params.data.isSubRow) {
+          classes.push('subrow');
+        }
+
+        return classes.join(' ');
       },
       enableRangeSelection: false,
       suppressAnimationFrame: true,
@@ -364,6 +377,38 @@ export class GridCommonService {
           // Only update the data object directly to avoid triggering another onCellValueChanged
           if (params.node.data) {
             (params.node.data as any)[params.colDef.field] = params.newValue;
+          }
+        }
+      },
+      onCellEditingStopped: (params) => {
+        // Only commit if there's actually a new value and it's not a date or quantity column
+        // Date and quantity columns have their own valueSetter that handles the conversion properly
+        if (
+          params.data &&
+          params.newValue !== undefined &&
+          params.colDef.field &&
+          params.newValue !== params.oldValue &&
+          !params.colDef.field.includes('Date') && // Skip date columns as they have valueSetter
+          params.colDef.field !== 'quantity' // Skip quantity column as it has valueSetter
+        ) {
+          params.data[params.colDef.field] = params.newValue;
+        }
+        // Refresh the cell to show the updated value
+        params.api.refreshCells({
+          rowNodes: [params.node],
+          columns: [params.column],
+          force: true,
+        });
+      },
+      onCellClicked: (params) => {
+        // Handle accordion toggle for the accordion icon column
+        if (
+          params.colDef.field === 'accordionIcon' &&
+          params.data.isParent &&
+          params.data.hasChildren
+        ) {
+          if (componentInstance.toggleAccordion) {
+            componentInstance.toggleAccordion(params.data.branchID);
           }
         }
       },
