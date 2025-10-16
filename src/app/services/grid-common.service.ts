@@ -178,7 +178,15 @@ export class GridCommonService {
   initializeClickableParts(rowData: any[]): Set<number> {
     const clickableParts = new Set<number>();
 
-    const first20Parts = rowData.slice(0, 20).map((row) => row.part.toString());
+    // Filter out header rows and only process actual data rows
+    const dataRows = rowData.filter((row) => 
+      !row.isSectionHeader && 
+      !row.isMaterialHeader && 
+      !row.isBranchHeader && 
+      row.part
+    );
+
+    const first20Parts = dataRows.slice(0, 20).map((row) => row.part.toString());
     const clickableCount = Math.floor(first20Parts.length * 0.3);
 
     for (let i = 0; i < clickableCount; i++) {
@@ -195,7 +203,11 @@ export class GridCommonService {
   getUniqueFeatures(rowData: any[]): string[] {
     const features = new Set<string>();
     rowData.forEach((row) => {
-      if (row.feature && !row.isNewRow) {
+      if (row.feature && 
+          !row.isNewRow && 
+          !row.isSectionHeader && 
+          !row.isMaterialHeader && 
+          !row.isBranchHeader) {
         features.add(row.feature);
       }
     });
@@ -208,7 +220,11 @@ export class GridCommonService {
   getAvailablePartNumbers(rowData: any[]): string[] {
     const partNumbers = new Set<string>();
     rowData.forEach((row) => {
-      if (!row.isNewRow) {
+      if (!row.isNewRow && 
+          !row.isSectionHeader && 
+          !row.isMaterialHeader && 
+          !row.isBranchHeader && 
+          row.part) {
         partNumbers.add(row.part.toString());
       }
     });
@@ -221,7 +237,11 @@ export class GridCommonService {
   getUniqueSuppliers(rowData: any[]): string[] {
     const suppliers = new Set<string>();
     rowData.forEach((row) => {
-      if (row.supplier && !row.isNewRow) {
+      if (row.supplier && 
+          !row.isNewRow && 
+          !row.isSectionHeader && 
+          !row.isMaterialHeader && 
+          !row.isBranchHeader) {
         suppliers.add(row.supplier);
       }
     });
@@ -234,7 +254,11 @@ export class GridCommonService {
   getUniqueColors(rowData: any[]): string[] {
     const colors = new Set<string>();
     rowData.forEach((row) => {
-      if (row.color && !row.isNewRow) {
+      if (row.color && 
+          !row.isNewRow && 
+          !row.isSectionHeader && 
+          !row.isMaterialHeader && 
+          !row.isBranchHeader) {
         colors.add(row.color);
       }
     });

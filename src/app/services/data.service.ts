@@ -127,6 +127,10 @@ export class DataService extends BaseService {
     return this.apiData?.columns || {};
   }
 
+  getColumnMapping(): { [key: string]: string } {
+    return this.apiData?.columns || {};
+  }
+
   // Transform backend data to grid format with SKU columns and hierarchical structure
   transformToGridData(parts: PartData[], isSbom: boolean = false): any[] {
     if (!this.apiData) return [];
