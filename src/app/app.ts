@@ -106,6 +106,7 @@ export class App implements OnInit {
   public skuColumns: any[] = []; // Dynamic SKU columns
 
   public rowData: any[] = [];
+  public displayData: any[] = []; // Flattened data for display
   public totalRows = 1000;
 
   constructor(
@@ -148,9 +149,6 @@ export class App implements OnInit {
     (window as any).toggleMaterial = (section: string, material: string) => {
       this.toggleMaterial(section, material);
     };
-    (window as any).toggleBranch = (branchId: string) => {
-      this.toggleBranch(branchId);
-    };
   }
 
   // Toggle section expansion
@@ -165,12 +163,14 @@ export class App implements OnInit {
     sectionRow.isExpanded = !sectionRow.isExpanded;
 
     // Update the grid with the new data
-    const flatData = this.flattenHierarchicalData(this.rowData);
-    this.gridApi.setGridOption('rowData', flatData);
+    this.displayData = this.flattenHierarchicalData(this.rowData);
   }
 
   // Toggle material expansion
-  public toggleMaterial(section: string, material: string): void {
+  public toggleMaterial(section: string, material: string, materialIndex?: number): void {
+    console.log(
+      `toggleMaterial called with: section=${section}, material=${material}, materialIndex=${materialIndex}`
+    );
     if (!this.gridApi) return;
 
     const sectionRow = this.rowData.find(
@@ -178,42 +178,49 @@ export class App implements OnInit {
     );
     if (!sectionRow) return;
 
-    const materialRow = sectionRow.children.find(
-      (child: any) => child.material === material && child.isMaterialHeader
-    );
-    if (!materialRow) return;
+    // Find material row by material name and index if provided
+    let materialRow;
+    if (materialIndex !== undefined) {
+      // Find all material headers with this name and get the one at the specified index
+      const materialHeaders = sectionRow.children.filter(
+        (child: any) => child.material === material && child.isMaterialHeader
+      );
+      console.log(`Found ${materialHeaders.length} material headers for ${material}`);
+      console.log(
+        `Material headers:`,
+        materialHeaders.map((m: any) => ({
+          material: m.material,
+          index: m.materialIndex,
+          expanded: m.isExpanded,
+        }))
+      );
 
+      // Use the materialIndex from the data, not the array position
+      materialRow = materialHeaders.find((m: any) => m.materialIndex === materialIndex);
+      console.log(
+        `Looking for material ${material} with materialIndex ${materialIndex}, found:`,
+        materialRow
+      );
+    } else {
+      // Fallback to finding by name only
+      materialRow = sectionRow.children.find(
+        (child: any) => child.material === material && child.isMaterialHeader
+      );
+    }
+
+    if (!materialRow) {
+      console.log(`Material row not found for ${material} at index ${materialIndex}`);
+      return;
+    }
+
+    console.log(
+      `Toggling material: ${materialRow.material}, current expanded: ${materialRow.isExpanded}`
+    );
     materialRow.isExpanded = !materialRow.isExpanded;
+    console.log(`New expanded state: ${materialRow.isExpanded}`);
 
     // Update the grid with the new data
-    const flatData = this.flattenHierarchicalData(this.rowData);
-    this.gridApi.setGridOption('rowData', flatData);
-  }
-
-  // Toggle branch expansion
-  public toggleBranch(branchId: string): void {
-    if (!this.gridApi) return;
-
-    // Find the branch row in the hierarchical structure
-    for (const sectionRow of this.rowData) {
-      if (sectionRow.isSectionHeader) {
-        for (const materialRow of sectionRow.children) {
-          if (materialRow.isMaterialHeader) {
-            const branchRow = materialRow.children.find(
-              (child: any) => child.branchID === branchId && child.isBranchHeader
-            );
-            if (branchRow) {
-              branchRow.isExpanded = !branchRow.isExpanded;
-
-              // Update the grid with the new data
-              const flatData = this.flattenHierarchicalData(this.rowData);
-              this.gridApi.setGridOption('rowData', flatData);
-              return;
-            }
-          }
-        }
-      }
-    }
+    this.displayData = this.flattenHierarchicalData(this.rowData);
   }
 
   private updateGridData(): void {
@@ -222,33 +229,73 @@ export class App implements OnInit {
   }
 
   private getInitialDisplayData(): any[] {
-    // Only show section headers initially
-    return this.rowData.filter((item) => item.isSectionHeader);
+    // Show all expanded data initially
+    return this.flattenHierarchicalData(this.rowData);
   }
 
   private flattenHierarchicalData(data: any[]): any[] {
     const result: any[] = [];
 
+    console.log('=== FLATTENING HIERARCHICAL DATA ===');
+    console.log('Input data:', data);
+
     data.forEach((item) => {
       result.push(item);
+      console.log(
+        `Processing item: ${item.section || item.material || 'unknown'}, isSectionHeader: ${
+          item.isSectionHeader
+        }, isExpanded: ${item.isExpanded}`
+      );
 
       if (item.isSectionHeader && item.isExpanded) {
-        item.children.forEach((material: any) => {
-          result.push(material);
+        console.log(
+          `Section ${item.section} is expanded, processing ${item.children?.length || 0} children`
+        );
+        if (item.children && Array.isArray(item.children)) {
+          item.children.forEach((child: any) => {
+            console.log(
+              `  Child: ${child.material || child.part || 'unknown'}, isDirectRow: ${
+                child.isDirectRow
+              }, isMaterialHeader: ${child.isMaterialHeader}, isExpanded: ${child.isExpanded}`
+            );
+            if (child.isDirectRow) {
+              // Direct row - show immediately without accordion
+              result.push(child);
+              console.log(`    Added direct row: ${child.part || child.material}`);
+            } else if (child.isMaterialHeader) {
+              // Material header with accordion
+              result.push(child);
+              console.log(`    Added material header: ${child.material}`);
 
-          if (material.isMaterialHeader && material.isExpanded) {
-            material.children.forEach((branch: any) => {
-              result.push(branch);
-
-              if (branch.isBranchHeader && branch.isExpanded) {
-                branch.children.forEach((subItem: any) => {
-                  result.push(subItem);
+              if (child.isExpanded && child.children && Array.isArray(child.children)) {
+                console.log(
+                  `    Material ${child.material} is expanded, processing ${child.children.length} children`
+                );
+                child.children.forEach((item: any) => {
+                  result.push(item);
+                  console.log(`      Added child: ${item.part || item.material}`);
                 });
               }
-            });
-          }
-        });
+            }
+          });
+        }
       }
+    });
+
+    console.log('=== FLATTENED RESULT ===');
+    console.log('Total items in result:', result.length);
+    result.forEach((item, index) => {
+      console.log(
+        `  ${index + 1}. ${item.section || item.material || item.part || 'unknown'} (${
+          item.isSectionHeader
+            ? 'Section'
+            : item.isMaterialHeader
+            ? 'Material'
+            : item.isDirectRow
+            ? 'Direct'
+            : 'Data'
+        })`
+      );
     });
 
     return result;
@@ -266,16 +313,13 @@ export class App implements OnInit {
       next: (user) => {
         // Only load data if user is properly authenticated
         if (user) {
-          console.log('CSRF API succeeded - user authenticated');
           this.loadData();
         } else {
-          console.log('CSRF API succeeded but no valid user - showing modal');
           this.promptForCredentials();
         }
       },
       error: (error) => {
         // CSRF API failed - show modal, NO DATA LOADING
-        console.log('CSRF API failed - showing modal, no data loaded', error);
         setTimeout(() => {
           this.promptForCredentials();
         }, 100);
@@ -324,14 +368,11 @@ export class App implements OnInit {
         },
         error: (error) => {
           // CSRF API failed after user entered credentials - NO DATA LOADING
-          console.log('CSRF API failed after credentials - no data loaded', error);
           alert('Authentication failed. Please check your credentials and try again.');
           this.promptForCredentials(); // Show modal again
         },
       });
-    } catch (error) {
-      console.error('Error showing sign-in modal:', error);
-    }
+    } catch (error) {}
   }
 
   loadData(): void {
@@ -342,12 +383,11 @@ export class App implements OnInit {
       // Initialize columns after data is loaded
       this.initializeColumns();
 
-      // Set the initial flattened data to the grid (only section headers visible initially)
-      const initialData = this.getInitialDisplayData();
-      this.gridApi?.setGridOption('rowData', initialData);
+      // Set the initial flattened data to the grid (show all expanded data)
+      this.displayData = this.getInitialDisplayData();
 
       // Make only some parts clickable (random selection from first 20 rows)
-      this.clickableParts = this.gridCommonService.initializeClickableParts(initialData);
+      this.clickableParts = this.gridCommonService.initializeClickableParts(this.displayData);
     });
   }
 
@@ -362,12 +402,15 @@ export class App implements OnInit {
   createHierarchicalColumns(columnMapping: any): ColDef[] {
     const columns: ColDef[] = [];
 
-    // Add hierarchical structure column
+    // Add Material column as the first column with hierarchical display
     columns.push({
-      headerName: 'Hierarchy',
-      field: 'hierarchy',
+      headerName: '',
+      field: 'material',
       width: 300,
       minWidth: 200,
+      pinned: 'left',
+      sortable: false,
+      filter: false,
       cellRenderer: (params: any) => {
         return this.renderHierarchicalCell(params);
       },
@@ -384,6 +427,8 @@ export class App implements OnInit {
         field: field,
         width: 150,
         minWidth: 100,
+        filter: true,
+        sortable: true,
         cellRenderer: (params: any) => {
           // Only show values for actual data rows, not headers
           if (
@@ -483,7 +528,11 @@ export class App implements OnInit {
 
     if (data.isMaterialHeader) {
       const arrowIcon = data.isExpanded ? '▼' : '▶';
-      const materialIndent = '&nbsp;'.repeat(16); // Add indentation for materials
+      const materialIndent = '&nbsp;'.repeat(8);
+      const materialIndex = data.materialIndex || 0; // Use the material index
+      console.log(
+        `Rendering material header: ${data.material}, index: ${materialIndex}, expanded: ${data.isExpanded}`
+      );
       return `
         <div style="
           display: flex; 
@@ -498,7 +547,7 @@ export class App implements OnInit {
           border-left: 3px solid #10b981;
           margin: 1px 0;
         " 
-             onclick="window.toggleMaterial('${data.section}', '${data.material}')"
+             onclick="window.toggleMaterial('${data.section}', '${data.material}', ${materialIndex})"
              onmouseover="this.style.background='#dcfce7'; this.style.borderLeftColor='#059669'"
              onmouseout="this.style.background='#f0fdf4'; this.style.borderLeftColor='#10b981'">
           <span style="
@@ -515,42 +564,61 @@ export class App implements OnInit {
       `;
     }
 
-    if (data.isBranchHeader) {
-      const arrowIcon = data.isExpanded ? '▼' : '▶';
-      const branchIndent = '&nbsp;'.repeat(32); // Add more indentation for branches
+    // Parent row (main item with children)
+    if (data.isParentRow) {
+      const parentIndent = '&nbsp;'.repeat(16);
       return `
         <div style="
           display: flex; 
           align-items: center; 
-          font-weight: 400; 
-          color: #92400e; 
-          background: #fffbeb; 
-          padding: 5px 8px; 
-          border-radius: 3px; 
-          cursor: pointer; 
-          transition: all 0.2s ease; 
-          border-left: 2px solid #f59e0b;
+          color: #1e40af; 
+          padding: 4px 6px; 
+          background: #eff6ff;
+          border-radius: 2px;
           margin: 1px 0;
+          border-left: 3px solid #3b82f6;
+          transition: all 0.2s ease;
+          font-weight: 500;
         " 
-             onclick="window.toggleBranch('${data.branchID}')"
-             onmouseover="this.style.background='#fef3c7'; this.style.borderLeftColor='#d97706'"
-             onmouseout="this.style.background='#fffbeb'; this.style.borderLeftColor='#f59e0b'">
+             onmouseover="this.style.background='#dbeafe'; this.style.borderLeftColor='#1d4ed8'"
+             onmouseout="this.style.background='#eff6ff'; this.style.borderLeftColor='#3b82f6'">
           <span style="
-            margin-right: 6px; 
-            font-size: 10px; 
-            transition: transform 0.2s ease; 
-            color: #92400e;
-            font-weight: 600;
-            width: 12px;
-            text-align: center;
-          ">${arrowIcon}</span>
-          <span style="font-size: 12px; font-weight: 400;">${branchIndent}Branch: ${data.branchID}</span>
+            font-size: 12px; 
+            color: #1e40af;
+            font-weight: 500;
+          ">${parentIndent}${data.part || data.material || 'Item'}</span>
         </div>
       `;
     }
 
-    // Regular data row
-    const dataIndent = '&nbsp;'.repeat(48); // Add maximum indentation for data rows
+    // Direct row (no accordion)
+    if (data.isDirectRow) {
+      const directIndent = '&nbsp;'.repeat(16);
+      return `
+        <div style="
+          display: flex; 
+          align-items: center; 
+          color: #6b7280; 
+          padding: 4px 6px; 
+          background: #f8fafc;
+          border-radius: 2px;
+          margin: 1px 0;
+          border-left: 2px solid #cbd5e1;
+          transition: all 0.2s ease;
+        " 
+             onmouseover="this.style.background='#f1f5f9'; this.style.borderLeftColor='#94a3b8'"
+             onmouseout="this.style.background='#f8fafc'; this.style.borderLeftColor='#cbd5e1'">
+          <span style="
+            font-size: 12px; 
+            color: #475569;
+            font-weight: 400;
+          ">${directIndent}${data.part || data.material || 'Item'}</span>
+        </div>
+      `;
+    }
+
+    // Regular data row (sub-row)
+    const dataIndent = '&nbsp;'.repeat(24);
     return `
       <div style="
         display: flex; 
@@ -565,12 +633,6 @@ export class App implements OnInit {
       " 
            onmouseover="this.style.background='#f1f5f9'; this.style.borderLeftColor='#94a3b8'"
            onmouseout="this.style.background='#f8fafc'; this.style.borderLeftColor='#cbd5e1'">
-        <span style="
-          margin-right: 6px; 
-          font-size: 10px; 
-          color: #64748b;
-          font-weight: 400;
-        ">•</span>
         <span style="
           font-size: 12px; 
           color: #475569;
@@ -599,11 +661,19 @@ export class App implements OnInit {
       };
     }
 
-    if (data.isBranchHeader) {
+    if (data.isParentRow) {
       return {
-        backgroundColor: '#f9fafb',
-        borderLeft: '4px solid #f59e0b',
+        backgroundColor: '#eff6ff',
+        borderLeft: '3px solid #3b82f6',
         fontWeight: '500',
+      };
+    }
+
+    if (data.isDirectRow) {
+      return {
+        backgroundColor: '#ffffff',
+        borderLeft: '2px solid #d1d5db',
+        fontWeight: '400',
       };
     }
 
@@ -616,10 +686,24 @@ export class App implements OnInit {
   getDataCellStyle(params: any): any {
     const data = params.data;
 
-    if (data.isSectionHeader || data.isMaterialHeader || data.isBranchHeader) {
+    if (data.isSectionHeader || data.isMaterialHeader) {
       return {
         backgroundColor: 'transparent',
         color: 'transparent',
+      };
+    }
+
+    if (data.isParentRow) {
+      return {
+        backgroundColor: '#ffffff',
+        color: '#1e40af',
+      };
+    }
+
+    if (data.isDirectRow) {
+      return {
+        backgroundColor: '#ffffff',
+        color: '#374151',
       };
     }
 
@@ -634,6 +718,11 @@ export class App implements OnInit {
     this.gridCommonService.sizeColumnsToFit(this.gridApi);
     // Add Firefox compatibility
     this.gridCommonService.forceHorizontalScrollbarVisibility(this.gridApi);
+
+    // If data is already loaded, set it to the grid
+    if (this.rowData && this.rowData.length > 0) {
+      this.displayData = this.getInitialDisplayData();
+    }
   }
 
   getColumnDisplayName(col: any): string {
@@ -985,206 +1074,260 @@ export class App implements OnInit {
     this.gridCommonService.clearSearch(this.gridApi, this);
   }
 
-  // Transform data to hierarchical structure
+  // Build SKU-based MBOM hierarchy
+  private buildMbomHierarchy(data: any): any[] {
+    const sections: any = {};
+    const items = data.mbom;
+
+    console.log('=== BUILDING SKU-BASED HIERARCHY ===');
+    console.log('Processing items:', items.length);
+
+    // Group items by section and create material groups (not SKU-expanded)
+    for (const item of items) {
+      const section = item.section || 'NA';
+      if (!sections[section]) sections[section] = [];
+
+      // Create unique key for material group (part + branchID + flexBomLinkID)
+      const materialKey = `${item.part}_${item.branchID}_${item.flexBomLinkID}`;
+      console.log(`Item ${item.part} (${item.branchID}) - Material Key: ${materialKey}`);
+
+      // Check if this material group already exists
+      let existingMaterial = sections[section].find((m: any) => m.materialKey === materialKey);
+
+      if (!existingMaterial) {
+        // Create new material group with all SKUs
+        existingMaterial = {
+          ...item,
+          materialKey,
+          allSkus: item.skus || [],
+        };
+        sections[section].push(existingMaterial);
+        console.log(
+          `  Created new material group: ${materialKey} with SKUs:`,
+          item.skus?.map((s: any) => s.skuId)
+        );
+      }
+    }
+
+    // Build tree recursively for children
+    const buildTree = (branchID: string, allItems: any[]): any[] => {
+      const children = allItems.filter((i: any) => i.masterBranchID == branchID);
+      return children
+        .sort((a: any, b: any) => Number(a.sortingNumber || 0) - Number(b.sortingNumber || 0))
+        .map((c: any) => ({
+          ...c,
+          children: buildTree(c.branchID, allItems),
+        }));
+    };
+
+    const result: any[] = [];
+    const sectionOrder = data.sectionOrder || [];
+
+    console.log('=== BUILDING FINAL HIERARCHY ===');
+    console.log('Section order:', sectionOrder);
+
+    for (const sectionName of sectionOrder) {
+      const sectionItems = sections[sectionName] || [];
+      const roots = sectionItems.filter((i: any) => i.masterBranchID == '0');
+
+      console.log(
+        `Section ${sectionName}: ${sectionItems.length} items, ${roots.length} root items`
+      );
+
+      if (roots.length > 0) {
+        const sectionObj = {
+          section: sectionName,
+          materials: roots
+            .sort((a: any, b: any) => Number(a.sortingNumber || 0) - Number(b.sortingNumber || 0))
+            .map((r: any) => ({
+              ...r,
+              children: buildTree(r.branchID, sectionItems),
+            })),
+        };
+        result.push(sectionObj);
+        console.log(`  Added section ${sectionName} with ${sectionObj.materials.length} materials`);
+      }
+    }
+
+    console.log('=== FINAL HIERARCHY RESULT ===');
+    console.log('Total sections created:', result.length);
+    result.forEach((section: any, index: number) => {
+      console.log(
+        `Section ${index + 1}: ${section.section} (${section.materials.length} materials)`
+      );
+    });
+
+    return result;
+  }
+
+  // Transform data to hierarchical structure using SKU-based grouping
   transformToHierarchicalData(data: any): any[] {
     const hierarchicalData: any[] = [];
 
-    console.log('Total items in response:', data.mbom.length);
+    // Log original mock2.json structure
+    console.log('=== ORIGINAL MOCK2.JSON DATA ===');
+    console.log('Original mbom items:', data.mbom.length);
+    console.log('Section order:', data.sectionOrder);
+    console.log('Product info:', data.productInfo);
     console.log(
-      'All items:',
+      'Original items structure:',
       data.mbom.map((item: any) => ({
         branchID: item.branchID,
-        section: item.section,
-        material: item.material,
         part: item.part,
+        section: item.section,
+        masterBranchID: item.masterBranchID,
+        linkedBom: item.linkedBom,
+        skus: item.skus,
+        quantity: item.quantity,
+        sortingNumber: item.sortingNumber,
       }))
     );
 
-    // Group by section first
-    const sections = this.groupBySection(data.mbom);
-    console.log('Sections found:', Object.keys(sections));
+    // Build SKU-based hierarchy
+    const sections = this.buildMbomHierarchy(data);
 
-    Object.keys(sections).forEach((sectionName) => {
-      const sectionData = sections[sectionName];
+    // Log the transformed hierarchy
+    console.log('=== TRANSFORMED HIERARCHY FOR AG GRID ===');
+    console.log('Transformed sections:', sections.length);
+    sections.forEach((section: any, index: number) => {
+      console.log(`Section ${index + 1}: ${section.section}`);
+      console.log(`  Materials: ${section.materials.length}`);
+      section.materials.forEach((material: any, matIndex: number) => {
+        console.log(`    Material ${matIndex + 1}: ${material.part} (SKU: ${material.skuId})`);
+        console.log(`      Children: ${material.children.length}`);
+        material.children.forEach((child: any, childIndex: number) => {
+          console.log(`        Child ${childIndex + 1}: ${child.part} (SKU: ${child.skuId})`);
+        });
+      });
+    });
 
-      // Create section header row
+    // Convert to AG Grid format
+    sections.forEach((section: any) => {
       const sectionRow: any = {
-        section: sectionName,
+        section: section.section,
         isSectionHeader: true,
-        isExpanded: false, // Start collapsed
+        isExpanded: true, // Start expanded to show materials
         children: [],
         level: 0,
       };
 
-      // Group by material within section
-      const materials = this.groupByMaterial(sectionData);
-      console.log(`Materials in ${sectionName}:`, Object.keys(materials));
+      // Process materials in this section
+      section.materials.forEach((material: any, materialIndex: number) => {
+        // Check if material has children
+        const hasChildren = material.children && material.children.length > 0;
 
-      Object.keys(materials).forEach((materialName) => {
-        const materialData = materials[materialName];
-        console.log(
-          `Items for material ${materialName}:`,
-          materialData.map((item: any) => ({
-            branchID: item.branchID,
-            part: item.part,
-          }))
-        );
+        if (hasChildren) {
+          // Create material header with children
+          const materialRow: any = {
+            section: section.section,
+            material: material.part,
+            materialIndex: materialIndex, // Add unique index for this material
+            allSkus: material.allSkus,
+            isMaterialHeader: true,
+            isExpanded: true, // Start expanded to show children
+            children: [],
+            level: 1,
+            parent: sectionRow,
+            hasLinkedBom: true, // Add indicator for linked BOM
+          };
 
-        // Create material header row
-        const materialRow: any = {
-          section: sectionName,
-          material: materialName,
-          isMaterialHeader: true,
-          isExpanded: false,
-          children: [],
-          level: 1,
-          parent: sectionRow,
-        };
+          console.log(`Creating material header: ${material.part} with index ${materialIndex}`);
 
-        // Group by branchID for sub-rows
-        const branchGroups = this.groupByBranchID(materialData);
-        console.log(`Branches for ${materialName}:`, Object.keys(branchGroups));
+          // Add parent item
+          const parentRow = {
+            ...material,
+            isParentRow: true,
+            level: 2,
+            parent: materialRow,
+          };
+          this.addSkuDataToRow(parentRow, material);
+          materialRow.children.push(parentRow);
 
-        Object.keys(branchGroups).forEach((branchID) => {
-          const branchData = branchGroups[branchID];
-
-          // Create branch header row if there are multiple items with same branchID
-          if (branchData.length > 1) {
-            const branchRow: any = {
-              section: sectionName,
-              material: materialName,
-              branchID: branchID,
-              isBranchHeader: true,
-              isExpanded: false,
-              children: [],
-              level: 2,
-              parent: materialRow,
-            };
-
-            // Add individual items as children
-            branchData.forEach((item: any) => {
-              const itemRow = {
-                ...item,
-                isSubRow: true,
-                level: 3,
-                parent: branchRow,
-              };
-
-              // Add SKU data to the item row
-              this.addSkuDataToRow(itemRow, item);
-
-              branchRow.children.push(itemRow);
-            });
-
-            materialRow.children.push(branchRow);
-          } else {
-            // Single item, add directly to material
-            const itemRow = {
-              ...branchData[0],
+          // Add child items
+          material.children.forEach((child: any) => {
+            const childRow = {
+              ...child,
               isSubRow: true,
               level: 2,
               parent: materialRow,
             };
+            this.addSkuDataToRow(childRow, child);
+            materialRow.children.push(childRow);
+          });
 
-            // Add SKU data to the item row
-            this.addSkuDataToRow(itemRow, branchData[0]);
-
-            materialRow.children.push(itemRow);
-          }
-        });
-
-        sectionRow.children.push(materialRow);
+          sectionRow.children.push(materialRow);
+        } else {
+          // No children - add material directly as a direct row
+          const directRow = {
+            ...material,
+            section: section.section,
+            isDirectRow: true,
+            level: 1,
+            parent: sectionRow,
+          };
+          this.addSkuDataToRow(directRow, material);
+          sectionRow.children.push(directRow);
+        }
       });
 
       hierarchicalData.push(sectionRow);
     });
 
-    // Count total items in hierarchical structure
-    let totalItems = 0;
-    hierarchicalData.forEach((section: any) => {
-      totalItems += 1; // section header
-      section.children.forEach((material: any) => {
-        totalItems += 1; // material header
-        material.children.forEach((branch: any) => {
-          if (branch.isBranchHeader) {
-            totalItems += 1; // branch header
-            totalItems += branch.children.length; // branch items
-          } else {
-            totalItems += 1; // single item
-          }
-        });
+    // Log final AG Grid structure
+    console.log('=== FINAL AG GRID STRUCTURE ===');
+    console.log('Total sections in grid:', hierarchicalData.length);
+    console.log('Hierarchical data:', hierarchicalData);
+
+    if (hierarchicalData.length === 0) {
+      console.log('❌ NO DATA IN HIERARCHICAL STRUCTURE!');
+      return hierarchicalData;
+    }
+
+    hierarchicalData.forEach((section: any, index: number) => {
+      console.log(`Grid Section ${index + 1}: ${section.section}`);
+      console.log(`  Grid Children: ${section.children.length}`);
+      section.children.forEach((child: any, childIndex: number) => {
+        if (child.isMaterialHeader) {
+          console.log(
+            `    Material Header ${childIndex + 1}: ${child.material} (SKU: ${child.skuId})`
+          );
+          console.log(`      Material Children: ${child.children.length}`);
+          child.children.forEach((item: any, itemIndex: number) => {
+            if (item.isParentRow) {
+              console.log(`        Parent Row ${itemIndex + 1}: ${item.part} (${item.quantity})`);
+            } else if (item.isSubRow) {
+              console.log(`        Sub Row ${itemIndex + 1}: ${item.part} (${item.quantity})`);
+            }
+          });
+        } else if (child.isDirectRow) {
+          console.log(`    Direct Row ${childIndex + 1}: ${child.part} (${child.quantity})`);
+        }
       });
     });
-
-    console.log('Total items in hierarchical structure:', totalItems);
-    console.log(
-      'Expected total items (11 original + headers):',
-      data.mbom.length + ' original items + section headers + material headers + branch headers'
-    );
-
-    // Verify all original items are preserved
-    const originalItems = data.mbom.map((item: any) => item.branchID + '-' + item.part);
-    const hierarchicalItems: string[] = [];
-
-    hierarchicalData.forEach((section: any) => {
-      section.children.forEach((material: any) => {
-        material.children.forEach((branch: any) => {
-          if (branch.isBranchHeader) {
-            branch.children.forEach((item: any) => {
-              if (item.part) {
-                hierarchicalItems.push(item.branchID + '-' + item.part);
-              }
-            });
-          } else if (branch.part) {
-            hierarchicalItems.push(branch.branchID + '-' + branch.part);
-          }
-        });
-      });
-    });
-
-    console.log('Original items:', originalItems);
-    console.log('Hierarchical items:', hierarchicalItems);
-    console.log(
-      'All items preserved:',
-      originalItems.every((item: string) => hierarchicalItems.includes(item))
-    );
-
-    console.log('Hierarchical structure:', hierarchicalData);
 
     return hierarchicalData;
   }
 
-  private groupBySection(data: any[]): any {
-    return data.reduce((groups, item) => {
-      const section = item.section;
-      if (!groups[section]) {
-        groups[section] = [];
-      }
-      groups[section].push(item);
-      return groups;
-    }, {});
-  }
+  // Sort sections according to the sectionOrder from the data
+  private sortSectionsByOrder(sectionNames: string[], sectionOrder: string[]): string[] {
+    const orderedSections: string[] = [];
+    const unorderedSections: string[] = [];
 
-  private groupByMaterial(data: any[]): any {
-    return data.reduce((groups, item) => {
-      const material = item.material;
-      if (!groups[material]) {
-        groups[material] = [];
+    // First, add sections in the order specified by sectionOrder
+    sectionOrder.forEach((orderedSection) => {
+      if (sectionNames.includes(orderedSection)) {
+        orderedSections.push(orderedSection);
       }
-      groups[material].push(item);
-      return groups;
-    }, {});
-  }
+    });
 
-  private groupByBranchID(data: any[]): any {
-    return data.reduce((groups, item) => {
-      const branchID = item.branchID;
-      if (!groups[branchID]) {
-        groups[branchID] = [];
+    // Then add any remaining sections that weren't in the order
+    sectionNames.forEach((sectionName) => {
+      if (!orderedSections.includes(sectionName)) {
+        unorderedSections.push(sectionName);
       }
-      groups[branchID].push(item);
-      return groups;
-    }, {});
+    });
+
+    return [...orderedSections, ...unorderedSections];
   }
 
   private addSkuDataToRow(itemRow: any, originalItem: any): void {
@@ -1204,15 +1347,6 @@ export class App implements OnInit {
       skuInfo.forEach((sku) => {
         const fieldName = `sku${sku.sku}`;
         itemRow[fieldName] = '';
-      });
-    }
-
-    // Debug: Log SKU data for the first few items
-    if (itemRow.part && (itemRow.part === 'Material2' || itemRow.part === 'mat1')) {
-      console.log('SKU data for', itemRow.part, ':', {
-        sku100480: itemRow.sku100480,
-        sku100484: itemRow.sku100484,
-        originalSkus: originalItem.skus,
       });
     }
   }
