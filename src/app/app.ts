@@ -146,8 +146,12 @@ export class App implements OnInit {
     (window as any).toggleSection = (section: string) => {
       this.toggleSection(section);
     };
-    (window as any).toggleMaterial = (section: string, material: string) => {
-      this.toggleMaterial(section, material);
+    (window as any).toggleMaterial = (
+      section: string,
+      material: string,
+      materialIndex?: number
+    ) => {
+      this.toggleMaterial(section, material, materialIndex);
     };
   }
 
@@ -168,9 +172,6 @@ export class App implements OnInit {
 
   // Toggle material expansion
   public toggleMaterial(section: string, material: string, materialIndex?: number): void {
-    console.log(
-      `toggleMaterial called with: section=${section}, material=${material}, materialIndex=${materialIndex}`
-    );
     if (!this.gridApi) return;
 
     const sectionRow = this.rowData.find(
@@ -185,22 +186,9 @@ export class App implements OnInit {
       const materialHeaders = sectionRow.children.filter(
         (child: any) => child.material === material && child.isMaterialHeader
       );
-      console.log(`Found ${materialHeaders.length} material headers for ${material}`);
-      console.log(
-        `Material headers:`,
-        materialHeaders.map((m: any) => ({
-          material: m.material,
-          index: m.materialIndex,
-          expanded: m.isExpanded,
-        }))
-      );
 
       // Use the materialIndex from the data, not the array position
       materialRow = materialHeaders.find((m: any) => m.materialIndex === materialIndex);
-      console.log(
-        `Looking for material ${material} with materialIndex ${materialIndex}, found:`,
-        materialRow
-      );
     } else {
       // Fallback to finding by name only
       materialRow = sectionRow.children.find(
@@ -208,16 +196,8 @@ export class App implements OnInit {
       );
     }
 
-    if (!materialRow) {
-      console.log(`Material row not found for ${material} at index ${materialIndex}`);
-      return;
-    }
-
-    console.log(
-      `Toggling material: ${materialRow.material}, current expanded: ${materialRow.isExpanded}`
-    );
+    if (!materialRow) return;
     materialRow.isExpanded = !materialRow.isExpanded;
-    console.log(`New expanded state: ${materialRow.isExpanded}`);
 
     // Update the grid with the new data
     this.displayData = this.flattenHierarchicalData(this.rowData);
@@ -236,66 +216,28 @@ export class App implements OnInit {
   private flattenHierarchicalData(data: any[]): any[] {
     const result: any[] = [];
 
-    console.log('=== FLATTENING HIERARCHICAL DATA ===');
-    console.log('Input data:', data);
-
     data.forEach((item) => {
       result.push(item);
-      console.log(
-        `Processing item: ${item.section || item.material || 'unknown'}, isSectionHeader: ${
-          item.isSectionHeader
-        }, isExpanded: ${item.isExpanded}`
-      );
 
       if (item.isSectionHeader && item.isExpanded) {
-        console.log(
-          `Section ${item.section} is expanded, processing ${item.children?.length || 0} children`
-        );
         if (item.children && Array.isArray(item.children)) {
           item.children.forEach((child: any) => {
-            console.log(
-              `  Child: ${child.material || child.part || 'unknown'}, isDirectRow: ${
-                child.isDirectRow
-              }, isMaterialHeader: ${child.isMaterialHeader}, isExpanded: ${child.isExpanded}`
-            );
             if (child.isDirectRow) {
               // Direct row - show immediately without accordion
               result.push(child);
-              console.log(`    Added direct row: ${child.part || child.material}`);
             } else if (child.isMaterialHeader) {
               // Material header with accordion
               result.push(child);
-              console.log(`    Added material header: ${child.material}`);
 
               if (child.isExpanded && child.children && Array.isArray(child.children)) {
-                console.log(
-                  `    Material ${child.material} is expanded, processing ${child.children.length} children`
-                );
-                child.children.forEach((item: any) => {
-                  result.push(item);
-                  console.log(`      Added child: ${item.part || item.material}`);
+                child.children.forEach((sub: any) => {
+                  result.push(sub);
                 });
               }
             }
           });
         }
       }
-    });
-
-    console.log('=== FLATTENED RESULT ===');
-    console.log('Total items in result:', result.length);
-    result.forEach((item, index) => {
-      console.log(
-        `  ${index + 1}. ${item.section || item.material || item.part || 'unknown'} (${
-          item.isSectionHeader
-            ? 'Section'
-            : item.isMaterialHeader
-            ? 'Material'
-            : item.isDirectRow
-            ? 'Direct'
-            : 'Data'
-        })`
-      );
     });
 
     return result;
@@ -430,12 +372,8 @@ export class App implements OnInit {
         filter: true,
         sortable: true,
         cellRenderer: (params: any) => {
-          // Only show values for actual data rows, not headers
-          if (
-            params.data.isSectionHeader ||
-            params.data.isMaterialHeader ||
-            params.data.isBranchHeader
-          ) {
+          // Show values for data rows and material headers (header carries parent data)
+          if (params.data.isSectionHeader || params.data.isBranchHeader) {
             return '';
           }
           return params.value || '';
@@ -530,6 +468,7 @@ export class App implements OnInit {
       const arrowIcon = data.isExpanded ? '▼' : '▶';
       const materialIndent = '&nbsp;'.repeat(8);
       const materialIndex = data.materialIndex || 0; // Use the material index
+      const linkIcon = data.hasLinkedBom ? '🔗' : '⧉'; // Different icon for material/linked BOM
       console.log(
         `Rendering material header: ${data.material}, index: ${materialIndex}, expanded: ${data.isExpanded}`
       );
@@ -539,7 +478,7 @@ export class App implements OnInit {
           align-items: center; 
           font-weight: 500; 
           color: #065f46; 
-          background: #f0fdf4; 
+          background: #eefbf3; 
           padding: 6px 10px; 
           border-radius: 3px; 
           cursor: pointer; 
@@ -559,6 +498,11 @@ export class App implements OnInit {
             width: 14px;
             text-align: center;
           ">${arrowIcon}</span>
+          <span style="
+              margin-right: 6px;
+              font-size: 12px;
+              color: #0f766e;
+            ">${linkIcon}</span>
           <span style="font-size: 13px; font-weight: 500;">${materialIndent}${data.material}</span>
         </div>
       `;
@@ -1079,9 +1023,6 @@ export class App implements OnInit {
     const sections: any = {};
     const items = data.mbom;
 
-    console.log('=== BUILDING SKU-BASED HIERARCHY ===');
-    console.log('Processing items:', items.length);
-
     // Group items by section and create material groups (not SKU-expanded)
     for (const item of items) {
       const section = item.section || 'NA';
@@ -1089,7 +1030,6 @@ export class App implements OnInit {
 
       // Create unique key for material group (part + branchID + flexBomLinkID)
       const materialKey = `${item.part}_${item.branchID}_${item.flexBomLinkID}`;
-      console.log(`Item ${item.part} (${item.branchID}) - Material Key: ${materialKey}`);
 
       // Check if this material group already exists
       let existingMaterial = sections[section].find((m: any) => m.materialKey === materialKey);
@@ -1102,10 +1042,6 @@ export class App implements OnInit {
           allSkus: item.skus || [],
         };
         sections[section].push(existingMaterial);
-        console.log(
-          `  Created new material group: ${materialKey} with SKUs:`,
-          item.skus?.map((s: any) => s.skuId)
-        );
       }
     }
 
@@ -1123,16 +1059,9 @@ export class App implements OnInit {
     const result: any[] = [];
     const sectionOrder = data.sectionOrder || [];
 
-    console.log('=== BUILDING FINAL HIERARCHY ===');
-    console.log('Section order:', sectionOrder);
-
     for (const sectionName of sectionOrder) {
       const sectionItems = sections[sectionName] || [];
       const roots = sectionItems.filter((i: any) => i.masterBranchID == '0');
-
-      console.log(
-        `Section ${sectionName}: ${sectionItems.length} items, ${roots.length} root items`
-      );
 
       if (roots.length > 0) {
         const sectionObj = {
@@ -1145,17 +1074,8 @@ export class App implements OnInit {
             })),
         };
         result.push(sectionObj);
-        console.log(`  Added section ${sectionName} with ${sectionObj.materials.length} materials`);
       }
     }
-
-    console.log('=== FINAL HIERARCHY RESULT ===');
-    console.log('Total sections created:', result.length);
-    result.forEach((section: any, index: number) => {
-      console.log(
-        `Section ${index + 1}: ${section.section} (${section.materials.length} materials)`
-      );
-    });
 
     return result;
   }
@@ -1217,33 +1137,27 @@ export class App implements OnInit {
         const hasChildren = material.children && material.children.length > 0;
 
         if (hasChildren) {
-          // Create material header with children
+          // Create material header with children (NO separate parent row)
           const materialRow: any = {
+            // carry over all original material fields so other columns can show values
+            ...material,
             section: section.section,
             material: material.part,
-            materialIndex: materialIndex, // Add unique index for this material
+            materialIndex: materialIndex,
             allSkus: material.allSkus,
             isMaterialHeader: true,
-            isExpanded: true, // Start expanded to show children
+            isExpanded: true,
             children: [],
             level: 1,
             parent: sectionRow,
-            hasLinkedBom: true, // Add indicator for linked BOM
+            hasLinkedBom: true,
           };
 
-          console.log(`Creating material header: ${material.part} with index ${materialIndex}`);
+          console.log(
+            `Creating material header (no parent row): ${material.part} with index ${materialIndex}`
+          );
 
-          // Add parent item
-          const parentRow = {
-            ...material,
-            isParentRow: true,
-            level: 2,
-            parent: materialRow,
-          };
-          this.addSkuDataToRow(parentRow, material);
-          materialRow.children.push(parentRow);
-
-          // Add child items
+          // Add only child items under the header
           material.children.forEach((child: any) => {
             const childRow = {
               ...child,
@@ -1273,37 +1187,10 @@ export class App implements OnInit {
       hierarchicalData.push(sectionRow);
     });
 
-    // Log final AG Grid structure
-    console.log('=== FINAL AG GRID STRUCTURE ===');
-    console.log('Total sections in grid:', hierarchicalData.length);
-    console.log('Hierarchical data:', hierarchicalData);
-
+    // Final guard
     if (hierarchicalData.length === 0) {
-      console.log('❌ NO DATA IN HIERARCHICAL STRUCTURE!');
       return hierarchicalData;
     }
-
-    hierarchicalData.forEach((section: any, index: number) => {
-      console.log(`Grid Section ${index + 1}: ${section.section}`);
-      console.log(`  Grid Children: ${section.children.length}`);
-      section.children.forEach((child: any, childIndex: number) => {
-        if (child.isMaterialHeader) {
-          console.log(
-            `    Material Header ${childIndex + 1}: ${child.material} (SKU: ${child.skuId})`
-          );
-          console.log(`      Material Children: ${child.children.length}`);
-          child.children.forEach((item: any, itemIndex: number) => {
-            if (item.isParentRow) {
-              console.log(`        Parent Row ${itemIndex + 1}: ${item.part} (${item.quantity})`);
-            } else if (item.isSubRow) {
-              console.log(`        Sub Row ${itemIndex + 1}: ${item.part} (${item.quantity})`);
-            }
-          });
-        } else if (child.isDirectRow) {
-          console.log(`    Direct Row ${childIndex + 1}: ${child.part} (${child.quantity})`);
-        }
-      });
-    });
 
     return hierarchicalData;
   }
