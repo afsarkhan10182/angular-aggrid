@@ -408,15 +408,21 @@ export class App implements OnInit {
       headerClass: index === 0 ? 'first-sku-column-header' : '',
       cellClass: index === 0 ? 'first-sku-column-cell' : '',
       cellRenderer: (params: any) => {
-        // Only show SKU values for actual data rows
-        if (
-          params.data.isSectionHeader ||
-          params.data.isMaterialHeader ||
-          params.data.isBranchHeader
-        ) {
+        const data = params.data || {};
+
+        // Hide SKU values on section headers and branch headers
+        if (data.isSectionHeader || data.isBranchHeader) {
           return '';
         }
-        return params.value || '';
+
+        // Show SKU values on material headers (linked BOM) and direct rows
+        // Hide SKU values on child rows (subrows) since they're already on material header
+        if (data.isMaterialHeader || data.isDirectRow) {
+          return params.value || '';
+        }
+
+        // Hide on subrows (child rows under material headers)
+        return '';
       },
       cellStyle: (params: any) => {
         return this.getDataCellStyle(params);
@@ -466,12 +472,9 @@ export class App implements OnInit {
 
     if (data.isMaterialHeader) {
       const arrowIcon = data.isExpanded ? '▼' : '▶';
-      const materialIndent = '&nbsp;'.repeat(8);
+      const materialIndent = ''; // No indent - same level as section headers
       const materialIndex = data.materialIndex || 0; // Use the material index
       const linkIcon = data.hasLinkedBom ? '🔗' : '⧉'; // Different icon for material/linked BOM
-      console.log(
-        `Rendering material header: ${data.material}, index: ${materialIndex}, expanded: ${data.isExpanded}`
-      );
       return `
         <div style="
           display: flex; 
@@ -537,7 +540,7 @@ export class App implements OnInit {
 
     // Direct row (no accordion)
     if (data.isDirectRow) {
-      const directIndent = '&nbsp;'.repeat(16);
+      const directIndent = ''; // No indent - same level as section headers
       return `
         <div style="
           display: flex; 
@@ -1152,6 +1155,9 @@ export class App implements OnInit {
             parent: sectionRow,
             hasLinkedBom: true,
           };
+
+          // Add SKU data to material header
+          this.addSkuDataToRow(materialRow, material);
 
           console.log(
             `Creating material header (no parent row): ${material.part} with index ${materialIndex}`
