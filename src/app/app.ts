@@ -64,6 +64,9 @@ export class App implements OnInit {
   public copiedFromCellKey: string = ''; // Track which cell was copied from (for visual indicator)
   public copiedCellIndicator: string = ''; // Visual indicator for copied cell
 
+  // Current user state
+  public currentUser: any = null;
+
   // Master list for column visibility panel (includes both real and virtual columns)
   public allColumns = [
     // Core Part Information
@@ -266,6 +269,7 @@ export class App implements OnInit {
       next: (user) => {
         // Only load data if user is properly authenticated
         if (user) {
+          this.currentUser = user;
           this.loadData();
         } else {
           this.promptForCredentials();
@@ -312,6 +316,7 @@ export class App implements OnInit {
       this.sessionService.initSession().subscribe({
         next: (user) => {
           if (user && user.name && user.id) {
+            this.currentUser = user;
             this.loadData();
           } else {
             // Authentication failed - show modal again

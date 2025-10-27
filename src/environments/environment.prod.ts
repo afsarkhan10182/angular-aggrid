@@ -3,6 +3,7 @@ export const environment = {
   baseHref: '/Windchill/rfa/trek/jsp/bomcomposer/',
   apiUrl: '/Windchill/rfa/trek/jsp/bomcomposer/api',
   csrfUrl: '/Windchill/servlet/rest/security/csrf',
+  getUserUrl: '/Windchill/servlet/rest/security/getUser',
   dataApiPath: '/Windchill/servlet/rest/trek/bomlink',
   serverHostUrl: 'http://plmcntimg.plmtestlab.com',
   // Empty credentials - users enter their own in the modal
@@ -18,5 +19,6 @@ export const environment = {
   useMockApi: false,
   mockApiEndpoints: {
     csrf: '/api/csrf.json',
+    getUser: '/api/getUser.json',
   },
 };
