@@ -47,13 +47,18 @@ export class ColumnService {
             return `<span class="delete-row-btn" data-new-row-id="${newRowId}" title="Delete">−</span>`;
           }
 
-          // Don't show plus icon for sub-rows
-          if (params.data.isSubRow) {
-            return '';
+          // Only show add/remove buttons on parent level materials
+          // This includes: isMaterialHeader (materials with children) OR isDirectRow (materials without children)
+          // Both are at level 1 and represent parent materials
+          if (
+            (params.data.isMaterialHeader && params.data.hasLinkedBom) ||
+            params.data.isDirectRow
+          ) {
+            return `<span class="add-row-btn" data-part-id="${partId}" title="Add">+</span>`;
           }
 
-          // For all other rows, show add button
-          return `<span class="add-row-btn" data-part-id="${partId}" title="Add">+</span>`;
+          // For all other rows (section headers, sub-rows, direct rows), show nothing
+          return '';
         },
         cellStyle: {
           textAlign: 'center',

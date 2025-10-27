@@ -121,6 +121,7 @@
           (click)="toggleColumnVisibility()"
           class="grid-toggle-columns-btn"
           title="Show/Hide Columns"
+          #toggleBtn
         >
           <div class="toggle-button-content">
             <i class="fas fa-columns"></i>
@@ -130,7 +131,11 @@
       </div>
 
       <!-- Column Visibility Panel - Positioned near grid toggle button -->
-      <div *ngIf="showColumnVisibilityPanel" class="grid-column-visibility-panel-container">
+      <div
+        *ngIf="showColumnVisibilityPanel"
+        class="grid-column-visibility-panel-container"
+        #columnPanel
+      >
         <div class="column-visibility-panel" (click)="$event.stopPropagation()">
           <div class="column-visibility-header">
             <h4>Visible Columns</h4>

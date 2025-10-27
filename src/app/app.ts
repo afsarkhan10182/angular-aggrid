@@ -1,10 +1,18 @@
-import { Component, OnInit, ViewContainerRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewContainerRef,
+  ViewChild,
+  ElementRef,
+  HostListener,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { PartModalComponent } from './part-modal/part-modal.component';
+import { AutocompleteCellEditorComponent } from './autocomplete-cell-editor/autocomplete-cell-editor.component';
 import { DataService } from './services/data.service';
 import { ColumnService } from './services/column.service';
 import { GridCommonService } from './services/grid-common.service';
@@ -23,6 +31,9 @@ import { environment } from '../environments/environment';
 export class App implements OnInit {
   private gridApi!: GridApi;
   public showColumnVisibilityPanel = false;
+
+  @ViewChild('columnPanel') columnPanel!: ElementRef;
+  @ViewChild('toggleBtn') toggleBtn!: ElementRef;
   public showExpiredData = false;
   public expiredDataCount = 0;
 
@@ -274,7 +285,7 @@ export class App implements OnInit {
       const credentials = await this.modalService.showSignInModal(this.viewContainerRef);
 
       if (!credentials) {
-        alert('Authentication is required to access this application.');
+        this.showNotification('Authentication is required to access this application.', 'error');
         return; // Don't reopen modal
       }
 
@@ -287,7 +298,7 @@ export class App implements OnInit {
           credentials.username !== expectedUsername ||
           credentials.password !== expectedPassword
         ) {
-          alert('Invalid credentials. Please try again.');
+          this.showNotification('Invalid credentials. Please try again.', 'error');
           this.promptForCredentials(); // Show modal again
           return;
         }
@@ -304,13 +315,16 @@ export class App implements OnInit {
             this.loadData();
           } else {
             // Authentication failed - show modal again
-            alert('Authentication failed. Please check your credentials.');
+            this.showNotification('Authentication failed. Please check your credentials.', 'error');
             this.promptForCredentials(); // Show modal again
           }
         },
         error: (error) => {
           // CSRF API failed after user entered credentials - NO DATA LOADING
-          alert('Authentication failed. Please check your credentials and try again.');
+          this.showNotification(
+            'Authentication failed. Please check your credentials and try again.',
+            'error'
+          );
           this.promptForCredentials(); // Show modal again
         },
       });
@@ -344,7 +358,62 @@ export class App implements OnInit {
   createHierarchicalColumns(columnMapping: any): ColDef[] {
     const columns: ColDef[] = [];
 
-    // Add Material column as the first column with hierarchical display
+    // Add Actions column as the first column
+    columns.push({
+      headerName: '',
+      field: 'actions',
+      width: 40,
+      minWidth: 40,
+      maxWidth: 40,
+      pinned: 'left',
+      resizable: false,
+      sortable: false,
+      filter: false,
+      cellRenderer: (params: any) => {
+        // Show red "e" for expired data
+        if (params.data.isExpired) {
+          return `<span class="expired-indicator" title="Expired">e</span>`;
+        }
+
+        const partId = params.data.part || '';
+
+        // For new rows, show delete button
+        if (params.data.isNewRow) {
+          const newRowId = params.data.newRowId;
+          return `<span class="delete-row-btn" data-new-row-id="${newRowId}" title="Delete">−</span>`;
+        }
+
+        // Debug: Log row data to understand the structure
+        if (params.data && params.data.part) {
+          console.log('Row data for add button:', {
+            part: params.data.part,
+            isMaterialHeader: params.data.isMaterialHeader,
+            hasLinkedBom: params.data.hasLinkedBom,
+            isDirectRow: params.data.isDirectRow,
+            isSubRow: params.data.isSubRow,
+            isSectionHeader: params.data.isSectionHeader,
+            level: params.data.level,
+          });
+        }
+
+        // Only show add/remove buttons on parent level materials
+        // This includes: isMaterialHeader (materials with children) OR isDirectRow (materials without children)
+        // Both are at level 1 and represent parent materials
+        if ((params.data.isMaterialHeader && params.data.hasLinkedBom) || params.data.isDirectRow) {
+          return `<span class="add-row-btn" data-part-id="${partId}" title="Add">+</span>`;
+        }
+
+        // For all other rows (section headers, sub-rows, direct rows), show nothing
+        return '';
+      },
+      cellStyle: {
+        textAlign: 'center',
+        padding: '4px',
+        borderRight: '1px solid #e2e8f0',
+      },
+    });
+
+    // Add Material column as the second column with hierarchical display
     columns.push({
       headerName: '',
       field: 'material',
@@ -359,12 +428,21 @@ export class App implements OnInit {
       cellStyle: (params: any) => {
         return this.getHierarchicalCellStyle(params);
       },
+      // Add autocomplete functionality for new rows
+      editable: (params: any) => {
+        return params.data && params.data.isNewRow;
+      },
+      cellEditor: 'AutocompleteCellEditorComponent',
+      cellEditorParams: (params: any) => ({
+        values: this.getAvailablePartNumbers(),
+        placeholder: 'Type to search part numbers...',
+      }),
     });
 
     // Add columns based on response column mapping
     Object.keys(columnMapping).forEach((field) => {
       const headerName = columnMapping[field];
-      columns.push({
+      const columnDef: ColDef = {
         headerName: headerName,
         field: field,
         width: 150,
@@ -381,7 +459,87 @@ export class App implements OnInit {
         cellStyle: (params: any) => {
           return this.getDataCellStyle(params);
         },
-      });
+        // Make all fields editable for new rows, but not for section headers
+        editable: (params: any) => {
+          return params.data && params.data.isNewRow && !params.data.isSectionHeader;
+        },
+      };
+
+      // Add specific cell editors for different field types
+      if (field === 'part') {
+        columnDef.cellEditor = 'AutocompleteCellEditorComponent';
+        columnDef.cellEditorParams = (params: any) => ({
+          values: this.getAvailablePartNumbers(),
+          placeholder: 'Type to search part numbers...',
+        });
+      } else if (field === 'qty' || field === 'quantity') {
+        columnDef.cellEditor = 'agNumberCellEditor';
+        columnDef.cellEditorParams = {
+          min: 0,
+          max: 9999,
+        };
+        // Qty field is always editable (like in SBOM), but not for section headers
+        columnDef.editable = (params: any) => {
+          // Don't allow editing expired rows or section headers
+          if (params.data && (params.data.isExpired || params.data.isSectionHeader)) {
+            return false;
+          }
+          // Always allow editing quantity field
+          return true;
+        };
+      } else if (field === 'supplier' || field === 'color' || field === 'feature') {
+        columnDef.cellEditor = 'AutocompleteCellEditorComponent';
+        columnDef.cellEditorParams = (params: any) => {
+          let values: string[] = [];
+          if (field === 'supplier') {
+            values = this.getUniqueSuppliers();
+          } else if (field === 'color') {
+            values = this.getUniqueColors();
+          } else if (field === 'feature') {
+            values = this.getUniqueFeatures();
+          }
+          return {
+            values: values,
+            placeholder: `Type to search ${field}...`,
+          };
+        };
+      } else if (field === 'startDate' || field === 'endDate') {
+        // Date columns should use date picker - use exact same config as ColumnService
+        columnDef.cellEditor = 'agDateCellEditor';
+        columnDef.cellDataType = 'date';
+        columnDef.cellEditorParams = {
+          browserDatePicker: true,
+          minValidYear: 2000,
+          maxValidYear: 2050,
+          format: 'mm/dd/yyyy',
+        };
+        columnDef.valueFormatter = (params: any) => {
+          // Just return the value as-is, keeping the original string format
+          return params.value || '';
+        };
+        columnDef.valueParser = (params: any) => {
+          if (!params.newValue) return '';
+          // Keep dates as strings to match mock2.json format
+          if (
+            params.newValue &&
+            typeof params.newValue === 'object' &&
+            'toLocaleDateString' in params.newValue
+          ) {
+            return (params.newValue as Date).toLocaleDateString('en-US');
+          }
+          // Return the string value as-is
+          return String(params.newValue);
+        };
+        columnDef.valueSetter = (params: any) => {
+          if (!params.newValue) return false;
+          const date = new Date(params.newValue);
+          if (isNaN(date.getTime())) return false;
+          params.data[params.colDef.field as string] = date.toISOString();
+          return true;
+        };
+      }
+
+      columns.push(columnDef);
     });
 
     // Add SKU columns
@@ -715,43 +873,26 @@ export class App implements OnInit {
       // Toggle visibility panel
       this.showColumnVisibilityPanel = !this.showColumnVisibilityPanel;
 
-      // Remove existing listener first to prevent duplicates
-      document.removeEventListener('click', this.handleClickOutside, true);
-
-      // Add click outside handler when panel opens
-      if (this.showColumnVisibilityPanel) {
-        // Use setTimeout to avoid immediate closure
-        setTimeout(() => {
-          document.addEventListener('click', this.handleClickOutside, true);
-        }, 150);
-      }
+      // No need for manual event listeners - HostListener handles this
     }
   }
 
-  private handleClickOutside = (event: Event): void => {
+  @HostListener('document:click', ['$event'])
+  handleClickOutside(event: Event): void {
+    if (!this.showColumnVisibilityPanel) return;
+
     const target = event.target as Element;
-    const panel = document.querySelector('.grid-column-visibility-panel-container');
-    const toggleBtn = document.querySelector('.grid-toggle-columns-btn');
-    const toggleContainer = document.querySelector('.grid-toggle-button-container');
+    const panel = this.columnPanel?.nativeElement;
+    const toggleBtn = this.toggleBtn?.nativeElement;
 
     // Check if click is outside all relevant elements
     const clickedOutside =
-      panel &&
-      !panel.contains(target) &&
-      toggleBtn &&
-      !toggleBtn.contains(target) &&
-      toggleContainer &&
-      !toggleContainer.contains(target);
+      panel && !panel.contains(target) && toggleBtn && !toggleBtn.contains(target);
 
     if (clickedOutside) {
       this.showColumnVisibilityPanel = false;
-      document.removeEventListener('click', this.handleClickOutside, true);
-      // Force change detection since we're outside Angular zone
-      setTimeout(() => {
-        // This ensures Angular detects the change
-      }, 0);
     }
-  };
+  }
 
   onCellClicked(event: any): void {
     const target = event.event?.target as HTMLElement;
@@ -795,26 +936,38 @@ export class App implements OnInit {
       return;
     }
 
-    // Start editing for part field in new rows
-    if (event.colDef.field === 'part' && event.data && event.data.isNewRow) {
-      event.api.startEditingCell({
-        rowIndex: event.rowIndex,
-        colKey: event.column.getId(),
-        rowPinned: event.rowPinned,
-        keyPress: event.event?.key,
-      });
-      return;
+    // Start editing for all editable fields in new rows (but not section headers)
+    if (event.data && event.data.isNewRow && !event.data.isSectionHeader) {
+      // Check if this is an editable field (not actions, not SKU fields)
+      const field = event.colDef.field;
+      if (field && field !== 'actions' && !field.startsWith('sku')) {
+        event.api.startEditingCell({
+          rowIndex: event.rowIndex,
+          colKey: event.column.getId(),
+          rowPinned: event.rowPinned,
+          keyPress: event.event?.key,
+        });
+        return;
+      }
     }
 
     if (event.colDef.field === 'actions') {
       const target = event.event?.target as HTMLElement;
 
       if (target && target.classList.contains('add-row-btn')) {
+        console.log('Add button clicked!');
+        console.log('Target element:', target);
+        console.log('Row index:', event.rowIndex);
+        console.log('Row data:', event.data);
+
         // Use the row index instead of partId for reliable positioning
         const rowIndex = event.rowIndex;
         if (rowIndex !== null && rowIndex !== undefined) {
+          console.log('Calling addRowAfter with rowIndex:', rowIndex);
           this.addRowAfter(rowIndex);
           return;
+        } else {
+          console.log('Row index is null or undefined');
         }
       } else if (target && target.classList.contains('delete-row-btn')) {
         const partId = target.getAttribute('data-part-id');
@@ -912,17 +1065,18 @@ export class App implements OnInit {
   addRowAfter(rowIndex: number): void {
     const result = this.rowManagementService.addRowAfter(
       rowIndex,
-      this.rowData,
+      this.displayData, // Use displayData instead of rowData
       this.gridApi,
       this.dataService,
-      this.nextRowId
+      this.nextRowId,
+      false // Not SBOM
     );
     this.nextRowId = result.newRowId;
     this.newRows.set(result.newRow.newRowId, result.newRow);
   }
 
   deleteRowById(newRowId: number): void {
-    this.rowManagementService.deleteRowById(newRowId, this.rowData, this.gridApi);
+    this.rowManagementService.deleteRowById(newRowId, this.displayData, this.gridApi);
     this.newRows.delete(newRowId);
   }
 
@@ -1087,42 +1241,8 @@ export class App implements OnInit {
   transformToHierarchicalData(data: any): any[] {
     const hierarchicalData: any[] = [];
 
-    // Log original mock2.json structure
-    console.log('=== ORIGINAL MOCK2.JSON DATA ===');
-    console.log('Original mbom items:', data.mbom.length);
-    console.log('Section order:', data.sectionOrder);
-    console.log('Product info:', data.productInfo);
-    console.log(
-      'Original items structure:',
-      data.mbom.map((item: any) => ({
-        branchID: item.branchID,
-        part: item.part,
-        section: item.section,
-        masterBranchID: item.masterBranchID,
-        linkedBom: item.linkedBom,
-        skus: item.skus,
-        quantity: item.quantity,
-        sortingNumber: item.sortingNumber,
-      }))
-    );
-
     // Build SKU-based hierarchy
     const sections = this.buildMbomHierarchy(data);
-
-    // Log the transformed hierarchy
-    console.log('=== TRANSFORMED HIERARCHY FOR AG GRID ===');
-    console.log('Transformed sections:', sections.length);
-    sections.forEach((section: any, index: number) => {
-      console.log(`Section ${index + 1}: ${section.section}`);
-      console.log(`  Materials: ${section.materials.length}`);
-      section.materials.forEach((material: any, matIndex: number) => {
-        console.log(`    Material ${matIndex + 1}: ${material.part} (SKU: ${material.skuId})`);
-        console.log(`      Children: ${material.children.length}`);
-        material.children.forEach((child: any, childIndex: number) => {
-          console.log(`        Child ${childIndex + 1}: ${child.part} (SKU: ${child.skuId})`);
-        });
-      });
-    });
 
     // Convert to AG Grid format
     sections.forEach((section: any) => {
@@ -1158,10 +1278,6 @@ export class App implements OnInit {
 
           // Add SKU data to material header
           this.addSkuDataToRow(materialRow, material);
-
-          console.log(
-            `Creating material header (no parent row): ${material.part} with index ${materialIndex}`
-          );
 
           // Add only child items under the header
           material.children.forEach((child: any) => {
@@ -1247,5 +1363,17 @@ export class App implements OnInit {
   // Navigation
   goToSbom(): void {
     this.router.navigate(['/sbom']);
+  }
+
+  // Angular-friendly notification method
+  private showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
+    this.saveMessage = message;
+    this.saveMessageType = type;
+
+    // Auto-clear after 5 seconds
+    setTimeout(() => {
+      this.saveMessage = '';
+      this.saveMessageType = '';
+    }, 5000);
   }
 }

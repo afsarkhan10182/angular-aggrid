@@ -179,11 +179,8 @@ export class GridCommonService {
     const clickableParts = new Set<number>();
 
     // Filter out header rows and only process actual data rows
-    const dataRows = rowData.filter((row) => 
-      !row.isSectionHeader && 
-      !row.isMaterialHeader && 
-      !row.isBranchHeader && 
-      row.part
+    const dataRows = rowData.filter(
+      (row) => !row.isSectionHeader && !row.isMaterialHeader && !row.isBranchHeader && row.part
     );
 
     const first20Parts = dataRows.slice(0, 20).map((row) => row.part.toString());
@@ -203,11 +200,13 @@ export class GridCommonService {
   getUniqueFeatures(rowData: any[]): string[] {
     const features = new Set<string>();
     rowData.forEach((row) => {
-      if (row.feature && 
-          !row.isNewRow && 
-          !row.isSectionHeader && 
-          !row.isMaterialHeader && 
-          !row.isBranchHeader) {
+      if (
+        row.feature &&
+        !row.isNewRow &&
+        !row.isSectionHeader &&
+        !row.isMaterialHeader &&
+        !row.isBranchHeader
+      ) {
         features.add(row.feature);
       }
     });
@@ -220,11 +219,13 @@ export class GridCommonService {
   getAvailablePartNumbers(rowData: any[]): string[] {
     const partNumbers = new Set<string>();
     rowData.forEach((row) => {
-      if (!row.isNewRow && 
-          !row.isSectionHeader && 
-          !row.isMaterialHeader && 
-          !row.isBranchHeader && 
-          row.part) {
+      if (
+        !row.isNewRow &&
+        !row.isSectionHeader &&
+        !row.isMaterialHeader &&
+        !row.isBranchHeader &&
+        row.part
+      ) {
         partNumbers.add(row.part.toString());
       }
     });
@@ -237,11 +238,13 @@ export class GridCommonService {
   getUniqueSuppliers(rowData: any[]): string[] {
     const suppliers = new Set<string>();
     rowData.forEach((row) => {
-      if (row.supplier && 
-          !row.isNewRow && 
-          !row.isSectionHeader && 
-          !row.isMaterialHeader && 
-          !row.isBranchHeader) {
+      if (
+        row.supplier &&
+        !row.isNewRow &&
+        !row.isSectionHeader &&
+        !row.isMaterialHeader &&
+        !row.isBranchHeader
+      ) {
         suppliers.add(row.supplier);
       }
     });
@@ -254,11 +257,13 @@ export class GridCommonService {
   getUniqueColors(rowData: any[]): string[] {
     const colors = new Set<string>();
     rowData.forEach((row) => {
-      if (row.color && 
-          !row.isNewRow && 
-          !row.isSectionHeader && 
-          !row.isMaterialHeader && 
-          !row.isBranchHeader) {
+      if (
+        row.color &&
+        !row.isNewRow &&
+        !row.isSectionHeader &&
+        !row.isMaterialHeader &&
+        !row.isBranchHeader
+      ) {
         colors.add(row.color);
       }
     });
@@ -372,8 +377,8 @@ export class GridCommonService {
           componentInstance.trackFieldChange(params);
         }
 
-        // Handle part number changes for auto-populating feature
-        if (params.colDef.field === 'part') {
+        // Handle field changes for new rows (auto-population)
+        if (params.data && params.data.isNewRow) {
           if (componentInstance.onNewRowValueChanged) {
             componentInstance.onNewRowValueChanged(
               params,

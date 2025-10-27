@@ -94,6 +94,42 @@ export class DataService extends BaseService {
     );
   }
 
+  /**
+   * Search materials by query string
+   * @param query Search query string
+   * @returns Observable of material search results
+   */
+  searchMaterials(query: string): Observable<any[]> {
+    // Use Material API endpoint
+    let apiUrl = environment.useMockApi
+      ? '/api/materials/search' // Mock endpoint
+      : `${environment.serverHostUrl}/api/materials/search`;
+
+    // Add query parameter
+    const params = new URLSearchParams();
+    params.set('q', query);
+
+    return this.http.get<any[]>(`${apiUrl}?${params.toString()}`).pipe(
+      map((data) => {
+        // Transform API response to material options
+        return data.map((material: any) => ({
+          id: material.id || material.materialId,
+          name: material.name || material.materialName,
+          description: material.description || material.materialDescription,
+          supplier: material.supplier || material.supplierName,
+          color: material.color || material.colorName,
+          feature: material.feature || material.featureName,
+          startDate: material.startDate,
+          endDate: material.endDate,
+          qty: material.qty || material.quantity,
+          // Add any other fields from your API response
+          ...material,
+        }));
+      }),
+      catchError(this.handleError)
+    );
+  }
+
   private handleError(error: HttpErrorResponse) {
     let errorMessage = 'Unknown error occurred';
 

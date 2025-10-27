@@ -2,6 +2,9 @@ import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } fr
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ICellEditorAngularComp } from 'ag-grid-angular';
+import { DataService } from '../services/data.service';
+import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
+import { of, Subject } from 'rxjs';
 
 @Component({
   selector: 'app-autocomplete-cell-editor',
@@ -28,9 +31,7 @@ import { ICellEditorAngularComp } from 'ag-grid-angular';
         #dropdown
         (click)="$event.stopPropagation()"
       >
-        <div class="dropdown-header">
-          Select part number ({{ filteredOptions.length }} available)
-        </div>
+        <div class="dropdown-header">Select material ({{ filteredOptions.length }} available)</div>
         <div
           *ngFor="let option of filteredOptions; let i = index"
           [class.selected]="i === selectedIndex"
@@ -38,7 +39,15 @@ import { ICellEditorAngularComp } from 'ag-grid-angular';
           (click)="selectOption(option); $event.stopPropagation()"
           (mouseenter)="selectedIndex = i"
         >
-          {{ option }}
+          <div class="material-option">
+            <div class="material-name">{{ option }}</div>
+            <div class="material-details" *ngIf="materialOptions[i]">
+              <span *ngIf="materialOptions[i].supplier"
+                >Supplier: {{ materialOptions[i].supplier }}</span
+              >
+              <span *ngIf="materialOptions[i].color"> | Color: {{ materialOptions[i].color }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -137,6 +146,24 @@ import { ICellEditorAngularComp } from 'ag-grid-angular';
       .dropdown-option:first-child {
         border-radius: 0 !important;
       }
+
+      .material-option {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .material-name {
+        font-weight: 500;
+        color: #1f2937;
+        font-size: 13px;
+      }
+
+      .material-details {
+        font-size: 11px;
+        color: #6b7280;
+        font-style: italic;
+      }
     `,
   ],
 })
@@ -150,15 +177,60 @@ export class AutocompleteCellEditorComponent
   public placeholder: string = '';
   public options: string[] = [];
   public filteredOptions: string[] = [];
+  public materialOptions: any[] = []; // Store full material objects from API
   public showDropdown: boolean = false;
   public selectedIndex: number = -1;
 
   private params: any;
   private originalValue: string = '';
   private customFilterFunction?: (searchTerm: string, options: string[]) => string[];
+  private dataService: DataService;
+  private searchSubject = new Subject<string>();
+  private isDestroyed: boolean = false;
+
+  constructor() {
+    // DataService will be set in agInit when params are available
+    this.dataService = null as any;
+  }
 
   ngOnInit() {
     this.originalValue = this.value;
+
+    // Set up Material API search with debouncing
+    this.searchSubject
+      .pipe(
+        debounceTime(300), // Wait 300ms after user stops typing
+        distinctUntilChanged(), // Only search if query changed
+        switchMap((query) => {
+          if (query && query.length >= 2 && this.dataService) {
+            return this.dataService.searchMaterials(query);
+          } else if (query && query.length >= 2) {
+            // Fallback to local filtering if no DataService
+            return of(this.filterLocalOptions(query));
+          }
+          return of([]);
+        }),
+        catchError((error) => {
+          console.error('Material search error:', error);
+          return of([]);
+        })
+      )
+      .subscribe((materials) => {
+        if (!this.isDestroyed) {
+          if (Array.isArray(materials) && materials.length > 0 && materials[0].name) {
+            // API response format
+            this.materialOptions = materials;
+            this.filteredOptions = materials.map(
+              (material) => material.name || material.materialName
+            );
+          } else {
+            // Local filtering fallback
+            this.materialOptions = [];
+            this.filteredOptions = materials;
+          }
+          this.showDropdown = this.filteredOptions.length > 0;
+        }
+      });
   }
 
   ngAfterViewInit() {
@@ -184,11 +256,14 @@ export class AutocompleteCellEditorComponent
   agInit(params: any): void {
     this.params = params;
 
+    // Get DataService from grid context
+    this.dataService = params.context?.dataService;
+
     // Ensure value is always a string
     this.value = params.value ? String(params.value) : '';
-    this.placeholder = params.placeholder || 'Enter value...';
+    this.placeholder = params.placeholder || 'Type to search materials...';
 
-    // Get options from params - support multiple formats
+    // Get options from params - support multiple formats (fallback for non-material fields)
     if (params.values && Array.isArray(params.values)) {
       this.options = params.values.map((opt: any) => String(opt));
     } else if (typeof params.values === 'function') {
@@ -207,7 +282,10 @@ export class AutocompleteCellEditorComponent
       this.customFilterFunction = params.filterFunction;
     }
 
-    this.filterOptions();
+    // Only filter options if we have static options (not using Material API)
+    if (this.options.length > 0) {
+      this.filterOptions();
+    }
   }
 
   getValue(): any {
@@ -220,8 +298,10 @@ export class AutocompleteCellEditorComponent
 
   onInputChange(event: any): void {
     this.value = event.target.value || '';
-    this.filterOptions();
-    this.showDropdown = this.filteredOptions.length > 0;
+
+    // Trigger Material API search
+    this.searchSubject.next(this.value);
+
     this.selectedIndex = -1;
 
     // Reposition dropdown when content changes
@@ -299,6 +379,11 @@ export class AutocompleteCellEditorComponent
     this.value = option;
     this.closeDropdown();
 
+    // Find the selected material object
+    const selectedMaterial = this.materialOptions.find(
+      (material) => (material.name || material.materialName) === option
+    );
+
     // Force the value to be set in AG Grid
     if (this.params && this.params.node) {
       this.params.node.setDataValue(this.params.column.getColId(), option);
@@ -306,6 +391,11 @@ export class AutocompleteCellEditorComponent
       // Also update the data object directly
       if (this.params.node.data) {
         this.params.node.data[this.params.column.getColId()] = option;
+      }
+
+      // Auto-populate other fields from the selected material
+      if (selectedMaterial) {
+        this.autoPopulateFields(selectedMaterial);
       }
     }
 
@@ -323,11 +413,70 @@ export class AutocompleteCellEditorComponent
         }
       }, 50);
     }
+  }
 
-    // Trigger feature auto-population directly
-    setTimeout(() => {
-      this.triggerFeatureAutoPopulation(option);
-    }, 100);
+  /**
+   * Filter local options as fallback when API is not available
+   */
+  private filterLocalOptions(query: string): string[] {
+    if (!this.options || this.options.length === 0) {
+      return [];
+    }
+
+    const searchTerm = query.toLowerCase();
+    return this.options.filter((option) => option.toLowerCase().includes(searchTerm));
+  }
+
+  /**
+   * Auto-populate other fields based on selected material
+   */
+  private autoPopulateFields(material: any): void {
+    if (!this.params || !this.params.node) return;
+
+    const fieldsToPopulate = [
+      'supplier',
+      'color',
+      'feature',
+      'startDate',
+      'endDate',
+      'qty',
+      'description',
+      'shortDesc',
+      'longDesc',
+    ];
+
+    // Store original data to avoid infinite loops
+    const originalData = { ...this.params.node.data };
+
+    fieldsToPopulate.forEach((fieldName) => {
+      const value = material[fieldName];
+      if (value !== undefined && value !== null && originalData[fieldName] !== value) {
+        this.params.node.setDataValue(fieldName, value);
+        if (this.params.node.data) {
+          this.params.node.data[fieldName] = value;
+        }
+      }
+    });
+
+    // Auto-populate SKU columns if available
+    if (material.skus && Array.isArray(material.skus)) {
+      const skuInfo = this.dataService?.getSkuInfo();
+      if (skuInfo && skuInfo.length > 0) {
+        skuInfo.forEach((sku) => {
+          const skuFieldName = `sku${sku.sku}`;
+          const skuValue = material.skus.includes(sku.sku)
+            ? material.name || material.materialName
+            : '';
+
+          if (originalData[skuFieldName] !== skuValue) {
+            this.params.node.setDataValue(skuFieldName, skuValue);
+            if (this.params.node.data) {
+              this.params.node.data[skuFieldName] = skuValue;
+            }
+          }
+        });
+      }
+    }
   }
 
   private triggerFeatureAutoPopulation(partNumber: string): void {
