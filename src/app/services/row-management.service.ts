@@ -327,7 +327,6 @@ export class RowManagementService {
 
             // Only update if value is different
             if (oldData[fieldName] !== valueToSet) {
-              console.log(`Setting ${fieldName} to ${valueToSet} for new row`);
               params.node.setDataValue(fieldName, valueToSet);
               if (params.node.data) {
                 (params.node.data as any)[fieldName] = valueToSet;

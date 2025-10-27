@@ -80,8 +80,6 @@ export class DataService extends BaseService {
 
       if (bomId) {
         apiUrl += `/${bomId}`;
-      } else {
-        console.warn('No BOM ID found in data-bomid attribute');
       }
     }
 
@@ -139,11 +137,8 @@ export class DataService extends BaseService {
     } else {
       // Server-side error
       errorMessage = `Server Error: ${error.status} - ${error.message}`;
-      console.error('Error loading data from:', environment.dataApiPath);
-      console.error('Full error:', error);
     }
 
-    console.error('DataService Error:', errorMessage);
     return throwError(() => new Error(errorMessage));
   }
 

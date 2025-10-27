@@ -32,16 +32,16 @@ body {
 }
 
 .app-header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  margin-bottom: 20px;
   padding: 15px 20px;
   border-bottom: 1px solid #e2e8f0;
   position: relative;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  gap: 16px;
 }
 
 .app-header h2 {
@@ -49,15 +49,25 @@ body {
   font-weight: 600;
   color: #1e293b;
   margin: 0;
-  flex: 1;
   text-align: center;
+  grid-column: 2;
+  position: relative;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: flex-start;
+  grid-column: 1;
 }
 
 .header-right {
   display: flex;
   align-items: center;
   gap: 16px;
-  flex-shrink: 0;
+  justify-content: flex-end;
+  grid-column: 3;
 }
 
 .user-info {
@@ -415,17 +425,35 @@ body {
   --ag-row-border-style: solid;
   --ag-row-hover-border-color: #d1d5db;
   --ag-row-hover-border-width: 1px;
+
+  /* Prevent sub-pixel rendering issues on zoom */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 /* ✅ FALLBACK BORDER RULES - Direct styling to ensure visible borders */
 .ag-theme-alpine .ag-cell {
-  border-right: 1px solid #d1d5db;
-  border-bottom: 1px solid #d1d5db;
+  border-right: 1px solid #d1d5db !important;
+  border-bottom: 1px solid #d1d5db !important;
+  /* Prevent border disappearing on zoom */
+  outline: 1px solid transparent;
 }
 
 .ag-theme-alpine .ag-header-cell {
-  border-right: 1px solid #d1d5db;
-  border-bottom: 1px solid #d1d5db;
+  border-right: 1px solid #d1d5db !important;
+  border-bottom: 1px solid #d1d5db !important;
+  /* Prevent border disappearing on zoom */
+  outline: 1px solid transparent;
+}
+
+/* Force borders to be visible at all zoom levels */
+.ag-theme-alpine .ag-row {
+  border-bottom: 1px solid #d1d5db !important;
+  box-shadow: 0 1px 0 0 #d1d5db;
 }
 
 /* Firefox 102 ESR compatibility fixes */
@@ -456,98 +484,29 @@ body {
     -moz-transform: scale(1.2);
   }
 
-  /* Comprehensive horizontal scroll fix for old Firefox */
-  .ag-body-horizontal-scroll-viewport {
-    overflow-x: auto !important;
-    scrollbar-width: auto !important;
-    scrollbar-color: #cbd5e1 #f1f5f9 !important;
-    min-width: max-content !important;
-    width: max-content !important;
-    -moz-overflow-scrolling: touch !important;
-    display: block !important;
-  }
-
-  .ag-body-horizontal-scroll {
-    min-width: max-content !important;
-    width: max-content !important;
-    display: block !important;
-  }
-
-  /* Ensure AG Grid internal scrolling works */
+  /* Firefox-specific scrollbar improvements */
   .ag-body-viewport {
     overflow-x: auto !important;
     overflow-y: auto !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #94a3b8 #f1f5f9 !important;
     -moz-overflow-scrolling: touch !important;
   }
 
-  /* Force horizontal scrollbar visibility in old Firefox */
   .ag-body-horizontal-scroll-viewport {
-    scrollbar-width: auto !important;
-    scrollbar-color: #cbd5e1 #f1f5f9 !important;
-  }
-
-  /* Ensure grid container allows horizontal scrolling */
-  .ag-grid-container-wrapper {
     overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #94a3b8 #f1f5f9 !important;
     -moz-overflow-scrolling: touch !important;
   }
 
-  /* Additional fixes for very old Firefox versions */
-  .ag-body-horizontal-scroll-viewport {
-    box-sizing: border-box !important;
-    -moz-box-sizing: border-box !important;
-    transform: translateZ(0) !important;
-    -moz-transform: translateZ(0) !important;
-  }
-
-  /* Force scrollbar to always be visible in old Firefox */
-  .ag-body-horizontal-scroll-viewport::-moz-scrollbar {
-    width: 12px !important;
-    height: 12px !important;
-  }
-
-  .ag-body-horizontal-scroll-viewport::-moz-scrollbar-thumb {
-    background-color: #cbd5e1 !important;
-    border-radius: 6px !important;
-  }
-
-  .ag-body-horizontal-scroll-viewport::-moz-scrollbar-track {
-    background-color: #f1f5f9 !important;
-  }
-
-  /* Force horizontal scrollbar to always be visible */
-  .ag-body-horizontal-scroll-viewport::-webkit-scrollbar {
-    height: 12px !important;
-    background-color: #f1f5f9 !important;
-  }
-
-  .ag-body-horizontal-scroll-viewport::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1 !important;
-    border-radius: 6px !important;
-    border: 2px solid #f1f5f9 !important;
-  }
-
-  .ag-body-horizontal-scroll-viewport::-webkit-scrollbar-track {
-    background-color: #f1f5f9 !important;
-  }
-
-  /* Ensure grid container allows proper scrolling */
-  .ag-grid-container {
-    overflow: visible !important;
-    position: relative !important;
-  }
-
-  /* Force proper cell sizing for horizontal scroll */
-  .ag-cell {
-    min-width: 120px !important;
-    max-width: 250px !important;
-    flex-shrink: 0 !important;
-  }
-
-  /* Ensure header cells don't shrink */
-  .ag-header-cell {
-    flex-shrink: 0 !important;
-    min-width: 120px !important;
+  .ag-body-vertical-scroll-viewport {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #94a3b8 #f1f5f9 !important;
+    -moz-overflow-scrolling: touch !important;
   }
 }
 
@@ -858,45 +817,92 @@ body {
   border-right: 1px solid #d1d5db !important; /* Consistent with other columns */
 }
 
-/* Ensure horizontal scrolling works properly */
+/* ========================================
+   SCROLLBAR CONFIGURATION - FUTURE PROOF
+   ======================================== */
+
+/* Main body viewport - handles both scrolling directions */
+.ag-body-viewport {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Horizontal scroll viewport - AG Grid's horizontal scrollbar container */
 .ag-body-horizontal-scroll-viewport {
   overflow-x: auto !important;
-  min-width: max-content !important;
-  width: max-content !important;
-  /* Force scrollbar to always be visible */
-  scrollbar-width: auto !important;
-  scrollbar-color: #cbd5e1 #f1f5f9 !important;
-  /* Ensure proper scrolling behavior */
+  overflow-y: hidden !important;
+  /* Firefox scrollbar styling */
+  scrollbar-width: thin !important;
+  scrollbar-color: #94a3b8 #e2e8f0 !important;
   -webkit-overflow-scrolling: touch;
-  -moz-overflow-scrolling: touch;
 }
 
-.ag-body-horizontal-scroll {
-  min-width: max-content !important;
-  width: max-content !important;
-  display: block !important;
+/* Vertical scroll viewport - AG Grid's vertical scrollbar container */
+.ag-body-vertical-scroll-viewport {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  /* Firefox scrollbar styling */
+  scrollbar-width: thin !important;
+  scrollbar-color: #94a3b8 #e2e8f0 !important;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Force horizontal scrollbar styling for all browsers */
-.ag-body-horizontal-scroll-viewport::-webkit-scrollbar {
-  height: 12px !important;
-  background-color: #f1f5f9 !important;
+/* Webkit/Chrome scrollbar styling - Horizontal */
+.ag-body-horizontal-scroll-viewport::-webkit-scrollbar,
+.ag-body-viewport::-webkit-scrollbar-horizontal {
+  height: 14px;
+  background-color: #f1f5f9;
 }
 
-.ag-body-horizontal-scroll-viewport::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1 !important;
-  border-radius: 6px !important;
-  border: 2px solid #f1f5f9 !important;
+.ag-body-horizontal-scroll-viewport::-webkit-scrollbar-thumb,
+.ag-body-viewport::-webkit-scrollbar-thumb:horizontal {
+  background-color: #94a3b8;
+  border-radius: 8px;
+  border: 3px solid #f1f5f9;
+  min-width: 40px;
 }
 
-.ag-body-horizontal-scroll-viewport::-webkit-scrollbar-track {
-  background-color: #f1f5f9 !important;
+.ag-body-horizontal-scroll-viewport::-webkit-scrollbar-thumb:hover,
+.ag-body-viewport::-webkit-scrollbar-thumb:horizontal:hover {
+  background-color: #64748b;
 }
 
-/* Firefox-specific scrollbar styling */
-.ag-body-horizontal-scroll-viewport {
-  scrollbar-width: auto !important;
-  scrollbar-color: #cbd5e1 #f1f5f9 !important;
+.ag-body-horizontal-scroll-viewport::-webkit-scrollbar-track,
+.ag-body-viewport::-webkit-scrollbar-track:horizontal {
+  background-color: #f1f5f9;
+  border-radius: 8px;
+}
+
+/* Webkit/Chrome scrollbar styling - Vertical */
+.ag-body-vertical-scroll-viewport::-webkit-scrollbar,
+.ag-body-viewport::-webkit-scrollbar-vertical {
+  width: 14px;
+  background-color: #f1f5f9;
+}
+
+.ag-body-vertical-scroll-viewport::-webkit-scrollbar-thumb,
+.ag-body-viewport::-webkit-scrollbar-thumb:vertical {
+  background-color: #94a3b8;
+  border-radius: 8px;
+  border: 3px solid #f1f5f9;
+  min-height: 40px;
+}
+
+.ag-body-vertical-scroll-viewport::-webkit-scrollbar-thumb:hover,
+.ag-body-viewport::-webkit-scrollbar-thumb:vertical:hover {
+  background-color: #64748b;
+}
+
+.ag-body-vertical-scroll-viewport::-webkit-scrollbar-track,
+.ag-body-viewport::-webkit-scrollbar-track:vertical {
+  background-color: #f1f5f9;
+  border-radius: 8px;
+}
+
+/* Corner where scrollbars meet */
+.ag-body-viewport::-webkit-scrollbar-corner {
+  background-color: #f1f5f9;
 }
 
 /* Remove right spacer */
@@ -904,66 +910,39 @@ body {
   display: none !important;
 }
 
-/* Edited row highlighting - Subtle */
+/* ========================================
+   ROW STATES (Edited & New)
+   ======================================== */
+@keyframes newRowHighlight {
+  0% {
+    background-color: #dbeafe;
+    transform: scale(1.02);
+  }
+  to {
+    background-color: #f8fbff;
+    transform: scale(1);
+  }
+}
+
 .ag-row.edited-row {
   background: #f8fafc !important;
   border-left: 2px solid #e2e8f0 !important;
-  position: relative;
 }
 
 .ag-row.edited-row:hover {
   background: #f1f5f9 !important;
 }
 
-/* New row styling - Enhanced */
-.new-row-text {
-  color: #6b7280 !important;
-  font-style: italic !important;
-}
-
-.new-row-placeholder {
-  color: #9ca3af !important;
-  font-style: italic !important;
-  font-size: 12px !important;
-  user-select: none !important;
-  pointer-events: none !important;
-  opacity: 0.8 !important;
-}
-
 .ag-row.new-row {
   background: #f8fbff !important;
   border-left: 4px solid #007bff !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  height: 28px !important;
-  min-height: 28px !important;
-  max-height: 28px !important;
-  animation: newRowHighlight 0.5s ease-out !important;
-}
-
-@keyframes newRowHighlight {
-  0% {
-    background-color: #dbeafe !important;
-    transform: scale(1.02);
-  }
-  100% {
-    background-color: #f8fbff !important;
-    transform: scale(1);
-  }
+  animation: newRowHighlight 0.5s ease-out;
 }
 
 .ag-row.new-row .ag-cell {
   background: #f8fbff !important;
-  height: 100% !important;
-  min-height: 100% !important;
-  max-height: 100% !important;
-  margin: 0 !important;
-  padding: 4px 8px !important;
-  line-height: 1.2 !important;
-  border-bottom: 1px solid #bfdbfe !important;
-  display: flex !important;
-  align-items: center !important;
-  box-sizing: border-box !important;
+  /* Use same border as normal rows for consistency */
+  border-bottom: 1px solid #d1d5db !important;
 }
 
 .ag-row.new-row .ag-cell[col-id='part'] {
@@ -972,139 +951,73 @@ body {
   border-radius: 2px !important;
 }
 
-/* Part text styles - Clean */
+.new-row-text {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.new-row-placeholder {
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 12px;
+  user-select: none;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+/* ========================================
+   PART COLUMN & CLICKABLE ELEMENTS
+   ======================================== */
 .part-text {
-  color: #374151 !important;
+  color: #374151;
   cursor: default;
-  text-decoration: none !important;
-  font-weight: normal !important;
 }
 
-/* Text selection styling for editable cells */
-.ag-cell ::selection {
-  background-color: #3b82f6 !important;
-  color: white !important;
+.part-cell-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 28px;
+  overflow: hidden;
 }
 
-.ag-cell ::-moz-selection {
-  background-color: #3b82f6 !important;
-  color: white !important;
+/* Clickable parts */
+.clickable,
+.ag-cell .clickable,
+.ag-cell[col-id='part'] .clickable,
+.part-link.clickable {
+  cursor: pointer !important;
+  pointer-events: auto !important;
 }
 
-/* Specific selection styling for part column */
-.ag-cell[col-id='part'] ::selection {
-  background-color: #007bff !important;
-  color: white !important;
+.part-link.clickable {
+  color: #3b82f6;
+  text-decoration: underline;
+  font-weight: 500;
 }
 
-.ag-cell[col-id='part'] ::-moz-selection {
-  background-color: #007bff !important;
-  color: white !important;
-}
-
-/* Ensure part column allows text selection */
+/* Part column editing */
 .ag-cell[col-id='part'] {
-  user-select: text !important;
-  -webkit-user-select: text !important;
-  -moz-user-select: text !important;
-  -ms-user-select: text !important;
-  cursor: text !important;
+  user-select: text;
+  cursor: text;
 }
 
-/* Exception: Clickable parts should show pointer cursor */
-.ag-cell[col-id='part'] .part-link.clickable {
-  cursor: pointer !important;
-}
-
-/* Override text cursor for clickable parts in part column */
-.ag-cell[col-id='part'] .clickable {
-  cursor: pointer !important;
-}
-
-/* Part column when editing */
 .ag-cell[col-id='part'].ag-cell-edit-input {
   background-color: #ffffff !important;
   border: 2px solid #007bff !important;
   border-radius: 2px !important;
 }
 
-/* Selection styling for autocomplete input */
+/* Text selection */
+.ag-cell ::selection,
 .autocomplete-input ::selection {
-  background-color: #007bff !important;
-  color: white !important;
+  background-color: #3b82f6;
+  color: white;
 }
 
-.autocomplete-input ::-moz-selection {
-  background-color: #007bff !important;
-  color: white !important;
-}
-
-/* Simple rule: Any clickable element shows pointer cursor */
-.clickable {
-  cursor: pointer !important;
-}
-
-/* Force pointer cursor for clickable elements in AG Grid cells */
-.ag-cell .clickable {
-  cursor: pointer !important;
-}
-
-/* Most aggressive cursor override for clickable parts */
-.ag-cell[col-id='part'] span.clickable,
-.ag-cell[col-id='part'] .part-link.clickable,
-.ag-cell[col-id='part'] span[style*='cursor: pointer'] {
-  cursor: pointer !important;
-  pointer-events: auto !important;
-}
-
-/* Ultra-specific rule for clickable parts */
-.ag-cell[col-id='part'] .clickable-part,
-.ag-cell[col-id='part'] span.clickable-part {
-  cursor: pointer !important;
-  pointer-events: auto !important;
-}
-
-/* Override any inline styles for clickable parts */
-.ag-cell[col-id='part'] span[style*='cursor: pointer'] {
-  cursor: pointer !important;
-}
-
-/* Force pointer cursor on hover for clickable parts */
-.ag-cell[col-id='part'] .clickable:hover,
-.ag-cell[col-id='part'] .clickable-part:hover {
-  cursor: pointer !important;
-}
-
-/* Force pointer cursor regardless of grid focus state */
-.ag-theme-alpine .ag-cell[col-id='part'] .clickable,
-.ag-theme-alpine .ag-cell[col-id='part'] .clickable-part,
-.ag-theme-alpine .ag-cell[col-id='part'] .part-link.clickable {
-  cursor: pointer !important;
-}
-
-/* Override AG Grid's focus-based cursor styles */
-.ag-theme-alpine.ag-focus-managed .ag-cell[col-id='part'] .clickable,
-.ag-theme-alpine.ag-focus-managed .ag-cell[col-id='part'] .clickable-part,
-.ag-theme-alpine.ag-focus-managed .ag-cell[col-id='part'] .part-link.clickable {
-  cursor: pointer !important;
-}
-
-/* Clickable part links - Minimal */
-.part-link.clickable {
-  color: #3b82f6 !important;
-  text-decoration: underline !important;
-  font-weight: 500 !important;
-  cursor: pointer !important;
-}
-
-/* Part cell content layout - simplified */
-.part-cell-content {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  height: 28px;
-  overflow: hidden;
+.ag-cell[col-id='part'] ::selection {
+  background-color: #007bff;
+  color: white;
 }
 
 /* Add/Delete row button styling */
@@ -1180,37 +1093,14 @@ body {
   box-shadow: 0 4px 8px rgba(220, 38, 38, 0.4) !important;
 }
 
-/* Ensure no gaps between rows */
+/* ========================================
+   ROW & VIEWPORT LAYOUT
+   ======================================== */
 .ag-body-viewport {
   overflow-x: auto;
   overflow-y: auto;
   background: white;
   line-height: 1;
-  border-collapse: collapse;
-}
-
-/* Force cells to fill entire row height */
-.ag-body-viewport .ag-cell {
-  height: 100% !important;
-  min-height: 100% !important;
-  max-height: 100% !important;
-  display: flex !important;
-  align-items: center !important;
-  box-sizing: border-box !important;
-}
-
-/* Clean border styling - Consistent grid lines */
-.ag-theme-alpine .ag-row {
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-}
-
-/* Force row content to fill entire height */
-.ag-body-viewport .ag-row > * {
-  height: 100% !important;
-  min-height: 100% !important;
-  max-height: 100% !important;
 }
 
 .ag-body-viewport-wrapper {
@@ -1218,80 +1108,48 @@ body {
   background: white;
 }
 
-/* Fix scrolling issues and prevent black areas */
-.ag-body-vertical-scroll-viewport {
-  background: white;
-  overflow-y: auto;
+.ag-theme-alpine .ag-row {
+  margin: 0;
+  padding: 0;
+  border: none;
 }
 
-.ag-body-horizontal-scroll-viewport {
-  background: white;
-  overflow-x: auto;
+.ag-body-viewport .ag-cell,
+.ag-body-viewport .ag-row > * {
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
 }
 
-.ag-body-vertical-scroll {
-  background: white;
-}
-
+/* ========================================
+   GRID VIEWPORT & BACKGROUND
+   ======================================== */
+.ag-root-wrapper,
+.ag-root,
+.ag-body,
+.ag-body-viewport-wrapper,
+.ag-body-vertical-scroll-viewport,
+.ag-body-horizontal-scroll-viewport,
+.ag-body-vertical-scroll,
 .ag-body-horizontal-scroll {
   background: white;
-}
-
-/* Ensure grid content is always visible */
-.ag-root-wrapper {
-  background: white;
   line-height: 1;
 }
 
-.ag-root {
-  background: white;
-  line-height: 1;
-}
-
-/* Ensure no gaps in the grid body */
-.ag-body {
-  line-height: 1;
-  border-collapse: collapse;
-}
-
-.ag-body-viewport-wrapper {
-  line-height: 1;
-  border-collapse: collapse;
-}
-
-/* Override AG Grid's internal cell height calculation */
-.ag-theme-alpine .ag-cell-wrapper {
-  height: 100% !important;
-  min-height: 100% !important;
-  max-height: 100% !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
+/* Cell height and alignment */
+.ag-theme-alpine .ag-cell-wrapper,
 .ag-theme-alpine .ag-cell-value {
   height: 100% !important;
-  min-height: 100% !important;
-  max-height: 100% !important;
   display: flex !important;
   align-items: center !important;
 }
 
-/* Fix for Firefox 102 ESR scrolling issues */
+/* Firefox optimization */
 @-moz-document url-prefix() {
-  .ag-body-viewport {
-    background: white !important;
-    transform: translateZ(0);
-    -moz-transform: translateZ(0);
-  }
-
+  .ag-body-viewport,
   .ag-body-vertical-scroll-viewport {
-    background: white !important;
     transform: translateZ(0);
-    -moz-transform: translateZ(0);
-  }
-
-  .ag-grid-container-wrapper {
-    background: white !important;
   }
 }
 
@@ -1541,7 +1399,8 @@ body {
 
   /* Mobile header improvements */
   .app-header {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
     gap: 12px;
     padding: 12px 16px;
     text-align: center;
@@ -1550,9 +1409,19 @@ body {
   .app-header h2 {
     font-size: 20px;
     margin-bottom: 8px;
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .header-left {
+    grid-column: 1;
+    grid-row: 2;
+    justify-content: center;
   }
 
   .header-right {
+    grid-column: 1;
+    grid-row: 3;
     flex-direction: column;
     gap: 8px;
     width: 100%;
@@ -1705,7 +1574,66 @@ body {
   }
 }
 
-/* Expired count display - circular badge */
+/* ========================================
+   GLOBAL ANIMATIONS
+   ======================================== */
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 1px 3px rgba(220, 38, 38, 0.4);
+  }
+  50% {
+    box-shadow: 0 1px 3px rgba(220, 38, 38, 0.4), 0 0 0 4px rgba(220, 38, 38, 0.1);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes overlayAppear {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* ========================================
+   HEADER & USER INFO
+   ======================================== */
+
+.user-info:hover .username {
+  color: #1d4ed8;
+}
+
+.user-info i {
+  transition: transform 0.2s ease;
+}
+
+.user-info:hover i {
+  transform: scale(1.1);
+}
+
+.user-info.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.user-info.loading i {
+  animation: spin 1s linear infinite;
+}
+
+/* ========================================
+   BADGES & COUNTS
+   ======================================== */
 .expired-count {
   color: white !important;
   font-size: 10px !important;
@@ -1725,77 +1653,77 @@ body {
   animation: pulse 2s infinite;
 }
 
-@keyframes pulse {
-  0% {
-    box-shadow: 0 1px 3px rgba(220, 38, 38, 0.4);
-  }
-  50% {
-    box-shadow: 0 1px 3px rgba(220, 38, 38, 0.4), 0 0 0 4px rgba(220, 38, 38, 0.1);
-  }
-  100% {
-    box-shadow: 0 1px 3px rgba(220, 38, 38, 0.4);
-  }
-}
-
-/* Enhanced visual feedback for interactive elements */
-.user-info:hover .username {
-  color: #1d4ed8;
-}
-
-.user-info i {
-  transition: transform 0.2s ease;
-}
-
-.user-info:hover i {
-  transform: scale(1.1);
-}
-
-/* Improved focus states for accessibility */
+/* ========================================
+   FOCUS STATES (Accessibility)
+   ======================================== */
 .nav-button:focus,
-.user-info:focus {
+.user-info:focus,
+.btn:focus {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
 
-/* Loading state for user info */
-.user-info.loading {
-  opacity: 0.7;
-  pointer-events: none;
+/* ========================================
+   MODAL STYLES (Shared)
+   ======================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  animation: overlayAppear 0.2s ease-out;
 }
 
-.user-info.loading i {
-  animation: spin 1s linear infinite;
+.modal-container {
+  background: white;
+  border-radius: 12px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border: 1px solid #e2e8f0;
+  animation: modalEnter 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
 }
 
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.modal-header {
+  background: #f3f4f6;
+  color: #1e293b;
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #d1d5db;
 }
 
-/* Smooth transitions for header elements */
-.app-header * {
-  transition: all 0.2s ease;
+.close-button {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-/* Enhanced visual hierarchy */
-.app-header h2 {
-  position: relative;
+.close-button:hover {
+  background: #e2e8f0;
+  color: #475569;
 }
 
-.app-header h2::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 40px;
-  height: 2px;
-  background: linear-gradient(90deg, #3b82f6, #10b981);
-  border-radius: 1px;
+.modal-content {
+  flex: 1;
+  overflow-y: auto;
 }
 .ag-header-cell-text {
   display: flex;

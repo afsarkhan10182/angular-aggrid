@@ -211,7 +211,6 @@ export class AutocompleteCellEditorComponent
           return of([]);
         }),
         catchError((error) => {
-          console.error('Material search error:', error);
           return of([]);
         })
       )
@@ -659,7 +658,6 @@ export class AutocompleteCellEditorComponent
       // Force reflow for Firefox compatibility
       dropdownElement.offsetHeight;
     } catch (error) {
-      console.warn('Error positioning dropdown, using fallback:', error);
       this.positionDropdownFallback();
     }
   }

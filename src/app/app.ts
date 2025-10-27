@@ -388,19 +388,6 @@ export class App implements OnInit {
           return `<span class="delete-row-btn" data-new-row-id="${newRowId}" title="Delete">−</span>`;
         }
 
-        // Debug: Log row data to understand the structure
-        if (params.data && params.data.part) {
-          console.log('Row data for add button:', {
-            part: params.data.part,
-            isMaterialHeader: params.data.isMaterialHeader,
-            hasLinkedBom: params.data.hasLinkedBom,
-            isDirectRow: params.data.isDirectRow,
-            isSubRow: params.data.isSubRow,
-            isSectionHeader: params.data.isSectionHeader,
-            level: params.data.level,
-          });
-        }
-
         // Only show add/remove buttons on parent level materials
         // This includes: isMaterialHeader (materials with children) OR isDirectRow (materials without children)
         // Both are at level 1 and represent parent materials
@@ -960,19 +947,11 @@ export class App implements OnInit {
       const target = event.event?.target as HTMLElement;
 
       if (target && target.classList.contains('add-row-btn')) {
-        console.log('Add button clicked!');
-        console.log('Target element:', target);
-        console.log('Row index:', event.rowIndex);
-        console.log('Row data:', event.data);
-
         // Use the row index instead of partId for reliable positioning
         const rowIndex = event.rowIndex;
         if (rowIndex !== null && rowIndex !== undefined) {
-          console.log('Calling addRowAfter with rowIndex:', rowIndex);
           this.addRowAfter(rowIndex);
           return;
-        } else {
-          console.log('Row index is null or undefined');
         }
       } else if (target && target.classList.contains('delete-row-btn')) {
         const partId = target.getAttribute('data-part-id');

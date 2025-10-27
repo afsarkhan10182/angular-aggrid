@@ -46,18 +46,8 @@ export class SessionService {
         this.isAuthenticatedSubject.next(true);
       }),
       catchError((error) => {
-        console.log('Authentication failed:', error);
         this.sessionSubject.next(null);
         this.isAuthenticatedSubject.next(false);
-
-        if (environment.useMockApi) {
-          // Development: More lenient error handling
-          console.warn('Development mode: Authentication failed, but continuing with fallback');
-        } else {
-          // Production: Strict error handling - no fallbacks
-          console.error('Production mode: Authentication failed, user must re-authenticate');
-        }
-
         // Throw the error so app.ts can handle it properly
         return throwError(() => error);
       })
@@ -91,11 +81,8 @@ export class SessionService {
         }
       }),
       catchError((error) => {
-        console.log('getUser API failed:', error);
-
         if (environment.useMockApi) {
           // Development: Provide fallback for mock API failures
-          console.warn('Mock API failed, using fallback user data');
           const fallbackUser: LoggedInUserModel = {
             name: 'test',
             fullName: 'test User',
