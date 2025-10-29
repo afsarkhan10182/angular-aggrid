@@ -656,7 +656,6 @@ export class App implements OnInit {
     }
 
     if (data.isMaterialHeader) {
-      const arrowIcon = data.isExpanded ? '▼' : '▶';
       const materialIndex = data.materialIndex || 0;
       const linkIcon = data.hasLinkedBom ? '🔗' : '⧉';
       // Show section name with accordion functionality, but no material name
@@ -674,26 +673,15 @@ export class App implements OnInit {
           border-left: 3px solid #10b981;
           margin: 1px 0;
         " 
-             onclick="window.toggleMaterial('${data.section}', '${
-        data.material
-      }', ${materialIndex})"
+             onclick="window.toggleMaterial('${data.section}', '${data.material}', ${materialIndex})"
              onmouseover="this.style.background='#dcfce7'; this.style.borderLeftColor='#059669'"
              onmouseout="this.style.background='#f0fdf4'; this.style.borderLeftColor='#10b981'">
-          <span style="
-            margin-right: 6px; 
-            font-size: 11px; 
-            transition: transform 0.2s ease; 
-            color: #065f46;
-            font-weight: 600;
-            width: 14px;
-            text-align: center;
-          ">${arrowIcon}</span>
+        
           <span style="
               margin-right: 6px;
               font-size: 12px;
               color: #0f766e;
             ">${linkIcon}</span>
-          <span style="font-size: 13px; font-weight: 500;">${data.section || ''}</span>
         </div>
       `;
     }
@@ -728,52 +716,12 @@ export class App implements OnInit {
     // Direct row (no accordion)
     if (data.isDirectRow) {
       const directIndent = ''; // No indent - same level as section headers
-      return `
-        <div style="
-          display: flex; 
-          align-items: center; 
-          color: #6b7280; 
-          padding: 4px 6px; 
-          background: #f8fafc;
-          border-radius: 2px;
-          margin: 1px 0;
-          border-left: 2px solid #cbd5e1;
-          transition: all 0.2s ease;
-        " 
-             onmouseover="this.style.background='#f1f5f9'; this.style.borderLeftColor='#94a3b8'"
-             onmouseout="this.style.background='#f8fafc'; this.style.borderLeftColor='#cbd5e1'">
-          <span style="
-            font-size: 12px; 
-            color: #475569;
-            font-weight: 400;
-          ">${directIndent}${data.part || data.material || 'Item'}</span>
-        </div>
-      `;
+      return '';
     }
 
     // Regular data row (sub-row)
     const dataIndent = '&nbsp;'.repeat(24);
-    return `
-      <div style="
-        display: flex; 
-        align-items: center; 
-        color: #6b7280; 
-        padding: 4px 6px; 
-        background: #f8fafc;
-        border-radius: 2px;
-        margin: 1px 0;
-        border-left: 2px solid #cbd5e1;
-        transition: all 0.2s ease;
-      " 
-           onmouseover="this.style.background='#f1f5f9'; this.style.borderLeftColor='#94a3b8'"
-           onmouseout="this.style.background='#f8fafc'; this.style.borderLeftColor='#cbd5e1'">
-        <span style="
-          font-size: 12px; 
-          color: #475569;
-          font-weight: 400;
-        ">${dataIndent}${data.part || data.material || 'Item'}</span>
-      </div>
-    `;
+    return '';
   }
 
   getHierarchicalCellStyle(params: any): any {

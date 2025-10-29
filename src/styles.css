@@ -679,9 +679,10 @@ body {
   max-width: 350px !important;
   padding: 6px 10px !important;
   line-height: 1.4 !important;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal !important;
+  overflow: visible !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
   /* ✅ VISIBLE BORDERS - Use CSS variables for consistent grid lines */
   border-right: var(--ag-cell-vertical-border-width) var(--ag-row-border-style)
     var(--ag-row-border-color) !important;
@@ -968,7 +969,6 @@ body {
 /* Sub-row styling - children under material headers */
 .ag-row.subrow {
   background: #f0fdf4 !important;
-  border-left: 3px solid #10b981 !important;
 }
 
 .ag-row.subrow .ag-cell {

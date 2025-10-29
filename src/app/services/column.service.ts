@@ -1047,6 +1047,21 @@ export class ColumnService {
           placeholder: 'Type to search part numbers...',
         });
         columnDef.headerClass = 'part-column-header';
+
+        // For material column, hide value in material header rows
+        if (fieldKey === 'material') {
+          columnDef.cellRenderer = (params: any) => {
+            // Hide material name in material header rows
+            if (params.data && params.data.isMaterialHeader) {
+              return '';
+            }
+            // Show material name for regular rows
+            if (params.value === null || params.value === undefined) {
+              return '';
+            }
+            return String(params.value);
+          };
+        }
       }
 
       if (fieldKey === 'quantity') {
@@ -1187,14 +1202,17 @@ export class ColumnService {
       width: 140,
       minWidth: 100,
       maxWidth: 300,
-      wrapText: false,
+      wrapText: true,
+      autoHeight: true,
       cellStyle: (params: any) => {
         const baseStyle = {
           padding: '8px 12px',
           borderRight: '1px solid #e2e8f0',
+          whiteSpace: 'normal',
+          lineHeight: '1.4',
+          wordBreak: 'break-word',
         };
 
-        // Temporarily removed custom styling for testing
         return baseStyle;
       },
     };
