@@ -4,22 +4,15 @@
 
 export const environment = {
   production: false,
-  baseHref: '/',
-  apiUrl: '/api',
   csrfUrl: '/Windchill/servlet/rest/security/csrf',
-  getUserUrl: '/Windchill/servlet/rest/security/getUser',
+  getUserUrl: '/Windchill/servlet/rest/trek/getUserDetails',
   dataApiPath: '/mock2.json',
   serverHostUrl: '',
-  // Development credentials for mock API validation
   credentials: {
-    username: 'test',
-    password: 'test',
+    username: 'wcadmin',
+    password: 'wcadmin',
   },
   enableHttpBasicAuth: true,
-  appKey: '',
-  enableThingworx: false,
-  isLoggerEnable: false,
-  // Mock API configuration for development
   useMockApi: true,
   mockApiEndpoints: {
     csrf: '/api/csrf.json',

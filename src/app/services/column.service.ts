@@ -888,7 +888,7 @@ export class ColumnService {
           borderRight: '1px solid #e2e8f0',
         },
       },
-      // Accordion expand/collapse column
+      // Accordion expand/collapse column with linkedBom icon
       {
         headerName: '',
         field: 'accordionIcon',

@@ -1,5 +1,7 @@
 {
-  "name": "test",
-  "fullName": "test User",
-  "id": "OR:wt.org.WTUser:123456789"
+  "last": "Administrator",
+  "name": "wcadmin",
+  "fullName": "Administrator, Site",
+  "emailId": "",
+  "userName": "wcadmin"
 }

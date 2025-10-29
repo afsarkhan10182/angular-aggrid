@@ -372,6 +372,7 @@
       "colorDescription": "Red"
     }
   ],
+  "bomPartInfo": { "bomName": "002 : MBOM BOM", "modifyTimestamp": "2025-10-29 11:52:20.0" },
   "columns": {
     "partName": "Component",
     "material": "Material",

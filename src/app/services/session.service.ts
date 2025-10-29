@@ -7,7 +7,9 @@ import { catchError, tap, map, mergeMap } from 'rxjs/operators';
 export interface LoggedInUserModel {
   name: string;
   fullName: string;
-  id: string;
+  userName: string;
+  last?: string;
+  emailId?: string;
 }
 
 @Injectable({
@@ -30,18 +32,32 @@ export class SessionService {
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
+  // Store CSRF token
+  private csrfToken: string | null = null;
+
   constructor(private http: HttpClient) {}
 
-  initSession(): Observable<LoggedInUserModel> {
-    // First call CSRF API for authentication
+  // Call CSRF API to get token (before showing login modal)
+  getCsrfToken(): Observable<string> {
     return this.http.get<any>(SessionService.authUrl).pipe(
-      mergeMap((csrfResponse: any) => {
-        // If CSRF API returns successfully, user is authenticated
-        // Now call getUser API to get user information and chain it properly
-        return this.getUserInfo();
+      map((csrfResponse: any) => {
+        // Extract CSRF token from response
+        const token = csrfResponse?.items?.[0]?.attributes?.nonce || csrfResponse?.nonce || '';
+        this.csrfToken = token;
+        return token;
       }),
+      catchError((error) => {
+        this.csrfToken = null;
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // Authenticate user with credentials (after modal)
+  initSession(): Observable<LoggedInUserModel> {
+    return this.getUserInfo().pipe(
       tap((user: LoggedInUserModel) => {
-        // Update session state when both CSRF and getUser succeed
+        // Update session state when getUserDetails succeeds
         this.sessionSubject.next(user);
         this.isAuthenticatedSubject.next(true);
       }),
@@ -54,28 +70,51 @@ export class SessionService {
     );
   }
 
+  // Get stored CSRF token
+  getCsrfNonce(): string | null {
+    return this.csrfToken;
+  }
+
   private getUserInfo(): Observable<LoggedInUserModel> {
-    return this.http.get<any>(SessionService.getUserUrl).pipe(
+    // Prepare request body with username from credentials
+    const requestBody = {
+      userName: environment.credentials.username,
+    };
+
+    // Prepare headers with CSRF token
+    let headers: any = {
+      'Content-Type': 'application/json',
+    };
+
+    if (this.csrfToken) {
+      headers['CSRF_NONCE'] = this.csrfToken;
+    }
+
+    return this.http.post<any>(SessionService.getUserUrl, requestBody, { headers }).pipe(
       map((response: any) => {
         // Map the response to our user model
         if (environment.useMockApi) {
           // Development: Allow fallbacks for mock data
           const user: LoggedInUserModel = {
-            name: response.name || 'test',
-            fullName: response.fullName || 'test User',
-            id: response.id || 'OR:wt.org.WTUser:123456789',
+            name: response.name || response.userName || 'wcadmin',
+            fullName: response.fullName || 'Administrator',
+            userName: response.userName || 'wcadmin',
+            last: response.last,
+            emailId: response.emailId,
           };
           return user;
         } else {
           // Production: Strict validation - backend must provide all fields
-          if (!response.name || !response.fullName || !response.id) {
+          if (!response.name || !response.fullName || !response.userName) {
             throw new Error('Invalid user data received from backend - missing required fields');
           }
 
           const user: LoggedInUserModel = {
             name: response.name,
             fullName: response.fullName,
-            id: response.id,
+            userName: response.userName,
+            last: response.last,
+            emailId: response.emailId,
           };
           return user;
         }
@@ -84,9 +123,9 @@ export class SessionService {
         if (environment.useMockApi) {
           // Development: Provide fallback for mock API failures
           const fallbackUser: LoggedInUserModel = {
-            name: 'test',
-            fullName: 'test User',
-            id: 'OR:wt.org.WTUser:123456789',
+            name: 'wcadmin',
+            fullName: 'Administrator',
+            userName: 'wcadmin',
           };
           return of(fallbackUser);
         } else {

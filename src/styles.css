@@ -965,6 +965,27 @@ body {
   opacity: 0.8;
 }
 
+/* Sub-row styling - children under material headers */
+.ag-row.subrow {
+  background: #f0fdf4 !important;
+  border-left: 3px solid #10b981 !important;
+}
+
+.ag-row.subrow .ag-cell {
+  background: #f0fdf4 !important;
+  color: #065f46 !important;
+  font-weight: 500;
+  border-bottom: 1px solid #d1fae5 !important;
+}
+
+.ag-row.subrow:hover {
+  background: #dcfce7 !important;
+}
+
+.ag-row.subrow:hover .ag-cell {
+  background: #dcfce7 !important;
+}
+
 /* ========================================
    PART COLUMN & CLICKABLE ELEMENTS
    ======================================== */

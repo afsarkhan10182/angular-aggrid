@@ -2,8 +2,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, map, catchError, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { BaseService } from './base.service';
-import { CsrfService } from './csrf.service';
 
 export interface PartData {
   branchID: string;
@@ -55,16 +53,24 @@ export interface ApiData {
     productName: string;
     skus: SkuInfo[];
   };
+  bomPartInfo?: {
+    bomName: string;
+    modifyTimestamp: string;
+  };
 }
 
 @Injectable({
   providedIn: 'root',
 })
-export class DataService extends BaseService {
+export class DataService {
   private apiData: ApiData | null = null;
 
-  constructor(http: HttpClient, csrfService: CsrfService) {
-    super(http, csrfService);
+  constructor(private http: HttpClient) {}
+
+  // Common method to get data attributes from JSP
+  private getJspDataAttribute(attributeName: string): string | null {
+    const angularRoot = document.getElementById('angular-root');
+    return angularRoot?.getAttribute(attributeName) || null;
   }
 
   loadData(): Observable<ApiData> {
@@ -75,8 +81,7 @@ export class DataService extends BaseService {
 
     // In production, append bomId from JSP data attribute
     if (!environment.useMockApi) {
-      const bomElement = document.getElementById('angular-root');
-      const bomId = bomElement?.getAttribute('data-bomid');
+      const bomId = this.getJspDataAttribute('data-bomid');
 
       if (bomId) {
         apiUrl += `/${bomId}`;
@@ -152,6 +157,10 @@ export class DataService extends BaseService {
 
   getProductInfo() {
     return this.apiData?.productInfo;
+  }
+
+  getBomPartInfo() {
+    return this.apiData?.bomPartInfo;
   }
 
   getDynamicColumns(): { [key: string]: string } {
@@ -420,5 +429,10 @@ export class DataService extends BaseService {
         value: partRow[`sku${sku.sku}`],
         partNumber: partRow.part.toString(),
       }));
+  }
+
+  // Get username from JSP data attribute (passed from FlexPLM session)
+  getUserNameFromJsp(): string | null {
+    return this.getJspDataAttribute('data-username');
   }
 }

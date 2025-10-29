@@ -67,6 +67,9 @@ export class App implements OnInit {
   // Current user state
   public currentUser: any = null;
 
+  // BOM information from API
+  public bomName: string = 'MBOM'; // Default fallback
+
   // Master list for column visibility panel (includes both real and virtual columns)
   public allColumns = [
     // Core Part Information
@@ -264,33 +267,54 @@ export class App implements OnInit {
       return;
     }
 
-    // Try to authenticate with existing credentials first
-    this.sessionService.initSession().subscribe({
-      next: (user) => {
-        // Only load data if user is properly authenticated
-        if (user) {
-          this.currentUser = user;
-          this.loadData();
-        } else {
-          this.promptForCredentials();
-        }
+    // Get username from JSP data attribute (using DataService for consistency)
+    const userName = this.dataService.getUserNameFromJsp();
+
+    if (userName) {
+      // Set current user from JSP data
+      this.currentUser = {
+        name: userName,
+        fullName: userName,
+        userName: userName,
+      };
+    }
+
+    // Step 1: Get CSRF token (keep this call as it uses existing FlexPLM session)
+    this.sessionService.getCsrfToken().subscribe({
+      next: (csrfToken) => {
+        // CSRF token received successfully - skip login modal and getUserDetails for now
+        // TODO: Re-enable in future when needed
+        // setTimeout(() => {
+        //   this.promptForCredentials();
+        // }, 100);
+
+        // Load data directly without authentication
+        this.loadData();
       },
       error: (error) => {
-        // CSRF API failed - show modal, NO DATA LOADING
-        setTimeout(() => {
-          this.promptForCredentials();
-        }, 100);
+        // CSRF API failed - app must be accessed outside FlexPLM
+        // Show error and DO NOT load data
+        this.showNotification(
+          'This application must be accessed through FlexPLM. Please login to FlexPLM first.',
+          'error'
+        );
+        // TODO: Re-enable modal in future if needed
+        // setTimeout(() => {
+        //   this.promptForCredentials();
+        // }, 100);
       },
     });
   }
 
+  // TODO: Re-enable login modal and getUserDetails API in future
+  /*
   private async promptForCredentials(): Promise<void> {
     try {
       const credentials = await this.modalService.showSignInModal(this.viewContainerRef);
 
       if (!credentials) {
         this.showNotification('Authentication is required to access this application.', 'error');
-        return; // Don't reopen modal
+        return;
       }
 
       // Validate credentials for mock API
@@ -303,7 +327,7 @@ export class App implements OnInit {
           credentials.password !== expectedPassword
         ) {
           this.showNotification('Invalid credentials. Please try again.', 'error');
-          this.promptForCredentials(); // Show modal again
+          this.promptForCredentials();
           return;
         }
       }
@@ -312,32 +336,43 @@ export class App implements OnInit {
       environment.credentials.username = credentials.username;
       environment.credentials.password = credentials.password;
 
-      // Try to authenticate - the API call will happen regardless
+      // Call getUserDetails POST with credentials and CSRF token
       this.sessionService.initSession().subscribe({
         next: (user) => {
-          if (user && user.name && user.id) {
+          if (user && user.name && user.userName) {
             this.currentUser = user;
             this.loadData();
           } else {
-            // Authentication failed - show modal again
             this.showNotification('Authentication failed. Please check your credentials.', 'error');
-            this.promptForCredentials(); // Show modal again
+            this.promptForCredentials();
           }
         },
         error: (error) => {
-          // CSRF API failed after user entered credentials - NO DATA LOADING
           this.showNotification(
             'Authentication failed. Please check your credentials and try again.',
             'error'
           );
-          this.promptForCredentials(); // Show modal again
+          this.promptForCredentials();
         },
       });
     } catch (error) {}
   }
+  */
 
   loadData(): void {
     this.dataService.loadData().subscribe((data) => {
+      // Get BOM name and modify timestamp from API response
+      const bomPartInfo = this.dataService.getBomPartInfo();
+      if (bomPartInfo?.bomName) {
+        this.bomName = bomPartInfo.bomName;
+      }
+      if (bomPartInfo?.modifyTimestamp) {
+        // Parse timestamp from API (format: "2025-10-29 11:52:20.0")
+        this.lastSavedAt = new Date(bomPartInfo.modifyTimestamp);
+        // Save to localStorage for persistence
+        localStorage.setItem('lastSavedAt', this.lastSavedAt.toISOString());
+      }
+
       // Transform data to hierarchical structure
       this.rowData = this.transformToHierarchicalData(data);
 
@@ -622,9 +657,9 @@ export class App implements OnInit {
 
     if (data.isMaterialHeader) {
       const arrowIcon = data.isExpanded ? '▼' : '▶';
-      const materialIndent = ''; // No indent - same level as section headers
-      const materialIndex = data.materialIndex || 0; // Use the material index
-      const linkIcon = data.hasLinkedBom ? '🔗' : '⧉'; // Different icon for material/linked BOM
+      const materialIndex = data.materialIndex || 0;
+      const linkIcon = data.hasLinkedBom ? '🔗' : '⧉';
+      // Show section name with accordion functionality, but no material name
       return `
         <div style="
           display: flex; 
@@ -639,7 +674,9 @@ export class App implements OnInit {
           border-left: 3px solid #10b981;
           margin: 1px 0;
         " 
-             onclick="window.toggleMaterial('${data.section}', '${data.material}', ${materialIndex})"
+             onclick="window.toggleMaterial('${data.section}', '${
+        data.material
+      }', ${materialIndex})"
              onmouseover="this.style.background='#dcfce7'; this.style.borderLeftColor='#059669'"
              onmouseout="this.style.background='#f0fdf4'; this.style.borderLeftColor='#10b981'">
           <span style="
@@ -656,7 +693,7 @@ export class App implements OnInit {
               font-size: 12px;
               color: #0f766e;
             ">${linkIcon}</span>
-          <span style="font-size: 13px; font-weight: 500;">${materialIndent}${data.material}</span>
+          <span style="font-size: 13px; font-weight: 500;">${data.section || ''}</span>
         </div>
       `;
     }
