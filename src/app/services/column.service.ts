@@ -1202,15 +1202,12 @@ export class ColumnService {
       width: 140,
       minWidth: 100,
       maxWidth: 300,
-      wrapText: true,
-      autoHeight: true,
+      wrapText: false,
+      autoHeight: false,
       cellStyle: (params: any) => {
         const baseStyle = {
           padding: '8px 12px',
           borderRight: '1px solid #e2e8f0',
-          whiteSpace: 'normal',
-          lineHeight: '1.4',
-          wordBreak: 'break-word',
         };
 
         return baseStyle;

@@ -1,390 +1,3215 @@
 {
   "mbom": [
     {
-      "branchID": "3",
-      "bomLinkFeature": "Bom Feature_1",
+      "branchID": "5",
+      "bomLinkFeature": "Framekit Hardware 1",
       "skus": [
         {
           "isActive": true,
-          "value": "Material2",
-          "skuId": "100480"
-        }
-      ],
-      "color": "Red",
-      "part": "Material2",
-      "section": "Drivetrain",
-      "partName": "comp23",
-      "bomLinkStartDate": "10/14/2025",
-      "supplier": "sup2",
-      "linkedBom": "1",
-      "supplierDescription": "sup2",
-      "bomLinkIncludeInSpecSheet": "Y",
-      "sortingNumber": "2",
-      "quantity": "30",
-      "bomLinkSpecSheetExtra": "Yes",
-      "bomLinkPart": "2234",
-      "bomLinkEndDate": "10/01/2025",
-      "materialDescription": "Material2",
-      "masterBranchID": "0",
-      "material": "Material2",
-      "flexBomLinkID": "272046",
-      "materialSupplierComments": "MS Comments",
-      "colorDescription": "Red"
-    },
-    {
-      "branchID": "3-3",
-      "bomLinkFeature": "",
-      "skus": [
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
+          "skuId": "100150"
+        },
         {
           "isActive": true,
-          "value": "mat1",
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
+          "skuId": "100152"
+        },
+        {
+          "isActive": true,
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
+          "skuId": "100154"
+        },
+        {
+          "isActive": true,
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
+          "skuId": "100158"
+        },
+        {
+          "isActive": true,
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
+          "skuId": "100160"
+        },
+        {
+          "isActive": true,
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
+          "skuId": "100162"
+        },
+        {
+          "isActive": true,
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
+          "skuId": "100166"
+        },
+        {
+          "isActive": true,
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
+          "skuId": "100167"
+        },
+        {
+          "isActive": true,
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
+          "skuId": "100168"
+        },
+        {
+          "isActive": true,
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
+          "skuId": "100170"
+        },
+        {
+          "isActive": true,
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
+          "skuId": "100171"
+        },
+        {
+          "isActive": true,
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
+          "skuId": "100172"
+        },
+        {
+          "isActive": true,
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
+          "skuId": "100180"
+        },
+        {
+          "isActive": true,
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
+          "skuId": "100181"
+        },
+        {
+          "isActive": true,
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
           "skuId": "100480"
         },
         {
           "isActive": true,
-          "value": "mat1",
-          "skuId": "100484"
-        }
-      ],
-      "part": "mat1",
-      "section": "Drivetrain",
-      "partName": "comp1",
-      "bomLinkStartDate": "",
-      "supplier": "",
-      "supplierDescription": "",
-      "bomLinkIncludeInSpecSheet": "",
-      "sortingNumber": "1",
-      "quantity": "",
-      "bomLinkSpecSheetExtra": "No",
-      "bomLinkPart": "",
-      "bomLinkEndDate": "",
-      "materialcolorLongDescription": "",
-      "materialcolorShortDescription": "",
-      "materialDescription": "mat1",
-      "masterBranchID": "3",
-      "material": "mat1",
-      "flexBomLinkID": "268909",
-      "materialSupplierComments": "",
-      "colorDescription": ""
-    },
-    {
-      "branchID": "3-3",
-      "bomLinkFeature": "",
-      "skus": [
-        {
-          "isActive": true,
-          "value": "mat2sub",
-          "skuId": "100480"
-        },
-        {
-          "isActive": true,
-          "value": "mat2sub",
-          "skuId": "100484"
-        }
-      ],
-      "part": "mat2sub",
-      "section": "Drivetrain",
-      "partName": "comp2",
-      "bomLinkStartDate": "",
-      "supplier": "",
-      "supplierDescription": "",
-      "bomLinkIncludeInSpecSheet": "",
-      "sortingNumber": "2",
-      "quantity": "",
-      "bomLinkSpecSheetExtra": "No",
-      "bomLinkPart": "",
-      "bomLinkEndDate": "10/10/2025",
-      "materialcolorLongDescription": "",
-      "materialcolorShortDescription": "",
-      "materialDescription": "mat2sub",
-      "masterBranchID": "3",
-      "material": "mat2sub",
-      "flexBomLinkID": "269745",
-      "materialSupplierComments": "",
-      "colorDescription": ""
-    },
-    {
-      "branchID": "17",
-      "bomLinkFeature": "",
-      "skus": [
-        {
-          "isActive": true,
-          "value": "Mat_Top",
-          "skuId": "100480"
-        },
-        {
-          "isActive": true,
-          "value": "Mat_Top",
+          "value": "WLR TMC ARSL51 70D 142 CND/LG",
           "skuId": "100484"
         }
       ],
       "color": "",
-      "part": "Mat_Top",
-      "section": "Drivetrain",
-      "partName": "toprow",
-      "bomLinkStartDate": "",
-      "supplier": "",
-      "supplierDescription": "",
-      "bomLinkIncludeInSpecSheet": "N",
-      "sortingNumber": "1",
-      "quantity": "",
-      "bomLinkSpecSheetExtra": "No",
-      "bomLinkPart": "",
-      "bomLinkEndDate": "10/15/2025",
-      "materialcolorLongDescription": "",
-      "materialcolorShortDescription": "",
-      "materialDescription": "Mat_Top",
-      "masterBranchID": "0",
-      "material": "Mat_Top",
-      "flexBomLinkID": "273627",
-      "materialSupplierComments": "",
-      "colorDescription": ""
-    },
-    {
-      "branchID": "16",
-      "bomLinkFeature": "Bom Feature_1",
-      "skus": [
-        {
-          "isActive": true,
-          "value": "Material2",
-          "skuId": "100480"
-        }
-      ],
-      "color": "",
-      "part": "Material2",
-      "section": "Cockpit",
+      "part": "WLR TMC ARSL51 70D 142 CND/LG",
+      "section": "Brake",
       "partName": "",
       "bomLinkStartDate": "",
-      "supplier": "sup2",
-      "linkedBom": "1",
-      "supplierDescription": "",
-      "bomLinkIncludeInSpecSheet": "Y",
-      "sortingNumber": "4",
-      "quantity": "10",
-      "bomLinkSpecSheetExtra": "No",
-      "bomLinkPart": "",
-      "bomLinkEndDate": "10/15/2025",
-      "materialcolorLongDescription": "",
-      "materialcolorShortDescription": "",
-      "materialDescription": "Material2",
-      "masterBranchID": "0",
-      "material": "Material2",
-      "flexBomLinkID": "272055",
-      "materialSupplierComments": "MS Comments",
-      "colorDescription": ""
-    },
-    {
-      "branchID": "16-16",
-      "bomLinkFeature": "",
-      "skus": [
-        {
-          "isActive": true,
-          "value": "mat1",
-          "skuId": "100480"
-        },
-        {
-          "isActive": true,
-          "value": "mat1",
-          "skuId": "100484"
-        }
-      ],
-      "color": "",
-      "part": "mat1",
-      "section": "Cockpit",
-      "partName": "comp1",
-      "bomLinkStartDate": "",
       "supplier": "",
-      "supplierDescription": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "placeholder",
       "bomLinkIncludeInSpecSheet": "",
       "sortingNumber": "1",
-      "quantity": "11",
+      "quantity": "",
       "bomLinkSpecSheetExtra": "No",
       "bomLinkPart": "",
       "bomLinkEndDate": "",
       "materialcolorLongDescription": "",
       "materialcolorShortDescription": "",
-      "materialDescription": "mat1",
-      "masterBranchID": "16",
-      "material": "mat1",
-      "flexBomLinkID": "268909",
+      "materialDescription": "WLR TMC ARSL51 70D 142 CND/LG",
+      "masterBranchID": "0",
+      "material": "WLR TMC ARSL51 70D 142 CND/LG",
+      "flexBomLinkID": "304132",
       "materialSupplierComments": "",
       "colorDescription": ""
     },
     {
-      "branchID": "16-16",
-      "bomLinkFeature": "",
+      "branchID": "4",
+      "bomLinkFeature": "Frame Hardware",
       "skus": [
         {
           "isActive": true,
-          "value": "mat2sub",
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100150"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100152"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100154"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100158"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100160"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100162"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100166"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100167"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100168"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100170"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100171"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100172"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100180"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100181"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
           "skuId": "100480"
         },
         {
           "isActive": true,
-          "value": "mat2sub",
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
           "skuId": "100484"
         }
       ],
       "color": "",
-      "part": "mat2sub",
-      "section": "Cockpit",
-      "partName": "comp2",
+      "part": "WLF FOR LC30N 29D 110 CBK SBK",
+      "section": "Wheel",
+      "partName": "",
       "bomLinkStartDate": "",
       "supplier": "",
-      "supplierDescription": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "placeholder",
       "bomLinkIncludeInSpecSheet": "",
-      "sortingNumber": "2",
-      "quantity": "12",
+      "sortingNumber": "1",
+      "quantity": "",
       "bomLinkSpecSheetExtra": "No",
       "bomLinkPart": "",
-      "bomLinkEndDate": "10/10/2025",
+      "bomLinkEndDate": "",
       "materialcolorLongDescription": "",
       "materialcolorShortDescription": "",
-      "materialDescription": "mat2sub",
-      "masterBranchID": "16",
-      "material": "mat2sub",
-      "flexBomLinkID": "269745",
+      "materialDescription": "WLF FOR LC30N 29D 110 CBK SBK",
+      "masterBranchID": "0",
+      "material": "WLF FOR LC30N 29D 110 CBK SBK",
+      "flexBomLinkID": "304133",
       "materialSupplierComments": "",
       "colorDescription": ""
     },
     {
       "branchID": "3",
-      "bomLinkFeature": "Bom Feature_1",
+      "bomLinkFeature": "Frame",
       "skus": [
         {
           "isActive": true,
-          "value": "Material2",
-          "skuId": "100484"
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100150"
+        },
+        {
+          "isActive": true,
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100152"
+        },
+        {
+          "isActive": true,
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100154"
         }
       ],
-      "color": "Red",
-      "part": "Material2",
+      "color": "",
+      "part": "WLF DTA ARSL51 70D 12T CND/LG",
       "section": "Drivetrain",
-      "partName": "comp23",
-      "bomLinkStartDate": "10/14/2025",
-      "supplier": "sup2",
-      "linkedBom": "1",
-      "supplierDescription": "sup2",
-      "bomLinkIncludeInSpecSheet": "Y",
-      "sortingNumber": "2",
-      "quantity": "20",
-      "bomLinkSpecSheetExtra": "Yes",
-      "bomLinkPart": "2234",
-      "bomLinkEndDate": "10/01/2025",
-      "materialDescription": "Material2",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "Note5",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "WLF DTA ARSL51 70D 12T CND/LG",
       "masterBranchID": "0",
-      "material": "Material2",
-      "flexBomLinkID": "272045",
-      "materialSupplierComments": "MS Comments",
-      "colorDescription": "Red"
+      "material": "WLF DTA ARSL51 70D 12T CND/LG",
+      "flexBomLinkID": "304715",
+      "materialSupplierComments": "",
+      "colorDescription": ""
     },
     {
       "branchID": "2",
+      "bomLinkFeature": "Compliance Label 3",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "TIR ADV PRO 29X2.40",
+          "skuId": "100150"
+        },
+        {
+          "isActive": true,
+          "value": "TIR ADV PRO 29X2.40",
+          "skuId": "100152"
+        },
+        {
+          "isActive": true,
+          "value": "TIR ADV PRO 29X2.40",
+          "skuId": "100154"
+        }
+      ],
+      "color": "",
+      "part": "TIR ADV PRO 29X2.40",
+      "section": "Cockpit",
+      "partName": "",
+      "bomLinkStartDate": "10/31/2025",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "Y",
+      "sortingNumber": "1",
+      "quantity": "13",
+      "bomLinkSpecSheetExtra": "Yes",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "10/30/2025",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "TIR ADV PRO 29X2.40",
+      "masterBranchID": "0",
+      "material": "TIR ADV PRO 29X2.40",
+      "flexBomLinkID": "304170",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "1",
+      "bomLinkFeature": "Compliance Label 1",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100150"
+        },
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100152"
+        },
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100154"
+        },
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100158"
+        },
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100160"
+        },
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100162"
+        },
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100166"
+        },
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100167"
+        },
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100168"
+        },
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100170"
+        },
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100171"
+        },
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100172"
+        },
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100180"
+        },
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100181"
+        },
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100480"
+        },
+        {
+          "isActive": true,
+          "value": "BEARING SEALED 608Z",
+          "skuId": "100484"
+        }
+      ],
+      "color": "",
+      "part": "BEARING SEALED 608Z",
+      "section": "Fuselage",
+      "partName": "",
+      "bomLinkStartDate": "10/28/2025",
+      "supplier": "A&J (VIETNAM) CO.LTD",
+      "bomLinkNotes": "",
+      "supplierDescription": "A&J (VIETNAM) CO.LTD",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "2344",
+      "bomLinkEndDate": "10/29/2025",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "BEARING SEALED 608Z",
+      "masterBranchID": "0",
+      "material": "BEARING SEALED 608Z",
+      "flexBomLinkID": "304193",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "18",
+      "bomLinkFeature": "Storage Door Hardware (Expanding)",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100150"
+        },
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100152"
+        },
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100154"
+        },
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100158"
+        },
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100160"
+        },
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100162"
+        },
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100166"
+        },
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100167"
+        },
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100168"
+        },
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100170"
+        },
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100171"
+        },
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100172"
+        },
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100180"
+        },
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100181"
+        },
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100480"
+        },
+        {
+          "isActive": true,
+          "value": "WHEEL-21345",
+          "skuId": "100484"
+        }
+      ],
+      "color": "",
+      "part": "WHEEL-21345",
+      "section": "Fuselage",
+      "partName": "",
+      "bomLinkStartDate": "10/30/2025",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "2",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "1234",
+      "bomLinkEndDate": "10/29/2025",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "WHEEL-21345",
+      "masterBranchID": "0",
+      "material": "WHEEL-21345",
+      "flexBomLinkID": "305134",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "16",
       "bomLinkFeature": "",
       "skus": [
         {
           "isActive": true,
-          "value": "Material1",
+          "value": "",
+          "skuId": "100150"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100152"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100154"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100158"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100160"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100162"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100166"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100167"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100168"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100170"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100171"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100172"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100180"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100181"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        },
+        {
+          "isActive": true,
+          "value": "",
           "skuId": "100484"
         }
       ],
-      "color": "Test_Color",
-      "part": "Material1",
-      "section": "Cockpit",
+      "color": "",
+      "part": "",
+      "section": "NA",
       "partName": "",
       "bomLinkStartDate": "",
-      "supplier": "Test_Supplier",
-      "linkedBom": "1",
-      "supplierDescription": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "placeholder",
       "bomLinkIncludeInSpecSheet": "",
       "sortingNumber": "1",
-      "quantity": "13",
+      "quantity": "",
       "bomLinkSpecSheetExtra": "No",
       "bomLinkPart": "",
       "bomLinkEndDate": "",
-      "materialDescription": "Material1",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "",
       "masterBranchID": "0",
-      "material": "Material1",
-      "flexBomLinkID": "268158",
+      "material": "",
+      "flexBomLinkID": "276739",
       "materialSupplierComments": "",
-      "colorDescription": "Test_Color"
+      "colorDescription": ""
     },
     {
-      "branchID": "1",
-      "bomLinkFeature": "Bom Feature_1",
+      "branchID": "15",
+      "bomLinkFeature": "",
       "skus": [
         {
           "isActive": true,
-          "value": "Material1",
-          "skuId": "100484"
-        }
-      ],
-      "color": "Test_Color",
-      "part": "Material1",
-      "section": "Fuselage",
-      "partName": "",
-      "bomLinkStartDate": "10/10/2025",
-      "supplier": "Test_Supplier",
-      "linkedBom": "1",
-      "supplierDescription": "",
-      "bomLinkIncludeInSpecSheet": "Y",
-      "sortingNumber": "1",
-      "quantity": "2",
-      "bomLinkSpecSheetExtra": "Yes",
-      "bomLinkPart": "98876",
-      "bomLinkEndDate": "10/11/2025",
-      "materialDescription": "Material1",
-      "masterBranchID": "0",
-      "material": "Material1",
-      "flexBomLinkID": "270201",
-      "materialSupplierComments": "",
-      "colorDescription": "Test_Color"
-    },
-    {
-      "branchID": "16",
-      "bomLinkFeature": "Bom Feature_1",
-      "skus": [
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100150"
+        },
         {
           "isActive": true,
-          "value": "Material2",
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100152"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100154"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100158"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100160"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100162"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100166"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100167"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100168"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100170"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100171"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100172"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100180"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100181"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
+          "skuId": "100480"
+        },
+        {
+          "isActive": true,
+          "value": "WLF FOR LC30N 29D 110 CBK SBK",
           "skuId": "100484"
         }
       ],
-      "color": "Red",
-      "part": "Material2",
-      "section": "Cockpit",
+      "color": "",
+      "part": "WLF FOR LC30N 29D 110 CBK SBK",
+      "section": "Packaging",
       "partName": "",
       "bomLinkStartDate": "",
-      "supplier": "sup2",
-      "linkedBom": "1",
-      "supplierDescription": "",
-      "bomLinkIncludeInSpecSheet": "Y",
-      "sortingNumber": "4",
-      "quantity": "14",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
       "bomLinkSpecSheetExtra": "No",
       "bomLinkPart": "",
-      "bomLinkEndDate": "10/15/2025",
-      "materialDescription": "Material2",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "WLF FOR LC30N 29D 110 CBK SBK",
       "masterBranchID": "0",
-      "material": "Material2",
-      "flexBomLinkID": "268941",
-      "materialSupplierComments": "MS Comments",
-      "colorDescription": "Red"
+      "material": "WLF FOR LC30N 29D 110 CBK SBK",
+      "flexBomLinkID": "304148",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "14",
+      "bomLinkFeature": "Derailleur Hanger Nut",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100150"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100152"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100154"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100158"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100160"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100162"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100166"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100167"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100168"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100170"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100171"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100172"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100180"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100181"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100484"
+        }
+      ],
+      "color": "",
+      "part": "",
+      "section": "Reflector",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "",
+      "masterBranchID": "0",
+      "material": "",
+      "flexBomLinkID": "276725",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "13",
+      "bomLinkFeature": "",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100150"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100152"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100154"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100158"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100160"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100162"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100166"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100167"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100168"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100170"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100171"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100172"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100180"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100181"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100484"
+        }
+      ],
+      "color": "",
+      "part": "",
+      "section": "Media",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "",
+      "masterBranchID": "0",
+      "material": "",
+      "flexBomLinkID": "276707",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "11",
+      "bomLinkFeature": "Derailleur Hanger Bolt",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "FASTENER CLIP-LOCK 8MM",
+          "skuId": "100150"
+        },
+        {
+          "isActive": true,
+          "value": "FASTENER CLIP-LOCK 8MM",
+          "skuId": "100152"
+        },
+        {
+          "isActive": true,
+          "value": "FASTENER CLIP-LOCK 8MM",
+          "skuId": "100154"
+        }
+      ],
+      "color": "",
+      "part": "FASTENER CLIP-LOCK 8MM",
+      "section": "Compliance",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "FASTENER CLIP-LOCK 8MM",
+      "masterBranchID": "0",
+      "material": "FASTENER CLIP-LOCK 8MM",
+      "flexBomLinkID": "302355",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "10",
+      "bomLinkFeature": "Derailleur Hanger",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100150"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100152"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100154"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100158"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100160"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100162"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100166"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100167"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100168"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100170"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100171"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100172"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100180"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100181"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100484"
+        }
+      ],
+      "color": "",
+      "part": "",
+      "section": "Accessory",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "",
+      "masterBranchID": "0",
+      "material": "",
+      "flexBomLinkID": "276727",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "20",
+      "bomLinkFeature": "",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100150"
+        },
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100152"
+        },
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100154"
+        },
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100158"
+        },
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100160"
+        },
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100162"
+        },
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100166"
+        },
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100167"
+        },
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100168"
+        },
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100170"
+        },
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100171"
+        },
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100172"
+        },
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100180"
+        },
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100181"
+        },
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100480"
+        },
+        {
+          "isActive": true,
+          "value": "SADDLE COMFORT GEL",
+          "skuId": "100484"
+        }
+      ],
+      "color": "",
+      "part": "SADDLE COMFORT GEL",
+      "section": "Fuselage",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "linkedBom": "1",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "3",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "SADDLE COMFORT GEL",
+      "masterBranchID": "0",
+      "material": "SADDLE COMFORT GEL",
+      "flexBomLinkID": "305143",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "20-20",
+      "bomLinkFeature": "Frame",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100150"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100152"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100154"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100158"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100160"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100162"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100166"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100167"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100168"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100170"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100171"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100172"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100180"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100181"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100480"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND",
+          "skuId": "100484"
+        }
+      ],
+      "color": "",
+      "part": "WLF TMC ARSL51 70D 12T CND",
+      "section": "Fuselage",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "WLF TMC ARSL51 70D 12T CND",
+      "masterBranchID": "20",
+      "material": "WLF TMC ARSL51 70D 12T CND",
+      "flexBomLinkID": "305517",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "20-20",
+      "bomLinkFeature": "Frame Hardware",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100150"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100152"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100154"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100158"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100160"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100162"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100166"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100167"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100168"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100170"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100171"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100172"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100180"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100181"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100480"
+        },
+        {
+          "isActive": true,
+          "value": "WLF TMC ARSL51 70D 12T CND/LG",
+          "skuId": "100484"
+        }
+      ],
+      "color": "",
+      "part": "WLF TMC ARSL51 70D 12T CND/LG",
+      "section": "Fuselage",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "2",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "WLF TMC ARSL51 70D 12T CND/LG",
+      "masterBranchID": "20",
+      "material": "WLF TMC ARSL51 70D 12T CND/LG",
+      "flexBomLinkID": "305519",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "20-20",
+      "bomLinkFeature": "Frame Hardware 2",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100150"
+        },
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100152"
+        },
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100154"
+        },
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100158"
+        },
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100160"
+        },
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100162"
+        },
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100166"
+        },
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100167"
+        },
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100168"
+        },
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100170"
+        },
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100171"
+        },
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100172"
+        },
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100180"
+        },
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100181"
+        },
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100480"
+        },
+        {
+          "isActive": true,
+          "value": "WLR DTA ARSL51 70D 142 CND/LG",
+          "skuId": "100484"
+        }
+      ],
+      "color": "",
+      "part": "WLR DTA ARSL51 70D 142 CND/LG",
+      "section": "Fuselage",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "3",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "WLR DTA ARSL51 70D 142 CND/LG",
+      "masterBranchID": "20",
+      "material": "WLR DTA ARSL51 70D 142 CND/LG",
+      "flexBomLinkID": "305518",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "9",
+      "bomLinkFeature": "Storage Door Hardware (Expanding)",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100150"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100152"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100154"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100158"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100160"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100162"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100166"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100167"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100168"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100170"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100171"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100172"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100180"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100181"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100484"
+        }
+      ],
+      "color": "",
+      "part": "",
+      "section": "Lighting",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "",
+      "masterBranchID": "0",
+      "material": "",
+      "flexBomLinkID": "276703",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "8",
+      "bomLinkFeature": "Storage Bag 2",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100150"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100152"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100154"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100158"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100160"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100162"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100166"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100167"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100168"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100170"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100171"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100172"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100180"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100181"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100480"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR+++SERRATED 304 10ODX5.3ID",
+          "skuId": "100484"
+        }
+      ],
+      "color": "",
+      "part": "WSHR+++SERRATED 304 10ODX5.3ID",
+      "section": "Fender",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "WSHR+++SERRATED 304 10ODX5.3ID",
+      "masterBranchID": "0",
+      "material": "WSHR+++SERRATED 304 10ODX5.3ID",
+      "flexBomLinkID": "304137",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "7",
+      "bomLinkFeature": "Storage Bag 1",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100150"
+        },
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100152"
+        },
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100154"
+        },
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100158"
+        },
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100160"
+        },
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100162"
+        },
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100166"
+        },
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100167"
+        },
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100168"
+        },
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100170"
+        },
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100171"
+        },
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100172"
+        },
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100180"
+        },
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100181"
+        },
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100480"
+        },
+        {
+          "isActive": true,
+          "value": "PEDAL COMBO SPORT XTR",
+          "skuId": "100484"
+        }
+      ],
+      "color": "",
+      "part": "PEDAL COMBO SPORT XTR",
+      "section": "Rack",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "PEDAL COMBO SPORT XTR",
+      "masterBranchID": "0",
+      "material": "PEDAL COMBO SPORT XTR",
+      "flexBomLinkID": "304138",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "6",
+      "bomLinkFeature": "Frame Hardware 2",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100150"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100152"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100154"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100158"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100160"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100162"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100166"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100167"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100168"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100170"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100171"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100172"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100180"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100181"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100480"
+        },
+        {
+          "isActive": true,
+          "value": "WSHR YZI M5X1.0 316SS",
+          "skuId": "100484"
+        }
+      ],
+      "color": "",
+      "part": "WSHR YZI M5X1.0 316SS",
+      "section": "E-System",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "WSHR YZI M5X1.0 316SS",
+      "masterBranchID": "0",
+      "material": "WSHR YZI M5X1.0 316SS",
+      "flexBomLinkID": "304139",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "3",
+      "bomLinkFeature": "Frame",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100158"
+        },
+        {
+          "isActive": true,
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100160"
+        },
+        {
+          "isActive": true,
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100162"
+        }
+      ],
+      "color": "",
+      "part": "WLF DTA ARSL51 70D 12T CND/LG",
+      "section": "Drivetrain",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "Note8",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "WLF DTA ARSL51 70D 12T CND/LG",
+      "masterBranchID": "0",
+      "material": "WLF DTA ARSL51 70D 12T CND/LG",
+      "flexBomLinkID": "304717",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "2",
+      "bomLinkFeature": "Compliance Label 3",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "KIT STARTER WRENCH SET",
+          "skuId": "100158"
+        },
+        {
+          "isActive": true,
+          "value": "KIT STARTER WRENCH SET",
+          "skuId": "100160"
+        },
+        {
+          "isActive": true,
+          "value": "KIT STARTER WRENCH SET",
+          "skuId": "100162"
+        }
+      ],
+      "color": "",
+      "part": "KIT STARTER WRENCH SET",
+      "section": "Cockpit",
+      "partName": "",
+      "bomLinkStartDate": "10/31/2025",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "Y",
+      "sortingNumber": "1",
+      "quantity": "16",
+      "bomLinkSpecSheetExtra": "Yes",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "10/30/2025",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "KIT STARTER WRENCH SET",
+      "masterBranchID": "0",
+      "material": "KIT STARTER WRENCH SET",
+      "flexBomLinkID": "304176",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "11",
+      "bomLinkFeature": "Derailleur Hanger Bolt",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100158"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100160"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100162"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100170"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100171"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100172"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100484"
+        }
+      ],
+      "color": "",
+      "part": "",
+      "section": "Compliance",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "",
+      "masterBranchID": "0",
+      "material": "",
+      "flexBomLinkID": "276726",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "3",
+      "bomLinkFeature": "Frame",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100166"
+        },
+        {
+          "isActive": true,
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100167"
+        },
+        {
+          "isActive": true,
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100168"
+        }
+      ],
+      "color": "",
+      "part": "WLF DTA ARSL51 70D 12T CND/LG",
+      "section": "Drivetrain",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "Note1",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "WLF DTA ARSL51 70D 12T CND/LG",
+      "masterBranchID": "0",
+      "material": "WLF DTA ARSL51 70D 12T CND/LG",
+      "flexBomLinkID": "304718",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "2",
+      "bomLinkFeature": "Compliance Label 3",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "FASTENER CLIP-LOCK 8MM",
+          "skuId": "100166"
+        },
+        {
+          "isActive": true,
+          "value": "FASTENER CLIP-LOCK 8MM",
+          "skuId": "100167"
+        },
+        {
+          "isActive": true,
+          "value": "FASTENER CLIP-LOCK 8MM",
+          "skuId": "100168"
+        }
+      ],
+      "color": "",
+      "part": "FASTENER CLIP-LOCK 8MM",
+      "section": "Cockpit",
+      "partName": "",
+      "bomLinkStartDate": "10/31/2025",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "Y",
+      "sortingNumber": "1",
+      "quantity": "5",
+      "bomLinkSpecSheetExtra": "Yes",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "10/30/2025",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "FASTENER CLIP-LOCK 8MM",
+      "masterBranchID": "0",
+      "material": "FASTENER CLIP-LOCK 8MM",
+      "flexBomLinkID": "304177",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "11",
+      "bomLinkFeature": "Derailleur Hanger Bolt",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "DERAILLEUR CAGE REAR",
+          "skuId": "100166"
+        },
+        {
+          "isActive": true,
+          "value": "DERAILLEUR CAGE REAR",
+          "skuId": "100167"
+        },
+        {
+          "isActive": true,
+          "value": "DERAILLEUR CAGE REAR",
+          "skuId": "100168"
+        }
+      ],
+      "color": "",
+      "part": "DERAILLEUR CAGE REAR",
+      "section": "Compliance",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "DERAILLEUR CAGE REAR",
+      "masterBranchID": "0",
+      "material": "DERAILLEUR CAGE REAR",
+      "flexBomLinkID": "302357",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "3",
+      "bomLinkFeature": "Frame",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100170"
+        },
+        {
+          "isActive": true,
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100171"
+        },
+        {
+          "isActive": true,
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100172"
+        }
+      ],
+      "color": "",
+      "part": "WLF DTA ARSL51 70D 12T CND/LG",
+      "section": "Drivetrain",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "Note4",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "WLF DTA ARSL51 70D 12T CND/LG",
+      "masterBranchID": "0",
+      "material": "WLF DTA ARSL51 70D 12T CND/LG",
+      "flexBomLinkID": "304719",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "2",
+      "bomLinkFeature": "Compliance Label 3",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "KIT STARTER WRENCH SET",
+          "skuId": "100170"
+        },
+        {
+          "isActive": true,
+          "value": "KIT STARTER WRENCH SET",
+          "skuId": "100171"
+        },
+        {
+          "isActive": true,
+          "value": "KIT STARTER WRENCH SET",
+          "skuId": "100172"
+        }
+      ],
+      "color": "",
+      "part": "KIT STARTER WRENCH SET",
+      "section": "Cockpit",
+      "partName": "",
+      "bomLinkStartDate": "10/31/2025",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "Y",
+      "sortingNumber": "1",
+      "quantity": "8",
+      "bomLinkSpecSheetExtra": "Yes",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "10/30/2025",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "KIT STARTER WRENCH SET",
+      "masterBranchID": "0",
+      "material": "KIT STARTER WRENCH SET",
+      "flexBomLinkID": "304181",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "3",
+      "bomLinkFeature": "Frame",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100180"
+        },
+        {
+          "isActive": true,
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100181"
+        },
+        {
+          "isActive": true,
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100182"
+        }
+      ],
+      "color": "",
+      "part": "WLF DTA ARSL51 70D 12T CND/LG",
+      "section": "Drivetrain",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "Note6",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "WLF DTA ARSL51 70D 12T CND/LG",
+      "masterBranchID": "0",
+      "material": "WLF DTA ARSL51 70D 12T CND/LG",
+      "flexBomLinkID": "304714",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "2",
+      "bomLinkFeature": "Compliance Label 3",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "TIR KND MON COMP 27.5X2.40 BK",
+          "skuId": "100180"
+        },
+        {
+          "isActive": true,
+          "value": "TIR KND MON COMP 27.5X2.40 BK",
+          "skuId": "100181"
+        },
+        {
+          "isActive": true,
+          "value": "TIR KND MON COMP 27.5X2.40 BK",
+          "skuId": "100182"
+        }
+      ],
+      "color": "",
+      "part": "TIR KND MON COMP 27.5X2.40 BK",
+      "section": "Cockpit",
+      "partName": "",
+      "bomLinkStartDate": "10/31/2025",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "Y",
+      "sortingNumber": "1",
+      "quantity": "14",
+      "bomLinkSpecSheetExtra": "Yes",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "10/30/2025",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "TIR KND MON COMP 27.5X2.40 BK",
+      "masterBranchID": "0",
+      "material": "TIR KND MON COMP 27.5X2.40 BK",
+      "flexBomLinkID": "304168",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "11",
+      "bomLinkFeature": "Derailleur Hanger Bolt",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "KIT STARTER WRENCH SET",
+          "skuId": "100180"
+        },
+        {
+          "isActive": true,
+          "value": "KIT STARTER WRENCH SET",
+          "skuId": "100181"
+        },
+        {
+          "isActive": true,
+          "value": "KIT STARTER WRENCH SET",
+          "skuId": "100182"
+        }
+      ],
+      "color": "",
+      "part": "KIT STARTER WRENCH SET",
+      "section": "Compliance",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "KIT STARTER WRENCH SET",
+      "masterBranchID": "0",
+      "material": "KIT STARTER WRENCH SET",
+      "flexBomLinkID": "302354",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "3",
+      "bomLinkFeature": "Frame",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100185"
+        }
+      ],
+      "color": "",
+      "part": "WLF DTA ARSL51 70D 12T CND/LG",
+      "section": "Drivetrain",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "Note2",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "WLF DTA ARSL51 70D 12T CND/LG",
+      "masterBranchID": "0",
+      "material": "WLF DTA ARSL51 70D 12T CND/LG",
+      "flexBomLinkID": "304716",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "2",
+      "bomLinkFeature": "Compliance Label 3",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "TIR KND BRE PRO XR 29X2.50 BK",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "TIR KND BRE PRO XR 29X2.50 BK",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "TIR KND BRE PRO XR 29X2.50 BK",
+          "skuId": "100185"
+        }
+      ],
+      "color": "",
+      "part": "TIR KND BRE PRO XR 29X2.50 BK",
+      "section": "Cockpit",
+      "partName": "",
+      "bomLinkStartDate": "10/31/2025",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "Y",
+      "sortingNumber": "1",
+      "quantity": "6",
+      "bomLinkSpecSheetExtra": "Yes",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "10/30/2025",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "TIR KND BRE PRO XR 29X2.50 BK",
+      "masterBranchID": "0",
+      "material": "TIR KND BRE PRO XR 29X2.50 BK",
+      "flexBomLinkID": "304175",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "11",
+      "bomLinkFeature": "Derailleur Hanger Bolt",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "HANDLEBAR GRIP RACING",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "HANDLEBAR GRIP RACING",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "HANDLEBAR GRIP RACING",
+          "skuId": "100185"
+        }
+      ],
+      "color": "",
+      "part": "HANDLEBAR GRIP RACING",
+      "section": "Compliance",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "HANDLEBAR GRIP RACING",
+      "masterBranchID": "0",
+      "material": "HANDLEBAR GRIP RACING",
+      "flexBomLinkID": "302356",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "3",
+      "bomLinkFeature": "Frame",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100476"
+        }
+      ],
+      "color": "",
+      "part": "WLF DTA ARSL51 70D 12T CND/LG",
+      "section": "Drivetrain",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "Note3",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "WLF DTA ARSL51 70D 12T CND/LG",
+      "masterBranchID": "0",
+      "material": "WLF DTA ARSL51 70D 12T CND/LG",
+      "flexBomLinkID": "304713",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "2",
+      "bomLinkFeature": "Compliance Label 3",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "KIT STARTER WRENCH SET",
+          "skuId": "100476"
+        }
+      ],
+      "color": "",
+      "part": "KIT STARTER WRENCH SET",
+      "section": "Cockpit",
+      "partName": "",
+      "bomLinkStartDate": "10/31/2025",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "Y",
+      "sortingNumber": "1",
+      "quantity": "3",
+      "bomLinkSpecSheetExtra": "Yes",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "10/30/2025",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "KIT STARTER WRENCH SET",
+      "masterBranchID": "0",
+      "material": "KIT STARTER WRENCH SET",
+      "flexBomLinkID": "304182",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "3",
+      "bomLinkFeature": "Frame",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100480"
+        },
+        {
+          "isActive": true,
+          "value": "WLF DTA ARSL51 70D 12T CND/LG",
+          "skuId": "100484"
+        }
+      ],
+      "color": "",
+      "part": "WLF DTA ARSL51 70D 12T CND/LG",
+      "section": "Drivetrain",
+      "partName": "",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "Note7",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "WLF DTA ARSL51 70D 12T CND/LG",
+      "masterBranchID": "0",
+      "material": "WLF DTA ARSL51 70D 12T CND/LG",
+      "flexBomLinkID": "304712",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "2",
+      "bomLinkFeature": "Compliance Label 3",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "KIT STARTER WRENCH SET",
+          "skuId": "100480"
+        }
+      ],
+      "color": "",
+      "part": "KIT STARTER WRENCH SET",
+      "section": "Cockpit",
+      "partName": "",
+      "bomLinkStartDate": "10/31/2025",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "Y",
+      "sortingNumber": "1",
+      "quantity": "15",
+      "bomLinkSpecSheetExtra": "Yes",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "10/30/2025",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "KIT STARTER WRENCH SET",
+      "masterBranchID": "0",
+      "material": "KIT STARTER WRENCH SET",
+      "flexBomLinkID": "304180",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "branchID": "2",
+      "bomLinkFeature": "Compliance Label 3",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "KIT STARTER WRENCH SET",
+          "skuId": "100484"
+        }
+      ],
+      "color": "",
+      "part": "KIT STARTER WRENCH SET",
+      "section": "Cockpit",
+      "partName": "",
+      "bomLinkStartDate": "10/31/2025",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "Y",
+      "sortingNumber": "1",
+      "quantity": "11",
+      "bomLinkSpecSheetExtra": "Yes",
+      "bomLinkPart": "",
+      "bomLinkEndDate": "10/30/2025",
+      "materialcolorLongDescription": "",
+      "materialcolorShortDescription": "",
+      "materialDescription": "KIT STARTER WRENCH SET",
+      "masterBranchID": "0",
+      "material": "KIT STARTER WRENCH SET",
+      "flexBomLinkID": "304174",
+      "materialSupplierComments": "",
+      "colorDescription": ""
     }
   ],
-  "bomPartInfo": { "bomName": "002 : MBOM BOM", "modifyTimestamp": "2025-10-29 11:52:20.0" },
+  "bomPartInfo": {
+    "bomName": "002 : MBOM BOM",
+    "modifyTimestamp": "2025-10-29 11:52:20.0"
+  },
   "columns": {
-    "partName": "Component",
+    "bomLinkFeature": "Feature",
     "material": "Material",
     "supplier": "Supplier",
     "color": "Color",
-    "bomLinkFeature": "Feature",
     "bomLinkPart": "Part #",
     "bomLinkStartDate": "Start Date",
     "bomLinkEndDate": "End Date",
     "bomLinkIncludeInSpecSheet": "Spec Sheet",
     "bomLinkSpecSheetExtra": "Spec Sheet Extra",
     "quantity": "Quantity",
+    "bomLinkNotes": "Notes",
     "materialcolorShortDescription": "Short Description",
     "materialcolorLongDescription": "Long Description",
     "materialComments": "Material Comments",
@@ -412,10 +3237,162 @@
       {
         "product": "MF3",
         "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size": "l",
+        "destination": "AU",
+        "sku": "100150",
+        "manufacturer": "GNC - Giant China-GC"
+      },
+      {
+        "product": "MF3",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size": "l",
+        "destination": "CA",
+        "sku": "100152",
+        "manufacturer": "GNC - Giant China-GC"
+      },
+      {
+        "product": "MF3",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size": "l",
+        "destination": "CN",
+        "sku": "100154",
+        "manufacturer": "GNC - Giant China-GC"
+      },
+      {
+        "product": "MF3",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size": "xl",
+        "destination": "AU",
+        "sku": "100158",
+        "manufacturer": "GNC - Giant China-GC"
+      },
+      {
+        "product": "MF3",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size": "xl",
+        "destination": "CA",
+        "sku": "100160",
+        "manufacturer": "GNC - Giant China-GC"
+      },
+      {
+        "product": "MF3",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size": "xl",
+        "destination": "CN",
+        "sku": "100162",
+        "manufacturer": "GNC - Giant China-GC"
+      },
+      {
+        "product": "MF3",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size": "l",
+        "destination": "AU",
+        "sku": "100166",
+        "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC"
+      },
+      {
+        "product": "MF3",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size": "l",
+        "destination": "CA",
+        "sku": "100167",
+        "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC"
+      },
+      {
+        "product": "MF3",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size": "l",
+        "destination": "CN",
+        "sku": "100168",
+        "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC"
+      },
+      {
+        "product": "MF3",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size": "xl",
+        "destination": "AU",
+        "sku": "100170",
+        "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC"
+      },
+      {
+        "product": "MF3",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size": "xl",
+        "destination": "CA",
+        "sku": "100171",
+        "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC"
+      },
+      {
+        "product": "MF3",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size": "xl",
+        "destination": "CN",
+        "sku": "100172",
+        "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC"
+      },
+      {
+        "product": "MF3",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size": "m",
+        "destination": "AU",
+        "sku": "100180",
+        "manufacturer": "GNC - Giant China-GC"
+      },
+      {
+        "product": "MF3",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size": "m",
+        "destination": "CA",
+        "sku": "100181",
+        "manufacturer": "GNC - Giant China-GC"
+      },
+      {
+        "product": "MF3",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size": "m",
+        "destination": "CN",
+        "sku": "100182",
+        "manufacturer": "GNC - Giant China-GC"
+      },
+      {
+        "product": "MF3",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size": "m",
+        "destination": "AU",
+        "sku": "100183",
+        "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC"
+      },
+      {
+        "product": "MF3",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size": "m",
+        "destination": "CA",
+        "sku": "100184",
+        "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC"
+      },
+      {
+        "product": "MF3",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size": "m",
+        "destination": "CN",
+        "sku": "100185",
+        "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC"
+      },
+      {
+        "product": "MF3",
+        "color": "RD-red(red) TL-yellow(yellow) (MF3)",
+        "size": "s",
+        "destination": "CA",
+        "sku": "100476",
+        "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC"
+      },
+      {
+        "product": "MF3",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
         "size": "s",
         "destination": "CA",
         "sku": "100480",
-        "manufacturer": "sup1"
+        "manufacturer": "GNC - Giant China-GC"
       },
       {
         "product": "MF3",
@@ -423,7 +3400,7 @@
         "size": "s",
         "destination": "CA",
         "sku": "100484",
-        "manufacturer": "sup1"
+        "manufacturer": "GNC - Giant China-GC"
       }
     ],
     "productId": "MF3",
