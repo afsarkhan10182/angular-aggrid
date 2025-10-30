@@ -113,6 +113,10 @@
   background: #059669;
 }
 
+.item-icon.default {
+  background: #64748b;
+}
+
 .item-content {
   display: flex;
   flex-direction: column;
@@ -236,6 +240,45 @@
   font-size: 14px;
   font-weight: 600;
   color: #1e293b;
+}
+
+/* Details Card */
+.details-card {
+  padding: 28px;
+  background: #f3f4f6;
+  border-bottom: 2px solid #d1d5db;
+}
+
+.details-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.detail-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+  word-wrap: break-word;
 }
 
 /* SKU Portfolio */

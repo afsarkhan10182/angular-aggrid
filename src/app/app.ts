@@ -37,10 +37,10 @@ export class App implements OnInit {
   public showExpiredData = false;
   public expiredDataCount = 0;
 
-  // Modal state
-  public showPartModal = false;
-  public selectedPartData: any = {};
-  public selectedPartSkuData: any[] = [];
+  // Material modal state
+  public showMaterialModal = false;
+  public selectedMaterialData: any = {};
+  public selectedMaterialSkuData: any[] = [];
 
   // Search functionality
   public searchText: string = '';
@@ -953,35 +953,72 @@ export class App implements OnInit {
         }
       }
     } else if (event.colDef.field === 'part') {
+      // Part column clicks are handled differently - no modal functionality for parts
+      return;
+    } else if (event.colDef.field === 'material') {
       // Don't open modal for new rows - they are in edit mode
       if (event.data && event.data.isNewRow) {
         return; // Skip modal opening for new rows
       }
 
-      // Check if it's a clickable part for modal
+      // Open material modal if clicking on a material header or direct row with material data
       if (
-        this.clickableParts.has(event.value?.toString()) ||
-        this.clickableParts.has(parseInt(event.value?.toString()))
+        event.data &&
+        (event.data.isMaterialHeader || event.data.isDirectRow) &&
+        event.data.material
       ) {
-        this.openPartModal(event.value?.toString());
+        this.openMaterialModal(event.data);
       }
     }
   }
 
-  openPartModal(partId: string): void {
-    // Find the part data from the current row data
-    const partData = this.rowData.find((row) => row.part.toString() === partId);
-    if (partData) {
-      this.selectedPartData = partData;
-      this.selectedPartSkuData = this.dataService.getSkuDataForPart(partData);
-      this.showPartModal = true;
+  openMaterialModal(materialData: any): void {
+    // Use material data directly - it already contains all the necessary fields
+    // Material headers carry parent data including supplier, dates, SKUs, etc.
+    if (materialData) {
+      // Get column mapping to determine which fields to include
+      const columnMapping = this.dataService.getColumnMapping();
+
+      // Prepare material data with all available fields
+      // Check for both display field names and backend field names
+      const materialModalData: any = {
+        part: materialData.material || materialData.part,
+        supplier: materialData.supplier,
+        color: materialData.color,
+        feature: materialData.feature || materialData.bomLinkFeature || '',
+        qty: materialData.qty || materialData.quantity || '',
+        startDate: materialData.startDate || materialData.bomLinkStartDate || '',
+        endDate: materialData.endDate || materialData.bomLinkEndDate || '',
+        shortDesc: materialData.shortDesc || materialData.materialcolorShortDescription || '',
+        longDesc: materialData.longDesc || materialData.materialcolorLongDescription || '',
+        uom: materialData.uom || '',
+        partName: materialData.partName || '',
+        materialDescription: materialData.materialDescription || '',
+        supplierDescription: materialData.supplierDescription || '',
+        colorDescription: materialData.colorDescription || '',
+        materialSupplierComments: materialData.materialSupplierComments || '',
+      };
+
+      // Add all other fields from column mapping that exist in materialData
+      Object.keys(columnMapping).forEach((fieldKey) => {
+        if (materialData.hasOwnProperty(fieldKey) && materialModalData[fieldKey] === undefined) {
+          materialModalData[fieldKey] = materialData[fieldKey] || '';
+        }
+      });
+
+      this.selectedMaterialData = materialModalData;
+
+      // Get SKU data for the material (material headers already have SKU fields)
+      this.selectedMaterialSkuData = this.dataService.getSkuDataForPart(materialData);
+
+      this.showMaterialModal = true;
     }
   }
 
-  closePartModal(): void {
-    this.showPartModal = false;
-    this.selectedPartData = {};
-    this.selectedPartSkuData = [];
+  closeMaterialModal(): void {
+    this.showMaterialModal = false;
+    this.selectedMaterialData = {};
+    this.selectedMaterialSkuData = [];
   }
 
   trackFieldChange(params: any): void {
