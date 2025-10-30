@@ -183,8 +183,10 @@ export class App implements OnInit {
 
     sectionRow.isExpanded = !sectionRow.isExpanded;
 
-    // Update the grid with the new data
-    this.displayData = this.flattenHierarchicalData(this.rowData);
+    // Update using setGridOption (like add/delete rows) - prevents scroll jump
+    const flatData = this.flattenHierarchicalData(this.rowData);
+    this.displayData = flatData;
+    this.gridApi.setGridOption('rowData', flatData);
   }
 
   // Toggle material expansion
@@ -216,8 +218,10 @@ export class App implements OnInit {
     if (!materialRow) return;
     materialRow.isExpanded = !materialRow.isExpanded;
 
-    // Update the grid with the new data
-    this.displayData = this.flattenHierarchicalData(this.rowData);
+    // Update using setGridOption (like add/delete rows) - prevents scroll jump
+    const flatData = this.flattenHierarchicalData(this.rowData);
+    this.displayData = flatData;
+    this.gridApi.setGridOption('rowData', flatData);
   }
 
   private updateGridData(): void {

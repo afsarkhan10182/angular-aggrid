@@ -317,7 +317,7 @@ export class GridCommonService {
       suppressDragLeaveHidesColumns: false,
       suppressFieldDotNotation: true,
       suppressContextMenu: false,
-      suppressScrollOnNewData: false,
+      suppressScrollOnNewData: true, // Prevent scroll jump when accordion expands/collapses
       allowDragFromColumnsToolPanel: true,
       suppressRowVirtualisation: false,
       domLayout: 'normal',
