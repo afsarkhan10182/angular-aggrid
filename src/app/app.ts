@@ -448,8 +448,8 @@ export class App implements OnInit {
     columns.push({
       headerName: '',
       field: 'material',
-      width: 300,
-      minWidth: 200,
+      width: 200,
+      minWidth: 150,
       pinned: 'left',
       sortable: false,
       filter: false,
