@@ -8,27 +8,29 @@
   padding: 0;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+html, body {
+  height: 100%;
   margin: 0;
   padding: 0;
+  overflow: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: #f8fafc;
   color: #1e293b;
 }
 
-/* App layout - Professional spacing */
+/* App layout - Full viewport, no scroll */
 .app-container {
   max-width: 1600px;
   margin: 0 auto;
   padding: 20px;
   background: white;
-  min-height: 100vh;
   height: 100vh;
-  position: relative;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .app-header {
@@ -42,6 +44,7 @@ body {
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   gap: 16px;
+  flex-shrink: 0;
 }
 
 .app-header h2 {
@@ -132,12 +135,15 @@ body {
   background: #f8fafc;
   border-radius: 6px;
   padding: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 0;
   border: 1px solid #e2e8f0;
   position: sticky;
   top: 0;
   z-index: 100;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .controls-row {
@@ -370,50 +376,20 @@ body {
 .ag-grid-section {
   display: flex;
   flex: 1;
-  min-height: 500px;
+  min-height: 0;
   position: relative;
-  border-radius: 6px;
-  overflow-x: auto;
-  overflow-y: visible;
-  /* Smooth horizontal scrolling with hardware acceleration */
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch; /* iOS smooth scrolling */
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: #cbd5e1 #f1f5f9; /* Firefox */
-  /* Hardware acceleration for smooth scrolling */
-  will-change: scroll-position;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  /* Prevent scroll chaining */
-  overscroll-behavior-x: contain;
+  overflow: hidden;
 }
 
 /* AG Grid container - Clean design with proper scrolling */
 .ag-grid-container-wrapper {
   flex: 1;
-  overflow-x: auto;
-  overflow-y: visible;
+  overflow: hidden;
   border: 1px solid #e2e8f0;
-  border-right: none; /* No right border - toggle button will provide it */
-  border-radius: 6px 0 0 6px;
-  background: white;
-  position: relative;
-  line-height: 1;
-  /* Smooth horizontal scrolling with hardware acceleration */
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch; /* iOS smooth scrolling */
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: #cbd5e1 #f1f5f9; /* Firefox */
-  /* Hardware acceleration for smooth scrolling */
-  will-change: scroll-position;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  /* Prevent scroll chaining */
-  overscroll-behavior-x: contain;
+  border-right: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 /* Custom scrollbar styling for horizontal scrolling - Webkit browsers */
@@ -443,12 +419,11 @@ body {
 }
 
 .ag-grid-container {
-  min-width: 100%;
-  width: max-content;
-  height: 100%;
-  position: relative;
-  overflow: visible;
-  background: white;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* AG Grid theme - CLEAN & ADJUSTABLE with VISIBLE GRID LINES */
