@@ -486,22 +486,7 @@ export class App implements OnInit {
       cellStyle: (params: any) => {
         return this.getHierarchicalCellStyle(params);
       },
-      // Add autocomplete functionality for new rows
-      editable: (params: any) => {
-        const isEditable = params.data && params.data.isNewRow;
-        console.log('🟦 Material column editable() called:', {
-          isEditable,
-          isNewRow: params.data?.isNewRow,
-          hasData: !!params.data,
-          field: params.colDef?.field,
-        });
-        return isEditable;
-      },
-      cellEditor: 'AutocompleteCellEditorComponent', // Use string name after registering in components
-      cellEditorParams: (params: any) => ({
-        values: this.getAvailableMaterials(), // Use same simple pattern as Part column
-        placeholder: 'Type to search materials...',
-      }),
+      editable: false, // Material column is not editable - it's just for hierarchical display
     });
 
     // Add columns based on response column mapping
@@ -537,11 +522,17 @@ export class App implements OnInit {
       };
 
       // Add specific cell editors for different field types
-      if (field === 'part') {
-        columnDef.cellEditor = 'AutocompleteCellEditorComponent';
+      if (field === 'bomLinkPart') {
+        columnDef.cellEditor = AutocompleteCellEditorComponent;
         columnDef.cellEditorParams = (params: any) => ({
           values: this.getAvailablePartNumbers(),
           placeholder: 'Type to search part numbers...',
+        });
+      } else if (field === 'material') {
+        columnDef.cellEditor = AutocompleteCellEditorComponent;
+        columnDef.cellEditorParams = (params: any) => ({
+          values: this.getAvailableMaterials(),
+          placeholder: 'Type to search materials...',
         });
       } else if (field === 'qty' || field === 'quantity') {
         columnDef.cellEditor = 'agNumberCellEditor';
@@ -559,7 +550,6 @@ export class App implements OnInit {
           return true;
         };
       } else if (field === 'supplier' || field === 'color' || field === 'feature') {
-        // Explicitly set to use AG Grid's default text editor, NOT AutocompleteCellEditorComponent
         columnDef.cellEditor = 'agTextCellEditor';
         columnDef.cellEditorParams = (params: any) => {
           let values: string[] = [];
@@ -1036,7 +1026,7 @@ export class App implements OnInit {
           return;
         }
       }
-    } else if (event.colDef.field === 'part') {
+    } else if (event.colDef.field === 'part' || event.colDef.field === 'bomLinkPart') {
       // Part column clicks are handled differently - no modal functionality for parts
       return;
     } else if (event.colDef.field === 'material') {

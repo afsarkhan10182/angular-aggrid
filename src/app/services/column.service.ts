@@ -1032,7 +1032,7 @@ export class ColumnService {
       };
 
       // Special handling for specific columns
-      if (fieldKey === 'part' || fieldKey === 'material') {
+      if (fieldKey === 'part' || fieldKey === 'bomLinkPart' || fieldKey === 'material') {
         columnDef.pinned = 'left';
         columnDef.width = 130;
         columnDef.minWidth = 120;
@@ -1043,8 +1043,14 @@ export class ColumnService {
         };
         columnDef.cellEditor = AutocompleteCellEditorComponent;
         columnDef.cellEditorParams = (params: any) => ({
-          values: componentInstance.getAvailablePartNumbers(),
-          placeholder: fieldKey === 'material' ? 'Type to search materials...' : 'Type to search part numbers...',
+          values:
+            fieldKey === 'material'
+              ? componentInstance.getAvailableMaterials()
+              : componentInstance.getAvailablePartNumbers(),
+          placeholder:
+            fieldKey === 'material'
+              ? 'Type to search materials...'
+              : 'Type to search part numbers...',
           context: {
             dataService: dataService,
           },
