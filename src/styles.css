@@ -1532,29 +1532,20 @@ body {
   background: #fff9c4 !important;
 }
 
-/* Section header rows - simple unified row appearance */
-/* Apply border removal to ALL cells first, then restore borders for actions column */
-.ag-theme-alpine .ag-row.section-header-row .ag-cell,
-.ag-theme-alpine .ag-center-cols-container .ag-row.section-header-row .ag-cell,
-.ag-theme-alpine .ag-left-cols-container .ag-row.section-header-row .ag-cell {
+/* Section header rows - Remove vertical borders except for actions column */
+.ag-theme-alpine .ag-row.section-header-row .ag-cell {
   background-color: #eff6ff !important;
   border-top: none !important;
   border-bottom: 1px solid #cbd5e1 !important;
-  /* Remove vertical borders - override CSS variable borders immediately */
   border-right: none !important;
   border-left: none !important;
-  border-right-width: 0 !important;
-  border-left-width: 0 !important;
-  border-right-color: transparent !important;
-  border-left-color: transparent !important;
+  --ag-cell-vertical-border-width: 0 !important;
 }
 
-/* Restore borders for actions column (first child) only */
-.ag-theme-alpine .ag-row.section-header-row .ag-cell:first-child,
+/* Keep actions column border visible */
 .ag-theme-alpine .ag-row.section-header-row .ag-cell[col-id='actions'] {
-  border-right: var(--ag-cell-vertical-border-width) var(--ag-row-border-style) var(--ag-row-border-color) !important;
-  border-right-width: var(--ag-cell-vertical-border-width) !important;
-  border-right-color: var(--ag-row-border-color) !important;
+  border-right: 1px solid #e2e8f0 !important;
+  --ag-cell-vertical-border-width: 1px !important;
 }
 
 /* Force red text for matching values and inherit backgrounds - High specificity */

@@ -468,7 +468,7 @@ export class App implements OnInit {
     columns.push({
       headerName: '',
       field: 'material',
-      width: 200,
+      width: 150,
       minWidth: 150,
       pinned: 'left',
       sortable: false,
@@ -793,14 +793,16 @@ export class App implements OnInit {
 
   getHierarchicalCellStyle(params: any): any {
     const data = params.data;
+    const isSectionHeader = data?.isSectionHeader;
+    const isActionsColumn = this.isActionsColumn(params);
 
-    if (data.isSectionHeader) {
+    if (isSectionHeader) {
       return {
-        backgroundColor: '#eff6ff', // Light blue - lighter version of selection color (#dbeafe)
+        backgroundColor: '#eff6ff',
         borderTop: 'none',
         borderBottom: 'none',
-        borderRight: 'none', // Remove right border for seamless row
-        borderLeft: 'none', // Remove left border for seamless row
+        borderRight: isActionsColumn ? '1px solid #e2e8f0' : 'none',
+        borderLeft: 'none',
         fontWeight: 'bold',
       };
     }
@@ -837,16 +839,17 @@ export class App implements OnInit {
 
   getDataCellStyle(params: any): any {
     const data = params.data;
+    const isSectionHeader = data?.isSectionHeader;
+    const isActionsColumn = this.isActionsColumn(params);
 
-    if (data.isSectionHeader) {
-      // Make section header cells seamless - remove all vertical borders
+    if (isSectionHeader) {
       return {
-        backgroundColor: '#eff6ff', // Light blue - lighter version of selection color (#dbeafe)
+        backgroundColor: '#eff6ff',
         color: 'transparent',
         borderTop: 'none',
         borderBottom: 'none',
-        borderRight: 'none', // Remove right border for seamless row
-        borderLeft: 'none', // Remove left border for seamless row
+        borderRight: isActionsColumn ? '1px solid #e2e8f0' : 'none',
+        borderLeft: 'none',
       };
     }
 
@@ -1202,6 +1205,13 @@ export class App implements OnInit {
 
   getUniqueFeatures(): string[] {
     return this.gridCommonService.getUniqueFeatures(this.rowData);
+  }
+
+  // Helper: Check if column is actions column
+  private isActionsColumn(params: any): boolean {
+    const fieldName = params.colDef?.field;
+    const colId = params.column?.getColId() || params.colDef?.colId || fieldName;
+    return fieldName === 'actions' || colId === 'actions';
   }
 
   // Get all columns for the visibility panel (real + virtual)
