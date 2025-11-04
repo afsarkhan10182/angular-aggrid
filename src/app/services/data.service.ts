@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, map, catchError, throwError } from 'rxjs';
+import { Observable, map, catchError, throwError, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface PartData {
@@ -98,6 +98,39 @@ export class DataService {
   }
 
   /**
+   * Get Complex BOM data for a specific material
+   * @param materialId Material ID or part number
+   * @returns Observable of material details in key-value format
+   */
+  getComplexBOM(materialId: string): Observable<any> {
+    let apiUrl = environment.useMockApi
+      ? `/api/complexBOM/${materialId}` // Mock endpoint
+      : `${environment.serverHostUrl}/api/complexBOM/${materialId}`;
+
+    return this.http.get<any>(apiUrl).pipe(
+      map((data) => {
+        // Transform API response to key-value pairs if needed
+        // If API already returns key-value format, return as-is
+        if (data && typeof data === 'object' && !Array.isArray(data)) {
+          return data;
+        }
+        // If API returns array, convert to object
+        if (Array.isArray(data)) {
+          const keyValuePairs: any = {};
+          data.forEach((item: any) => {
+            if (item.key && item.value !== undefined) {
+              keyValuePairs[item.key] = item.value;
+            }
+          });
+          return keyValuePairs;
+        }
+        return data;
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Search materials by query string
    * @param query Search query string
    * @returns Observable of material search results
@@ -130,6 +163,102 @@ export class DataService {
         }));
       }),
       catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Search materials from mock2.json by query string
+   * Currently uses mock2.json data, later will be replaced with API call
+   * @param query Search query string
+   * @returns Observable of material search results
+   */
+  searchMaterialsFromMock2(query: string): Observable<any[]> {
+    // For now, load from mock2.json
+    // Later: Replace this with API call when backend is ready
+    const apiUrl = '/mock2.json';
+
+    return this.http.get<any>(apiUrl).pipe(
+      map((data) => {
+        if (!data || !data.mbom || !Array.isArray(data.mbom)) {
+          return [];
+        }
+
+        const queryLower = query.toLowerCase().trim();
+        if (!queryLower || queryLower.length < 1) {
+          return [];
+        }
+
+        // Filter materials that match the query
+        const matchedMaterials = data.mbom.filter((material: any) => {
+          const materialName = (material.material || '').toLowerCase();
+          const partName = (material.part || '').toLowerCase();
+          const materialDesc = (material.materialDescription || '').toLowerCase();
+          
+          return (
+            materialName.includes(queryLower) ||
+            partName.includes(queryLower) ||
+            materialDesc.includes(queryLower)
+          );
+        });
+
+        // Transform to material options format
+        return matchedMaterials.map((material: any) => ({
+          id: material.flexBomLinkID || material.branchID,
+          name: material.material || material.part || '',
+          description: material.materialDescription || '',
+          supplier: material.supplier || material.supplierDescription || '',
+          color: material.color || material.colorDescription || '',
+          feature: material.bomLinkFeature || '',
+          startDate: material.bomLinkStartDate || '',
+          endDate: material.bomLinkEndDate || '',
+          qty: material.quantity || '',
+          section: material.section || '',
+          part: material.part || '',
+          bomLinkPart: material.bomLinkPart || '',
+          bomLinkNotes: material.bomLinkNotes || '',
+          bomLinkIncludeInSpecSheet: material.bomLinkIncludeInSpecSheet || '',
+          bomLinkSpecSheetExtra: material.bomLinkSpecSheetExtra || '',
+          sortingNumber: material.sortingNumber || '',
+          // Include the full material object for later population
+          fullData: material,
+          ...material,
+        }));
+      }),
+      catchError((error) => {
+        return of([]);
+      })
+    );
+  }
+
+  /**
+   * Get material data by material name/ID from mock2.json
+   * Currently uses mock2.json data, later will be replaced with API call
+   * @param materialName Material name or ID
+   * @returns Observable of material data
+   */
+  getMaterialFromMock2(materialName: string): Observable<any | null> {
+    // For now, load from mock2.json
+    // Later: Replace this with API call when backend is ready
+    const apiUrl = '/mock2.json';
+
+    return this.http.get<any>(apiUrl).pipe(
+      map((data) => {
+        if (!data || !data.mbom || !Array.isArray(data.mbom)) {
+          return null;
+        }
+
+        // Find exact match or closest match
+        const material = data.mbom.find(
+          (m: any) =>
+            (m.material && m.material.toLowerCase() === materialName.toLowerCase()) ||
+            (m.part && m.part.toLowerCase() === materialName.toLowerCase())
+        );
+
+        return material || null;
+      }),
+      catchError((error) => {
+        return of(null);
+      })
     );
   }
 

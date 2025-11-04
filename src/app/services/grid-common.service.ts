@@ -18,63 +18,27 @@ export class GridCommonService {
   }
 
   /**
-   * Force horizontal scrollbar visibility for Firefox
+   * Force horizontal scrollbar visibility - Simple and reliable
    */
   forceHorizontalScrollbarVisibility(gridApi: GridApi): void {
     if (!gridApi) return;
 
-    gridApi.refreshCells({ force: true });
-
-    const horizontalScrollViewport = document.querySelector(
-      '.ag-body-horizontal-scroll-viewport'
-    ) as HTMLElement;
-    if (horizontalScrollViewport) {
-      horizontalScrollViewport.style.overflowX = 'auto';
-      horizontalScrollViewport.style.scrollbarWidth = 'auto';
-      horizontalScrollViewport.style.scrollbarColor = '#cbd5e1 #f1f5f9';
-      horizontalScrollViewport.style.minWidth = 'max-content';
-      horizontalScrollViewport.style.width = 'max-content';
-      horizontalScrollViewport.style.setProperty('-moz-overflow-scrolling', 'touch');
-      horizontalScrollViewport.style.setProperty('-moz-box-sizing', 'border-box');
-      horizontalScrollViewport.style.setProperty('-moz-transform', 'translateZ(0)');
-      horizontalScrollViewport.style.display = 'block';
-    }
-
-    const gridContainer = document.querySelector('.ag-grid-container-wrapper') as HTMLElement;
-    if (gridContainer) {
-      gridContainer.style.overflowX = 'auto';
-      gridContainer.style.setProperty('-moz-overflow-scrolling', 'touch');
-    }
-
+    // Apply styles after a short delay to ensure DOM is ready
     setTimeout(() => {
+      const horizontalScrollViewport = document.querySelector(
+        '.ag-body-horizontal-scroll-viewport'
+      ) as HTMLElement;
+      
       if (horizontalScrollViewport) {
-        horizontalScrollViewport.style.display = 'block';
-        horizontalScrollViewport.offsetHeight;
-        horizontalScrollViewport.style.setProperty('overflow-x', 'auto');
-        horizontalScrollViewport.style.setProperty('scrollbar-width', 'auto');
+        horizontalScrollViewport.style.overflowX = 'auto';
+        horizontalScrollViewport.style.overflowY = 'hidden';
+      }
+
+      const bodyViewport = document.querySelector('.ag-body-viewport') as HTMLElement;
+      if (bodyViewport) {
+        bodyViewport.style.overflowX = 'auto';
       }
     }, 100);
-
-    setTimeout(() => {
-      this.forceOldFirefoxScroll();
-    }, 200);
-  }
-
-  /**
-   * Additional method specifically for old Firefox
-   */
-  private forceOldFirefoxScroll(): void {
-    const horizontalScrollViewport = document.querySelector(
-      '.ag-body-horizontal-scroll-viewport'
-    ) as HTMLElement;
-    if (horizontalScrollViewport) {
-      horizontalScrollViewport.style.setProperty('overflow-x', 'auto', 'important');
-      horizontalScrollViewport.style.setProperty('scrollbar-width', 'auto', 'important');
-      horizontalScrollViewport.style.setProperty('min-width', 'max-content', 'important');
-
-      horizontalScrollViewport.scrollLeft = 1;
-      horizontalScrollViewport.scrollLeft = 0;
-    }
   }
 
   /**
@@ -233,6 +197,25 @@ export class GridCommonService {
   }
 
   /**
+   * Get available materials
+   */
+  getAvailableMaterials(rowData: any[]): string[] {
+    const materials = new Set<string>();
+    rowData.forEach((row) => {
+      if (
+        row.material &&
+        !row.isNewRow &&
+        !row.isSectionHeader &&
+        !row.isMaterialHeader &&
+        !row.isBranchHeader
+      ) {
+        materials.add(row.material.toString());
+      }
+    });
+    return Array.from(materials).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  }
+
+  /**
    * Get unique suppliers
    */
   getUniqueSuppliers(rowData: any[]): string[] {
@@ -308,11 +291,17 @@ export class GridCommonService {
   getCommonGridOptions(componentInstance: any): GridOptions {
     return {
       theme: 'legacy',
-      animateRows: true,
+      animateRows: false, // Disable row animations to prevent flickering
       enableCellTextSelection: true,
       rowSelection: 'single' as const,
+      suppressRowClickSelection: true, // We handle selection manually in onCellClicked
+      suppressMultiRangeSelection: true, // Prevent multiple range selections
       suppressColumnVirtualisation: false,
       suppressHorizontalScroll: false,
+      // Enable horizontal scrolling for wide grids
+      enableCharts: false,
+      // Enable browser tooltips for cells
+      enableBrowserTooltips: true,
       suppressColumnMoveAnimation: false,
       suppressDragLeaveHidesColumns: false,
       suppressFieldDotNotation: true,
@@ -339,6 +328,9 @@ export class GridCommonService {
       getRowClass: (params) => {
         let classes = [];
 
+        if (params.data && params.data.isSectionHeader) {
+          classes.push('section-header-row');
+        }
         if (params.data && params.data.isExpired) {
           classes.push('expired-row');
         }
@@ -367,9 +359,34 @@ export class GridCommonService {
       },
       onGridReady: (params) => {
         componentInstance.gridApi = params.api;
+        this.forceHorizontalScrollbarVisibility(params.api);
+      },
+      onRowSelected: (params) => {
+        // Ensure only one row can be selected at a time
+        if (params.node.isSelected()) {
+          // Deselect all other rows (use setTimeout to batch and prevent flickering)
+          setTimeout(() => {
+            params.api.forEachNode((node) => {
+              if (node.id !== params.node.id && node.isSelected()) {
+                node.setSelected(false);
+              }
+            });
+          }, 0);
+        }
+      },
+      onSelectionChanged: (params) => {
+        // Use setTimeout to batch operations and prevent flickering
         setTimeout(() => {
-          this.forceHorizontalScrollbarVisibility(params.api);
-        }, 100);
+          const selectedNodes = params.api.getSelectedNodes();
+          if (selectedNodes.length > 0) {
+            // If multiple selected, keep only the first one
+            if (selectedNodes.length > 1) {
+              selectedNodes.slice(1).forEach(node => node.setSelected(false));
+            }
+            // Don't auto-scroll - let user control scrolling to prevent layout issues
+            // Only scroll if row is completely out of view (not just partially)
+          }
+        }, 0);
       },
       onCellValueChanged: (params) => {
         // Track changes for all editable fields
@@ -409,6 +426,13 @@ export class GridCommonService {
           }
         }
       },
+      onCellEditingStarted: (params) => {
+        // Cell editing started
+      },
+      onCellMouseOver: (params) => {
+        // Don't manually set title - let AG Grid's tooltipValueGetter handle it
+        // This allows tooltipValueGetter to work properly with enableBrowserTooltips
+      },
       onCellEditingStopped: (params) => {
         // Only commit if there's actually a new value and it's not a date or quantity column
         // Date and quantity columns have their own valueSetter that handles the conversion properly
@@ -439,8 +463,34 @@ export class GridCommonService {
           if (componentInstance.toggleAccordion) {
             componentInstance.toggleAccordion(params.data.branchID);
           }
+          return; // Don't toggle selection when clicking accordion
+        }
+
+        // Skip selection toggle for actions column (user wants to click action buttons)
+        if (params.colDef.field === 'actions') {
+          return;
+        }
+        
+        // Toggle row selection on cell click (but not during text selection)
+        if (params.event) {
+          const mouseEvent = params.event as MouseEvent;
+          // Clear any text selection first
+          const selection = window.getSelection();
+          if (selection && selection.toString().trim() === '') {
+            // Only toggle row if no text is selected and no modifier keys pressed
+            if (!mouseEvent.shiftKey && !mouseEvent.ctrlKey && !mouseEvent.metaKey) {
+              // Use setTimeout to batch selection update and prevent flickering
+              setTimeout(() => {
+                // Toggle selection: if selected, deselect; if not selected, select
+                const isSelected = params.node.isSelected();
+                params.node.setSelected(!isSelected);
+              }, 0);
+            }
+          }
         }
       },
+      // Prevent row selection during scrolling/dragging
+      suppressRowDeselection: false, // Allow deselecting
       onCellKeyDown: (params) => {
         // Handle Ctrl+V for paste in SKU columns of new rows
         if (

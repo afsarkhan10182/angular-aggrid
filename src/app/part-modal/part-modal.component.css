@@ -6,6 +6,232 @@
   width: 92%;
 }
 
+/* Material Search Autocomplete Styles */
+.material-search-card {
+  padding: 28px;
+  background: #ffffff;
+  border-bottom: 2px solid #e2e8f0;
+  margin-top: 0;
+}
+
+.material-search-container {
+  position: relative;
+  width: 100%;
+}
+
+.material-search-input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  outline: none;
+  transition: all 0.2s ease;
+  background: #ffffff;
+  color: #1e293b;
+  box-sizing: border-box;
+}
+
+.material-search-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.material-search-input::placeholder {
+  color: #94a3b8;
+}
+
+.material-autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 10000;
+  margin-top: 4px;
+  display: block !important;
+}
+
+.material-autocomplete-dropdown .dropdown-header {
+  padding: 10px 16px;
+  background: #f8fafc;
+  font-size: 12px;
+  color: #64748b;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 600;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.material-autocomplete-dropdown .dropdown-option {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.15s ease;
+  background: #ffffff;
+}
+
+.material-autocomplete-dropdown .dropdown-option:hover,
+.material-autocomplete-dropdown .dropdown-option.selected {
+  background: #f0f9ff;
+  border-left: 3px solid #3b82f6;
+  padding-left: 13px;
+}
+
+.material-autocomplete-dropdown .dropdown-option:last-child {
+  border-bottom: none;
+  border-radius: 0 0 8px 8px;
+}
+
+.material-autocomplete-dropdown .material-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.material-autocomplete-dropdown .material-name {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 14px;
+}
+
+.material-autocomplete-dropdown .material-details {
+  font-size: 12px;
+  color: #64748b;
+  font-style: italic;
+}
+
+/* Key-Value Table Styles */
+.key-value-table-card {
+  padding: 28px;
+  background: #ffffff;
+  border-bottom: 2px solid #e2e8f0;
+  margin-top: 0;
+}
+
+.key-value-table-card .card-header {
+  margin-bottom: 20px;
+}
+
+.table-container {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.key-value-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.key-value-table thead {
+  background: #f8fafc;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.key-value-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: none !important;
+  border-right: none !important;
+  border-left: none !important;
+}
+
+.key-value-table th:first-child {
+  border-right: none !important;
+}
+
+.key-value-table th:last-child {
+  border-left: none !important;
+}
+
+.key-value-table tbody tr {
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color 0.2s ease;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+.key-value-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.key-value-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.key-value-table td {
+  border: none !important;
+  border-right: none !important;
+  border-left: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+}
+
+.key-value-table .key-cell {
+  padding: 12px 16px;
+  font-weight: 500;
+  color: #1e293b;
+  width: 40%;
+  vertical-align: top;
+  border-right: none !important;
+  border-left: none !important;
+}
+
+.key-value-table .value-cell {
+  padding: 12px 16px;
+  color: #475569;
+  width: 60%;
+  word-break: break-word;
+  vertical-align: top;
+  border-right: none !important;
+  border-left: none !important;
+}
+
+/* SKU Row Styling - Better visual grouping */
+.key-value-table tbody tr.sku-row {
+  background-color: #f8fafc;
+  border-top: 2px solid #e2e8f0;
+}
+
+.key-value-table tbody tr.first-sku-row {
+  border-top: 3px solid #3b82f6;
+  background-color: #eff6ff;
+}
+
+.key-value-table tbody tr.sku-row:hover {
+  background-color: #f1f5f9;
+}
+
+.key-value-table tbody tr.first-sku-row:hover {
+  background-color: #dbeafe;
+}
+
+.key-value-table .sku-key {
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.key-value-table .sku-value {
+  font-weight: 500;
+  color: #1e293b;
+  font-family: 'Courier New', monospace;
+}
+
 .part-icon {
   width: 48px;
   height: 48px;
@@ -473,6 +699,14 @@
   .empty-state {
     margin: 20px;
     padding: 32px 20px;
+  }
+
+  .material-search-card {
+    padding: 20px;
+  }
+
+  .material-autocomplete-dropdown {
+    max-height: 250px;
   }
 }
 

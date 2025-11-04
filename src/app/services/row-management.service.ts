@@ -28,6 +28,7 @@ export class RowManagementService {
       startDate: '',
       endDate: '',
       qty: 0,
+      material: '', // Add empty material field
       isNewRow: true,
       newRowId: newRowIdValue, // Add the unique ID to the row data
       insertAfter: rowIndex,

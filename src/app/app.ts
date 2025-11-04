@@ -152,7 +152,20 @@ export class App implements OnInit {
     }
 
     this.defaultColDef = this.columnService.getDefaultColDef(this);
-    this.gridOptions = this.gridCommonService.getCommonGridOptions(this);
+    const commonOptions = this.gridCommonService.getCommonGridOptions(this);
+    // Merge with our component registration - ensure components are preserved
+    this.gridOptions = {
+      ...commonOptions,
+      components: {
+        ...(commonOptions.components || {}),
+        AutocompleteCellEditorComponent: AutocompleteCellEditorComponent,
+      },
+      // Set dataService in context so AutocompleteCellEditor can access it
+      context: {
+        ...(commonOptions.context || {}),
+        dataService: this.dataService,
+      },
+    };
 
     // Initialize authentication check
     this.checkAuthentication();
@@ -388,6 +401,13 @@ export class App implements OnInit {
 
       // Make only some parts clickable (random selection from first 20 rows)
       this.clickableParts = this.gridCommonService.initializeClickableParts(this.displayData);
+
+      // Force horizontal scroll after data is loaded
+      if (this.gridApi) {
+        setTimeout(() => {
+          this.gridCommonService.forceHorizontalScrollbarVisibility(this.gridApi);
+        }, 200);
+      }
     });
   }
 
@@ -402,7 +422,7 @@ export class App implements OnInit {
   createHierarchicalColumns(columnMapping: any): ColDef[] {
     const columns: ColDef[] = [];
 
-    // Add Actions column as the first column
+    // Add Actions column as the first column (never changes based on selection)
     columns.push({
       headerName: '',
       field: 'actions',
@@ -453,6 +473,13 @@ export class App implements OnInit {
       pinned: 'left',
       sortable: false,
       filter: false,
+      tooltipValueGetter: (params: any) => {
+        // Always show tooltip for material column
+        if (!params.data) return null;
+        const materialValue = params.data.material || params.value || '';
+        if (!materialValue) return null;
+        return String(materialValue);
+      },
       cellRenderer: (params: any) => {
         return this.renderHierarchicalCell(params);
       },
@@ -461,12 +488,19 @@ export class App implements OnInit {
       },
       // Add autocomplete functionality for new rows
       editable: (params: any) => {
-        return params.data && params.data.isNewRow;
+        const isEditable = params.data && params.data.isNewRow;
+        console.log('🟦 Material column editable() called:', {
+          isEditable,
+          isNewRow: params.data?.isNewRow,
+          hasData: !!params.data,
+          field: params.colDef?.field,
+        });
+        return isEditable;
       },
-      cellEditor: 'AutocompleteCellEditorComponent',
+      cellEditor: 'AutocompleteCellEditorComponent', // Use string name after registering in components
       cellEditorParams: (params: any) => ({
-        values: this.getAvailablePartNumbers(),
-        placeholder: 'Type to search part numbers...',
+        values: this.getAvailableMaterials(), // Use same simple pattern as Part column
+        placeholder: 'Type to search materials...',
       }),
     });
 
@@ -485,7 +519,13 @@ export class App implements OnInit {
           if (params.data.isSectionHeader || params.data.isBranchHeader) {
             return '';
           }
-          return params.value || '';
+          const columnWidth = params.column?.getActualWidth() || columnDef.width || 150;
+          return this.createCellContentWithTooltip(params.value, columnWidth);
+        },
+        tooltipValueGetter: (params: any) => {
+          // Always show tooltip if value exists
+          if (params.value === null || params.value === undefined) return null;
+          return String(params.value);
         },
         cellStyle: (params: any) => {
           return this.getDataCellStyle(params);
@@ -519,7 +559,8 @@ export class App implements OnInit {
           return true;
         };
       } else if (field === 'supplier' || field === 'color' || field === 'feature') {
-        columnDef.cellEditor = 'AutocompleteCellEditorComponent';
+        // Explicitly set to use AG Grid's default text editor, NOT AutocompleteCellEditorComponent
+        columnDef.cellEditor = 'agTextCellEditor';
         columnDef.cellEditorParams = (params: any) => {
           let values: string[] = [];
           if (field === 'supplier') {
@@ -607,11 +648,17 @@ export class App implements OnInit {
         // Show SKU values on material headers (linked BOM) and direct rows
         // Hide SKU values on child rows (subrows) since they're already on material header
         if (data.isMaterialHeader || data.isDirectRow) {
-          return params.value || '';
+          const columnWidth = params.column?.getActualWidth() || 200;
+          return this.createCellContentWithTooltip(params.value, columnWidth);
         }
 
         // Hide on subrows (child rows under material headers)
         return '';
+      },
+      tooltipValueGetter: (params: any) => {
+        // Always show tooltip for SKU columns
+        if (params.value === null || params.value === undefined) return null;
+        return String(params.value);
       },
       cellStyle: (params: any) => {
         return this.getDataCellStyle(params);
@@ -630,23 +677,13 @@ export class App implements OnInit {
       const arrowIcon = data.isExpanded ? '▼' : '▶';
       return `
         <div style="
-          display: flex; 
-          align-items: center; 
-          font-weight: 600; 
-          color: #1e40af; 
-          background: #f8fafc; 
-          padding: 8px 12px; 
-          border-radius: 4px; 
           cursor: pointer; 
-          transition: all 0.2s ease; 
-          border-left: 4px solid #3b82f6;
-          margin: 2px 0;
         " 
              onclick="window.toggleSection('${data.section}')"
              onmouseover="this.style.background='#e0f2fe'; this.style.borderLeftColor='#1d4ed8'"
              onmouseout="this.style.background='#f8fafc'; this.style.borderLeftColor='#3b82f6'">
           <span style="
-            margin-right: 8px; 
+            margin-right: 4px; 
             font-size: 12px; 
             transition: transform 0.2s ease; 
             color: #1e40af;
@@ -665,17 +702,9 @@ export class App implements OnInit {
       // Show section name with accordion functionality, but no material name
       return `
         <div style="
-          display: flex; 
-          align-items: center; 
-          font-weight: 500; 
-          color: #065f46; 
-          background: #eefbf3; 
-          padding: 6px 10px; 
-          border-radius: 3px; 
+          
           cursor: pointer; 
-          transition: all 0.2s ease; 
-          border-left: 3px solid #10b981;
-          margin: 1px 0;
+          
         " 
              onclick="window.toggleMaterial('${data.section}', '${data.material}', ${materialIndex})"
              onmouseover="this.style.background='#dcfce7'; this.style.borderLeftColor='#059669'"
@@ -728,13 +757,50 @@ export class App implements OnInit {
     return '';
   }
 
+  // Helper method to escape HTML for tooltip
+  private escapeHtml(text: string): string {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // Helper method to estimate if text will be truncated based on column width
+  private isTextLikelyTruncated(text: string | null | undefined, columnWidth: number): boolean {
+    if (!text) return false;
+    const textStr = String(text);
+    // Estimate ~8-10 pixels per character (conservative estimate)
+    // Add some padding for cell padding (16px total)
+    const estimatedPixelsNeeded = textStr.length * 9 + 16;
+    return estimatedPixelsNeeded > columnWidth;
+  }
+
+  // Helper method to create cell content with conditional tooltip
+  private createCellContentWithTooltip(value: any, columnWidth: number): string {
+    if (!value && value !== 0) return '';
+    const textStr = String(value);
+    const escapedText = this.escapeHtml(textStr);
+    const shouldShowTooltip = this.isTextLikelyTruncated(textStr, columnWidth);
+
+    // Don't add title attribute here - let AG Grid's tooltipValueGetter handle tooltips
+    // This ensures tooltipValueGetter works properly with enableBrowserTooltips
+    if (shouldShowTooltip) {
+      return `<span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; width: 100%;">${escapedText}</span>`;
+    }
+    // Return plain text without title attribute
+    return escapedText;
+  }
+
   getHierarchicalCellStyle(params: any): any {
     const data = params.data;
 
     if (data.isSectionHeader) {
       return {
-        backgroundColor: '#f3f4f6',
-        borderLeft: '4px solid #3b82f6',
+        backgroundColor: '#eff6ff', // Light blue - lighter version of selection color (#dbeafe)
+        borderTop: 'none',
+        borderBottom: 'none',
+        borderRight: 'none', // Remove right border for seamless row
+        borderLeft: 'none', // Remove left border for seamless row
         fontWeight: 'bold',
       };
     }
@@ -772,7 +838,19 @@ export class App implements OnInit {
   getDataCellStyle(params: any): any {
     const data = params.data;
 
-    if (data.isSectionHeader || data.isMaterialHeader) {
+    if (data.isSectionHeader) {
+      // Make section header cells seamless - remove all vertical borders
+      return {
+        backgroundColor: '#eff6ff', // Light blue - lighter version of selection color (#dbeafe)
+        color: 'transparent',
+        borderTop: 'none',
+        borderBottom: 'none',
+        borderRight: 'none', // Remove right border for seamless row
+        borderLeft: 'none', // Remove left border for seamless row
+      };
+    }
+
+    if (data.isMaterialHeader) {
       return {
         backgroundColor: 'transparent',
         color: 'transparent',
@@ -802,7 +880,6 @@ export class App implements OnInit {
   onGridReady(params: any): void {
     this.gridApi = params.api;
     this.gridCommonService.sizeColumnsToFit(this.gridApi);
-    // Add Firefox compatibility
     this.gridCommonService.forceHorizontalScrollbarVisibility(this.gridApi);
 
     // If data is already loaded, set it to the grid
@@ -977,46 +1054,67 @@ export class App implements OnInit {
   }
 
   openMaterialModal(materialData: any): void {
-    // Use material data directly - it already contains all the necessary fields
-    // Material headers carry parent data including supplier, dates, SKUs, etc.
-    if (materialData) {
-      // Get column mapping to determine which fields to include
-      const columnMapping = this.dataService.getColumnMapping();
+    if (!materialData) return;
 
-      // Prepare material data with all available fields
-      // Check for both display field names and backend field names
-      const materialModalData: any = {
-        part: materialData.material || materialData.part,
-        supplier: materialData.supplier,
-        color: materialData.color,
-        feature: materialData.feature || materialData.bomLinkFeature || '',
-        qty: materialData.qty || materialData.quantity || '',
-        startDate: materialData.startDate || materialData.bomLinkStartDate || '',
-        endDate: materialData.endDate || materialData.bomLinkEndDate || '',
-        shortDesc: materialData.shortDesc || materialData.materialcolorShortDescription || '',
-        longDesc: materialData.longDesc || materialData.materialcolorLongDescription || '',
-        uom: materialData.uom || '',
-        partName: materialData.partName || '',
-        materialDescription: materialData.materialDescription || '',
-        supplierDescription: materialData.supplierDescription || '',
-        colorDescription: materialData.colorDescription || '',
-        materialSupplierComments: materialData.materialSupplierComments || '',
-      };
+    const materialId = materialData.material || materialData.part;
+    if (!materialId) return;
 
-      // Add all other fields from column mapping that exist in materialData
-      Object.keys(columnMapping).forEach((fieldKey) => {
-        if (materialData.hasOwnProperty(fieldKey) && materialModalData[fieldKey] === undefined) {
-          materialModalData[fieldKey] = materialData[fieldKey] || '';
+    // Fetch Complex BOM data from API
+    this.dataService.getComplexBOM(materialId).subscribe({
+      next: (complexBOMData: any) => {
+        // Convert to key-value array format for table display
+        const keyValuePairs: any[] = [];
+
+        // If API returns object, convert to array of {key, value} pairs
+        if (
+          complexBOMData &&
+          typeof complexBOMData === 'object' &&
+          !Array.isArray(complexBOMData)
+        ) {
+          Object.keys(complexBOMData).forEach((key) => {
+            if (complexBOMData[key] !== null && complexBOMData[key] !== undefined) {
+              keyValuePairs.push({
+                key: key,
+                value: complexBOMData[key],
+              });
+            }
+          });
+        } else if (Array.isArray(complexBOMData)) {
+          // If API already returns array format
+          keyValuePairs.push(...complexBOMData);
         }
-      });
 
-      this.selectedMaterialData = materialModalData;
+        // If API returned data, merge it with the original row data, otherwise use original row data
+        const allRowData =
+          keyValuePairs.length > 0
+            ? { ...materialData, ...this.convertKeyValuePairsToObject(keyValuePairs) }
+            : materialData;
 
-      // Get SKU data for the material (material headers already have SKU fields)
-      this.selectedMaterialSkuData = this.dataService.getSkuDataForPart(materialData);
+        // Set ALL row data (everything from that particular row)
+        this.selectedMaterialData = allRowData;
 
-      this.showMaterialModal = true;
-    }
+        // Get SKU data for the material
+        this.selectedMaterialSkuData = this.dataService.getSkuDataForPart(materialData);
+
+        this.showMaterialModal = true;
+      },
+      error: (error) => {
+        // Use original row data if API fails
+        this.selectedMaterialData = materialData;
+        this.selectedMaterialSkuData = this.dataService.getSkuDataForPart(materialData);
+        this.showMaterialModal = true;
+      },
+    });
+  }
+
+  private convertKeyValuePairsToObject(keyValuePairs: any[]): any {
+    const obj: any = {};
+    keyValuePairs.forEach((pair) => {
+      if (pair.key && pair.value !== null && pair.value !== undefined) {
+        obj[pair.key] = pair.value;
+      }
+    });
+    return obj;
   }
 
   closeMaterialModal(): void {
@@ -1083,6 +1181,13 @@ export class App implements OnInit {
     );
     this.nextRowId = result.newRowId;
     this.newRows.set(result.newRow.newRowId, result.newRow);
+
+    // Force grid refresh to ensure cell editor is available
+    setTimeout(() => {
+      if (this.gridApi) {
+        this.gridApi.refreshCells({ force: true });
+      }
+    }, 100);
   }
 
   deleteRowById(newRowId: number): void {
@@ -1134,7 +1239,11 @@ export class App implements OnInit {
   }
 
   getAvailablePartNumbers(): string[] {
-    return this.gridCommonService.getAvailablePartNumbers(this.rowData);
+    return this.gridCommonService.getAvailablePartNumbers(this.displayData);
+  }
+
+  getAvailableMaterials(): string[] {
+    return this.gridCommonService.getAvailableMaterials(this.displayData);
   }
 
   getUniqueSuppliers(): string[] {
@@ -1372,7 +1481,14 @@ export class App implements OnInit {
 
   // Navigation
   goToSbom(): void {
-    this.router.navigate(['/sbom']);
+    this.router.navigate(['/sbom']).then(
+      (success) => {
+        // Navigation completed
+      },
+      (error) => {
+        // Navigation failed
+      }
+    );
   }
 
   // Angular-friendly notification method

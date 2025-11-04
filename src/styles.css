@@ -373,19 +373,73 @@ body {
   min-height: 500px;
   position: relative;
   border-radius: 6px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: visible;
+  /* Smooth horizontal scrolling with hardware acceleration */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* iOS smooth scrolling */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #cbd5e1 #f1f5f9; /* Firefox */
+  /* Hardware acceleration for smooth scrolling */
+  will-change: scroll-position;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* Prevent scroll chaining */
+  overscroll-behavior-x: contain;
 }
 
 /* AG Grid container - Clean design with proper scrolling */
 .ag-grid-container-wrapper {
   flex: 1;
-  overflow: visible;
+  overflow-x: auto;
+  overflow-y: visible;
   border: 1px solid #e2e8f0;
   border-right: none; /* No right border - toggle button will provide it */
   border-radius: 6px 0 0 6px;
   background: white;
   position: relative;
   line-height: 1;
+  /* Smooth horizontal scrolling with hardware acceleration */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* iOS smooth scrolling */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #cbd5e1 #f1f5f9; /* Firefox */
+  /* Hardware acceleration for smooth scrolling */
+  will-change: scroll-position;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* Prevent scroll chaining */
+  overscroll-behavior-x: contain;
+}
+
+/* Custom scrollbar styling for horizontal scrolling - Webkit browsers */
+.ag-grid-section::-webkit-scrollbar,
+.ag-grid-container-wrapper::-webkit-scrollbar {
+  height: 12px;
+  width: 12px;
+}
+
+.ag-grid-section::-webkit-scrollbar-track,
+.ag-grid-container-wrapper::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.ag-grid-section::-webkit-scrollbar-thumb,
+.ag-grid-container-wrapper::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+  border: 2px solid #f1f5f9;
+  transition: background 0.2s ease;
+}
+
+.ag-grid-section::-webkit-scrollbar-thumb:hover,
+.ag-grid-container-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .ag-grid-container {
@@ -491,6 +545,12 @@ body {
     scrollbar-width: thin !important;
     scrollbar-color: #94a3b8 #f1f5f9 !important;
     -moz-overflow-scrolling: touch !important;
+    /* Hardware acceleration for Firefox */
+    will-change: scroll-position !important;
+    transform: translateZ(0) !important;
+    -moz-transform: translateZ(0) !important;
+    backface-visibility: hidden !important;
+    overscroll-behavior-x: contain !important;
   }
 
   .ag-body-horizontal-scroll-viewport {
@@ -499,6 +559,12 @@ body {
     scrollbar-width: thin !important;
     scrollbar-color: #94a3b8 #f1f5f9 !important;
     -moz-overflow-scrolling: touch !important;
+    /* Hardware acceleration for Firefox horizontal scrolling */
+    will-change: scroll-position !important;
+    transform: translateZ(0) !important;
+    -moz-transform: translateZ(0) !important;
+    backface-visibility: hidden !important;
+    overscroll-behavior-x: contain !important;
   }
 
   .ag-body-vertical-scroll-viewport {
@@ -765,6 +831,9 @@ body {
   border-left: none !important;
   border-top: none !important;
   background: #f9fafb !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 /* Qty column specific styling - Improved with visible borders */
@@ -826,16 +895,44 @@ body {
   overflow-x: auto !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
+  /* Optimize horizontal scrolling performance */
+  scroll-behavior: smooth;
+  will-change: scroll-position;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
 }
 
 /* Horizontal scroll viewport - AG Grid's horizontal scrollbar container */
 .ag-body-horizontal-scroll-viewport {
   overflow-x: auto !important;
   overflow-y: hidden !important;
-  /* Firefox scrollbar styling */
-  scrollbar-width: thin !important;
-  scrollbar-color: #94a3b8 #e2e8f0 !important;
-  -webkit-overflow-scrolling: touch;
+  scrollbar-width: auto !important;
+  scrollbar-color: #cbd5e1 #f1f5f9 !important;
+}
+
+/* Custom scrollbar for horizontal scroll viewport - Webkit */
+.ag-body-horizontal-scroll-viewport::-webkit-scrollbar {
+  height: 12px !important;
+}
+
+.ag-body-horizontal-scroll-viewport::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+  border-radius: 10px !important;
+}
+
+.ag-body-horizontal-scroll-viewport::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+  border-radius: 10px !important;
+  border: 2px solid #f1f5f9 !important;
+  transition: background 0.2s ease !important;
+}
+
+.ag-body-horizontal-scroll-viewport::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8 !important;
 }
 
 /* Vertical scroll viewport - AG Grid's vertical scrollbar container */
@@ -986,6 +1083,37 @@ body {
 }
 
 /* ========================================
+   SELECTED ROW STYLING - HIGHLY VISIBLE
+   ======================================== */
+
+/* Selected row - Simple, clean selection styling */
+.ag-row.ag-row-selected {
+  background: #dbeafe !important;
+  border-left: 3px solid #3b82f6 !important;
+}
+
+.ag-row.ag-row-selected .ag-cell {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  font-weight: 500 !important;
+}
+
+.ag-row.ag-row-selected:hover {
+  background: #bfdbfe !important;
+}
+
+.ag-row.ag-row-selected:hover .ag-cell {
+  background: #bfdbfe !important;
+}
+
+/* Override any other row classes that might interfere */
+.ag-row.ag-row-selected.edited-row,
+.ag-row.ag-row-selected.new-row {
+  background: #dbeafe !important;
+  border-left: 3px solid #3b82f6 !important;
+}
+
+/* ========================================
    PART COLUMN & CLICKABLE ELEMENTS
    ======================================== */
 .part-text {
@@ -1129,15 +1257,26 @@ body {
 }
 
 .ag-theme-alpine .ag-row {
-  margin: 0;
-  padding: 0;
-  border: none;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  height: var(--ag-row-height) !important;
+  min-height: var(--ag-row-height) !important;
+  max-height: var(--ag-row-height) !important;
+  box-sizing: border-box !important;
 }
 
 .ag-body-viewport .ag-cell,
 .ag-body-viewport .ag-row > * {
   height: 100% !important;
   box-sizing: border-box !important;
+}
+
+/* Ensure consistent row heights - prevent empty rows or extra spacing */
+.ag-row {
+  height: var(--ag-row-height) !important;
+  min-height: var(--ag-row-height) !important;
+  max-height: var(--ag-row-height) !important;
 }
 
 /* ========================================
@@ -1177,6 +1316,20 @@ body {
   .ag-body-viewport,
   .ag-body-vertical-scroll-viewport {
     transform: translateZ(0);
+    -moz-transform: translateZ(0);
+    will-change: scroll-position;
+    backface-visibility: hidden;
+  }
+
+  /* Additional Firefox horizontal scroll optimization */
+  .ag-body-horizontal-scroll-viewport,
+  .ag-grid-section,
+  .ag-grid-container-wrapper {
+    transform: translateZ(0);
+    -moz-transform: translateZ(0);
+    will-change: scroll-position;
+    backface-visibility: hidden;
+    overscroll-behavior-x: contain;
   }
 }
 
@@ -1293,6 +1446,33 @@ body {
   border-right: 1px solid #d1d5db !important; /* Consistent with other columns */
 }
 
+/* Override for selected rows - supplier column should inherit row background */
+.ag-row.ag-row-selected .ag-cell[col-id='supplier'],
+.ag-row.ag-row-selected .ag-cell[col-id='part'] {
+  background: #dbeafe !important;
+  background-color: #dbeafe !important;
+}
+
+.ag-row.ag-row-selected:hover .ag-cell[col-id='supplier'],
+.ag-row.ag-row-selected:hover .ag-cell[col-id='part'] {
+  background: #bfdbfe !important;
+  background-color: #bfdbfe !important;
+}
+
+/* Override for subrows - supplier and part columns should inherit subrow green background */
+.ag-row.subrow .ag-cell[col-id='supplier'],
+.ag-row.subrow .ag-cell[col-id='part'] {
+  background: #f0fdf4 !important;
+  background-color: #f0fdf4 !important;
+  color: #065f46 !important;
+}
+
+.ag-row.subrow:hover .ag-cell[col-id='supplier'],
+.ag-row.subrow:hover .ag-cell[col-id='part'] {
+  background: #dcfce7 !important;
+  background-color: #dcfce7 !important;
+}
+
 .first-sku-column-header {
   background-color: #fff9c4 !important; /* Yellow background for first SKU header */
   background: #fff9c4 !important; /* Alternative background property */
@@ -1350,6 +1530,31 @@ body {
 .ag-theme-alpine .ag-cell.first-sku-column-cell {
   background-color: #fff9c4 !important;
   background: #fff9c4 !important;
+}
+
+/* Section header rows - simple unified row appearance */
+/* Apply border removal to ALL cells first, then restore borders for actions column */
+.ag-theme-alpine .ag-row.section-header-row .ag-cell,
+.ag-theme-alpine .ag-center-cols-container .ag-row.section-header-row .ag-cell,
+.ag-theme-alpine .ag-left-cols-container .ag-row.section-header-row .ag-cell {
+  background-color: #eff6ff !important;
+  border-top: none !important;
+  border-bottom: 1px solid #cbd5e1 !important;
+  /* Remove vertical borders - override CSS variable borders immediately */
+  border-right: none !important;
+  border-left: none !important;
+  border-right-width: 0 !important;
+  border-left-width: 0 !important;
+  border-right-color: transparent !important;
+  border-left-color: transparent !important;
+}
+
+/* Restore borders for actions column (first child) only */
+.ag-theme-alpine .ag-row.section-header-row .ag-cell:first-child,
+.ag-theme-alpine .ag-row.section-header-row .ag-cell[col-id='actions'] {
+  border-right: var(--ag-cell-vertical-border-width) var(--ag-row-border-style) var(--ag-row-border-color) !important;
+  border-right-width: var(--ag-cell-vertical-border-width) !important;
+  border-right-color: var(--ag-row-border-color) !important;
 }
 
 /* Force red text for matching values and inherit backgrounds - High specificity */
@@ -1762,4 +1967,24 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Hide autocomplete cell editor inputs that appear outside AG Grid popup containers */
+body > app-autocomplete-cell-editor,
+.app-container > app-autocomplete-cell-editor:first-child {
+  display: none !important;
+  visibility: hidden !important;
+  position: absolute !important;
+  left: -9999px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Only show autocomplete editor when inside AG Grid popup container */
+.ag-popup app-autocomplete-cell-editor,
+.ag-overlay app-autocomplete-cell-editor,
+.ag-cell app-autocomplete-cell-editor {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }

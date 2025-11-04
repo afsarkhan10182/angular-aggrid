@@ -16,8 +16,8 @@
           </svg>
         </div>
         <div class="header-info">
-          <h1>{{ partData.part || 'N/A' }}</h1>
-          <p>Part Details & Specifications</p>
+          <h1>{{ partData.materialId || partData.part || 'N/A' }}</h1>
+          <p>Material Details & Specifications</p>
         </div>
       </div>
       <button class="close-button" (click)="closeModal()" aria-label="Close">
@@ -37,204 +37,105 @@
 
     <!-- Modal Content -->
     <div class="modal-content">
-      <!-- Overview Card -->
-      <div class="overview-card">
-        <div class="overview-header">
-          <h2>Overview</h2>
-          <div class="status-badge active">Active</div>
+      <!-- Material Autocomplete Search -->
+      <div class="material-search-card">
+        <div class="card-header">
+          <h3>Search Material</h3>
         </div>
-        <div class="overview-grid">
-          <div class="overview-item">
-            <div class="item-icon supplier">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
+        <div class="material-search-container">
+          <input
+            type="text"
+            [ngModel]="materialSearchInput"
+            (ngModelChange)="onMaterialSearchChange($event)"
+            (input)="onMaterialSearchInput($event)"
+            (focus)="onMaterialSearchFocus()"
+            (blur)="onMaterialSearchBlur()"
+            (keydown)="onMaterialSearchKeyDown($event)"
+            placeholder="Type to search materials..."
+            class="material-search-input"
+          />
+          <div
+            *ngIf="showAutocompleteDropdown && filteredMaterials.length > 0"
+            class="material-autocomplete-dropdown"
+            (click)="$event.stopPropagation()"
+            (mousedown)="$event.preventDefault()"
+          >
+            <div class="dropdown-header">
+              Select material ({{ filteredMaterials.length }} available)
             </div>
-            <div class="item-content">
-              <span class="item-label">Supplier</span>
-              <span class="item-value">{{ partData.supplier }}</span>
-            </div>
-          </div>
-          <div class="overview-item">
-            <div class="item-icon feature">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <circle cx="12" cy="12" r="3"></circle>
-                <path
-                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
-                ></path>
-              </svg>
-            </div>
-            <div class="item-content">
-              <span class="item-label">Feature</span>
-              <span class="item-value">{{ partData.feature }}</span>
-            </div>
-          </div>
-          <div class="overview-item">
-            <div class="item-icon quantity">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
-                ></path>
-                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-              </svg>
-            </div>
-            <div class="item-content">
-              <span class="item-label">Quantity</span>
-              <span class="item-value highlight">{{ partData.qty }}</span>
-            </div>
-          </div>
-          <div class="overview-item">
-            <div class="item-icon color">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <circle cx="13.5" cy="6.5" r=".5"></circle>
-                <circle cx="17.5" cy="10.5" r=".5"></circle>
-                <circle cx="8.5" cy="7.5" r=".5"></circle>
-                <circle cx="6.5" cy="12.5" r=".5"></circle>
-                <path
-                  d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"
-                ></path>
-              </svg>
-            </div>
-            <div class="item-content">
-              <span class="item-label">Color</span>
-              <span class="item-value">{{ partData.color }}</span>
-            </div>
-          </div>
-
-          <!-- All Other Fields including descriptions -->
-          <div class="overview-item" *ngFor="let item of getAllOverviewFields()">
-            <div class="item-icon default">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <circle cx="12" cy="12" r="3"></circle>
-                <path
-                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
-                ></path>
-              </svg>
-            </div>
-            <div class="item-content">
-              <span class="item-label">{{ item.label }}</span>
-              <span class="item-value">{{ item.value }}</span>
+            <div
+              *ngFor="let material of filteredMaterials; let i = index"
+              [class.selected]="i === selectedMaterialIndex"
+              class="dropdown-option"
+              (click)="selectMaterial(material); $event.stopPropagation()"
+              (mouseenter)="onMaterialOptionMouseEnter(i)"
+            >
+              <div class="material-option">
+                <div class="material-name">{{ material.name }}</div>
+                <div
+                  class="material-details"
+                  *ngIf="material.supplier || material.color || material.feature"
+                >
+                  <span *ngIf="material.supplier">Supplier: {{ material.supplier }}</span>
+                  <span *ngIf="material.color"> | Color: {{ material.color }}</span>
+                  <span *ngIf="material.feature"> | Feature: {{ material.feature }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Timeline Card -->
-      <div class="timeline-card">
+      <!-- Material Details Table - Shows all data except SKUs -->
+      <div class="key-value-table-card" *ngIf="getAllRowData().length > 0">
         <div class="card-header">
-          <h3>Timeline</h3>
-          <div class="timeline-status">
-            <div class="timeline-dot active"></div>
-            <span>Active Period</span>
-          </div>
+          <h3>Material Details</h3>
         </div>
-        <div class="timeline-content">
-          <div class="timeline-item">
-            <div class="timeline-marker start">
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12,6 12,12 16,14"></polyline>
-              </svg>
-            </div>
-            <div class="timeline-info">
-              <span class="timeline-label">Start Date</span>
-              <span class="timeline-value">{{ partData.startDate }}</span>
-            </div>
-          </div>
-          <div class="timeline-line"></div>
-          <div class="timeline-item">
-            <div class="timeline-marker end">
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12,6 12,12 16,14"></polyline>
-              </svg>
-            </div>
-            <div class="timeline-info">
-              <span class="timeline-label">End Date</span>
-              <span class="timeline-value">{{ partData.endDate }}</span>
-            </div>
-          </div>
+        <div class="table-container">
+          <table class="key-value-table">
+            <thead>
+              <tr>
+                <th>Columns</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let pair of getAllRowData()">
+                <td class="key-cell">{{ formatKeyName(pair.key) }}</td>
+                <td class="value-cell">{{ pair.value }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <!-- SKU Portfolio -->
-      <div class="sku-portfolio" *ngIf="skuData.length > 0">
-        <div class="card-header">
-          <h3>SKU Portfolio</h3>
-          <div class="sku-count">{{ skuData.length }} SKUs</div>
+      <!-- SKU Portfolio - Widget-wise display -->
+      <div class="sku-portfolio" *ngIf="hasSkus()">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+          "
+        >
+          <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b">
+            SKU Portfolio
+          </h3>
+          <span class="sku-count"
+            >{{ getSkuData().length }} SKU{{ getSkuData().length !== 1 ? 's' : '' }}</span
+          >
         </div>
         <div class="sku-list">
-          <div class="sku-card" *ngFor="let sku of skuData; let i = index">
+          <div class="sku-card" *ngFor="let sku of getSkuData()">
             <div class="sku-header">
-              <div class="sku-id">SKU-{{ sku.skuNumber }}</div>
-              <div class="sku-badge">{{ sku.product }}</div>
+              <div class="sku-id">SKU {{ sku.id }}</div>
+              <span class="sku-badge">Active</span>
             </div>
             <div class="sku-details">
               <div class="sku-detail">
-                <span class="detail-label">Manufacturer</span>
-                <span class="detail-value">{{ sku.manufacturer }}</span>
-              </div>
-              <div class="sku-detail">
-                <span class="detail-label">Color</span>
-                <span class="detail-value">{{ sku.color }}</span>
-              </div>
-              <div class="sku-detail">
-                <span class="detail-label">Size</span>
-                <span class="detail-value">{{ sku.size }}</span>
-              </div>
-              <div class="sku-detail" *ngIf="sku.partNumber">
-                <span class="detail-label">Part Number</span>
-                <span class="detail-value">{{ sku.partNumber }}</span>
+                <span class="detail-label">Material</span>
+                <span class="detail-value">{{ sku.value }}</span>
               </div>
             </div>
           </div>
@@ -242,7 +143,7 @@
       </div>
 
       <!-- Empty State -->
-      <div *ngIf="skuData.length === 0" class="empty-state">
+      <div *ngIf="getAllRowData().length === 0 && !hasSkus()" class="empty-state">
         <div class="empty-icon">
           <svg
             width="48"
@@ -256,8 +157,8 @@
             <circle cx="12" cy="12" r="9"></circle>
           </svg>
         </div>
-        <h4>No SKU Data Available</h4>
-        <p>This part doesn't have any associated SKU records at the moment.</p>
+        <h4>No Data Available</h4>
+        <p>This material doesn't have any associated data.</p>
       </div>
     </div>
   </div>

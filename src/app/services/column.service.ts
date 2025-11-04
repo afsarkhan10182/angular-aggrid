@@ -1044,7 +1044,10 @@ export class ColumnService {
         columnDef.cellEditor = AutocompleteCellEditorComponent;
         columnDef.cellEditorParams = (params: any) => ({
           values: componentInstance.getAvailablePartNumbers(),
-          placeholder: 'Type to search part numbers...',
+          placeholder: fieldKey === 'material' ? 'Type to search materials...' : 'Type to search part numbers...',
+          context: {
+            dataService: dataService,
+          },
         });
         columnDef.headerClass = 'part-column-header';
 
@@ -1205,11 +1208,13 @@ export class ColumnService {
       wrapText: false,
       autoHeight: false,
       cellStyle: (params: any) => {
-        const baseStyle = {
+        const baseStyle: any = {
           padding: '8px 12px',
-          borderRight: '1px solid #e2e8f0',
         };
-
+        // Don't add border for section headers - they should be seamless
+        if (!params.data || !params.data.isSectionHeader) {
+          baseStyle.borderRight = '1px solid #e2e8f0';
+        }
         return baseStyle;
       },
     };
