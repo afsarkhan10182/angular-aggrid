@@ -1,0 +1,176 @@
+{
+  "resultCount": 8,
+  "from": 1,
+  "to": 8,
+  "results": [
+    {
+      "material-supplier": {
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:254808",
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:254807"
+      },
+      "material": {
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:254651",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:254652",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
+        "ptcmaterialName": "Afsar BEARING SEALED 608Z"
+      },
+      "supplier": {
+        "supplierName": "Test_Supplier",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:141427",
+        "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+        "primaryImageURL": null,
+        "name": "Test_Supplier"
+      }
+    },
+    {
+      "material-supplier": {
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:268831",
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:268830"
+      },
+      "material": {
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:268176",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:268177",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
+        "ptcmaterialName": "DERAILLEUR CAGE REAR"
+      },
+      "supplier": {
+        "supplierName": "sup2",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:157495",
+        "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+        "primaryImageURL": null,
+        "name": "sup2"
+      }
+    },
+    {
+      "material-supplier": {
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:268832",
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:268831"
+      },
+      "material": {
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:268177",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:268178",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
+        "ptcmaterialName": "FASTENER CLIP-LOCK 8MM"
+      },
+      "supplier": {
+        "supplierName": "Supplier_3",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:157496",
+        "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+        "primaryImageURL": null,
+        "name": "Supplier_3"
+      }
+    },
+    {
+      "material-supplier": {
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:268833",
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:268832"
+      },
+      "material": {
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:268178",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:268179",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
+        "ptcmaterialName": "HANDLEBAR GRIP RACING"
+      },
+      "supplier": {
+        "supplierName": "Supplier_4",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:157497",
+        "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+        "primaryImageURL": null,
+        "name": "Supplier_4"
+      }
+    },
+    {
+      "material-supplier": {
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:268834",
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:268833"
+      },
+      "material": {
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:268179",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:268180",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
+        "ptcmaterialName": "CABLE SHIFT REAR"
+      },
+      "supplier": {
+        "supplierName": "Supplier_5",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:157498",
+        "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+        "primaryImageURL": null,
+        "name": "Supplier_5"
+      }
+    },
+    {
+      "material-supplier": {
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:268835",
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:268834"
+      },
+      "material": {
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:268180",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:268181",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
+        "ptcmaterialName": "CHAIN LINK PLATE"
+      },
+      "supplier": {
+        "supplierName": "Supplier_6",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:157499",
+        "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+        "primaryImageURL": null,
+        "name": "Supplier_6"
+      }
+    },
+    {
+      "material-supplier": {
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:268836",
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:268835"
+      },
+      "material": {
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:268181",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:268182",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
+        "ptcmaterialName": "BRAKE PAD SET"
+      },
+      "supplier": {
+        "supplierName": "Supplier_7",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:157500",
+        "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+        "primaryImageURL": null,
+        "name": "Supplier_7"
+      }
+    },
+    {
+      "material-supplier": {
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:268837",
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:268836"
+      },
+      "material": {
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:268182",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:268183",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
+        "ptcmaterialName": "WHEEL RIM ALLOY"
+      },
+      "supplier": {
+        "supplierName": "Supplier_8",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:157501",
+        "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+        "primaryImageURL": null,
+        "name": "Supplier_8"
+      }
+    }
+  ],
+  "errors": []
+}

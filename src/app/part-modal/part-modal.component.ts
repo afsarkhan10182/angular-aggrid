@@ -1,4 +1,14 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, HostListener } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnInit,
+  OnDestroy,
+  OnChanges,
+  SimpleChanges,
+  HostListener,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../services/data.service';
@@ -11,13 +21,13 @@ import { of } from 'rxjs';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './part-modal.component.html',
-  styleUrls: ['./part-modal.component.css']
+  styleUrls: ['./part-modal.component.css'],
 })
 export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
   @Input() partData: any = {};
   @Input() skuData: any[] = [];
   @Output() close = new EventEmitter<void>();
-  
+
   // Autocomplete properties
   materialSearchInput: string = '';
   filteredMaterials: any[] = [];
@@ -40,7 +50,7 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
   ngOnInit(): void {
     // Initialize material search input with current material value
     this.materialSearchInput = this.partData?.material || this.partData?.part || '';
-    
+
     // Set up material search with debouncing
     this.searchSubject
       .pipe(
@@ -49,7 +59,7 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
         switchMap((query) => {
           if (query && query.trim().length >= 1) {
             // Use mock2.json search - later will be replaced with API call
-            return this.dataService.searchMaterialsFromMock2(query.trim()).pipe(
+            return this.dataService.searchMaterials(query.trim()).pipe(
               catchError((error) => {
                 return of([]);
               })
@@ -64,9 +74,10 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
       .subscribe({
         next: (materials) => {
           this.filteredMaterials = materials || [];
-          const shouldShow: boolean = this.filteredMaterials.length > 0 && 
-                                      !!this.materialSearchInput && 
-                                      this.materialSearchInput.trim().length >= 1;
+          const shouldShow: boolean =
+            this.filteredMaterials.length > 0 &&
+            !!this.materialSearchInput &&
+            this.materialSearchInput.trim().length >= 1;
           this.showAutocompleteDropdown = shouldShow;
           this.selectedMaterialIndex = -1;
           // Debug logging
@@ -74,7 +85,7 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
         error: (error) => {
           this.filteredMaterials = [];
           this.showAutocompleteDropdown = false;
-        }
+        },
       });
   }
 
@@ -105,10 +116,10 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
    */
   getAllRowData(): Array<{ key: string; value: any }> {
     if (!this.partData || typeof this.partData !== 'object') return [];
-    
+
     const keyValuePairs: Array<{ key: string; value: any }> = [];
     const seenKeys = new Set<string>(); // Prevent duplicates
-    
+
     // Exclude only Angular internal properties and system-level properties
     const systemFields = new Set([
       '$', // Angular internal
@@ -128,13 +139,13 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
       'allSkus',
       'skus', // Exclude SKU array
     ]);
-    
+
     Object.keys(this.partData).forEach((key) => {
       // Validate key is a valid string
       if (!key || typeof key !== 'string' || key.trim() === '') {
         return;
       }
-      
+
       // Skip system/internal fields, Angular properties, and SKU fields
       if (
         !systemFields.has(key) &&
@@ -145,16 +156,16 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
         this.partData[key] !== undefined
       ) {
         seenKeys.add(key);
-        
+
         let displayValue = this.partData[key];
-        
+
         // Handle different value types
         if (typeof displayValue === 'object' && displayValue !== null) {
           // Skip functions
           if (typeof displayValue === 'function') {
             return;
           }
-          
+
           // Convert arrays/objects to readable format
           if (Array.isArray(displayValue)) {
             if (displayValue.length === 0) return; // Skip empty arrays
@@ -175,10 +186,10 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
             }
           }
         }
-        
+
         // Convert to string and validate
         const stringValue = String(displayValue).trim();
-        
+
         // Only include if value is meaningful (not empty, not just whitespace)
         if (stringValue !== '' && stringValue !== 'null' && stringValue !== 'undefined') {
           keyValuePairs.push({
@@ -188,7 +199,7 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
         }
       }
     });
-    
+
     // Sort fields alphabetically
     return keyValuePairs.sort((a, b) => a.key.localeCompare(b.key));
   }
@@ -201,42 +212,48 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
    */
   getSkuData(): Array<{ id: string; value: string }> {
     if (!this.partData || typeof this.partData !== 'object') return [];
-    
+
     const skuData: Array<{ id: string; value: string }> = [];
     const seenSkuIds = new Set<string>(); // Prevent duplicate SKU IDs
-    
+
     // Extract SKU fields from partData
     Object.keys(this.partData).forEach((key) => {
       // Only process fields that match pattern: "sku" followed by digits (e.g., sku100, sku100150)
       // Exclude "skus" (plural array) and any non-numeric SKU fields
-      if (key && typeof key === 'string' && key.startsWith('sku') && key !== 'skus' && /^sku\d+$/.test(key)) {
+      if (
+        key &&
+        typeof key === 'string' &&
+        key.startsWith('sku') &&
+        key !== 'skus' &&
+        /^sku\d+$/.test(key)
+      ) {
         const skuValue = this.partData[key];
-        
+
         // Validate SKU value exists and is valid
         if (skuValue !== null && skuValue !== undefined) {
           // Skip if value is an object or array (these show as [object Object])
           if (typeof skuValue === 'object') {
             return; // Skip object/array values
           }
-          
+
           // Skip functions
           if (typeof skuValue === 'function') {
             return;
           }
-          
+
           const stringValue = String(skuValue).trim();
-          
+
           // Validate the value is meaningful
           if (stringValue !== '' && stringValue !== 'null' && stringValue !== 'undefined') {
             // Extract SKU number from field name (e.g., "sku100" -> "100")
             const skuNumber = key.replace('sku', '');
-            
+
             // Validate SKU number is actually a number
             const skuNum = parseInt(skuNumber);
             if (isNaN(skuNum) || skuNum <= 0) {
               return; // Skip invalid SKU numbers
             }
-            
+
             // Prevent duplicate SKU IDs
             if (!seenSkuIds.has(skuNumber)) {
               seenSkuIds.add(skuNumber);
@@ -249,7 +266,7 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
         }
       }
     });
-    
+
     // Sort SKU fields by SKU number (numeric sort)
     return skuData.sort((a, b) => {
       const numA = parseInt(a.id) || 0;
@@ -329,7 +346,10 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
         break;
       case 'Enter':
         event.preventDefault();
-        if (this.selectedMaterialIndex >= 0 && this.selectedMaterialIndex < this.filteredMaterials.length) {
+        if (
+          this.selectedMaterialIndex >= 0 &&
+          this.selectedMaterialIndex < this.filteredMaterials.length
+        ) {
           this.selectMaterial(this.filteredMaterials[this.selectedMaterialIndex]);
         }
         break;
@@ -349,14 +369,19 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
     // Populate partData with the selected material's data
     // This will update the modal display immediately
     Object.keys(materialData).forEach((key) => {
-      if (materialData[key] !== null && materialData[key] !== undefined && materialData[key] !== '') {
+      if (
+        materialData[key] !== null &&
+        materialData[key] !== undefined &&
+        materialData[key] !== ''
+      ) {
         this.partData[key] = materialData[key];
       }
     });
 
     // Update the search input with the selected material name
-    this.materialSearchInput = materialData.material || materialData.part || this.materialSearchInput;
-    
+    this.materialSearchInput =
+      materialData.material || materialData.part || this.materialSearchInput;
+
     // Close dropdown
     this.showAutocompleteDropdown = false;
     this.selectedMaterialIndex = -1;

@@ -749,6 +749,12 @@ body {
   -ms-user-select: text !important;
 }
 
+/* Allow overflow when cell is being edited inline */
+.ag-cell.ag-cell-inline-editing {
+  overflow: visible !important;
+  z-index: 1000 !important;
+}
+
 /* Improved column resizing experience */
 .ag-theme-alpine .ag-header-cell-resize {
   background-color: #3b82f6 !important;
@@ -1937,22 +1943,102 @@ body {
   text-overflow: ellipsis;
 }
 
-/* Hide autocomplete cell editor inputs that appear outside AG Grid popup containers */
-body > app-autocomplete-cell-editor,
-.app-container > app-autocomplete-cell-editor:first-child {
-  display: none !important;
-  visibility: hidden !important;
-  position: absolute !important;
-  left: -9999px !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-/* Only show autocomplete editor when inside AG Grid popup container */
-.ag-popup app-autocomplete-cell-editor,
-.ag-overlay app-autocomplete-cell-editor,
-.ag-cell app-autocomplete-cell-editor {
+/* BRUTE FORCE: Make autocomplete editor visible everywhere */
+app-autocomplete-cell-editor {
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100px !important;
+  min-height: 30px !important;
 }
+
+/* Show autocomplete editor when inside AG Grid cell (inline editing) - MUST come first with higher specificity */
+.ag-cell app-autocomplete-cell-editor,
+.ag-cell-inline-editing app-autocomplete-cell-editor,
+.ag-cell.ag-cell-inline-editing app-autocomplete-cell-editor,
+.ag-cell-wrapper app-autocomplete-cell-editor,
+.ag-cell-inline-editing > app-autocomplete-cell-editor,
+.ag-cell > app-autocomplete-cell-editor,
+.ag-cell-value app-autocomplete-cell-editor {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100px !important;
+  min-height: 30px !important;
+}
+
+/* Note: Hide rules removed - show rules below handle visibility properly */
+
+/* Show autocomplete editor when inside AG Grid popup container */
+.ag-popup app-autocomplete-cell-editor,
+.ag-overlay app-autocomplete-cell-editor {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Ensure AG Grid popup container aligns with cell */
+.ag-popup-editor {
+  z-index: 10000 !important;
+}
+
+/* Ensure popup editor is positioned correctly over the cell */
+.ag-cell-editor-popup {
+  position: absolute !important;
+}
+
+/* Force popup to match cell dimensions exactly */
+.ag-popup-editor app-autocomplete-cell-editor {
+  width: 100% !important;
+  min-width: 150px !important;
+}
+
+/* Ensure the popup container matches cell width */
+.ag-cell-editor-popup-wrapper {
+  width: 100% !important;
+}
+
+/* Allow autocomplete dropdown to overflow when editing inline (not popup) */
+.ag-cell.ag-cell-inline-editing,
+.ag-cell.ag-cell-focus {
+  overflow: visible !important;
+  z-index: 1000 !important;
+  position: relative !important;
+}
+
+.ag-cell.ag-cell-inline-editing app-autocomplete-cell-editor,
+.ag-cell.ag-cell-focus app-autocomplete-cell-editor {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 100% !important;
+  height: 100% !important;
+  position: relative !important;
+}
+
+.ag-cell.ag-cell-inline-editing .autocomplete-container,
+.ag-cell.ag-cell-focus .autocomplete-container,
+.ag-cell-inline-editing .autocomplete-container {
+  overflow: visible !important;
+  z-index: 1000 !important;
+  position: relative !important;
+}
+
+/* Ensure cell wrapper allows overflow when editing */
+.ag-cell-wrapper {
+  overflow: visible !important;
+}
+
+.ag-cell.ag-cell-inline-editing .ag-cell-wrapper {
+  overflow: visible !important;
+}
+

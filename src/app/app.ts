@@ -527,12 +527,18 @@ export class App implements OnInit {
         columnDef.cellEditorParams = (params: any) => ({
           values: this.getAvailablePartNumbers(),
           placeholder: 'Type to search part numbers...',
+          context: {
+            dataService: this.dataService,
+          },
         });
       } else if (field === 'material') {
         columnDef.cellEditor = AutocompleteCellEditorComponent;
         columnDef.cellEditorParams = (params: any) => ({
-          values: this.getAvailableMaterials(),
           placeholder: 'Type to search materials...',
+          useApiSearch: true, // Flag to indicate API search should be used
+          context: {
+            dataService: this.dataService,
+          },
         });
       } else if (field === 'qty' || field === 'quantity') {
         columnDef.cellEditor = 'agNumberCellEditor';
@@ -1030,6 +1036,12 @@ export class App implements OnInit {
       // Part column clicks are handled differently - no modal functionality for parts
       return;
     } else if (event.colDef.field === 'material') {
+      event.api.startEditingCell({
+        rowIndex: event.rowIndex,
+        colKey: event.column.getId(),
+        rowPinned: event.rowPinned,
+        keyPress: event.event?.key,
+      });
       // Don't open modal for new rows - they are in edit mode
       if (event.data && event.data.isNewRow) {
         return; // Skip modal opening for new rows

@@ -10,6 +10,12 @@ import { of, Subject } from 'rxjs';
   selector: 'app-autocomplete-cell-editor',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  host: {
+    '[style.display]': '"block"',
+    '[style.width]': '"100%"',
+    '[style.height]': '"100%"',
+    '[style.position]': '"relative"',
+  },
   template: `
     <div class="autocomplete-container" style="position: relative; width: 100%; height: 100%;">
       <input
@@ -31,7 +37,12 @@ import { of, Subject } from 'rxjs';
         #dropdown
         (click)="$event.stopPropagation()"
       >
-        <div class="dropdown-header">Select material ({{ filteredOptions.length }} available)</div>
+        <div class="dropdown-header">
+          {{ isMaterialSearch ? 'Select material' : 'Select part number' }} ({{
+            filteredOptions.length
+          }}
+          available)
+        </div>
         <div
           *ngFor="let option of filteredOptions; let i = index"
           [class.selected]="i === selectedIndex"
@@ -39,14 +50,17 @@ import { of, Subject } from 'rxjs';
           (click)="selectOption(option); $event.stopPropagation()"
           (mouseenter)="selectedIndex = i"
         >
-          <div class="material-option">
+          <div *ngIf="isMaterialSearch && materialOptions[i]" class="material-option">
             <div class="material-name">{{ option }}</div>
-            <div class="material-details" *ngIf="materialOptions[i]">
+            <div class="material-details">
               <span *ngIf="materialOptions[i].supplier"
                 >Supplier: {{ materialOptions[i].supplier }}</span
               >
               <span *ngIf="materialOptions[i].color"> | Color: {{ materialOptions[i].color }}</span>
             </div>
+          </div>
+          <div *ngIf="!isMaterialSearch || !materialOptions[i]">
+            {{ option }}
           </div>
         </div>
       </div>
@@ -54,6 +68,18 @@ import { of, Subject } from 'rxjs';
   `,
   styles: [
     `
+      :host {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-width: 150px !important;
+        min-height: 30px !important;
+        box-sizing: border-box !important;
+      }
+
       .autocomplete-container {
         position: relative;
         width: 100%;
@@ -180,6 +206,7 @@ export class AutocompleteCellEditorComponent
   public materialOptions: any[] = []; // Store full material objects from API
   public showDropdown: boolean = false;
   public selectedIndex: number = -1;
+  public isMaterialSearch: boolean = false; // Flag to determine if this is material search
 
   private params: any;
   private originalValue: string = '';
@@ -202,10 +229,15 @@ export class AutocompleteCellEditorComponent
         debounceTime(300), // Wait 300ms after user stops typing
         distinctUntilChanged(), // Only search if query changed
         switchMap((query) => {
-          if (query && query.length >= 2 && this.dataService) {
-            return this.dataService.searchMaterials(query);
+          // For material search, use API search if DataService is available
+          if (this.isMaterialSearch && this.dataService) {
+            // Use API search for materials (minimum 1 character for better UX)
+            if (query && query.length >= 1) {
+              return this.dataService.searchMaterials(query);
+            }
+            return of([]);
           } else if (query && query.length >= 2) {
-            // Fallback to local filtering if no DataService
+            // Fallback to local filtering for non-material fields
             return of(this.filterLocalOptions(query));
           }
           return of([]);
@@ -216,18 +248,30 @@ export class AutocompleteCellEditorComponent
       )
       .subscribe((materials) => {
         if (!this.isDestroyed) {
-          if (Array.isArray(materials) && materials.length > 0 && materials[0].name) {
-            // API response format
+          if (Array.isArray(materials) && materials.length > 0) {
+            // API response format - extract ptcmaterialName from material object
             this.materialOptions = materials;
-            this.filteredOptions = materials.map(
-              (material) => material.name || material.materialName
-            );
+            this.filteredOptions = materials
+              .map(
+                (material) =>
+                  material.ptcmaterialName || material.materialName || material.name || ''
+              )
+              .filter((name) => name.length > 0); // Filter out empty strings
           } else {
             // Local filtering fallback
             this.materialOptions = [];
-            this.filteredOptions = materials;
+            this.filteredOptions = Array.isArray(materials)
+              ? materials.filter((m) => m && m.length > 0)
+              : [];
           }
-          this.showDropdown = this.filteredOptions.length > 0;
+
+          const shouldShow = this.filteredOptions.length > 0;
+          this.showDropdown = shouldShow;
+
+          // Position dropdown after showing
+          if (this.showDropdown) {
+            setTimeout(() => this.positionDropdown(), 0);
+          }
         }
       });
   }
@@ -237,12 +281,19 @@ export class AutocompleteCellEditorComponent
     setTimeout(() => {
       this.input.nativeElement.focus();
       this.input.nativeElement.select();
+
       // Show dropdown immediately when focused
       this.showDropdown = this.filteredOptions.length > 0;
 
       // Position dropdown if it's visible
       if (this.showDropdown) {
         this.positionDropdown();
+      }
+
+      // For material search with API, trigger initial search if value exists
+      if (this.isMaterialSearch && this.dataService && this.value && this.value.length >= 1) {
+        // Trigger search for existing value
+        this.searchSubject.next(this.value);
       }
     }, 0);
   }
@@ -255,14 +306,20 @@ export class AutocompleteCellEditorComponent
   agInit(params: any): void {
     this.params = params;
 
-    // Get DataService from grid context
-    this.dataService = params.context?.dataService;
+    // Get DataService from grid context or params context
+    this.dataService = params.context?.dataService || params.params?.context?.dataService;
 
     // Ensure value is always a string
     this.value = params.value ? String(params.value) : '';
     this.placeholder = params.placeholder || 'Type to search materials...';
 
-    // Get options from params - support multiple formats (fallback for non-material fields)
+    // Determine if this is material search
+    this.isMaterialSearch =
+      params.useApiSearch ||
+      (this.dataService &&
+        (this.placeholder.includes('material') || this.placeholder.includes('Material')));
+
+    // Get options from params - support multiple formats
     if (params.values && Array.isArray(params.values)) {
       this.options = params.values.map((opt: any) => String(opt));
     } else if (typeof params.values === 'function') {
@@ -282,7 +339,7 @@ export class AutocompleteCellEditorComponent
     }
 
     // Only filter options if we have static options (not using Material API)
-    if (this.options.length > 0) {
+    if (this.options.length > 0 && !this.isMaterialSearch) {
       this.filterOptions();
     }
   }
@@ -292,14 +349,20 @@ export class AutocompleteCellEditorComponent
   }
 
   isPopup(): boolean {
-    return true;
+    return false; // Render inline in the cell
   }
 
   onInputChange(event: any): void {
     this.value = event.target.value || '';
 
-    // Trigger Material API search
-    this.searchSubject.next(this.value);
+    // For material search, trigger API search
+    if (this.isMaterialSearch) {
+      this.searchSubject.next(this.value);
+    } else {
+      // For static options, filter locally
+      this.filterOptions();
+      this.showDropdown = this.filteredOptions.length > 0;
+    }
 
     this.selectedIndex = -1;
 
@@ -356,8 +419,10 @@ export class AutocompleteCellEditorComponent
 
   onInputClick(): void {
     // Show dropdown when input is clicked
-    this.filterOptions();
-    this.showDropdown = this.filteredOptions.length > 0;
+    if (!this.isMaterialSearch) {
+      this.filterOptions();
+      this.showDropdown = this.filteredOptions.length > 0;
+    }
 
     if (this.showDropdown) {
       setTimeout(() => this.positionDropdown(), 0);
@@ -366,8 +431,10 @@ export class AutocompleteCellEditorComponent
 
   onInputFocus(): void {
     // Show dropdown when input is focused
-    this.filterOptions();
-    this.showDropdown = this.filteredOptions.length > 0;
+    if (!this.isMaterialSearch) {
+      this.filterOptions();
+      this.showDropdown = this.filteredOptions.length > 0;
+    }
 
     if (this.showDropdown) {
       setTimeout(() => this.positionDropdown(), 0);
@@ -378,10 +445,13 @@ export class AutocompleteCellEditorComponent
     this.value = option;
     this.closeDropdown();
 
-    // Find the selected material object
-    const selectedMaterial = this.materialOptions.find(
-      (material) => (material.name || material.materialName) === option
-    );
+    // Find the selected material object for material search
+    const selectedMaterial = this.isMaterialSearch
+      ? this.materialOptions.find(
+          (material) =>
+            (material.ptcmaterialName || material.materialName || material.name || '') === option
+        )
+      : null;
 
     // Force the value to be set in AG Grid
     if (this.params && this.params.node) {
@@ -395,6 +465,9 @@ export class AutocompleteCellEditorComponent
       // Auto-populate other fields from the selected material
       if (selectedMaterial) {
         this.autoPopulateFields(selectedMaterial);
+      } else if (!this.isMaterialSearch) {
+        // For part numbers, trigger feature auto-population
+        this.triggerFeatureAutoPopulation(option);
       }
     }
 
@@ -611,15 +684,10 @@ export class AutocompleteCellEditorComponent
     const inputElement = this.input.nativeElement;
 
     try {
-      // Get container position for absolute positioning
-      const containerRect = inputElement.parentElement?.getBoundingClientRect();
+      // Get the input's position relative to its container
       const inputRect = inputElement.getBoundingClientRect();
-
-      if (!containerRect) {
-        // Fallback positioning for older browsers
-        this.positionDropdownFallback();
-        return;
-      }
+      const container = inputElement.offsetParent || document.body;
+      const containerRect = container.getBoundingClientRect();
 
       // Calculate position relative to container
       const relativeTop = inputRect.bottom - containerRect.top + 2;
@@ -658,6 +726,7 @@ export class AutocompleteCellEditorComponent
       // Force reflow for Firefox compatibility
       dropdownElement.offsetHeight;
     } catch (error) {
+      console.warn('Error positioning dropdown, using fallback:', error);
       this.positionDropdownFallback();
     }
   }

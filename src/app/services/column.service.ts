@@ -1042,19 +1042,27 @@ export class ColumnService {
           return params.data && params.data.isNewRow;
         };
         columnDef.cellEditor = AutocompleteCellEditorComponent;
-        columnDef.cellEditorParams = (params: any) => ({
-          values:
-            fieldKey === 'material'
-              ? componentInstance.getAvailableMaterials()
-              : componentInstance.getAvailablePartNumbers(),
-          placeholder:
-            fieldKey === 'material'
-              ? 'Type to search materials...'
-              : 'Type to search part numbers...',
-          context: {
-            dataService: dataService,
-          },
-        });
+        columnDef.cellEditorParams = (params: any) => {
+          if (fieldKey === 'material') {
+            // For material field, use API search instead of static values
+            return {
+              placeholder: 'Type to search materials...',
+              useApiSearch: true, // Flag to indicate API search should be used
+              context: {
+                dataService: dataService,
+              },
+            };
+          } else {
+            // For part numbers, use static values
+            return {
+              values: componentInstance.getAvailablePartNumbers(),
+              placeholder: 'Type to search part numbers...',
+              context: {
+                dataService: dataService,
+              },
+            };
+          }
+        };
         columnDef.headerClass = 'part-column-header';
 
         // For material column, hide value in material header rows
