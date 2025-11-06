@@ -143,9 +143,7 @@ export class DataService {
     }
 
     // Production: Use real API with CSRF token
-    const apiUrl = environment.serverHostUrl
-      ? `${environment.serverHostUrl}/Windchill/servlet/rest/rfa/materials/search`
-      : 'http://plmcntimg.plmtestlab.com:80/Windchill/servlet/rest/rfa/materials/search';
+    const apiUrl = `${environment.serverHostUrl}/Windchill/servlet/rest/rfa/materials/search`;
 
     // Build the request body
     const requestBody = {
@@ -223,7 +221,7 @@ export class DataService {
    */
   private searchMaterialsMock(query: string): Observable<any[]> {
     // Load mock data from JSON file
-    const mockApiUrl = '/api/material.json';
+    const mockApiUrl = environment.mockApiEndpoints.material;
 
     return this.http.get<any>(mockApiUrl).pipe(
       map((mockResponse) => {
@@ -269,7 +267,6 @@ export class DataService {
       })
     );
   }
-
 
   /**
    * Get material data by material name/ID from mock2.json

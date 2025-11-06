@@ -17,5 +17,6 @@ export const environment = {
   mockApiEndpoints: {
     csrf: '/api/csrf.json',
     getUser: '/api/getUser.json',
+    material: '/api/material.json',
   },
 };
