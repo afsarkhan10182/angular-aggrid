@@ -11,10 +11,6 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DataService } from '../services/data.service';
-import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
 
 @Component({
   selector: 'app-part-modal',
@@ -28,13 +24,6 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
   @Input() skuData: any[] = [];
   @Output() close = new EventEmitter<void>();
 
-  // Autocomplete properties
-  materialSearchInput: string = '';
-  filteredMaterials: any[] = [];
-  showAutocompleteDropdown: boolean = false;
-  selectedMaterialIndex: number = -1;
-  private searchSubject = new Subject<string>();
-
   // Fields that are already displayed in overview (excluding 'part' which is in title, and dates which are in timeline)
   private displayedFields = new Set([
     'supplier',
@@ -45,60 +34,13 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
     'endDate',
   ]);
 
-  constructor(private dataService: DataService) {}
+  constructor() {}
 
-  ngOnInit(): void {
-    // Initialize material search input with current material value
-    this.materialSearchInput = this.partData?.material || this.partData?.part || '';
+  ngOnInit(): void {}
 
-    // Set up material search with debouncing
-    this.searchSubject
-      .pipe(
-        debounceTime(300), // Wait 300ms after user stops typing
-        distinctUntilChanged(), // Only search if query changed
-        switchMap((query) => {
-          if (query && query.trim().length >= 1) {
-            // Use mock2.json search - later will be replaced with API call
-            return this.dataService.searchMaterials(query.trim()).pipe(
-              catchError((error) => {
-                return of([]);
-              })
-            );
-          }
-          return of([]);
-        }),
-        catchError((error) => {
-          return of([]);
-        })
-      )
-      .subscribe({
-        next: (materials) => {
-          this.filteredMaterials = materials || [];
-          const shouldShow: boolean =
-            this.filteredMaterials.length > 0 &&
-            !!this.materialSearchInput &&
-            this.materialSearchInput.trim().length >= 1;
-          this.showAutocompleteDropdown = shouldShow;
-          this.selectedMaterialIndex = -1;
-          // Debug logging
-        },
-        error: (error) => {
-          this.filteredMaterials = [];
-          this.showAutocompleteDropdown = false;
-        },
-      });
-  }
+  ngOnChanges(changes: SimpleChanges): void {}
 
-  ngOnChanges(changes: SimpleChanges): void {
-    // Update material search input when partData changes
-    if (changes['partData'] && changes['partData'].currentValue) {
-      this.materialSearchInput = this.partData?.material || this.partData?.part || '';
-    }
-  }
-
-  ngOnDestroy(): void {
-    this.searchSubject.complete();
-  }
+  ngOnDestroy(): void {}
 
   @HostListener('document:keydown.escape')
   onEscapeKey(): void {
@@ -286,114 +228,5 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
       .replace(/_/g, ' ')
       .replace(/^./, (str) => str.toUpperCase())
       .trim();
-  }
-
-  // Autocomplete methods
-  onMaterialSearchChange(value: string): void {
-    this.materialSearchInput = value || '';
-    if (value && value.length >= 1) {
-      this.searchSubject.next(value);
-    } else {
-      this.filteredMaterials = [];
-      this.showAutocompleteDropdown = false;
-    }
-  }
-
-  onMaterialSearchInput(event: any): void {
-    const value = event.target.value || '';
-    this.materialSearchInput = value;
-    if (value && value.length >= 1) {
-      this.searchSubject.next(value);
-    } else {
-      this.filteredMaterials = [];
-      this.showAutocompleteDropdown = false;
-    }
-  }
-
-  onMaterialSearchFocus(): void {
-    // If we have existing filtered results and text, show dropdown
-    if (this.filteredMaterials.length > 0 && this.materialSearchInput.length >= 1) {
-      this.showAutocompleteDropdown = true;
-    } else if (this.materialSearchInput.length >= 1) {
-      // If we have text but no results yet, trigger a search
-      this.searchSubject.next(this.materialSearchInput);
-    }
-  }
-
-  onMaterialSearchBlur(): void {
-    // Delay closing dropdown to allow click events to fire
-    setTimeout(() => {
-      this.showAutocompleteDropdown = false;
-    }, 300);
-  }
-
-  onMaterialSearchKeyDown(event: KeyboardEvent): void {
-    if (!this.showAutocompleteDropdown || this.filteredMaterials.length === 0) {
-      return;
-    }
-
-    switch (event.key) {
-      case 'ArrowDown':
-        event.preventDefault();
-        this.selectedMaterialIndex = Math.min(
-          this.selectedMaterialIndex + 1,
-          this.filteredMaterials.length - 1
-        );
-        break;
-      case 'ArrowUp':
-        event.preventDefault();
-        this.selectedMaterialIndex = Math.max(this.selectedMaterialIndex - 1, -1);
-        break;
-      case 'Enter':
-        event.preventDefault();
-        if (
-          this.selectedMaterialIndex >= 0 &&
-          this.selectedMaterialIndex < this.filteredMaterials.length
-        ) {
-          this.selectMaterial(this.filteredMaterials[this.selectedMaterialIndex]);
-        }
-        break;
-      case 'Escape':
-        this.showAutocompleteDropdown = false;
-        this.selectedMaterialIndex = -1;
-        break;
-    }
-  }
-
-  selectMaterial(material: any): void {
-    if (!material) return;
-
-    // Use fullData if available, otherwise use the material object itself
-    const materialData = material.fullData || material;
-
-    // Populate partData with the selected material's data
-    // This will update the modal display immediately
-    Object.keys(materialData).forEach((key) => {
-      if (
-        materialData[key] !== null &&
-        materialData[key] !== undefined &&
-        materialData[key] !== ''
-      ) {
-        this.partData[key] = materialData[key];
-      }
-    });
-
-    // Update the search input with the selected material name
-    this.materialSearchInput =
-      materialData.material || materialData.part || this.materialSearchInput;
-
-    // Close dropdown
-    this.showAutocompleteDropdown = false;
-    this.selectedMaterialIndex = -1;
-
-    // Update SKU data if available
-    if (materialData.skus && Array.isArray(materialData.skus)) {
-      // Note: SKU data transformation would happen here if needed
-      // For now, skuData is passed as input, but we could emit an event to update it
-    }
-  }
-
-  onMaterialOptionMouseEnter(index: number): void {
-    this.selectedMaterialIndex = index;
   }
 }

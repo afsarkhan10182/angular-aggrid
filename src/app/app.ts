@@ -556,21 +556,35 @@ export class App implements OnInit {
           return true;
         };
       } else if (field === 'supplier' || field === 'color' || field === 'feature') {
-        columnDef.cellEditor = 'agTextCellEditor';
-        columnDef.cellEditorParams = (params: any) => {
-          let values: string[] = [];
-          if (field === 'supplier') {
-            values = this.getUniqueSuppliers();
-          } else if (field === 'color') {
-            values = this.getUniqueColors();
-          } else if (field === 'feature') {
-            values = this.getUniqueFeatures();
-          }
-          return {
-            values: values,
-            placeholder: `Type to search ${field}...`,
+        if (field === 'supplier' || field === 'color') {
+          // Use AutocompleteCellEditorComponent for supplier and color
+          columnDef.cellEditor = AutocompleteCellEditorComponent;
+          columnDef.cellEditorParams = (params: any) => {
+            // Use row-specific values if available, otherwise use global list
+            let values: string[] = [];
+            if (field === 'supplier') {
+              values = params.data?._availableSuppliers || this.getUniqueSuppliers();
+            } else if (field === 'color') {
+              values = params.data?._availableColors || this.getUniqueColors();
+            }
+            return {
+              values: values,
+              placeholder: `Type to search ${field}...`,
+              context: {
+                dataService: this.dataService,
+              },
+            };
           };
-        };
+        } else {
+          // Feature field uses text editor
+          columnDef.cellEditor = 'agTextCellEditor';
+          columnDef.cellEditorParams = (params: any) => {
+            return {
+              values: this.getUniqueFeatures(),
+              placeholder: `Type to search ${field}...`,
+            };
+          };
+        }
       } else if (field === 'startDate' || field === 'endDate') {
         // Date columns should use date picker - use exact same config as ColumnService
         columnDef.cellEditor = 'agDateCellEditor';

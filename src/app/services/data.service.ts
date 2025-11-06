@@ -132,172 +132,241 @@ export class DataService {
   }
 
   /**
-   * Search materials by query string using Windchill API
+   * Search materials by query string using Windchill API or mock data
    * @param query Search query string
-   * @returns Observable of material search results
+   * @param fromIndex Starting index for pagination (default: 1)
+   * @param toIndex Ending index for pagination (default: 20)
+   * @param isPartNumberSearch Whether this is a part number search (default: false)
+   * @returns Observable of material search results with pagination info
    */
-  searchMaterials(query: string): Observable<any[]> {
-    // If using mock API, load directly from material.json
+  searchMaterials(
+    query: string,
+    fromIndex: number = 1,
+    toIndex: number = 20,
+    isPartNumberSearch: boolean = false
+  ): Observable<{ results: any[]; resultCount: number; hasMore: boolean }> {
+    // Determine data source based on environment
+    let dataSource: Observable<any>;
+
     if (environment.useMockApi) {
-      return this.searchMaterialsMock(query);
-    }
+      // Mock: Load from JSON file
+      const mockApiUrl = environment.mockApiEndpoints.material;
+      dataSource = this.http.get<any>(mockApiUrl).pipe(
+        map((mockResponse) => {
+          // Filter results based on query (case-insensitive) - client-side filtering for mock
+          const queryLower = query.trim().toLowerCase();
+          let filteredResults = mockResponse.results || [];
 
-    // Production: Use real API with CSRF token
-    const apiUrl = `${environment.serverHostUrl}/Windchill/servlet/rest/rfa/materials/search`;
+          if (queryLower.length > 0 && filteredResults.length > 0) {
+            filteredResults = filteredResults.filter((result: any) => {
+              if (isPartNumberSearch) {
+                // For part number search, check materialcolorPartNumber
+                const partNumber = (
+                  result['material-color']?.materialcolorPartNumber || ''
+                ).toLowerCase();
+                return partNumber.includes(queryLower);
+              } else {
+                // For material search, check ptcmaterialName
+                const materialName = (result.material?.ptcmaterialName || '').toLowerCase();
+                return materialName.includes(queryLower);
+              }
+            });
+          }
 
-    // Build the request body
-    const requestBody = {
-      typeName: 'com.lcs.wc.material.LCSMaterial',
-      parameters: [
-        { name: 'fromIndex', value: '1' },
-        { name: 'toIndex', value: '100' },
-        { name: 'includeSupplier', value: true },
-      ],
-      attributeParameters: [
-        {
+          // Apply pagination for mock data
+          const resultCount = filteredResults.length;
+          const paginatedResults = filteredResults.slice(fromIndex - 1, toIndex);
+          const hasMore = resultCount > toIndex;
+
+          return {
+            results: paginatedResults,
+            resultCount,
+            hasMore,
+          };
+        })
+      );
+    } else {
+      // Production: Use real API with CSRF token
+      const apiUrl = `${environment.serverHostUrl}/Windchill/servlet/rest/rfa/materials/search`;
+
+      // Build attribute parameters based on search type
+      const attributeParameters: any[] = [];
+      if (isPartNumberSearch) {
+        attributeParameters.push({
+          name: 'materialcolorPartNumber',
+          typeId: 'com.lcs.wc.material.LCSMaterialColor',
+          value: query.trim().length > 0 ? `${query.trim()}*` : '*',
+        });
+      } else {
+        attributeParameters.push({
           name: 'ptcmaterialName',
           typeId: 'com.lcs.wc.material.LCSMaterial',
           value: query.trim().length > 0 ? `${query.trim()}*` : '*',
-        },
-      ],
-      viewParameters: [{ name: 'material.ptcmaterialName' }, { name: 'material.versionId' }],
-    };
+        });
+      }
 
-    // Get CSRF token from SessionService
-    const csrfToken = this.sessionService.getCsrfNonce();
+      // Build the request body
+      const requestBody = {
+        typeName: 'com.lcs.wc.material.LCSMaterial',
+        parameters: [
+          { name: 'fromIndex', value: fromIndex.toString() },
+          { name: 'toIndex', value: toIndex.toString() },
+          { name: 'includeSupplier', value: true },
+          { name: 'includeColor', value: true },
+        ],
+        attributeParameters: attributeParameters,
+        viewParameters: [
+          { name: 'material.ptcmaterialName' },
+          { name: 'material.versionId' },
+          { name: 'material-color.materialcolorPartNumber' },
+        ],
+      };
 
-    // Prepare headers
-    const headers: any = {
-      accept: 'application/json',
-      'Content-Type': 'application/json',
-    };
+      // Get CSRF token from SessionService
+      const csrfToken = this.sessionService.getCsrfNonce();
 
-    // Add CSRF token if available
-    if (csrfToken) {
-      headers['CSRF_NONCE'] = csrfToken;
+      // Prepare headers
+      const headers: any = {
+        accept: 'application/json',
+        'Content-Type': 'application/json',
+      };
+
+      // Add CSRF token if available
+      if (csrfToken) {
+        headers['CSRF_NONCE'] = csrfToken;
+      }
+
+      dataSource = this.http.post<any>(apiUrl, requestBody, { headers }).pipe(
+        map((response) => {
+          // Server-side filtering and pagination - extract results and pagination info
+          if (!response || !response.results || !Array.isArray(response.results)) {
+            return { results: [], resultCount: 0, hasMore: false };
+          }
+
+          const resultCount = response.resultCount || 0;
+          const hasMore = resultCount > toIndex;
+
+          return {
+            results: response.results,
+            resultCount,
+            hasMore,
+          };
+        })
+      );
     }
 
-    return this.http.post<any>(apiUrl, requestBody, { headers }).pipe(
-      map((response) => {
-        // Transform API response to material options
-        if (!response || !response.results || !Array.isArray(response.results)) {
-          return [];
-        }
-
-        return response.results.map((result: any) => {
-          const material = result.material || {};
-          const supplier = result.supplier || {};
-
-          return {
-            // Extract ptcmaterialName from material object
-            name: material.ptcmaterialName || '',
-            materialName: material.ptcmaterialName || '',
-            ptcmaterialName: material.ptcmaterialName || '',
-            versionId: material.versionId || '',
-            materialMaster: material.materialMaster || '',
-            materialVersionId: material.versionId || '',
-            // Supplier information
-            supplier: supplier.supplierName || supplier.name || '',
-            supplierName: supplier.supplierName || supplier.name || '',
-            supplierVersionId: supplier.versionId || '',
-            // Material-supplier relationship
-            materialSupplierVersionId: result['material-supplier']?.versionId || '',
-            // Full result object for reference
-            fullResult: result,
-          };
-        });
-      }),
-      catchError((error) => {
-        console.error('Material search API error:', error);
-        return of([]);
-      })
-    );
-  }
-
-  /**
-   * Mock material search for local development
-   * @param query Search query string
-   * @returns Observable of mocked material search results
-   */
-  private searchMaterialsMock(query: string): Observable<any[]> {
-    // Load mock data from JSON file
-    const mockApiUrl = environment.mockApiEndpoints.material;
-
-    return this.http.get<any>(mockApiUrl).pipe(
-      map((mockResponse) => {
-        // Filter results based on query (case-insensitive)
-        const queryLower = query.trim().toLowerCase();
-        let filteredResults = mockResponse.results || [];
-
-        if (queryLower.length > 0 && filteredResults.length > 0) {
-          filteredResults = filteredResults.filter((result: any) => {
-            const materialName = (result.material?.ptcmaterialName || '').toLowerCase();
-            return materialName.includes(queryLower);
-          });
-        }
-
-        // Transform to match the same format as production API
-        return filteredResults.map((result: any) => {
-          const material = result.material || {};
-          const supplier = result.supplier || {};
-
-          return {
-            // Extract ptcmaterialName from material object
-            name: material.ptcmaterialName || '',
-            materialName: material.ptcmaterialName || '',
-            ptcmaterialName: material.ptcmaterialName || '',
-            versionId: material.versionId || '',
-            materialMaster: material.materialMaster || '',
-            materialVersionId: material.versionId || '',
-            // Supplier information
-            supplier: supplier.supplierName || supplier.name || '',
-            supplierName: supplier.supplierName || supplier.name || '',
-            supplierVersionId: supplier.versionId || '',
-            // Material-supplier relationship
-            materialSupplierVersionId: result['material-supplier']?.versionId || '',
-            // Full result object for reference
-            fullResult: result,
-          };
-        });
-      }),
-      catchError((error) => {
-        console.warn('Failed to load mock material data:', error);
-        // Return empty array if file fails to load
-        return of([]);
-      })
-    );
-  }
-
-  /**
-   * Get material data by material name/ID from mock2.json
-   * Currently uses mock2.json data, later will be replaced with API call
-   * @param materialName Material name or ID
-   * @returns Observable of material data
-   */
-  getMaterialFromMock2(materialName: string): Observable<any | null> {
-    // For now, load from mock2.json
-    // Later: Replace this with API call when backend is ready
-    const apiUrl = '/mock2.json';
-
-    return this.http.get<any>(apiUrl).pipe(
+    // Common transformation logic for both mock and real API
+    return dataSource.pipe(
       map((data) => {
-        if (!data || !data.mbom || !Array.isArray(data.mbom)) {
-          return null;
+        const results = data.results || [];
+        const resultCount = data.resultCount || 0;
+        const hasMore = data.hasMore || false;
+
+        // Transform results to common format
+        const transformedResults = results.map((result: any) => {
+          const material = result.material || {};
+          const supplier = result.supplier || {};
+          const materialColor = result['material-color'] || {};
+          const color = result.color || {};
+
+          // Extract supplier name - prefer supplierName, fallback to name
+          const supplierName = supplier.supplierName || supplier.name || '';
+
+          // Extract color name - prefer colorName, fallback to name
+          const colorName = color.colorName || color.name || '';
+
+          return {
+            // Extract ptcmaterialName from material object
+            name: material.ptcmaterialName || '',
+            materialName: material.ptcmaterialName || '',
+            ptcmaterialName: material.ptcmaterialName || '',
+            versionId: material.versionId || '',
+            materialMaster: material.materialMaster || '',
+            materialVersionId: material.versionId || '',
+            // Supplier information - ensure we have the actual supplier name
+            supplier: supplierName,
+            supplierName: supplierName,
+            supplierVersionId: supplier.versionId || '',
+            // Part number information
+            partNumber: materialColor.materialcolorPartNumber || '',
+            materialcolorPartNumber: materialColor.materialcolorPartNumber || '',
+            // Color information - ensure we have the actual color name
+            colorName: colorName,
+            color: colorName,
+            // Material-supplier relationship
+            materialSupplierVersionId: result['material-supplier']?.versionId || '',
+            // Full result object for reference (contains original API structure)
+            fullResult: result,
+          };
+        });
+
+        // Group by material name for material search (not for part number search)
+        let finalResults = transformedResults;
+        if (!isPartNumberSearch) {
+          finalResults = this.groupMaterialsByName(transformedResults);
         }
 
-        // Find exact match or closest match
-        const material = data.mbom.find(
-          (m: any) =>
-            (m.material && m.material.toLowerCase() === materialName.toLowerCase()) ||
-            (m.part && m.part.toLowerCase() === materialName.toLowerCase())
-        );
-
-        return material || null;
+        return { results: finalResults, resultCount, hasMore };
       }),
       catchError((error) => {
-        return of(null);
+        const errorMessage = environment.useMockApi
+          ? 'Failed to load mock material data'
+          : 'Material search API error';
+        console.error(errorMessage + ':', error);
+        return of({ results: [], resultCount: 0, hasMore: false });
       })
     );
+  }
+
+  /**
+   * Group materials by ptcmaterialName to show unique material names in dropdown
+   * Aggregates colors, suppliers, and part numbers for each material
+   */
+  private groupMaterialsByName(materials: any[]): any[] {
+    const grouped = materials.reduce((acc: any, item: any) => {
+      const materialName = item.ptcmaterialName || item.materialName || item.name || '';
+
+      if (!materialName) return acc;
+
+      if (!acc[materialName]) {
+        // First occurrence - create grouped entry
+        const colorName = item.colorName || item.color || '';
+        const supplierName = item.supplier || item.supplierName || '';
+
+        acc[materialName] = {
+          ...item,
+          // Aggregate arrays for variants - ensure we use actual values
+          colors: colorName ? [colorName] : [],
+          suppliers: supplierName ? [supplierName] : [],
+          partNumbers: item.materialcolorPartNumber ? [item.materialcolorPartNumber] : [],
+          variants: [item], // Store all variants for reference
+          // Keep first variant's data as primary
+        };
+      } else {
+        // Add to existing group - ensure we extract actual color and supplier names
+        const colorName = item.colorName || item.color || '';
+        const supplierName = item.supplier || item.supplierName || '';
+
+        if (colorName && !acc[materialName].colors.includes(colorName)) {
+          acc[materialName].colors.push(colorName);
+        }
+        if (supplierName && !acc[materialName].suppliers.includes(supplierName)) {
+          acc[materialName].suppliers.push(supplierName);
+        }
+        if (
+          item.materialcolorPartNumber &&
+          !acc[materialName].partNumbers.includes(item.materialcolorPartNumber)
+        ) {
+          acc[materialName].partNumbers.push(item.materialcolorPartNumber);
+        }
+        acc[materialName].variants.push(item);
+      }
+
+      return acc;
+    }, {});
+
+    // Convert grouped object to array
+    return Object.values(grouped);
   }
 
   private handleError(error: HttpErrorResponse) {

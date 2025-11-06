@@ -37,55 +37,6 @@
 
     <!-- Modal Content -->
     <div class="modal-content">
-      <!-- Material Autocomplete Search -->
-      <div class="material-search-card">
-        <div class="card-header">
-          <h3>Search Material</h3>
-        </div>
-        <div class="material-search-container">
-          <input
-            type="text"
-            [ngModel]="materialSearchInput"
-            (ngModelChange)="onMaterialSearchChange($event)"
-            (input)="onMaterialSearchInput($event)"
-            (focus)="onMaterialSearchFocus()"
-            (blur)="onMaterialSearchBlur()"
-            (keydown)="onMaterialSearchKeyDown($event)"
-            placeholder="Type to search materials..."
-            class="material-search-input"
-          />
-          <div
-            *ngIf="showAutocompleteDropdown && filteredMaterials.length > 0"
-            class="material-autocomplete-dropdown"
-            (click)="$event.stopPropagation()"
-            (mousedown)="$event.preventDefault()"
-          >
-            <div class="dropdown-header">
-              Select material ({{ filteredMaterials.length }} available)
-            </div>
-            <div
-              *ngFor="let material of filteredMaterials; let i = index"
-              [class.selected]="i === selectedMaterialIndex"
-              class="dropdown-option"
-              (click)="selectMaterial(material); $event.stopPropagation()"
-              (mouseenter)="onMaterialOptionMouseEnter(i)"
-            >
-              <div class="material-option">
-                <div class="material-name">{{ material.name }}</div>
-                <div
-                  class="material-details"
-                  *ngIf="material.supplier || material.color || material.feature"
-                >
-                  <span *ngIf="material.supplier">Supplier: {{ material.supplier }}</span>
-                  <span *ngIf="material.color"> | Color: {{ material.color }}</span>
-                  <span *ngIf="material.feature"> | Feature: {{ material.feature }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Material Details Table - Shows all data except SKUs -->
       <div class="key-value-table-card" *ngIf="getAllRowData().length > 0">
         <div class="card-header">

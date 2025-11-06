@@ -213,6 +213,19 @@ export class ColumnService {
         suppressSizeToFit: false,
         suppressAutoSize: false,
         editable: (params) => params.data && params.data.isNewRow, // Editable for new rows
+        cellEditor: AutocompleteCellEditorComponent,
+        cellEditorParams: (params: any) => {
+          // Use row-specific suppliers if available, otherwise use global list
+          const availableSuppliers =
+            params.data?._availableSuppliers || componentInstance.getUniqueSuppliers?.() || [];
+          return {
+            values: availableSuppliers,
+            placeholder: 'Type to search suppliers...',
+            context: {
+              dataService: dataService,
+            },
+          };
+        },
         cellRenderer: (params: any) => {
           return params.value || '';
         },
@@ -237,6 +250,19 @@ export class ColumnService {
         suppressSizeToFit: false,
         suppressAutoSize: false,
         editable: (params) => params.data && params.data.isNewRow, // Editable for new rows
+        cellEditor: AutocompleteCellEditorComponent,
+        cellEditorParams: (params: any) => {
+          // Use row-specific colors if available, otherwise use global list
+          const availableColors =
+            params.data?._availableColors || componentInstance.getUniqueColors?.() || [];
+          return {
+            values: availableColors,
+            placeholder: 'Type to search colors...',
+            context: {
+              dataService: dataService,
+            },
+          };
+        },
         cellRenderer: (params: any) => {
           return params.value || '';
         },

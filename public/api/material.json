@@ -1,176 +1,537 @@
 {
-  "resultCount": 8,
+  "resultCount": 15,
   "from": 1,
-  "to": 8,
+  "to": 15,
   "results": [
     {
       "material-supplier": {
-        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:254808",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:311784",
         "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
-        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:254807"
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:311783"
       },
       "material": {
-        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:254651",
-        "versionId": "VR:com.lcs.wc.material.LCSMaterial:254652",
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:297300",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:297301",
         "thumbnail": null,
         "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
-        "ptcmaterialName": "Afsar BEARING SEALED 608Z"
+        "ptcmaterialName": "PEDAL COMBO SPORT XTR"
+      },
+      "color": {
+        "colorName": "NA-Gold Yellow(990)",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+        "name": "NA-Gold Yellow(990)",
+        "iterationId": "OR:com.lcs.wc.color.LCSColor:310617",
+        "colorHexidecimalValue": "DEBD17"
       },
       "supplier": {
-        "supplierName": "Test_Supplier",
-        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:141427",
+        "supplierName": "Glory Wheel Enterprise Co. LTD",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:299549",
         "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
         "primaryImageURL": null,
-        "name": "Test_Supplier"
+        "name": "Glory Wheel Enterprise Co. LTD"
+      },
+      "material-color": {
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+        "name": "",
+        "materialcolorPartNumber": "41541",
+        "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:312337"
       }
     },
     {
       "material-supplier": {
-        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:268831",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:311784",
         "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
-        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:268830"
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:311783"
       },
       "material": {
-        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:268176",
-        "versionId": "VR:com.lcs.wc.material.LCSMaterial:268177",
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:297300",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:297301",
         "thumbnail": null,
         "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
-        "ptcmaterialName": "DERAILLEUR CAGE REAR"
+        "ptcmaterialName": "PEDAL COMBO SPORT XTR"
+      },
+      "color": {
+        "colorName": "NA-Light blue(3244)",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+        "name": "NA-Light blue(3244)",
+        "iterationId": "OR:com.lcs.wc.color.LCSColor:310592",
+        "colorHexidecimalValue": "597BEA"
       },
       "supplier": {
-        "supplierName": "sup2",
-        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:157495",
+        "supplierName": "Glory Wheel Enterprise Co. LTD",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:299549",
         "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
         "primaryImageURL": null,
-        "name": "sup2"
+        "name": "Glory Wheel Enterprise Co. LTD"
+      },
+      "material-color": {
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+        "name": "",
+        "materialcolorPartNumber": "41542",
+        "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:312591"
       }
     },
     {
       "material-supplier": {
-        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:268832",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:311784",
         "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
-        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:268831"
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:311783"
       },
       "material": {
-        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:268177",
-        "versionId": "VR:com.lcs.wc.material.LCSMaterial:268178",
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:297300",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:297301",
         "thumbnail": null,
         "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
-        "ptcmaterialName": "FASTENER CLIP-LOCK 8MM"
+        "ptcmaterialName": "PEDAL COMBO SPORT XTR"
+      },
+      "color": {
+        "colorName": "NA-pink(3234)",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+        "name": "NA-pink(3234)",
+        "iterationId": "OR:com.lcs.wc.color.LCSColor:310567",
+        "colorHexidecimalValue": "EA1787"
       },
       "supplier": {
-        "supplierName": "Supplier_3",
-        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:157496",
+        "supplierName": "Glory Wheel Enterprise Co. LTD",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:299549",
         "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
         "primaryImageURL": null,
-        "name": "Supplier_3"
+        "name": "Glory Wheel Enterprise Co. LTD"
+      },
+      "material-color": {
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+        "name": "",
+        "materialcolorPartNumber": "41543",
+        "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:312361"
       }
     },
     {
       "material-supplier": {
-        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:268833",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:311784",
         "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
-        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:268832"
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:311783"
       },
       "material": {
-        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:268178",
-        "versionId": "VR:com.lcs.wc.material.LCSMaterial:268179",
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:297300",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:297301",
         "thumbnail": null,
         "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
-        "ptcmaterialName": "HANDLEBAR GRIP RACING"
+        "ptcmaterialName": "PEDAL COMBO SPORT XTR"
+      },
+      "color": {
+        "colorName": "Red",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+        "name": "Red",
+        "iterationId": "OR:com.lcs.wc.color.LCSColor:147309",
+        "colorHexidecimalValue": "FF0D00"
       },
       "supplier": {
-        "supplierName": "Supplier_4",
-        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:157497",
+        "supplierName": "Glory Wheel Enterprise Co. LTD",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:299549",
         "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
         "primaryImageURL": null,
-        "name": "Supplier_4"
+        "name": "Glory Wheel Enterprise Co. LTD"
+      },
+      "material-color": {
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+        "name": "",
+        "materialcolorPartNumber": "41544",
+        "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:312206"
       }
     },
     {
       "material-supplier": {
-        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:268834",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:311784",
         "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
-        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:268833"
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:311783"
       },
       "material": {
-        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:268179",
-        "versionId": "VR:com.lcs.wc.material.LCSMaterial:268180",
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:297300",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:297301",
         "thumbnail": null,
         "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
-        "ptcmaterialName": "CABLE SHIFT REAR"
+        "ptcmaterialName": "PEDAL COMBO SPORT XTR"
+      },
+      "color": {
+        "colorName": "TL-yellow(yellow)",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+        "name": "TL-yellow(yellow)",
+        "iterationId": "OR:com.lcs.wc.color.LCSColor:157677",
+        "colorHexidecimalValue": "FFF400"
       },
       "supplier": {
-        "supplierName": "Supplier_5",
-        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:157498",
+        "supplierName": "Glory Wheel Enterprise Co. LTD",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:299549",
         "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
         "primaryImageURL": null,
-        "name": "Supplier_5"
+        "name": "Glory Wheel Enterprise Co. LTD"
+      },
+      "material-color": {
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+        "name": "",
+        "materialcolorPartNumber": "41545",
+        "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:312824"
       }
     },
     {
       "material-supplier": {
-        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:268835",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:311538",
         "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
-        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:268834"
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:311537"
       },
       "material": {
-        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:268180",
-        "versionId": "VR:com.lcs.wc.material.LCSMaterial:268181",
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:297300",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:297301",
         "thumbnail": null,
         "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
-        "ptcmaterialName": "CHAIN LINK PLATE"
+        "ptcmaterialName": "PEDAL COMBO SPORT XTR"
+      },
+      "color": {
+        "colorName": "NA-Gold Yellow(990)",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+        "name": "NA-Gold Yellow(990)",
+        "iterationId": "OR:com.lcs.wc.color.LCSColor:310617",
+        "colorHexidecimalValue": "DEBD17"
       },
       "supplier": {
-        "supplierName": "Supplier_6",
-        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:157499",
+        "supplierName": "GNC - Giant China-GC",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:142267",
         "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
         "primaryImageURL": null,
-        "name": "Supplier_6"
+        "name": "GNC - Giant China-GC"
+      },
+      "material-color": {
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+        "name": "",
+        "materialcolorPartNumber": "41546",
+        "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:312062"
       }
     },
     {
       "material-supplier": {
-        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:268836",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:311538",
         "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
-        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:268835"
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:311537"
       },
       "material": {
-        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:268181",
-        "versionId": "VR:com.lcs.wc.material.LCSMaterial:268182",
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:297300",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:297301",
         "thumbnail": null,
         "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
-        "ptcmaterialName": "BRAKE PAD SET"
+        "ptcmaterialName": "PEDAL COMBO SPORT XTR"
+      },
+      "color": {
+        "colorName": "NA-Light blue(3244)",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+        "name": "NA-Light blue(3244)",
+        "iterationId": "OR:com.lcs.wc.color.LCSColor:310592",
+        "colorHexidecimalValue": "597BEA"
       },
       "supplier": {
-        "supplierName": "Supplier_7",
-        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:157500",
+        "supplierName": "GNC - Giant China-GC",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:142267",
         "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
         "primaryImageURL": null,
-        "name": "Supplier_7"
+        "name": "GNC - Giant China-GC"
+      },
+      "material-color": {
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+        "name": "",
+        "materialcolorPartNumber": "41547",
+        "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:312391"
       }
     },
     {
       "material-supplier": {
-        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:268837",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:311538",
         "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
-        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:268836"
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:311537"
       },
       "material": {
-        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:268182",
-        "versionId": "VR:com.lcs.wc.material.LCSMaterial:268183",
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:297300",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:297301",
         "thumbnail": null,
         "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
-        "ptcmaterialName": "WHEEL RIM ALLOY"
+        "ptcmaterialName": "PEDAL COMBO SPORT XTR"
+      },
+      "color": {
+        "colorName": "NA-pink(3234)",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+        "name": "NA-pink(3234)",
+        "iterationId": "OR:com.lcs.wc.color.LCSColor:310567",
+        "colorHexidecimalValue": "EA1787"
       },
       "supplier": {
-        "supplierName": "Supplier_8",
-        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:157501",
+        "supplierName": "GNC - Giant China-GC",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:142267",
         "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
         "primaryImageURL": null,
-        "name": "Supplier_8"
+        "name": "GNC - Giant China-GC"
+      },
+      "material-color": {
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+        "name": "",
+        "materialcolorPartNumber": "41548",
+        "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:312083"
+      }
+    },
+    {
+      "material-supplier": {
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:311538",
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:311537"
+      },
+      "material": {
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:297300",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:297301",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
+        "ptcmaterialName": "PEDAL COMBO SPORT XTR"
+      },
+      "color": {
+        "colorName": "Red",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+        "name": "Red",
+        "iterationId": "OR:com.lcs.wc.color.LCSColor:147309",
+        "colorHexidecimalValue": "FF0D00"
+      },
+      "supplier": {
+        "supplierName": "GNC - Giant China-GC",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:142267",
+        "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+        "primaryImageURL": null,
+        "name": "GNC - Giant China-GC"
+      },
+      "material-color": {
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+        "name": "",
+        "materialcolorPartNumber": "41549",
+        "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:312848"
+      }
+    },
+    {
+      "material-supplier": {
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:311538",
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:311537"
+      },
+      "material": {
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:297300",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:297301",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
+        "ptcmaterialName": "PEDAL COMBO SPORT XTR"
+      },
+      "color": {
+        "colorName": "TL-yellow(yellow)",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+        "name": "TL-yellow(yellow)",
+        "iterationId": "OR:com.lcs.wc.color.LCSColor:157677",
+        "colorHexidecimalValue": "FFF400"
+      },
+      "supplier": {
+        "supplierName": "GNC - Giant China-GC",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:142267",
+        "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+        "primaryImageURL": null,
+        "name": "GNC - Giant China-GC"
+      },
+      "material-color": {
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+        "name": "",
+        "materialcolorPartNumber": "41550",
+        "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:312519"
+      }
+    },
+    {
+      "material-supplier": {
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:311617",
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:311616"
+      },
+      "material": {
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:297300",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:297301",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
+        "ptcmaterialName": "PEDAL COMBO SPORT XTR"
+      },
+      "color": {
+        "colorName": "NA-Gold Yellow(990)",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+        "name": "NA-Gold Yellow(990)",
+        "iterationId": "OR:com.lcs.wc.color.LCSColor:310617",
+        "colorHexidecimalValue": "DEBD17"
+      },
+      "supplier": {
+        "supplierName": "Hartex Rubber Private Limited",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:299582",
+        "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+        "primaryImageURL": null,
+        "name": "Hartex Rubber Private Limited"
+      },
+      "material-color": {
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+        "name": "",
+        "materialcolorPartNumber": "41551",
+        "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:312728"
+      }
+    },
+    {
+      "material-supplier": {
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:311617",
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:311616"
+      },
+      "material": {
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:297300",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:297301",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
+        "ptcmaterialName": "PEDAL COMBO SPORT XTR"
+      },
+      "color": {
+        "colorName": "NA-Light blue(3244)",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+        "name": "NA-Light blue(3244)",
+        "iterationId": "OR:com.lcs.wc.color.LCSColor:310592",
+        "colorHexidecimalValue": "597BEA"
+      },
+      "supplier": {
+        "supplierName": "Hartex Rubber Private Limited",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:299582",
+        "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+        "primaryImageURL": null,
+        "name": "Hartex Rubber Private Limited"
+      },
+      "material-color": {
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+        "name": "",
+        "materialcolorPartNumber": "41552",
+        "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:312897"
+      }
+    },
+    {
+      "material-supplier": {
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:311617",
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:311616"
+      },
+      "material": {
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:297300",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:297301",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
+        "ptcmaterialName": "PEDAL COMBO SPORT XTR"
+      },
+      "color": {
+        "colorName": "NA-pink(3234)",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+        "name": "NA-pink(3234)",
+        "iterationId": "OR:com.lcs.wc.color.LCSColor:310567",
+        "colorHexidecimalValue": "EA1787"
+      },
+      "supplier": {
+        "supplierName": "Hartex Rubber Private Limited",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:299582",
+        "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+        "primaryImageURL": null,
+        "name": "Hartex Rubber Private Limited"
+      },
+      "material-color": {
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+        "name": "",
+        "materialcolorPartNumber": "41553",
+        "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:312753"
+      }
+    },
+    {
+      "material-supplier": {
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:311617",
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:311616"
+      },
+      "material": {
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:297300",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:297301",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
+        "ptcmaterialName": "PEDAL COMBO SPORT XTR"
+      },
+      "color": {
+        "colorName": "Red",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+        "name": "Red",
+        "iterationId": "OR:com.lcs.wc.color.LCSColor:147309",
+        "colorHexidecimalValue": "FF0D00"
+      },
+      "supplier": {
+        "supplierName": "Hartex Rubber Private Limited",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:299582",
+        "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+        "primaryImageURL": null,
+        "name": "Hartex Rubber Private Limited"
+      },
+      "material-color": {
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+        "name": "",
+        "materialcolorPartNumber": "41554",
+        "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:312491"
+      }
+    },
+    {
+      "material-supplier": {
+        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:311617",
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:311616"
+      },
+      "material": {
+        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:297300",
+        "versionId": "VR:com.lcs.wc.material.LCSMaterial:297301",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterial",
+        "ptcmaterialName": "PEDAL COMBO SPORT XTR"
+      },
+      "color": {
+        "colorName": "TL-yellow(yellow)",
+        "thumbnail": null,
+        "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+        "name": "TL-yellow(yellow)",
+        "iterationId": "OR:com.lcs.wc.color.LCSColor:157677",
+        "colorHexidecimalValue": "FFF400"
+      },
+      "supplier": {
+        "supplierName": "Hartex Rubber Private Limited",
+        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:299582",
+        "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+        "primaryImageURL": null,
+        "name": "Hartex Rubber Private Limited"
+      },
+      "material-color": {
+        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+        "name": "",
+        "materialcolorPartNumber": "41555",
+        "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:312182"
       }
     }
   ],
-  "errors": []
+  "errors": [
+    {
+      "error": "(wt.indexsearch.indexsearchResource/3) wt.util.WTException:\nThere is a problem with your query or the connection with the Indexing Engine. Provide your administrator with this message and the time that you encountered this error."
+    }
+  ]
 }

@@ -36,11 +36,17 @@ import { of, Subject } from 'rxjs';
         class="autocomplete-dropdown"
         #dropdown
         (click)="$event.stopPropagation()"
+        (scroll)="onDropdownScroll($event)"
       >
         <div class="dropdown-header">
-          {{ isMaterialSearch ? 'Select material' : 'Select part number' }} ({{
-            filteredOptions.length
+          {{
+            isMaterialSearch
+              ? 'Select material'
+              : isPartNumberSearch
+              ? 'Select part number'
+              : 'Select option'
           }}
+          ({{ filteredOptions.length }}
           available)
         </div>
         <div
@@ -50,16 +56,45 @@ import { of, Subject } from 'rxjs';
           (click)="selectOption(option); $event.stopPropagation()"
           (mouseenter)="selectedIndex = i"
         >
-          <div *ngIf="isMaterialSearch && materialOptions[i]" class="material-option">
+          <div
+            *ngIf="(isMaterialSearch || isPartNumberSearch) && materialOptions[i]"
+            class="material-option"
+          >
             <div class="material-name">{{ option }}</div>
             <div class="material-details">
-              <span *ngIf="materialOptions[i].supplier"
+              <!-- For material search, show aggregated info if available -->
+              <span
+                *ngIf="
+                  isMaterialSearch &&
+                  materialOptions[i].suppliers &&
+                  materialOptions[i].suppliers.length > 0
+                "
+                >Suppliers: {{ materialOptions[i].suppliers.slice(0, 2).join(', ')
+                }}{{ materialOptions[i].suppliers.length > 2 ? '...' : '' }}</span
+              >
+              <span
+                *ngIf="
+                  isMaterialSearch &&
+                  materialOptions[i].colors &&
+                  materialOptions[i].colors.length > 0
+                "
+              >
+                | Colors: {{ materialOptions[i].colors.slice(0, 2).join(', ')
+                }}{{ materialOptions[i].colors.length > 2 ? '...' : '' }}</span
+              >
+              <!-- For part number search, show single values -->
+              <span *ngIf="isPartNumberSearch && materialOptions[i].supplier"
                 >Supplier: {{ materialOptions[i].supplier }}</span
               >
-              <span *ngIf="materialOptions[i].color"> | Color: {{ materialOptions[i].color }}</span>
+              <span *ngIf="isPartNumberSearch && materialOptions[i].color">
+                | Color: {{ materialOptions[i].color }}</span
+              >
+              <span *ngIf="isPartNumberSearch && materialOptions[i].ptcmaterialName">
+                | Material: {{ materialOptions[i].ptcmaterialName }}</span
+              >
             </div>
           </div>
-          <div *ngIf="!isMaterialSearch || !materialOptions[i]">
+          <div *ngIf="!isMaterialSearch && !isPartNumberSearch">
             {{ option }}
           </div>
         </div>
@@ -207,6 +242,7 @@ export class AutocompleteCellEditorComponent
   public showDropdown: boolean = false;
   public selectedIndex: number = -1;
   public isMaterialSearch: boolean = false; // Flag to determine if this is material search
+  public isPartNumberSearch: boolean = false; // Flag to determine if this is part number search
 
   private params: any;
   private originalValue: string = '';
@@ -214,6 +250,11 @@ export class AutocompleteCellEditorComponent
   private dataService: DataService;
   private searchSubject = new Subject<string>();
   private isDestroyed: boolean = false;
+  private currentQuery: string = '';
+  private fromIndex: number = 1;
+  private toIndex: number = 20;
+  private hasMore: boolean = false;
+  private isLoadingMore: boolean = false;
 
   constructor() {
     // DataService will be set in agInit when params are available
@@ -229,42 +270,65 @@ export class AutocompleteCellEditorComponent
         debounceTime(300), // Wait 300ms after user stops typing
         distinctUntilChanged(), // Only search if query changed
         switchMap((query) => {
-          // For material search, use API search if DataService is available
-          if (this.isMaterialSearch && this.dataService) {
-            // Use API search for materials (minimum 1 character for better UX)
+          // For material or part number search, use API search if DataService is available
+          if ((this.isMaterialSearch || this.isPartNumberSearch) && this.dataService) {
+            // Use API search (minimum 1 character for better UX)
             if (query && query.length >= 1) {
-              return this.dataService.searchMaterials(query);
+              this.currentQuery = query;
+              this.fromIndex = 1;
+              this.toIndex = 20;
+              return this.dataService.searchMaterials(
+                query,
+                this.fromIndex,
+                this.toIndex,
+                this.isPartNumberSearch
+              );
             }
-            return of([]);
+            return of({ results: [], resultCount: 0, hasMore: false });
           } else if (query && query.length >= 2) {
             // Fallback to local filtering for non-material fields
-            return of(this.filterLocalOptions(query));
+            return of({ results: this.filterLocalOptions(query), resultCount: 0, hasMore: false });
           }
-          return of([]);
+          return of({ results: [], resultCount: 0, hasMore: false });
         }),
         catchError((error) => {
-          return of([]);
+          return of({ results: [], resultCount: 0, hasMore: false });
         })
       )
-      .subscribe((materials) => {
+      .subscribe((response) => {
         if (!this.isDestroyed) {
+          const materials = response.results || [];
+          this.hasMore = response.hasMore || false;
+
           if (Array.isArray(materials) && materials.length > 0) {
-            // API response format - extract ptcmaterialName from material object
-            this.materialOptions = materials;
-            this.filteredOptions = materials
-              .map(
-                (material) =>
-                  material.ptcmaterialName || material.materialName || material.name || ''
-              )
-              .filter((name) => name.length > 0); // Filter out empty strings
-          } else {
-            // Local filtering fallback
+            // API response format - extract display value based on search type
+            if (this.fromIndex === 1) {
+              // First page - replace existing results
+              this.materialOptions = materials;
+            } else {
+              // Subsequent pages - append results
+              this.materialOptions = [...this.materialOptions, ...materials];
+            }
+
+            // Extract display value based on search type
+            this.filteredOptions = this.materialOptions
+              .map((material) => {
+                if (this.isPartNumberSearch) {
+                  return material.materialcolorPartNumber || material.partNumber || '';
+                } else {
+                  return material.ptcmaterialName || material.materialName || material.name || '';
+                }
+              })
+              .filter((name) => name.length > 0);
+          } else if (this.fromIndex === 1) {
+            // First page with no results - clear everything
             this.materialOptions = [];
             this.filteredOptions = Array.isArray(materials)
               ? materials.filter((m) => m && m.length > 0)
               : [];
           }
 
+          this.isLoadingMore = false;
           const shouldShow = this.filteredOptions.length > 0;
           this.showDropdown = shouldShow;
 
@@ -283,17 +347,21 @@ export class AutocompleteCellEditorComponent
       this.input.nativeElement.select();
 
       // Show dropdown immediately when focused
-      this.showDropdown = this.filteredOptions.length > 0;
+      if (this.isMaterialSearch || this.isPartNumberSearch) {
+        // For material/part number search, show dropdown only after search results
+        // Trigger initial search if value exists
+        if (this.dataService && this.value && this.value.length >= 1) {
+          this.searchSubject.next(this.value);
+        }
+      } else if (this.options.length > 0) {
+        // For static options (color, supplier, etc.), show dropdown immediately
+        this.filterOptions();
+        this.showDropdown = this.filteredOptions.length > 0;
+      }
 
       // Position dropdown if it's visible
       if (this.showDropdown) {
         this.positionDropdown();
-      }
-
-      // For material search with API, trigger initial search if value exists
-      if (this.isMaterialSearch && this.dataService && this.value && this.value.length >= 1) {
-        // Trigger search for existing value
-        this.searchSubject.next(this.value);
       }
     }, 0);
   }
@@ -313,22 +381,38 @@ export class AutocompleteCellEditorComponent
     this.value = params.value ? String(params.value) : '';
     this.placeholder = params.placeholder || 'Type to search materials...';
 
-    // Determine if this is material search
+    // Determine if this is material or part number search
+    const fieldName = params.column?.getColId() || params.colDef?.field || '';
+    this.isPartNumberSearch = fieldName === 'bomLinkPart' || fieldName === 'part';
     this.isMaterialSearch =
       params.useApiSearch ||
       (this.dataService &&
-        (this.placeholder.includes('material') || this.placeholder.includes('Material')));
+        (this.placeholder.includes('material') || this.placeholder.includes('Material'))) ||
+      (this.dataService && fieldName === 'material');
 
     // Get options from params - support multiple formats
-    if (params.values && Array.isArray(params.values)) {
-      this.options = params.values.map((opt: any) => String(opt));
-    } else if (typeof params.values === 'function') {
-      this.options = params.values().map((opt: any) => String(opt));
+    // Note: cellEditorParams can be a function, but AG Grid calls it and passes the result as params
+    // So params.values should already be the array if it exists
+    let valuesParam = params.values;
+    if (typeof valuesParam === 'function') {
+      // If values is a function, call it with params to get the actual values
+      valuesParam = valuesParam(params);
+    }
+
+    if (valuesParam && Array.isArray(valuesParam)) {
+      this.options = valuesParam
+        .map((opt: any) => String(opt))
+        .filter((opt: string) => opt.length > 0);
     } else if (params.options && Array.isArray(params.options)) {
       // Alternative property name for options
-      this.options = params.options.map((opt: any) => String(opt));
+      this.options = params.options
+        .map((opt: any) => String(opt))
+        .filter((opt: string) => opt.length > 0);
     } else if (typeof params.options === 'function') {
-      this.options = params.options().map((opt: any) => String(opt));
+      this.options = params
+        .options()
+        .map((opt: any) => String(opt))
+        .filter((opt: string) => opt.length > 0);
     } else {
       this.options = [];
     }
@@ -338,10 +422,21 @@ export class AutocompleteCellEditorComponent
       this.customFilterFunction = params.filterFunction;
     }
 
-    // Only filter options if we have static options (not using Material API)
-    if (this.options.length > 0 && !this.isMaterialSearch) {
+    // Only filter options if we have static options (not using Material API or Part Number search)
+    if (this.options.length > 0 && !this.isMaterialSearch && !this.isPartNumberSearch) {
       this.filterOptions();
     }
+
+    console.log(
+      'Autocomplete initialized - field:',
+      fieldName,
+      'options:',
+      this.options.length,
+      'isMaterialSearch:',
+      this.isMaterialSearch,
+      'isPartNumberSearch:',
+      this.isPartNumberSearch
+    ); // Debug
   }
 
   getValue(): any {
@@ -355,11 +450,11 @@ export class AutocompleteCellEditorComponent
   onInputChange(event: any): void {
     this.value = event.target.value || '';
 
-    // For material search, trigger API search
-    if (this.isMaterialSearch) {
+    // For material or part number search, trigger API search
+    if (this.isMaterialSearch || this.isPartNumberSearch) {
       this.searchSubject.next(this.value);
     } else {
-      // For static options, filter locally
+      // For static options (color, supplier, etc.), filter locally
       this.filterOptions();
       this.showDropdown = this.filteredOptions.length > 0;
     }
@@ -419,7 +514,7 @@ export class AutocompleteCellEditorComponent
 
   onInputClick(): void {
     // Show dropdown when input is clicked
-    if (!this.isMaterialSearch) {
+    if (!this.isMaterialSearch && !this.isPartNumberSearch) {
       this.filterOptions();
       this.showDropdown = this.filteredOptions.length > 0;
     }
@@ -431,7 +526,7 @@ export class AutocompleteCellEditorComponent
 
   onInputFocus(): void {
     // Show dropdown when input is focused
-    if (!this.isMaterialSearch) {
+    if (!this.isMaterialSearch && !this.isPartNumberSearch) {
       this.filterOptions();
       this.showDropdown = this.filteredOptions.length > 0;
     }
@@ -441,17 +536,126 @@ export class AutocompleteCellEditorComponent
     }
   }
 
+  onDropdownScroll(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (!target || this.isLoadingMore || !this.hasMore) return;
+
+    // Check if scrolled near bottom (within 50px)
+    const scrollTop = target.scrollTop;
+    const scrollHeight = target.scrollHeight;
+    const clientHeight = target.clientHeight;
+
+    if (scrollTop + clientHeight >= scrollHeight - 50) {
+      this.loadMoreResults();
+    }
+  }
+
+  private loadMoreResults(): void {
+    if (this.isLoadingMore || !this.hasMore || !this.dataService || !this.currentQuery) return;
+
+    this.isLoadingMore = true;
+    this.fromIndex = this.toIndex + 1;
+    this.toIndex = this.fromIndex + 19; // Load next 20 items
+
+    this.dataService
+      .searchMaterials(this.currentQuery, this.fromIndex, this.toIndex, this.isPartNumberSearch)
+      .subscribe({
+        next: (response) => {
+          if (!this.isDestroyed) {
+            const materials = response.results || [];
+            this.hasMore = response.hasMore || false;
+
+            if (Array.isArray(materials) && materials.length > 0) {
+              // For material search with grouped results, merge new materials into existing groups
+              if (this.isMaterialSearch && !this.isPartNumberSearch) {
+                // Merge new materials with existing grouped materials
+                const existingMap = new Map(
+                  this.materialOptions.map((m: any) => [
+                    m.ptcmaterialName || m.materialName || m.name,
+                    m,
+                  ])
+                );
+
+                materials.forEach((newMat: any) => {
+                  const key = newMat.ptcmaterialName || newMat.materialName || newMat.name;
+                  if (existingMap.has(key)) {
+                    // Merge into existing group
+                    const existing = existingMap.get(key)!;
+                    if (newMat.colorName && !existing.colors?.includes(newMat.colorName)) {
+                      existing.colors = existing.colors || [];
+                      existing.colors.push(newMat.colorName);
+                    }
+                    if (newMat.supplier && !existing.suppliers?.includes(newMat.supplier)) {
+                      existing.suppliers = existing.suppliers || [];
+                      existing.suppliers.push(newMat.supplier);
+                    }
+                    if (
+                      newMat.materialcolorPartNumber &&
+                      !existing.partNumbers?.includes(newMat.materialcolorPartNumber)
+                    ) {
+                      existing.partNumbers = existing.partNumbers || [];
+                      existing.partNumbers.push(newMat.materialcolorPartNumber);
+                    }
+                    if (newMat.variants) {
+                      existing.variants = existing.variants || [];
+                      existing.variants.push(...newMat.variants);
+                    } else {
+                      existing.variants = existing.variants || [];
+                      existing.variants.push(newMat);
+                    }
+                  } else {
+                    // New material, add to map
+                    existingMap.set(key, newMat);
+                  }
+                });
+
+                this.materialOptions = Array.from(existingMap.values());
+              } else {
+                // For part number search or non-grouped, just append
+                this.materialOptions = [...this.materialOptions, ...materials];
+              }
+
+              // Update filtered options
+              this.filteredOptions = this.materialOptions
+                .map((material) => {
+                  if (this.isPartNumberSearch) {
+                    return material.materialcolorPartNumber || material.partNumber || '';
+                  } else {
+                    return material.ptcmaterialName || material.materialName || material.name || '';
+                  }
+                })
+                .filter((name) => name.length > 0);
+            }
+
+            this.isLoadingMore = false;
+          }
+        },
+        error: (error) => {
+          console.error('Error loading more results:', error);
+          this.isLoadingMore = false;
+        },
+      });
+  }
+
   selectOption(option: string): void {
     this.value = option;
     this.closeDropdown();
 
-    // Find the selected material object for material search
-    const selectedMaterial = this.isMaterialSearch
-      ? this.materialOptions.find(
-          (material) =>
-            (material.ptcmaterialName || material.materialName || material.name || '') === option
-        )
-      : null;
+    // Find the selected material object for material or part number search
+    const selectedMaterial =
+      this.isMaterialSearch || this.isPartNumberSearch
+        ? this.materialOptions.find((material) => {
+            if (this.isPartNumberSearch) {
+              return (material.materialcolorPartNumber || material.partNumber || '') === option;
+            } else {
+              // For material search, match by material name
+              return (
+                (material.ptcmaterialName || material.materialName || material.name || '') ===
+                option
+              );
+            }
+          })
+        : null;
 
     // Force the value to be set in AG Grid
     if (this.params && this.params.node) {
@@ -464,8 +668,10 @@ export class AutocompleteCellEditorComponent
 
       // Auto-populate other fields from the selected material
       if (selectedMaterial) {
+        // For grouped materials, pass the grouped material (which has colors/suppliers arrays)
+        // The autoPopulateFields method will handle using the first variant for default values
         this.autoPopulateFields(selectedMaterial);
-      } else if (!this.isMaterialSearch) {
+      } else if (!this.isMaterialSearch && !this.isPartNumberSearch) {
         // For part numbers, trigger feature auto-population
         this.triggerFeatureAutoPopulation(option);
       }
@@ -505,9 +711,156 @@ export class AutocompleteCellEditorComponent
   private autoPopulateFields(material: any): void {
     if (!this.params || !this.params.node) return;
 
+    const originalData = { ...this.params.node.data };
+    const fieldName = this.params.column?.getColId() || this.params.colDef?.field || '';
+
+    console.log('Auto-populate - material object:', material); // Debug
+    console.log('Auto-populate - fieldName:', fieldName); // Debug
+    console.log('Auto-populate - isPartNumberSearch:', this.isPartNumberSearch); // Debug
+
+    // Populate based on search type
+    if (this.isPartNumberSearch) {
+      // For part number search, populate bomLinkPart (or part) and color
+      const partFieldName = fieldName === 'bomLinkPart' ? 'bomLinkPart' : 'part';
+
+      // Try to get data from fullResult first (raw API response), then fallback to transformed material
+      const fullResult = material.fullResult || {};
+      const materialColor = fullResult['material-color'] || {};
+      const colorObj = fullResult.color || {};
+
+      // Get part number value - prefer fullResult, then transformed material
+      const partValue =
+        materialColor.materialcolorPartNumber ||
+        material.materialcolorPartNumber ||
+        material.partNumber ||
+        '';
+      console.log('Auto-populate - partValue:', partValue, 'for field:', partFieldName); // Debug
+
+      if (partValue && originalData[partFieldName] !== partValue) {
+        this.params.node.setDataValue(partFieldName, partValue);
+        if (this.params.node.data) {
+          this.params.node.data[partFieldName] = partValue;
+        }
+        console.log('Auto-populated part field:', partFieldName, 'with value:', partValue); // Debug
+      }
+
+      // Populate color from color.colorName - prefer fullResult, then transformed material
+      const colorValue = colorObj.colorName || material.colorName || material.color || '';
+      console.log('Auto-populate - colorValue:', colorValue); // Debug
+
+      if (colorValue && originalData.color !== colorValue) {
+        this.params.node.setDataValue('color', colorValue);
+        if (this.params.node.data) {
+          this.params.node.data.color = colorValue;
+        }
+        console.log('Auto-populated color field with value:', colorValue); // Debug
+      }
+
+      // Populate material from material.ptcmaterialName
+      const materialObj = fullResult.material || {};
+      const materialValue =
+        materialObj.ptcmaterialName || material.ptcmaterialName || material.materialName || '';
+      console.log('Auto-populate - materialValue:', materialValue); // Debug
+
+      if (materialValue && originalData.material !== materialValue) {
+        this.params.node.setDataValue('material', materialValue);
+        if (this.params.node.data) {
+          this.params.node.data.material = materialValue;
+        }
+        console.log('Auto-populated material field with value:', materialValue); // Debug
+      }
+    } else {
+      // For material search, populate material and other fields
+      if (material.ptcmaterialName || material.materialName) {
+        const materialValue = material.ptcmaterialName || material.materialName;
+        if (originalData.material !== materialValue) {
+          this.params.node.setDataValue('material', materialValue);
+          if (this.params.node.data) {
+            this.params.node.data.material = materialValue;
+          }
+        }
+      }
+
+      // Store available colors and suppliers for dropdowns (for grouped materials)
+      // These arrays come from the grouped material object
+      if (material.colors && Array.isArray(material.colors) && material.colors.length > 0) {
+        this.params.node.setDataValue('_availableColors', material.colors);
+        if (this.params.node.data) {
+          this.params.node.data._availableColors = material.colors;
+        }
+        console.log('Stored available colors:', material.colors); // Debug
+      }
+
+      if (
+        material.suppliers &&
+        Array.isArray(material.suppliers) &&
+        material.suppliers.length > 0
+      ) {
+        this.params.node.setDataValue('_availableSuppliers', material.suppliers);
+        if (this.params.node.data) {
+          this.params.node.data._availableSuppliers = material.suppliers;
+        }
+        console.log('Stored available suppliers:', material.suppliers); // Debug
+      }
+
+      // Set default values from first variant if available
+      // This ensures we populate with actual values, not just arrays
+      if (material.variants && material.variants.length > 0) {
+        const firstVariant = material.variants[0];
+
+        // Get color from first variant (from fullResult if available)
+        const variantFullResult = firstVariant.fullResult || {};
+        const variantColor = variantFullResult.color || {};
+        const colorValue =
+          variantColor.colorName || firstVariant.colorName || firstVariant.color || '';
+
+        if (colorValue && !originalData.color) {
+          this.params.node.setDataValue('color', colorValue);
+          if (this.params.node.data) {
+            this.params.node.data.color = colorValue;
+          }
+          console.log('Set default color:', colorValue); // Debug
+        }
+
+        // Get supplier from first variant
+        const variantSupplier = variantFullResult.supplier || {};
+        const supplierValue =
+          variantSupplier.supplierName ||
+          variantSupplier.name ||
+          firstVariant.supplier ||
+          firstVariant.supplierName ||
+          '';
+
+        if (supplierValue && !originalData.supplier) {
+          this.params.node.setDataValue('supplier', supplierValue);
+          if (this.params.node.data) {
+            this.params.node.data.supplier = supplierValue;
+          }
+          console.log('Set default supplier:', supplierValue); // Debug
+        }
+      } else {
+        // If no variants array, use direct values from material object
+        const colorValue = material.colorName || material.color || '';
+        if (colorValue && !originalData.color) {
+          this.params.node.setDataValue('color', colorValue);
+          if (this.params.node.data) {
+            this.params.node.data.color = colorValue;
+          }
+        }
+
+        const supplierValue = material.supplier || material.supplierName || '';
+        if (supplierValue && !originalData.supplier) {
+          this.params.node.setDataValue('supplier', supplierValue);
+          if (this.params.node.data) {
+            this.params.node.data.supplier = supplierValue;
+          }
+        }
+      }
+    }
+
+    // Populate common fields
     const fieldsToPopulate = [
       'supplier',
-      'color',
       'feature',
       'startDate',
       'endDate',
@@ -517,15 +870,12 @@ export class AutocompleteCellEditorComponent
       'longDesc',
     ];
 
-    // Store original data to avoid infinite loops
-    const originalData = { ...this.params.node.data };
-
-    fieldsToPopulate.forEach((fieldName) => {
-      const value = material[fieldName];
-      if (value !== undefined && value !== null && originalData[fieldName] !== value) {
-        this.params.node.setDataValue(fieldName, value);
+    fieldsToPopulate.forEach((field) => {
+      const value = material[field];
+      if (value !== undefined && value !== null && originalData[field] !== value) {
+        this.params.node.setDataValue(field, value);
         if (this.params.node.data) {
-          this.params.node.data[fieldName] = value;
+          this.params.node.data[field] = value;
         }
       }
     });
