@@ -185,10 +185,30 @@ export class ColumnService {
         suppressAutoSize: false,
         editable: (params) => params.data && params.data.isNewRow, // Only editable for new rows
         cellEditor: AutocompleteCellEditorComponent,
-        cellEditorParams: (params: any) => ({
-          values: componentInstance.getAvailablePartNumbers(),
-          placeholder: 'Type to search part numbers...',
-        }),
+        cellEditorParams: (params: any) => {
+          // Use row-specific part numbers if available (from material selection), otherwise use global list
+          const availablePartNumbers = params.data?._availablePartNumbers;
+          
+          if (availablePartNumbers && Array.isArray(availablePartNumbers) && availablePartNumbers.length > 0) {
+            // Use part numbers from selected material
+            return {
+              values: availablePartNumbers,
+              placeholder: 'Type to search part numbers...',
+              context: {
+                dataService: dataService,
+              },
+            };
+          } else {
+            // Use global list of part numbers
+            return {
+              values: componentInstance.getAvailablePartNumbers(),
+              placeholder: 'Type to search part numbers...',
+              context: {
+                dataService: dataService,
+              },
+            };
+          }
+        },
         cellStyle: (params: any) => {
           // Enhanced styling for new rows
           if (params.data && params.data.isNewRow) {

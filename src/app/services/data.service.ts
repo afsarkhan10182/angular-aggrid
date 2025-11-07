@@ -300,10 +300,12 @@ export class DataService {
           };
         });
 
-        // Group by material name for material search (not for part number search)
+        // For material search, show all unique combinations (material + supplier + color)
+        // Don't group - each combination is unique
         let finalResults = transformedResults;
         if (!isPartNumberSearch) {
-          finalResults = this.groupMaterialsByName(transformedResults);
+          // Remove duplicates based on unique combination of material + supplier + color
+          finalResults = this.getUniqueMaterialCombinations(transformedResults);
         }
 
         return { results: finalResults, resultCount, hasMore };
@@ -319,54 +321,36 @@ export class DataService {
   }
 
   /**
-   * Group materials by ptcmaterialName to show unique material names in dropdown
-   * Aggregates colors, suppliers, and part numbers for each material
+   * Get unique material combinations (material + supplier + color)
+   * Each combination is shown as a separate option in the dropdown
    */
-  private groupMaterialsByName(materials: any[]): any[] {
-    const grouped = materials.reduce((acc: any, item: any) => {
+  private getUniqueMaterialCombinations(materials: any[]): any[] {
+    const seen = new Set<string>();
+    const unique: any[] = [];
+
+    for (const item of materials) {
       const materialName = item.ptcmaterialName || item.materialName || item.name || '';
+      const supplierName = item.supplier || item.supplierName || '';
+      const colorName = item.colorName || item.color || '';
 
-      if (!materialName) return acc;
+      // Create a unique key for the combination
+      const combinationKey = `${materialName}|${supplierName}|${colorName}`;
 
-      if (!acc[materialName]) {
-        // First occurrence - create grouped entry
-        const colorName = item.colorName || item.color || '';
-        const supplierName = item.supplier || item.supplierName || '';
-
-        acc[materialName] = {
+      // Only add if we haven't seen this combination before
+      if (!seen.has(combinationKey) && materialName) {
+        seen.add(combinationKey);
+        unique.push({
           ...item,
-          // Aggregate arrays for variants - ensure we use actual values
-          colors: colorName ? [colorName] : [],
-          suppliers: supplierName ? [supplierName] : [],
-          partNumbers: item.materialcolorPartNumber ? [item.materialcolorPartNumber] : [],
-          variants: [item], // Store all variants for reference
-          // Keep first variant's data as primary
-        };
-      } else {
-        // Add to existing group - ensure we extract actual color and supplier names
-        const colorName = item.colorName || item.color || '';
-        const supplierName = item.supplier || item.supplierName || '';
-
-        if (colorName && !acc[materialName].colors.includes(colorName)) {
-          acc[materialName].colors.push(colorName);
-        }
-        if (supplierName && !acc[materialName].suppliers.includes(supplierName)) {
-          acc[materialName].suppliers.push(supplierName);
-        }
-        if (
-          item.materialcolorPartNumber &&
-          !acc[materialName].partNumbers.includes(item.materialcolorPartNumber)
-        ) {
-          acc[materialName].partNumbers.push(item.materialcolorPartNumber);
-        }
-        acc[materialName].variants.push(item);
+          // Store single values (not arrays) since each entry is a unique combination
+          color: colorName,
+          colorName: colorName,
+          supplier: supplierName,
+          supplierName: supplierName,
+        });
       }
+    }
 
-      return acc;
-    }, {});
-
-    // Convert grouped object to array
-    return Object.values(grouped);
+    return unique;
   }
 
   private handleError(error: HttpErrorResponse) {
