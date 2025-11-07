@@ -560,12 +560,32 @@ export class App implements OnInit {
           // Use AutocompleteCellEditorComponent for supplier and color
           columnDef.cellEditor = AutocompleteCellEditorComponent;
           columnDef.cellEditorParams = (params: any) => {
-            // Use row-specific values if available, otherwise use global list
+            // Read directly from node data to ensure we get the latest values
+            // This is important because _availableSuppliers and _availableColors are set dynamically
+            const nodeData = params.node?.data || params.data || {};
             let values: string[] = [];
             if (field === 'supplier') {
-              values = params.data?._availableSuppliers || this.getUniqueSuppliers();
+              // Use filtered suppliers if they exist (even if empty array), otherwise use global list
+              // This ensures that when a material is selected, only its suppliers are shown
+              if (
+                nodeData._availableSuppliers !== undefined &&
+                Array.isArray(nodeData._availableSuppliers)
+              ) {
+                values = nodeData._availableSuppliers;
+              } else {
+                values = this.getUniqueSuppliers();
+              }
             } else if (field === 'color') {
-              values = params.data?._availableColors || this.getUniqueColors();
+              // Use filtered colors if they exist (even if empty array), otherwise use global list
+              // This ensures that when a material is selected, only its colors are shown
+              if (
+                nodeData._availableColors !== undefined &&
+                Array.isArray(nodeData._availableColors)
+              ) {
+                values = nodeData._availableColors;
+              } else {
+                values = this.getUniqueColors();
+              }
             }
             return {
               values: values,

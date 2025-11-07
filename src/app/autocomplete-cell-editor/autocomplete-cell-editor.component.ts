@@ -506,6 +506,9 @@ export class AutocompleteCellEditorComponent
   }
 
   onInputClick(): void {
+    // Re-read options from node data for supplier/color fields to get latest filtered values
+    this.refreshOptionsFromNodeData();
+
     // Show dropdown when input is clicked
     if (!this.isMaterialSearch && !this.isPartNumberSearch) {
       this.filterOptions();
@@ -518,6 +521,9 @@ export class AutocompleteCellEditorComponent
   }
 
   onInputFocus(): void {
+    // Re-read options from node data for supplier/color fields to get latest filtered values
+    this.refreshOptionsFromNodeData();
+
     // Show dropdown when input is focused
     if (!this.isMaterialSearch && !this.isPartNumberSearch) {
       this.filterOptions();
@@ -526,6 +532,45 @@ export class AutocompleteCellEditorComponent
 
     if (this.showDropdown) {
       setTimeout(() => this.positionDropdown(), 0);
+    }
+  }
+
+  /**
+   * Refresh options from node data to get the latest filtered values
+   * This is important for supplier/color fields that have filtered values based on material selection
+   */
+  private refreshOptionsFromNodeData(): void {
+    if (!this.params || !this.params.node) return;
+
+    const fieldName = this.params.column?.getColId() || this.params.colDef?.field || '';
+    const nodeData = this.params.node.data || {};
+
+    // Only refresh for supplier and color fields
+    if (fieldName === 'supplier' || fieldName === 'color') {
+      let filteredValues: string[] = [];
+
+      if (
+        fieldName === 'supplier' &&
+        nodeData._availableSuppliers &&
+        Array.isArray(nodeData._availableSuppliers)
+      ) {
+        filteredValues = nodeData._availableSuppliers;
+      } else if (
+        fieldName === 'color' &&
+        nodeData._availableColors &&
+        Array.isArray(nodeData._availableColors)
+      ) {
+        filteredValues = nodeData._availableColors;
+      }
+
+      // If we have filtered values, update the options
+      if (filteredValues.length > 0) {
+        this.options = filteredValues
+          .map((opt: any) => String(opt))
+          .filter((opt: string) => opt.length > 0);
+        // Re-filter with current input value
+        this.filterOptions();
+      }
     }
   }
 
@@ -768,9 +813,9 @@ export class AutocompleteCellEditorComponent
       }
 
       // Don't auto-populate part number - let user choose from dropdown
-      // Fetch ALL materials with the same material name to get all available colors, suppliers, and part numbers
-      // Don't populate supplier/color/part immediately - wait for async call to complete to avoid flicker
-      if (materialValue && this.dataService) {
+      // Set filtered values from the selected material entry only (not all materials with same name)
+      // This ensures supplier and color dropdowns show only the values linked to the selected material
+      if (materialValue) {
         this.fetchAllMaterialsForDropdowns(materialValue, material);
       }
       // Note: If no dataService, we skip auto-population to avoid flicker
@@ -1038,166 +1083,270 @@ export class AutocompleteCellEditorComponent
   }
 
   /**
-   * Fetch all materials with the same material name to collect all available colors and suppliers
-   * This ensures the color and supplier dropdowns show all possible values
-   * Only auto-populates if there's exactly one option available
+   * Set initial filtered values from the selected material for immediate dropdown filtering
+   * This ensures dropdowns work instantly even before async fetch completes
+   */
+  private setInitialFilteredValues(selectedMaterial: any): void {
+    if (!this.params || !this.params.node) return;
+
+    const fullResult = selectedMaterial.fullResult || {};
+    const colorObj = fullResult.color || {};
+    const supplierObj = fullResult.supplier || {};
+
+    const colorName =
+      colorObj.colorName ||
+      colorObj.name ||
+      selectedMaterial.colorName ||
+      selectedMaterial.color ||
+      '';
+    const supplierName =
+      supplierObj.supplierName ||
+      supplierObj.name ||
+      selectedMaterial.supplier ||
+      selectedMaterial.supplierName ||
+      '';
+
+    // Set initial filtered values (will be updated when all materials are fetched)
+    if (colorName) {
+      this.params.node.setDataValue('_availableColors', [colorName]);
+      if (this.params.node.data) {
+        this.params.node.data._availableColors = [colorName];
+      }
+    }
+
+    if (supplierName) {
+      this.params.node.setDataValue('_availableSuppliers', [supplierName]);
+      if (this.params.node.data) {
+        this.params.node.data._availableSuppliers = [supplierName];
+      }
+    }
+  }
+
+  /**
+   * Set filtered values from the selected material entry only
+   * Only show the supplier and color that are linked to the selected material entry
    */
   private fetchAllMaterialsForDropdowns(materialName: string, selectedMaterial: any): void {
-    if (!this.dataService || !materialName) return;
+    if (!this.params || !this.params.node || !selectedMaterial) return;
 
-    // Fetch all materials with this name (use a large toIndex to get all results)
-    this.dataService.searchMaterials(materialName, 1, 1000, false).subscribe({
+    // Get supplier and color from the selected material entry only (not all materials with same name)
+    const fullResult = selectedMaterial.fullResult || {};
+    const colorObj = fullResult.color || {};
+    const supplierObj = fullResult.supplier || {};
+    const materialColor = fullResult['material-color'] || {};
+
+    const colorName =
+      colorObj.colorName ||
+      colorObj.name ||
+      selectedMaterial.colorName ||
+      selectedMaterial.color ||
+      '';
+    const supplierName =
+      supplierObj.supplierName ||
+      supplierObj.name ||
+      selectedMaterial.supplier ||
+      selectedMaterial.supplierName ||
+      '';
+    const partNumber =
+      materialColor.materialcolorPartNumber ||
+      selectedMaterial.materialcolorPartNumber ||
+      selectedMaterial.partNumber ||
+      '';
+
+    // Store only the selected material's supplier and color (not all from all materials)
+    const availableColors = colorName ? [colorName] : [];
+    const availableSuppliers = supplierName ? [supplierName] : [];
+    const availablePartNumbers = partNumber ? [partNumber] : [];
+
+    // Always set _availableColors (even if empty) to ensure filtered list is used
+    this.params.node.setDataValue('_availableColors', availableColors);
+    if (this.params.node.data) {
+      this.params.node.data._availableColors = availableColors;
+    }
+    console.log('Stored available colors for selected material:', availableColors); // Debug
+
+    // Always set _availableSuppliers (even if empty) to ensure filtered list is used
+    this.params.node.setDataValue('_availableSuppliers', availableSuppliers);
+    if (this.params.node.data) {
+      this.params.node.data._availableSuppliers = availableSuppliers;
+    }
+    console.log('Stored available suppliers for selected material:', availableSuppliers); // Debug
+
+    if (availablePartNumbers.length > 0) {
+      this.params.node.setDataValue('_availablePartNumbers', availablePartNumbers);
+      if (this.params.node.data) {
+        this.params.node.data._availablePartNumbers = availablePartNumbers;
+      }
+      console.log('Stored available part numbers for selected material:', availablePartNumbers); // Debug
+    }
+
+    // Auto-populate supplier and color from selected material
+    const currentData = this.params.node.data || {};
+    const existingColor = currentData.color || '';
+    const existingSupplier = currentData.supplier || '';
+
+    // Auto-populate color if available
+    if (colorName && existingColor !== colorName) {
+      this.params.node.setDataValue('color', colorName);
+      if (this.params.node.data) {
+        this.params.node.data.color = colorName;
+      }
+      console.log('Auto-populated color:', colorName); // Debug
+    }
+
+    // Auto-populate supplier if available
+    if (supplierName && existingSupplier !== supplierName) {
+      this.params.node.setDataValue('supplier', supplierName);
+      if (this.params.node.data) {
+        this.params.node.data.supplier = supplierName;
+      }
+      console.log('Auto-populated supplier:', supplierName); // Debug
+    }
+  }
+
+  /**
+   * Fetch all parts with the same part number to collect all available colors and suppliers
+   * This ensures the color and supplier dropdowns show all possible values for that part number
+   */
+  private fetchAllPartsForDropdowns(partNumber: string, selectedMaterial: any): void {
+    if (!this.params || !this.params.node || !selectedMaterial || !this.dataService || !partNumber)
+      return;
+
+    // Immediately set initial filtered values from selected part for instant dropdown filtering
+    const fullResult = selectedMaterial.fullResult || {};
+    const colorObj = fullResult.color || {};
+    const supplierObj = fullResult.supplier || {};
+
+    const initialColorValue =
+      colorObj.colorName ||
+      colorObj.name ||
+      selectedMaterial.colorName ||
+      selectedMaterial.color ||
+      '';
+    const initialSupplierValue =
+      supplierObj.supplierName ||
+      supplierObj.name ||
+      selectedMaterial.supplier ||
+      selectedMaterial.supplierName ||
+      '';
+
+    // Set initial filtered values (will be updated when all parts are fetched)
+    if (initialColorValue) {
+      this.params.node.setDataValue('_availableColors', [initialColorValue]);
+      if (this.params.node.data) {
+        this.params.node.data._availableColors = [initialColorValue];
+      }
+    }
+
+    if (initialSupplierValue) {
+      this.params.node.setDataValue('_availableSuppliers', [initialSupplierValue]);
+      if (this.params.node.data) {
+        this.params.node.data._availableSuppliers = [initialSupplierValue];
+      }
+    }
+
+    // Fetch all parts with this part number (use a large toIndex to get all results)
+    this.dataService.searchMaterials(partNumber, 1, 1000, true).subscribe({
       next: (response) => {
         if (!this.isDestroyed && this.params && this.params.node) {
-          const allMaterials = response.results || [];
-          
-          // Collect all unique colors, suppliers, and part numbers from all materials with this name
+          const allParts = response.results || [];
+
+          // Collect all unique colors and suppliers from all parts with this part number
           const uniqueColors = new Set<string>();
           const uniqueSuppliers = new Set<string>();
-          const uniquePartNumbers = new Set<string>();
 
-          allMaterials.forEach((mat: any) => {
-            const fullResult = mat.fullResult || {};
+          allParts.forEach((part: any) => {
+            const fullResult = part.fullResult || {};
             const colorObj = fullResult.color || {};
             const supplierObj = fullResult.supplier || {};
-            const materialColor = fullResult['material-color'] || {};
-            
-            const colorName = colorObj.colorName || colorObj.name || mat.colorName || mat.color || '';
-            const supplierName = supplierObj.supplierName || supplierObj.name || mat.supplier || mat.supplierName || '';
-            const partNumber = materialColor.materialcolorPartNumber || mat.materialcolorPartNumber || mat.partNumber || '';
-            
+
+            const colorName =
+              colorObj.colorName || colorObj.name || part.colorName || part.color || '';
+            const supplierName =
+              supplierObj.supplierName ||
+              supplierObj.name ||
+              part.supplier ||
+              part.supplierName ||
+              '';
+
             if (colorName) {
               uniqueColors.add(colorName);
             }
             if (supplierName) {
               uniqueSuppliers.add(supplierName);
             }
-            if (partNumber) {
-              uniquePartNumbers.add(partNumber);
-            }
           });
 
-          // Store available colors, suppliers, and part numbers arrays for dropdowns
+          // Store available colors and suppliers arrays for dropdowns
+          // Always set these (even if empty) so the cell editor knows to use filtered values
           const availableColors = Array.from(uniqueColors).sort();
           const availableSuppliers = Array.from(uniqueSuppliers).sort();
-          const availablePartNumbers = Array.from(uniquePartNumbers).sort();
 
-          if (availableColors.length > 0) {
-            this.params.node.setDataValue('_availableColors', availableColors);
-            if (this.params.node.data) {
-              this.params.node.data._availableColors = availableColors;
-            }
-            console.log('Stored available colors:', availableColors); // Debug
+          // Always set _availableColors (even if empty) to ensure filtered list is used
+          this.params.node.setDataValue('_availableColors', availableColors);
+          if (this.params.node.data) {
+            this.params.node.data._availableColors = availableColors;
           }
+          console.log('Stored available colors for part number:', availableColors); // Debug
 
-          if (availableSuppliers.length > 0) {
-            this.params.node.setDataValue('_availableSuppliers', availableSuppliers);
-            if (this.params.node.data) {
-              this.params.node.data._availableSuppliers = availableSuppliers;
-            }
-            console.log('Stored available suppliers:', availableSuppliers); // Debug
+          // Always set _availableSuppliers (even if empty) to ensure filtered list is used
+          this.params.node.setDataValue('_availableSuppliers', availableSuppliers);
+          if (this.params.node.data) {
+            this.params.node.data._availableSuppliers = availableSuppliers;
           }
+          console.log('Stored available suppliers for part number:', availableSuppliers); // Debug
 
-          if (availablePartNumbers.length > 0) {
-            this.params.node.setDataValue('_availablePartNumbers', availablePartNumbers);
-            if (this.params.node.data) {
-              this.params.node.data._availablePartNumbers = availablePartNumbers;
-            }
-            console.log('Stored available part numbers:', availablePartNumbers); // Debug
-          }
-
-          // Only auto-populate if there's exactly ONE option available
-          // If multiple options exist, leave empty so user can choose from dropdown
-          // Get current data to check existing values
+          // Validate and update color field
           const currentData = this.params.node.data || {};
           const existingColor = currentData.color || '';
           const existingSupplier = currentData.supplier || '';
 
-          // Get color from selected material
-          const fullResult = selectedMaterial.fullResult || {};
-          const colorObj = fullResult.color || {};
-          const colorValue = colorObj.colorName || selectedMaterial.colorName || selectedMaterial.color || '';
-          
-          // Only auto-populate color if there's exactly one color option
-          // Only update if the value would change to prevent flicker
-          if (availableColors.length === 1 && colorValue && existingColor !== colorValue) {
-            this.params.node.setDataValue('color', colorValue);
-            if (this.params.node.data) {
-              this.params.node.data.color = colorValue;
+          // Validate color
+          if (availableColors.length === 1 && initialColorValue) {
+            // Only one color option - auto-populate it
+            if (existingColor !== initialColorValue) {
+              this.params.node.setDataValue('color', initialColorValue);
+              if (this.params.node.data) {
+                this.params.node.data.color = initialColorValue;
+              }
+              console.log('Auto-populated color (single option):', initialColorValue); // Debug
             }
-            console.log('Auto-populated color (single option):', colorValue); // Debug
           } else if (availableColors.length > 1) {
-            // Multiple colors available - only clear if there's a value to prevent unnecessary updates
-            if (existingColor) {
+            // Multiple colors available - validate existing value is in the list
+            if (existingColor && !availableColors.includes(existingColor)) {
               this.params.node.setDataValue('color', '');
               if (this.params.node.data) {
                 this.params.node.data.color = '';
               }
-              console.log('Cleared color field - multiple options available:', availableColors); // Debug
+              console.log('Cleared color field - not in filtered list:', existingColor); // Debug
             }
           }
 
-          // Get supplier from selected material
-          const supplierObj = fullResult.supplier || {};
-          const supplierValue = supplierObj.supplierName || supplierObj.name || selectedMaterial.supplier || selectedMaterial.supplierName || '';
-          
-          // Only auto-populate supplier if there's exactly one supplier option
-          // Only update if the value would change to prevent flicker
-          if (availableSuppliers.length === 1 && supplierValue && existingSupplier !== supplierValue) {
-            this.params.node.setDataValue('supplier', supplierValue);
-            if (this.params.node.data) {
-              this.params.node.data.supplier = supplierValue;
+          // Validate supplier
+          if (availableSuppliers.length === 1 && initialSupplierValue) {
+            // Only one supplier option - auto-populate it
+            if (existingSupplier !== initialSupplierValue) {
+              this.params.node.setDataValue('supplier', initialSupplierValue);
+              if (this.params.node.data) {
+                this.params.node.data.supplier = initialSupplierValue;
+              }
+              console.log('Auto-populated supplier (single option):', initialSupplierValue); // Debug
             }
-            console.log('Auto-populated supplier (single option):', supplierValue); // Debug
           } else if (availableSuppliers.length > 1) {
-            // Multiple suppliers available - only clear if there's a value to prevent unnecessary updates
-            if (existingSupplier) {
+            // Multiple suppliers available - validate existing value is in the list
+            if (existingSupplier && !availableSuppliers.includes(existingSupplier)) {
               this.params.node.setDataValue('supplier', '');
               if (this.params.node.data) {
                 this.params.node.data.supplier = '';
               }
-              console.log('Cleared supplier field - multiple options available:', availableSuppliers); // Debug
+              console.log('Cleared supplier field - not in filtered list:', existingSupplier); // Debug
             }
           }
         }
       },
       error: (error) => {
-        console.error('Error fetching all materials for dropdowns:', error);
+        console.error('Error fetching all parts for dropdowns:', error);
       },
     });
-  }
-
-  /**
-   * Store color and supplier from the selected part number for dropdowns
-   * Part numbers are specific combinations, so they should only show their specific color and supplier
-   */
-  private fetchAllPartsForDropdowns(partNumber: string, selectedMaterial: any): void {
-    if (!this.params || !this.params.node || !selectedMaterial) return;
-
-    // Get color and supplier from the selected part (not all parts with same part number)
-    // Part numbers are unique combinations, so they should only show their specific values
-    const fullResult = selectedMaterial.fullResult || {};
-    const colorObj = fullResult.color || {};
-    const supplierObj = fullResult.supplier || {};
-    
-    const colorValue = colorObj.colorName || colorObj.name || selectedMaterial.colorName || selectedMaterial.color || '';
-    const supplierValue = supplierObj.supplierName || supplierObj.name || selectedMaterial.supplier || selectedMaterial.supplierName || '';
-
-    // Store single values in arrays for dropdowns (part numbers have specific color/supplier)
-    if (colorValue) {
-      this.params.node.setDataValue('_availableColors', [colorValue]);
-      if (this.params.node.data) {
-        this.params.node.data._availableColors = [colorValue];
-      }
-      console.log('Stored available color for part number:', colorValue); // Debug
-    }
-
-    if (supplierValue) {
-      this.params.node.setDataValue('_availableSuppliers', [supplierValue]);
-      if (this.params.node.data) {
-        this.params.node.data._availableSuppliers = [supplierValue];
-      }
-      console.log('Stored available supplier for part number:', supplierValue); // Debug
-    }
   }
 }
