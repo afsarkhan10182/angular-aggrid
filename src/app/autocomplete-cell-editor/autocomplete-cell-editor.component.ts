@@ -1202,6 +1202,17 @@ export class AutocompleteCellEditorComponent
       }
       console.log('Auto-populated supplier:', supplierName); // Debug
     }
+
+    // Auto-populate part number (bomLinkPart) if available
+    const existingPartNumber = currentData.bomLinkPart || currentData.part || '';
+    if (partNumber && existingPartNumber !== partNumber) {
+      // Always populate bomLinkPart field (this is the standard field name in the grid)
+      this.params.node.setDataValue('bomLinkPart', partNumber);
+      if (this.params.node.data) {
+        this.params.node.data.bomLinkPart = partNumber;
+      }
+      console.log('Auto-populated part number:', partNumber, 'in bomLinkPart field'); // Debug
+    }
   }
 
   /**
