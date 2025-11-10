@@ -196,10 +196,8 @@ export class App implements OnInit {
 
     sectionRow.isExpanded = !sectionRow.isExpanded;
 
-    // Update using setGridOption (like add/delete rows) - prevents scroll jump
-    const flatData = this.flattenHierarchicalData(this.rowData);
-    this.displayData = flatData;
-    this.gridApi.setGridOption('rowData', flatData);
+    // Re-apply search filter to respect current search state
+    this.applyHierarchicalSearch();
   }
 
   // Toggle material expansion
@@ -231,15 +229,13 @@ export class App implements OnInit {
     if (!materialRow) return;
     materialRow.isExpanded = !materialRow.isExpanded;
 
-    // Update using setGridOption (like add/delete rows) - prevents scroll jump
-    const flatData = this.flattenHierarchicalData(this.rowData);
-    this.displayData = flatData;
-    this.gridApi.setGridOption('rowData', flatData);
+    // Re-apply search filter to respect current search state
+    this.applyHierarchicalSearch();
   }
 
   private updateGridData(): void {
-    const flatData = this.flattenHierarchicalData(this.rowData);
-    this.gridApi.setGridOption('rowData', flatData);
+    // Re-apply search filter to respect current search state
+    this.applyHierarchicalSearch();
   }
 
   private getInitialDisplayData(): any[] {
@@ -396,11 +392,22 @@ export class App implements OnInit {
       // Initialize columns after data is loaded
       this.initializeColumns();
 
-      // Set the initial flattened data to the grid (show all expanded data)
-      this.displayData = this.getInitialDisplayData();
+      // Set the initial flattened data to the grid (respecting search filter if any)
+      // Apply hierarchical search which will handle both filtered and unfiltered cases
+      if (this.gridApi) {
+        // Refresh header to ensure filter icons are displayed
+        this.gridApi.refreshHeader();
+        this.applyHierarchicalSearch();
+      } else {
+        // Grid not ready yet, use initial display data
+        this.displayData = this.getInitialDisplayData();
+      }
 
       // Make only some parts clickable (random selection from first 20 rows)
-      this.clickableParts = this.gridCommonService.initializeClickableParts(this.displayData);
+      // Use displayData for clickable parts calculation
+      const dataForClickableParts =
+        this.displayData.length > 0 ? this.displayData : this.getInitialDisplayData();
+      this.clickableParts = this.gridCommonService.initializeClickableParts(dataForClickableParts);
 
       // Force horizontal scroll after data is loaded
       if (this.gridApi) {
@@ -497,7 +504,11 @@ export class App implements OnInit {
         field: field,
         width: 150,
         minWidth: 100,
-        filter: true,
+        filter: 'agTextColumnFilter', // Use standard text filter
+        filterParams: {
+          buttons: ['reset', 'apply'], // shows Apply / Reset buttons
+          defaultOption: 'contains', // sets default filter type to "contains"
+        },
         sortable: true,
         cellRenderer: (params: any) => {
           // Show values for data rows and material headers (header carries parent data)
@@ -541,6 +552,10 @@ export class App implements OnInit {
           },
         });
       } else if (field === 'qty' || field === 'quantity') {
+        columnDef.filter = 'agNumberColumnFilter'; // Use number filter for quantity
+        columnDef.filterParams = {
+          buttons: ['reset', 'apply'],
+        };
         columnDef.cellEditor = 'agNumberCellEditor';
         columnDef.cellEditorParams = {
           min: 0,
@@ -606,7 +621,11 @@ export class App implements OnInit {
           };
         }
       } else if (field === 'startDate' || field === 'endDate') {
-        // Date columns should use date picker - use exact same config as ColumnService
+        // Date columns should use date picker and date filter
+        columnDef.filter = 'agDateColumnFilter'; // Use date filter for date columns
+        columnDef.filterParams = {
+          buttons: ['reset', 'apply'],
+        };
         columnDef.cellEditor = 'agDateCellEditor';
         columnDef.cellDataType = 'date';
         columnDef.cellEditorParams = {
@@ -659,6 +678,10 @@ export class App implements OnInit {
       headerName: `SKU - ${sku.skuId}\nProduct - ${sku.product}\nManufacturer - ${sku.manufacturer}\nColor - ${sku.color}\nSize - ${sku.size}`,
       field: sku.fieldName,
       filter: 'agTextColumnFilter',
+      filterParams: {
+        buttons: ['reset', 'apply'],
+        defaultOption: 'contains',
+      },
       width: 200,
       minWidth: 200,
       maxWidth: 350,
@@ -696,7 +719,8 @@ export class App implements OnInit {
       editable: false,
     }));
 
-    return [...columns, ...dynamicSkuColumns];
+    const allColumns = [...columns, ...dynamicSkuColumns];
+    return allColumns;
   }
 
   renderHierarchicalCell(params: any): string {
@@ -912,12 +936,77 @@ export class App implements OnInit {
 
   onGridReady(params: any): void {
     this.gridApi = params.api;
+
     this.gridCommonService.sizeColumnsToFit(this.gridApi);
     this.gridCommonService.forceHorizontalScrollbarVisibility(this.gridApi);
 
-    // If data is already loaded, set it to the grid
+    // Refresh header to ensure filter icons are displayed
+    setTimeout(() => {
+      if (this.gridApi) {
+        this.gridApi.refreshHeader();
+
+        // Add click listener to filter buttons to manually trigger filter menu
+        // Exclude actions and material columns (first two columns)
+        setTimeout(() => {
+          const filterButtons = document.querySelectorAll('.ag-header-cell-filter-button');
+          filterButtons.forEach((btn) => {
+            // Find the column ID from the header cell first
+            const headerCell = (btn as HTMLElement).closest('.ag-header-cell');
+            if (headerCell) {
+              const colId = headerCell.getAttribute('col-id');
+              // Skip actions and material columns
+              if (colId === 'actions' || colId === 'material') {
+                // Hide the filter button for these columns
+                (btn as HTMLElement).style.display = 'none';
+                (btn as HTMLElement).style.visibility = 'hidden';
+                return;
+              }
+
+              // Add click listener for other columns
+              btn.addEventListener(
+                'click',
+                (e) => {
+                  if (colId && this.gridApi) {
+                    // Let AG Grid handle the click naturally first
+                    // Only manually trigger if needed after a short delay
+                    setTimeout(() => {
+                      try {
+                        // Check if filter menu opened (AG Grid handled it)
+                        const filterMenu = document.querySelector('.ag-filter-menu');
+                        const popup = document.querySelector('.ag-popup');
+                        
+                        if (!filterMenu && !popup) {
+                          // AG Grid didn't open it, manually trigger
+                          this.gridApi.showColumnFilter(colId);
+                        } else {
+                          // Filter menu exists - ensure it's properly positioned
+                          // Let AG Grid handle positioning - just ensure visibility
+                          if (popup) {
+                            const popupEl = popup as HTMLElement;
+                            // Don't override position - let AG Grid manage it
+                            // Just ensure it's visible and has proper z-index
+                            if (popupEl.style.zIndex !== '999999') {
+                              popupEl.style.zIndex = '999999';
+                            }
+                          }
+                        }
+                      } catch (error) {
+                        console.error('Error handling filter:', error);
+                      }
+                    }, 100);
+                  }
+                },
+                false // Use bubble phase to let AG Grid handle it first
+              );
+            }
+          });
+        }, 300);
+      }
+    }, 100);
+
+    // If data is already loaded, set it to the grid (respecting search filter if any)
     if (this.rowData && this.rowData.length > 0) {
-      this.displayData = this.getInitialDisplayData();
+      this.applyHierarchicalSearch();
     }
   }
 
@@ -986,6 +1075,20 @@ export class App implements OnInit {
   }
 
   onCellClicked(event: any): void {
+    // Don't interfere with filter button clicks
+    if (event.event && event.event.target) {
+      const target = event.event.target as HTMLElement;
+      // Check if click is on filter button or its children
+      if (
+        target.closest('.ag-header-cell-filter-button') ||
+        target.closest('.ag-icon-filter') ||
+        target.classList.contains('ag-header-cell-filter-button') ||
+        target.classList.contains('ag-icon-filter')
+      ) {
+        // Let AG Grid handle the filter button click
+        return;
+      }
+    }
     const target = event.event?.target as HTMLElement;
 
     // Handle paste button click first
@@ -1326,18 +1429,365 @@ export class App implements OnInit {
     }
 
     this.searchTextDebounceTimer = setTimeout(() => {
-      this.gridCommonService.applyQuickFilter(this.gridApi, this.searchText);
+      this.applyHierarchicalSearch();
     }, 300); // 300ms debounce
   }
 
   private searchTextDebounceTimer: any;
 
   applyQuickFilter(): void {
-    this.gridCommonService.applyQuickFilter(this.gridApi, this.searchText);
+    this.applyHierarchicalSearch();
   }
 
   clearSearch(): void {
-    this.gridCommonService.clearSearch(this.gridApi, this);
+    this.searchText = '';
+    this.applyHierarchicalSearch();
+    if (this.searchTextDebounceTimer) {
+      clearTimeout(this.searchTextDebounceTimer);
+    }
+  }
+
+  // Check if a row matches the search text
+  private rowMatchesSearch(row: any, searchText: string): boolean {
+    if (!searchText || searchText.trim() === '') {
+      return true;
+    }
+
+    const searchLower = searchText.toLowerCase().trim();
+
+    // Exclude internal/system properties from search
+    const excludedFields = new Set([
+      'isSectionHeader',
+      'isMaterialHeader',
+      'isDirectRow',
+      'isSubRow',
+      'isBranchHeader',
+      'isNewRow',
+      'hasLinkedBom',
+      'isExpanded',
+      'level',
+      'parent',
+      'children',
+      'materialIndex',
+      'section',
+      'allSkus',
+      'skus',
+      'materialKey',
+      '_availablePartNumbers',
+      '_availableSuppliers',
+      '_availableColors',
+      'newRowId',
+    ]);
+
+    // Search through ALL properties of the row object
+    for (const key in row) {
+      // Skip excluded fields and prototype properties
+      if (excludedFields.has(key) || !row.hasOwnProperty(key)) {
+        continue;
+      }
+
+      const value = row[key];
+
+      // Skip null and undefined
+      if (value === null || value === undefined) {
+        continue;
+      }
+
+      // Handle arrays - search through array elements
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          if (item !== null && item !== undefined) {
+            const itemStr = String(item).toLowerCase();
+            if (itemStr.includes(searchLower)) {
+              return true;
+            }
+          }
+        }
+        continue;
+      }
+
+      // Skip objects (we only want to search primitive values and arrays)
+      if (typeof value === 'object') {
+        continue;
+      }
+
+      // Convert value to string and check if it contains the search text
+      const valueStr = String(value).toLowerCase();
+      if (valueStr.includes(searchLower)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // Filter hierarchical data while preserving structure
+  private filterHierarchicalData(data: any[], searchText: string): any[] {
+    if (!searchText || searchText.trim() === '') {
+      return data; // Return all data if no search text
+    }
+
+    const filteredData: any[] = [];
+
+    data.forEach((sectionRow) => {
+      if (!sectionRow.isSectionHeader) {
+        return; // Skip non-section rows
+      }
+
+      // Always keep section headers
+      const filteredSection: any = {
+        ...sectionRow,
+        children: [],
+      };
+
+      // Filter children (material headers and direct rows)
+      if (sectionRow.children && Array.isArray(sectionRow.children)) {
+        sectionRow.children.forEach((child: any) => {
+          if (child.isMaterialHeader) {
+            // Check if material header matches
+            const headerMatches = this.rowMatchesSearch(child, searchText);
+
+            // Check if any child matches
+            let hasMatchingChildren = false;
+            const filteredChildren: any[] = [];
+
+            if (child.children && Array.isArray(child.children)) {
+              child.children.forEach((subChild: any) => {
+                if (this.rowMatchesSearch(subChild, searchText)) {
+                  hasMatchingChildren = true;
+                  filteredChildren.push(subChild);
+                }
+              });
+            }
+
+            // Keep material header if header or any child matches
+            if (headerMatches || hasMatchingChildren) {
+              const filteredMaterialHeader: any = {
+                ...child,
+                children: filteredChildren,
+              };
+              filteredSection.children.push(filteredMaterialHeader);
+            }
+          } else if (child.isDirectRow) {
+            // Direct row - keep if it matches
+            if (this.rowMatchesSearch(child, searchText)) {
+              filteredSection.children.push(child);
+            }
+          }
+        });
+      }
+
+      // Only add section if it has matching children
+      if (filteredSection.children.length > 0) {
+        filteredData.push(filteredSection);
+      }
+    });
+
+    return filteredData;
+  }
+
+  // Apply hierarchical search
+  private applyHierarchicalSearch(): void {
+    if (!this.gridApi) return;
+
+    // Filter the hierarchical data
+    const filteredHierarchicalData = this.filterHierarchicalData(this.rowData, this.searchText);
+
+    // Flatten the filtered data
+    const flatData = this.flattenHierarchicalData(filteredHierarchicalData);
+    this.displayData = flatData;
+
+    // Update grid with filtered data
+    this.gridApi.setGridOption('rowData', flatData);
+  }
+
+  // Get field name from colId by looking up column definition
+  private getFieldNameFromColId(colId: string): string {
+    if (!colId || !this.gridApi) return colId;
+
+    // Try to get column by colId
+    const column = this.gridApi.getColumn(colId);
+    if (column) {
+      const field = column.getColDef().field;
+      if (field) {
+        return field;
+      }
+    }
+
+    // Fallback to colId if field not found
+    return colId;
+  }
+
+  // Get sort value from a row for a given field
+  private getSortValue(row: any, field: string): any {
+    if (!row || !field) return null;
+
+    const value = row[field];
+
+    // Handle null/undefined
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    // Return the value as-is for comparison
+    return value;
+  }
+
+  // Compare two values for sorting
+  private compareValues(a: any, b: any, sortDirection: 'asc' | 'desc'): number {
+    // Handle null/undefined values (always sort to end)
+    if (a === null || a === undefined) {
+      return b === null || b === undefined ? 0 : 1;
+    }
+    if (b === null || b === undefined) {
+      return -1;
+    }
+
+    // Convert to comparable types
+    let aVal: any = a;
+    let bVal: any = b;
+
+    // Try to convert to numbers if both are numeric strings
+    const aNum = typeof a === 'string' ? parseFloat(a) : a;
+    const bNum = typeof b === 'string' ? parseFloat(b) : b;
+
+    if (!isNaN(aNum) && !isNaN(bNum) && typeof a === 'string' && typeof b === 'string') {
+      aVal = aNum;
+      bVal = bNum;
+    } else {
+      // Convert to strings for comparison
+      aVal = String(a).toLowerCase();
+      bVal = String(b).toLowerCase();
+    }
+
+    // Compare values
+    let result = 0;
+    if (aVal < bVal) {
+      result = -1;
+    } else if (aVal > bVal) {
+      result = 1;
+    }
+
+    // Reverse if descending
+    return sortDirection === 'desc' ? -result : result;
+  }
+
+  // Sort hierarchical data while preserving structure
+  private sortHierarchicalData(data: any[], sortModel: any[]): any[] {
+    if (!sortModel || sortModel.length === 0) {
+      return data; // No sorting, return as-is
+    }
+
+    const sortedData: any[] = [];
+    // Get field name from colId (colId might be different from field name)
+    const sortColId = sortModel[0].colId;
+    const sortField = this.getFieldNameFromColId(sortColId) || sortModel[0].field || sortColId;
+    const sortDirection = sortModel[0].sort as 'asc' | 'desc';
+
+    // Process ALL sections
+    data.forEach((sectionRow) => {
+      if (!sectionRow.isSectionHeader) {
+        return; // Skip non-section rows
+      }
+
+      // Create a copy of the section with empty children array
+      const sortedSection: any = {
+        ...sectionRow,
+        children: [],
+      };
+
+      // Sort children (material headers and direct rows) within this section
+      if (
+        sectionRow.children &&
+        Array.isArray(sectionRow.children) &&
+        sectionRow.children.length > 0
+      ) {
+        // Sort material headers and direct rows within the section
+        const sortedChildren = [...sectionRow.children].sort((a: any, b: any) => {
+          // Get sort values
+          const aValue = this.getSortValue(a, sortField);
+          const bValue = this.getSortValue(b, sortField);
+
+          // Compare values
+          return this.compareValues(aValue, bValue, sortDirection);
+        });
+
+        // Process each sorted child
+        sortedChildren.forEach((child: any) => {
+          if (child.isMaterialHeader) {
+            // Sort children within material header
+            const sortedMaterialHeader: any = {
+              ...child,
+              children: [],
+            };
+
+            // Sort child rows within this material group
+            if (child.children && Array.isArray(child.children) && child.children.length > 0) {
+              const sortedSubChildren = [...child.children].sort((a: any, b: any) => {
+                const aValue = this.getSortValue(a, sortField);
+                const bValue = this.getSortValue(b, sortField);
+                return this.compareValues(aValue, bValue, sortDirection);
+              });
+              sortedMaterialHeader.children = sortedSubChildren;
+            }
+
+            sortedSection.children.push(sortedMaterialHeader);
+          } else if (child.isDirectRow) {
+            // Direct row - add to sorted section
+            sortedSection.children.push(child);
+          }
+        });
+      }
+
+      // Add the sorted section to the result (even if it has no children)
+      sortedData.push(sortedSection);
+    });
+
+    return sortedData;
+  }
+
+  // Apply hierarchical sort
+  public applyHierarchicalSort(params: any): void {
+    if (!this.gridApi) return;
+
+    // Use setTimeout to ensure sort state is updated
+    setTimeout(() => {
+      // Get current sort model from grid
+      const sortModel = this.gridApi.getColumnState().filter((col: any) => col.sort);
+
+      // If no sorting, just apply search filter
+      if (!sortModel || sortModel.length === 0) {
+        this.applyHierarchicalSearch();
+        return;
+      }
+
+      // Get the data to sort (apply search filter first if there's a search)
+      let dataToSort = this.rowData;
+      if (this.searchText && this.searchText.trim() !== '') {
+        dataToSort = this.filterHierarchicalData(this.rowData, this.searchText);
+      }
+
+      // Ensure we have data to sort
+      if (!dataToSort || dataToSort.length === 0) {
+        return;
+      }
+
+      // Sort the hierarchical data (this processes ALL sections)
+      const sortedData = this.sortHierarchicalData(dataToSort, sortModel);
+
+      // Flatten the sorted data
+      const flatData = this.flattenHierarchicalData(sortedData);
+      this.displayData = flatData;
+
+      // Update grid with our manually sorted data
+      this.gridApi.setGridOption('rowData', flatData);
+
+      // Re-apply sort state to show UI indicators (data is already sorted by us)
+      this.gridApi.applyColumnState({
+        state: sortModel,
+        defaultState: { sort: null },
+      });
+    }, 10);
   }
 
   // Build SKU-based MBOM hierarchy

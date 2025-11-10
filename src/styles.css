@@ -589,80 +589,33 @@ body {
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
-/* Filter menu styling */
+/* Filter menu styling - Only ensure z-index for visibility, let AG Grid handle positioning */
 .ag-theme-alpine .ag-filter-menu {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  padding: 12px;
-  min-width: 250px;
+  z-index: 999999 !important;
 }
 
-/* Filter condition styling */
-.ag-theme-alpine .ag-filter-condition {
-  margin-bottom: 8px;
+/* Ensure filter popup is visible and above everything */
+.ag-theme-alpine .ag-popup {
+  z-index: 999999 !important;
 }
 
-.ag-theme-alpine .ag-filter-condition-operator {
-  margin: 8px 0;
-  padding: 4px 0;
+.ag-theme-alpine .ag-filter-wrapper {
+  z-index: 999999 !important;
 }
 
-/* Filter buttons styling */
-.ag-theme-alpine .ag-filter-apply-panel {
-  margin-top: 12px;
-  padding-top: 8px;
-  border-top: 1px solid #e2e8f0;
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
+/* Filter popup container */
+.ag-theme-alpine .ag-popup-child {
+  z-index: 999999 !important;
 }
 
-.ag-theme-alpine .ag-filter-apply-panel button {
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid #d1d5db;
-  background: #ffffff;
-  color: #374151;
-  transition: all 0.2s;
+/* Ensure filter popup parent container doesn't hide it */
+.ag-theme-alpine .ag-popup-parent {
+  z-index: 999999 !important;
+  overflow: visible !important;
 }
 
-.ag-theme-alpine .ag-filter-apply-panel button:hover {
-  background: #f8fafc;
-  border-color: #9ca3af;
-}
-
-.ag-theme-alpine .ag-filter-apply-panel button.ag-filter-apply-panel-button {
-  background: #3b82f6;
-  color: white;
-  border-color: #3b82f6;
-}
-
-.ag-theme-alpine .ag-filter-apply-panel button.ag-filter-apply-panel-button:hover {
-  background: #2563eb;
-  border-color: #2563eb;
-}
-
-/* Reset button specific styling */
-.ag-theme-alpine .ag-filter-apply-panel button.ag-filter-reset-button {
-  background: #6b7280;
-  color: white;
-  border-color: #6b7280;
-}
-
-.ag-theme-alpine .ag-filter-apply-panel button.ag-filter-reset-button:hover {
-  background: #4b5563;
-  border-color: #4b5563;
-}
-
-/* Ensure filter buttons are properly spaced */
-.ag-theme-alpine .ag-filter-apply-panel {
-  gap: 12px !important;
-}
+/* Let AG Grid use its default filter styling - only ensure visibility */
+/* Remove all custom filter styling to use AG Grid defaults */
 
 /* Filter input focus states */
 .ag-theme-alpine .ag-filter-body input:focus,
@@ -680,6 +633,62 @@ body {
 .ag-theme-alpine .ag-header-cell-filtered .ag-header-cell-text {
   color: #1d4ed8 !important;
   font-weight: 600 !important;
+}
+
+/* Ensure filter button/icon is always visible and clickable */
+.ag-theme-alpine .ag-header-cell-filter-button {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
+
+.ag-theme-alpine .ag-header-cell-filter-button:hover {
+  opacity: 1 !important;
+}
+
+/* Ensure filter icon shows on columns with filters - AG Grid standard classes */
+/* Exclude actions and material columns */
+.ag-theme-alpine .ag-header-cell[col-filter] .ag-header-cell-filter-button,
+.ag-theme-alpine .ag-header-cell:not([col-id="actions"]):not([col-id="material"]) .ag-header-cell-filter-button,
+.ag-theme-alpine .ag-header-cell:not([col-id="actions"]):not([col-id="material"]) .ag-icon-filter,
+.ag-theme-alpine .ag-header-cell:not([col-id="actions"]):not([col-id="material"]) .ag-header-icon {
+  display: inline-block !important;
+  visibility: visible !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  opacity: 1 !important;
+}
+
+/* Hide filter icon on actions and material columns */
+.ag-theme-alpine .ag-header-cell[col-id="actions"] .ag-header-cell-filter-button,
+.ag-theme-alpine .ag-header-cell[col-id="material"] .ag-header-cell-filter-button,
+.ag-theme-alpine .ag-header-cell[col-id="actions"] .ag-icon-filter,
+.ag-theme-alpine .ag-header-cell[col-id="material"] .ag-icon-filter {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Make sure filter icon is clickable */
+.ag-theme-alpine .ag-header-cell-filter-button *,
+.ag-theme-alpine .ag-icon-filter * {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* Force filter icon to show on all filterable columns */
+.ag-theme-alpine .ag-header-cell:has([col-filter]) .ag-header-cell-filter-button,
+.ag-theme-alpine .ag-header-cell[col-filter] .ag-header-cell-filter-button {
+  display: inline-block !important;
+  visibility: visible !important;
+}
+
+/* Alternative: Show filter icon on hover for all columns with filter enabled */
+.ag-theme-alpine .ag-header-cell:hover .ag-header-cell-filter-button {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 /* Header cell - Bold and visually distinct styling with VISIBLE grid lines */

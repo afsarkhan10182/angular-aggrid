@@ -1247,9 +1247,17 @@ export class ColumnService {
    * @returns Default column definition object
    */
   getDefaultColDef(componentInstance: any) {
-    return {
+    const defaultColDef = {
       sortable: true,
-      // Remove the default filter type to allow individual columns to specify their own
+      // Custom comparator to maintain hierarchy during sorting
+      // Note: This only affects sorting, not filtering
+      comparator: (valueA: any, valueB: any, nodeA: any, nodeB: any, isDescending: boolean) => {
+        // Let the component handle sorting manually to preserve hierarchy
+        // Return 0 to prevent AG Grid from sorting (we handle it in onSortChanged)
+        return 0;
+      },
+      // Enable filtering with default text filter - individual columns can override with specific filter types
+      filter: 'agTextColumnFilter',
       resizable: true,
       suppressSizeToFit: false,
       suppressAutoSize: false,
@@ -1258,9 +1266,8 @@ export class ColumnService {
       autoHeaderHeight: true,
       headerClass: 'custom-header-with-border',
       filterParams: {
-        suppressAndOrCondition: true, // removes AND/OR + 2nd filter
-        buttons: ['reset', 'apply'], // shows Apply / Reset
-        defaultOption: 'contains', // sets default filter type for text columns
+        buttons: ['reset', 'apply'], // shows Apply / Reset buttons
+        defaultOption: 'contains', // sets default filter type to "contains"
       },
       width: 140,
       minWidth: 100,
@@ -1278,5 +1285,7 @@ export class ColumnService {
         return baseStyle;
       },
     };
+    
+    return defaultColDef;
   }
 }

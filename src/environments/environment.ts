@@ -7,7 +7,6 @@ export const environment = {
   csrfUrl: '/Windchill/servlet/rest/security/csrf',
   getUserUrl: '/Windchill/servlet/rest/trek/getUserDetails',
   dataApiPath: '/mock2.json',
-  serverHostUrl: '',
   credentials: {
     username: 'wcadmin',
     password: 'wcadmin',

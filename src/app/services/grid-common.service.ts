@@ -314,6 +314,7 @@ export class GridCommonService {
       includeHiddenColumnsInQuickFilter: false,
       cacheQuickFilter: true,
       rowModelType: 'clientSide',
+      // Sorting is handled manually in onSortChanged to preserve hierarchy
       navigateToNextCell: (params) => {
         return params.nextCellPosition;
       },
@@ -513,6 +514,12 @@ export class GridCommonService {
       },
       onFilterModified: (params) => {
         // Filter modified event
+      },
+      onSortChanged: (params) => {
+        // Handle hierarchical sorting
+        if (componentInstance.applyHierarchicalSort) {
+          componentInstance.applyHierarchicalSort(params);
+        }
       },
     };
   }

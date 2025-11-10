@@ -78,7 +78,7 @@ export class DataService {
     // Use full URL for production API
     let apiUrl = environment.useMockApi
       ? environment.dataApiPath
-      : `${environment.serverHostUrl}${environment.dataApiPath}`;
+      : `${this.getServiceHostUrl()}${environment.dataApiPath}`;
 
     // In production, append bomId from JSP data attribute
     if (!environment.useMockApi) {
@@ -106,7 +106,7 @@ export class DataService {
   getComplexBOM(materialId: string): Observable<any> {
     let apiUrl = environment.useMockApi
       ? `/api/complexBOM/${materialId}` // Mock endpoint
-      : `${environment.serverHostUrl}/api/complexBOM/${materialId}`;
+      : `${this.getServiceHostUrl()}/api/complexBOM/${materialId}`;
 
     return this.http.get<any>(apiUrl).pipe(
       map((data) => {
@@ -187,7 +187,7 @@ export class DataService {
       );
     } else {
       // Production: Use real API with CSRF token
-      const apiUrl = `${environment.serverHostUrl}/Windchill/servlet/rest/rfa/materials/search`;
+      const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/rfa/materials/search`;
 
       // Build attribute parameters based on search type
       const attributeParameters: any[] = [];
@@ -654,5 +654,13 @@ export class DataService {
   // Get username from JSP data attribute (passed from FlexPLM session)
   getUserNameFromJsp(): string | null {
     return this.getJspDataAttribute('data-username');
+  }
+
+  // Get service host URL from JSP data attribute (passed from Windchill)
+  getServiceHostUrl(): string {
+    const hostFromJsp = this.getJspDataAttribute('data-host');
+    console.log('[getServiceHostUrl] Host from bomComposer.jsp data-host:', hostFromJsp);
+    // Use JSP data-host from bomComposer.jsp
+    return hostFromJsp || '';
   }
 }

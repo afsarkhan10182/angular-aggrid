@@ -16,15 +16,33 @@ export interface LoggedInUserModel {
   providedIn: 'root',
 })
 export class SessionService {
+  // Common method to get data attributes from JSP
+  private getJspDataAttribute(attributeName: string): string | null {
+    const angularRoot = document.getElementById('angular-root');
+    return angularRoot?.getAttribute(attributeName) || null;
+  }
+
+  // Get service host URL from JSP data attribute (passed from Windchill)
+  private getServiceHostUrl(): string {
+    const hostFromJsp = this.getJspDataAttribute('data-host');
+    console.log('[getServiceHostUrl] Host from bomComposer.jsp data-host:', hostFromJsp);
+    // Use JSP data-host from bomComposer.jsp
+    return hostFromJsp || '';
+  }
+
   // Use CSRF API for authentication since it requires credentials
-  static readonly authUrl = environment.useMockApi
-    ? environment.mockApiEndpoints.csrf
-    : `${environment.serverHostUrl}${environment.csrfUrl}`;
+  getAuthUrl(): string {
+    return environment.useMockApi
+      ? environment.mockApiEndpoints.csrf
+      : `${this.getServiceHostUrl()}${environment.csrfUrl}`;
+  }
 
   // getUser API URL for getting user information after authentication
-  static readonly getUserUrl = environment.useMockApi
-    ? environment.mockApiEndpoints.getUser
-    : `${environment.serverHostUrl}${environment.getUserUrl}`;
+  getUserApiUrl(): string {
+    return environment.useMockApi
+      ? environment.mockApiEndpoints.getUser
+      : `${this.getServiceHostUrl()}${environment.getUserUrl}`;
+  }
 
   private sessionSubject = new BehaviorSubject<LoggedInUserModel | null>(null);
   public session$ = this.sessionSubject.asObservable();
@@ -39,7 +57,7 @@ export class SessionService {
 
   // Call CSRF API to get token (before showing login modal)
   getCsrfToken(): Observable<string> {
-    return this.http.get<any>(SessionService.authUrl).pipe(
+    return this.http.get<any>(this.getAuthUrl()).pipe(
       map((csrfResponse: any) => {
         // Extract CSRF token from response
         const token = csrfResponse?.items?.[0]?.attributes?.nonce || csrfResponse?.nonce || '';
@@ -90,7 +108,7 @@ export class SessionService {
       headers['CSRF_NONCE'] = this.csrfToken;
     }
 
-    return this.http.post<any>(SessionService.getUserUrl, requestBody, { headers }).pipe(
+    return this.http.post<any>(this.getUserApiUrl(), requestBody, { headers }).pipe(
       map((response: any) => {
         // Map the response to our user model
         if (environment.useMockApi) {
