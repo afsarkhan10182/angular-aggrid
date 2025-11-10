@@ -504,11 +504,7 @@ export class App implements OnInit {
         field: field,
         width: 150,
         minWidth: 100,
-        filter: 'agTextColumnFilter', // Use standard text filter
-        filterParams: {
-          buttons: ['reset', 'apply'], // shows Apply / Reset buttons
-          defaultOption: 'contains', // sets default filter type to "contains"
-        },
+        filter: false, // Filters disabled
         sortable: true,
         cellRenderer: (params: any) => {
           // Show values for data rows and material headers (header carries parent data)
@@ -552,10 +548,7 @@ export class App implements OnInit {
           },
         });
       } else if (field === 'qty' || field === 'quantity') {
-        columnDef.filter = 'agNumberColumnFilter'; // Use number filter for quantity
-        columnDef.filterParams = {
-          buttons: ['reset', 'apply'],
-        };
+        columnDef.filter = false; // Filters disabled
         columnDef.cellEditor = 'agNumberCellEditor';
         columnDef.cellEditorParams = {
           min: 0,
@@ -622,10 +615,7 @@ export class App implements OnInit {
         }
       } else if (field === 'startDate' || field === 'endDate') {
         // Date columns should use date picker and date filter
-        columnDef.filter = 'agDateColumnFilter'; // Use date filter for date columns
-        columnDef.filterParams = {
-          buttons: ['reset', 'apply'],
-        };
+        columnDef.filter = false; // Filters disabled
         columnDef.cellEditor = 'agDateCellEditor';
         columnDef.cellDataType = 'date';
         columnDef.cellEditorParams = {
@@ -677,11 +667,7 @@ export class App implements OnInit {
     const dynamicSkuColumns: ColDef[] = skuColumns.map((sku, index) => ({
       headerName: `SKU - ${sku.skuId}\nProduct - ${sku.product}\nManufacturer - ${sku.manufacturer}\nColor - ${sku.color}\nSize - ${sku.size}`,
       field: sku.fieldName,
-      filter: 'agTextColumnFilter',
-      filterParams: {
-        buttons: ['reset', 'apply'],
-        defaultOption: 'contains',
-      },
+      filter: false, // Filters disabled
       width: 200,
       minWidth: 200,
       maxWidth: 350,
@@ -940,69 +926,10 @@ export class App implements OnInit {
     this.gridCommonService.sizeColumnsToFit(this.gridApi);
     this.gridCommonService.forceHorizontalScrollbarVisibility(this.gridApi);
 
-    // Refresh header to ensure filter icons are displayed
-    setTimeout(() => {
-      if (this.gridApi) {
-        this.gridApi.refreshHeader();
-
-        // Add click listener to filter buttons to manually trigger filter menu
-        // Exclude actions and material columns (first two columns)
-        setTimeout(() => {
-          const filterButtons = document.querySelectorAll('.ag-header-cell-filter-button');
-          filterButtons.forEach((btn) => {
-            // Find the column ID from the header cell first
-            const headerCell = (btn as HTMLElement).closest('.ag-header-cell');
-            if (headerCell) {
-              const colId = headerCell.getAttribute('col-id');
-              // Skip actions and material columns
-              if (colId === 'actions' || colId === 'material') {
-                // Hide the filter button for these columns
-                (btn as HTMLElement).style.display = 'none';
-                (btn as HTMLElement).style.visibility = 'hidden';
-                return;
-              }
-
-              // Add click listener for other columns
-              btn.addEventListener(
-                'click',
-                (e) => {
-                  if (colId && this.gridApi) {
-                    // Let AG Grid handle the click naturally first
-                    // Only manually trigger if needed after a short delay
-                    setTimeout(() => {
-                      try {
-                        // Check if filter menu opened (AG Grid handled it)
-                        const filterMenu = document.querySelector('.ag-filter-menu');
-                        const popup = document.querySelector('.ag-popup');
-                        
-                        if (!filterMenu && !popup) {
-                          // AG Grid didn't open it, manually trigger
-                          this.gridApi.showColumnFilter(colId);
-                        } else {
-                          // Filter menu exists - ensure it's properly positioned
-                          // Let AG Grid handle positioning - just ensure visibility
-                          if (popup) {
-                            const popupEl = popup as HTMLElement;
-                            // Don't override position - let AG Grid manage it
-                            // Just ensure it's visible and has proper z-index
-                            if (popupEl.style.zIndex !== '999999') {
-                              popupEl.style.zIndex = '999999';
-                            }
-                          }
-                        }
-                      } catch (error) {
-                        console.error('Error handling filter:', error);
-                      }
-                    }, 100);
-                  }
-                },
-                false // Use bubble phase to let AG Grid handle it first
-              );
-            }
-          });
-        }, 300);
-      }
-    }, 100);
+    // Refresh header
+    if (this.gridApi) {
+      this.gridApi.refreshHeader();
+    }
 
     // If data is already loaded, set it to the grid (respecting search filter if any)
     if (this.rowData && this.rowData.length > 0) {

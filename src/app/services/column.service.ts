@@ -72,7 +72,7 @@ export class ColumnService {
             {
               headerName: 'Include In Spec Sheet',
               field: 'SpecSheet',
-              filter: 'agTextColumnFilter',
+              filter: false, // Filters disabled
               width: 150,
               minWidth: 120,
               maxWidth: 200,
@@ -106,7 +106,7 @@ export class ColumnService {
             {
               headerName: 'SpecSheet Extra',
               field: 'SpecSheetExtra',
-              filter: 'agTextColumnFilter',
+              filter: false, // Filters disabled
               width: 180,
               minWidth: 150,
               maxWidth: 250,
@@ -142,7 +142,7 @@ export class ColumnService {
       {
         headerName: 'Part Name',
         field: 'part',
-        filter: 'agTextColumnFilter',
+        filter: false, // Filters disabled
         cellRenderer: (params: any) => {
           // Always show the value, whether it's a new row or existing row
           if (params.data.isNewRow) {
@@ -225,7 +225,7 @@ export class ColumnService {
       {
         headerName: 'Supplier',
         field: 'supplier',
-        filter: 'agTextColumnFilter',
+        filter: false, // Filters disabled
         width: 180,
         minWidth: 120,
         maxWidth: 300,
@@ -262,7 +262,7 @@ export class ColumnService {
       {
         headerName: 'Color',
         field: 'color',
-        filter: 'agTextColumnFilter',
+        filter: false, // Filters disabled
         width: 180,
         minWidth: 120,
         maxWidth: 250,
@@ -290,7 +290,7 @@ export class ColumnService {
       {
         headerName: 'BOM Feature',
         field: 'feature',
-        filter: 'agTextColumnFilter',
+        filter: false, // Filters disabled
         width: 150,
         minWidth: 150,
         maxWidth: 300,
@@ -321,7 +321,7 @@ export class ColumnService {
       {
         headerName: 'Short Desc',
         field: 'shortDesc',
-        filter: 'agTextColumnFilter',
+        filter: false, // Filters disabled
         width: 200,
         minWidth: 150,
         maxWidth: 350,
@@ -344,7 +344,7 @@ export class ColumnService {
       {
         headerName: 'Long Desc',
         field: 'longDesc',
-        filter: 'agTextColumnFilter',
+        filter: false, // Filters disabled
         width: 250,
         minWidth: 200,
         maxWidth: 350,
@@ -367,7 +367,7 @@ export class ColumnService {
       {
         headerName: 'Start Date',
         field: 'startDate',
-        filter: 'agDateColumnFilter',
+        filter: false, // Filters disabled
         width: 130,
         minWidth: 120,
         maxWidth: 170,
@@ -432,33 +432,12 @@ export class ColumnService {
 
           return baseStyle;
         },
-        filterParams: {
-          filterOptions: [
-            'equals',
-            'notEqual',
-            'lessThan',
-            'lessThanOrEqual',
-            'greaterThan',
-            'greaterThanOrEqual',
-            'inRange',
-          ],
-          defaultOption: 'equals',
-          buttons: ['reset', 'apply'],
-          suppressAndOrCondition: true,
-          comparator: (filterLocalDateAtMidnight: Date, cellValue: string) => {
-            const [month, day, year] = cellValue.split('/').map(Number);
-            const cellDate = new Date(year, month - 1, day);
-            if (filterLocalDateAtMidnight.getTime() === cellDate.getTime()) {
-              return 0;
-            }
-            return cellDate < filterLocalDateAtMidnight ? -1 : 1;
-          },
-        },
+        // filterParams removed - filters disabled
       },
       {
         headerName: 'End Date',
         field: 'endDate',
-        filter: 'agDateColumnFilter',
+        filter: false, // Filters disabled
         width: 130,
         minWidth: 120,
         maxWidth: 200,
@@ -496,34 +475,13 @@ export class ColumnService {
           params.data[params.colDef.field as string] = date.toISOString();
           return true;
         },
-        filterParams: {
-          filterOptions: [
-            'equals',
-            'notEqual',
-            'lessThan',
-            'lessThanOrEqual',
-            'greaterThan',
-            'greaterThanOrEqual',
-            'inRange',
-          ],
-          defaultOption: 'equals',
-          buttons: ['reset', 'apply'],
-          suppressAndOrCondition: true,
-          comparator: (filterLocalDateAtMidnight: Date, cellValue: string) => {
-            const [month, day, year] = cellValue.split('/').map(Number);
-            const cellDate = new Date(year, month - 1, day);
-            if (filterLocalDateAtMidnight.getTime() === cellDate.getTime()) {
-              return 0;
-            }
-            return cellDate < filterLocalDateAtMidnight ? -1 : 1;
-          },
-        },
+        // filterParams removed - filters disabled
       },
       {
         headerName: 'Qty',
         field: 'qty',
         headerClass: 'qty-header',
-        filter: 'agNumberColumnFilter',
+        filter: false, // Filters disabled
         width: 90,
         minWidth: 90,
         maxWidth: 120,
@@ -610,20 +568,7 @@ export class ColumnService {
           // Use a simpler renderer to avoid dragging conflicts
           return numValue.toString();
         },
-        filterParams: {
-          filterOptions: [
-            'equals',
-            'notEqual',
-            'lessThan',
-            'lessThanOrEqual',
-            'greaterThan',
-            'greaterThanOrEqual',
-            'inRange',
-          ],
-          defaultOption: 'equals',
-          buttons: ['reset', 'apply'],
-          suppressAndOrCondition: true,
-        },
+        // filterParams removed - filters disabled
       },
     ];
 
@@ -631,7 +576,7 @@ export class ColumnService {
     const dynamicSkuColumns: ColDef[] = skuColumns.map((sku, index) => ({
       headerName: `SKU - ${sku.skuId}\nProduct - ${sku.product}\nManufacturer - ${sku.manufacturer}\nColor - ${sku.color}\nSize - ${sku.size}`,
       field: sku.fieldName,
-      filter: 'agTextColumnFilter',
+      filter: false, // Filters disabled
       width: 200,
       minWidth: 200,
       maxWidth: 350,
@@ -991,7 +936,7 @@ export class ColumnService {
         baseColumns.push({
           headerName: dynamicColumns['bomLinkIncludeInSpecSheet'],
           field: 'bomLinkIncludeInSpecSheet',
-          filter: 'agTextColumnFilter',
+          filter: false, // Filters disabled
           width: 150,
           minWidth: 120,
           maxWidth: 200,
@@ -1017,7 +962,7 @@ export class ColumnService {
         baseColumns.push({
           headerName: dynamicColumns['bomLinkSpecSheetExtra'],
           field: 'bomLinkSpecSheetExtra',
-          filter: 'agTextColumnFilter',
+          filter: false, // Filters disabled
           width: 180,
           minWidth: 150,
           maxWidth: 250,
@@ -1054,7 +999,7 @@ export class ColumnService {
       const columnDef: ColDef = {
         headerName: headerName as string,
         field: fieldKey,
-        filter: 'agTextColumnFilter',
+        filter: false, // Filters disabled
         width: 160,
         minWidth: 130,
         maxWidth: 300,
@@ -1128,7 +1073,7 @@ export class ColumnService {
       }
 
       if (fieldKey === 'quantity') {
-        columnDef.filter = 'agNumberColumnFilter';
+        columnDef.filter = false; // Filters disabled
         columnDef.type = 'numericColumn';
         columnDef.width = 120;
         columnDef.minWidth = 110;
@@ -1176,7 +1121,7 @@ export class ColumnService {
       }
 
       if (fieldKey === 'bomLinkStartDate' || fieldKey === 'bomLinkEndDate') {
-        columnDef.filter = 'agDateColumnFilter';
+        columnDef.filter = false; // Filters disabled
         columnDef.width = 140;
         columnDef.minWidth = 130;
         columnDef.maxWidth = 180;
@@ -1256,8 +1201,8 @@ export class ColumnService {
         // Return 0 to prevent AG Grid from sorting (we handle it in onSortChanged)
         return 0;
       },
-      // Enable filtering with default text filter - individual columns can override with specific filter types
-      filter: 'agTextColumnFilter',
+      // Filters disabled - remove filter icons and functionality
+      filter: false,
       resizable: true,
       suppressSizeToFit: false,
       suppressAutoSize: false,
@@ -1265,10 +1210,6 @@ export class ColumnService {
       wrapHeaderText: true,
       autoHeaderHeight: true,
       headerClass: 'custom-header-with-border',
-      filterParams: {
-        buttons: ['reset', 'apply'], // shows Apply / Reset buttons
-        defaultOption: 'contains', // sets default filter type to "contains"
-      },
       width: 140,
       minWidth: 100,
       maxWidth: 300,

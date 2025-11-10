@@ -660,7 +660,18 @@ export class DataService {
   getServiceHostUrl(): string {
     const hostFromJsp = this.getJspDataAttribute('data-host');
     console.log('[getServiceHostUrl] Host from bomComposer.jsp data-host:', hostFromJsp);
-    // Use JSP data-host from bomComposer.jsp
-    return hostFromJsp || '';
+
+    if (!hostFromJsp) {
+      return '';
+    }
+
+    // If host already includes protocol (http:// or https://), return as-is
+    if (hostFromJsp.startsWith('http://') || hostFromJsp.startsWith('https://')) {
+      return hostFromJsp;
+    }
+
+    // Otherwise, use the current page's protocol (http or https)
+    const protocol = window.location.protocol; // Returns "http:" or "https:"
+    return `${protocol}//${hostFromJsp}`;
   }
 }

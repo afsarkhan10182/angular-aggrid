@@ -190,7 +190,7 @@ export class SbomComponent implements OnInit {
     const dynamicSkuColumns: ColDef[] = skuColumns.map((sku, index) => ({
       headerName: `SKU - ${sku.skuId}\nProduct - ${sku.product}\nManufacturer - ${sku.manufacturer}\nColor - ${sku.color}\nSize - ${sku.size}`,
       field: sku.fieldName,
-      filter: 'agTextColumnFilter',
+      filter: false, // Filters disabled
       width: 200,
       minWidth: 200,
       maxWidth: 350,
