@@ -1382,6 +1382,13 @@ export class App implements OnInit {
 
     const searchLower = searchText.toLowerCase().trim();
 
+    // Get visible column fields from grid
+    const visibleFields = this.getVisibleColumnFields();
+
+    // If we can't get visible fields, fall back to searching all non-excluded fields
+    const fieldsToSearch =
+      visibleFields.length > 0 ? visibleFields : this.getAllSearchableFields(row);
+
     // Exclude internal/system properties from search
     const excludedFields = new Set([
       'isSectionHeader',
@@ -1404,12 +1411,18 @@ export class App implements OnInit {
       '_availableSuppliers',
       '_availableColors',
       'newRowId',
+      'actions', // Don't search action column
     ]);
 
-    // Search through ALL properties of the row object
-    for (const key in row) {
-      // Skip excluded fields and prototype properties
-      if (excludedFields.has(key) || !row.hasOwnProperty(key)) {
+    // Search through specified fields
+    for (const key of fieldsToSearch) {
+      // Skip excluded fields
+      if (excludedFields.has(key)) {
+        continue;
+      }
+
+      // Skip if field doesn't exist in row
+      if (!row.hasOwnProperty(key)) {
         continue;
       }
 
@@ -1446,6 +1459,70 @@ export class App implements OnInit {
     }
 
     return false;
+  }
+
+  // Get visible column fields from the grid
+  private getVisibleColumnFields(): string[] {
+    if (!this.gridApi) {
+      return [];
+    }
+
+    const visibleFields: string[] = [];
+    const columns = this.gridApi.getColumns();
+
+    if (columns) {
+      columns.forEach((column) => {
+        const colDef = column.getColDef();
+        const field = colDef.field;
+
+        // Only include visible columns with fields (skip action columns, etc.)
+        if (field && column.isVisible()) {
+          // Check if column is actually visible (not hidden)
+          const isHidden = colDef.hide === true;
+          if (!isHidden) {
+            visibleFields.push(field);
+          }
+        }
+      });
+    }
+
+    return visibleFields;
+  }
+
+  // Fallback: Get all searchable fields from row (excluding system fields)
+  private getAllSearchableFields(row: any): string[] {
+    const fields: string[] = [];
+    const excludedFields = new Set([
+      'isSectionHeader',
+      'isMaterialHeader',
+      'isDirectRow',
+      'isSubRow',
+      'isBranchHeader',
+      'isNewRow',
+      'hasLinkedBom',
+      'isExpanded',
+      'level',
+      'parent',
+      'children',
+      'materialIndex',
+      'section',
+      'allSkus',
+      'skus',
+      'materialKey',
+      '_availablePartNumbers',
+      '_availableSuppliers',
+      '_availableColors',
+      'newRowId',
+      'actions',
+    ]);
+
+    for (const key in row) {
+      if (row.hasOwnProperty(key) && !excludedFields.has(key)) {
+        fields.push(key);
+      }
+    }
+
+    return fields;
   }
 
   // Filter hierarchical data while preserving structure
