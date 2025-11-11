@@ -160,10 +160,8 @@ export class DataService {
           if (queryLower.length > 0 && filteredResults.length > 0) {
             filteredResults = filteredResults.filter((result: any) => {
               if (isPartNumberSearch) {
-                // For part number search, check materialcolorPartNumber
-                const partNumber = (
-                  result['material-color']?.materialcolorPartNumber || ''
-                ).toLowerCase();
+                // For part number search, check partNumber
+                const partNumber = result['material-color']?.partNumber || '';
                 return partNumber.includes(queryLower);
               } else {
                 // For material search, check ptcmaterialName
@@ -193,7 +191,7 @@ export class DataService {
       const attributeParameters: any[] = [];
       if (isPartNumberSearch) {
         attributeParameters.push({
-          name: 'materialcolorPartNumber',
+          name: 'partNumber',
           typeId: 'com.lcs.wc.material.LCSMaterialColor',
           value: query.trim().length > 0 ? `${query.trim()}*` : '*',
         });
@@ -218,7 +216,7 @@ export class DataService {
         viewParameters: [
           { name: 'material.ptcmaterialName' },
           { name: 'material.versionId' },
-          { name: 'material-color.materialcolorPartNumber' },
+          { name: 'material-color.partNumber' },
         ],
       };
 
@@ -288,8 +286,7 @@ export class DataService {
             supplierName: supplierName,
             supplierVersionId: supplier.versionId || '',
             // Part number information
-            partNumber: materialColor.materialcolorPartNumber || '',
-            materialcolorPartNumber: materialColor.materialcolorPartNumber || '',
+            partNumber: materialColor.partNumber || '',
             // Color information - ensure we have the actual color name
             colorName: colorName,
             color: colorName,

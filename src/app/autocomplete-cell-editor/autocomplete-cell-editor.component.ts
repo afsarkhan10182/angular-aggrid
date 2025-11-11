@@ -307,7 +307,7 @@ export class AutocompleteCellEditorComponent
             this.filteredOptions = this.materialOptions
               .map((material) => {
                 if (this.isPartNumberSearch) {
-                  return material.materialcolorPartNumber || material.partNumber || '';
+                  return material.partNumber || '';
                 } else {
                   return material.ptcmaterialName || material.materialName || material.name || '';
                 }
@@ -639,11 +639,11 @@ export class AutocompleteCellEditorComponent
                       existing.suppliers.push(newMat.supplier);
                     }
                     if (
-                      newMat.materialcolorPartNumber &&
-                      !existing.partNumbers?.includes(newMat.materialcolorPartNumber)
+                      newMat.partNumber &&
+                      !existing.partNumbers?.includes(newMat.partNumber)
                     ) {
                       existing.partNumbers = existing.partNumbers || [];
-                      existing.partNumbers.push(newMat.materialcolorPartNumber);
+                      existing.partNumbers.push(newMat.partNumber);
                     }
                     if (newMat.variants) {
                       existing.variants = existing.variants || [];
@@ -668,7 +668,7 @@ export class AutocompleteCellEditorComponent
               this.filteredOptions = this.materialOptions
                 .map((material) => {
                   if (this.isPartNumberSearch) {
-                    return material.materialcolorPartNumber || material.partNumber || '';
+                    return material.partNumber || '';
                   } else {
                     return material.ptcmaterialName || material.materialName || material.name || '';
                   }
@@ -695,7 +695,7 @@ export class AutocompleteCellEditorComponent
       this.isMaterialSearch || this.isPartNumberSearch
         ? this.materialOptions.find((material) => {
             if (this.isPartNumberSearch) {
-              return (material.materialcolorPartNumber || material.partNumber || '') === option;
+              return (material.partNumber || '') === option;
             } else {
               // For material search, match by material name
               return (
@@ -775,8 +775,7 @@ export class AutocompleteCellEditorComponent
 
       // Get part number value - prefer fullResult, then transformed material
       const partValue =
-        materialColor.materialcolorPartNumber ||
-        material.materialcolorPartNumber ||
+        materialColor.partNumber ||
         material.partNumber ||
         '';
       if (partValue && originalData[partFieldName] !== partValue) {
@@ -823,8 +822,7 @@ export class AutocompleteCellEditorComponent
       const fullResult = material.fullResult || {};
       const materialColor = fullResult['material-color'] || {};
       const partNumberFromMaterial =
-        materialColor.materialcolorPartNumber ||
-        material.materialcolorPartNumber ||
+        materialColor.partNumber ||
         material.partNumber ||
         '';
 
@@ -1186,8 +1184,7 @@ export class AutocompleteCellEditorComponent
       '';
     // Extract part number from multiple possible locations
     const partNumber =
-      materialColor.materialcolorPartNumber ||
-      selectedMaterial.materialcolorPartNumber ||
+      materialColor.partNumber ||
       selectedMaterial.partNumber ||
       '';
 
