@@ -543,6 +543,7 @@ export class App implements OnInit {
 
       // Add specific cell editors for different field types
       if (field === 'bomLinkPart') {
+        console.log('bomLinkPart called first');
         columnDef.cellEditor = AutocompleteCellEditorComponent;
         columnDef.cellEditorParams = (params: any) => ({
           placeholder: 'Type to search part numbers...',
@@ -662,6 +663,19 @@ export class App implements OnInit {
           params.data[params.colDef.field as string] = date.toISOString();
           return true;
         };
+      }
+
+      if (field === 'bomLinkPart') {
+        console.log('bomLinkPart called second');
+        columnDef.cellEditor = AutocompleteCellEditorComponent;
+        columnDef.cellEditorParams = (params: any) => ({
+          placeholder: 'Type to search part numbers...',
+          useApiSearch: true, // Use API search for part numbers
+          isPartNumberSearch: true, // Flag to indicate part number search
+          context: {
+            dataService: this.dataService,
+          },
+        });
       }
 
       columns.push(columnDef);
@@ -1016,6 +1030,18 @@ export class App implements OnInit {
   }
 
   onCellClicked(event: any): void {
+    console.log('[App] onCellClicked - colDef.field:', event.colDef.field);
+    // Handle bomLinkPart clicks FIRST - make it editable for all rows
+    if (event.colDef.field === 'bomLinkPart') {
+      event.api.startEditingCell({
+        rowIndex: event.rowIndex,
+        colKey: event.column.getId(),
+        rowPinned: event.rowPinned,
+        keyPress: event.event?.key,
+      });
+      return;
+    }
+
     // Don't interfere with filter button clicks
     if (event.event && event.event.target) {
       const target = event.event.target as HTMLElement;
@@ -1110,9 +1136,6 @@ export class App implements OnInit {
           return;
         }
       }
-    } else if (event.colDef.field === 'part' || event.colDef.field === 'bomLinkPart') {
-      // Part column clicks are handled differently - no modal functionality for parts
-      return;
     } else if (event.colDef.field === 'material') {
       event.api.startEditingCell({
         rowIndex: event.rowIndex,

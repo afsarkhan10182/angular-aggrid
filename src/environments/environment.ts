@@ -11,7 +11,7 @@ export const environment = {
     username: 'wcadmin',
     password: 'wcadmin',
   },
-  enableHttpBasicAuth: true,
+  enableHttpBasicAuth: false,
   useMockApi: true,
   mockApiEndpoints: {
     csrf: '/api/csrf.json',
