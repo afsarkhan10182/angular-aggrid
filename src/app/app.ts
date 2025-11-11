@@ -542,8 +542,9 @@ export class App implements OnInit {
       };
 
       // Add specific cell editors for different field types
-      if (field === 'bomLinkPart') {
-        console.log('bomLinkPart called first');
+      // Handle both 'bomLinkPart' (local) and 'partNumber' (production) field names
+      if (field === 'bomLinkPart' || field === 'partNumber') {
+        console.log(`Part number field detected: ${field}`);
         columnDef.cellEditor = AutocompleteCellEditorComponent;
         columnDef.cellEditorParams = (params: any) => ({
           placeholder: 'Type to search part numbers...',
@@ -665,18 +666,7 @@ export class App implements OnInit {
         };
       }
 
-      if (field === 'bomLinkPart') {
-        console.log('bomLinkPart called second');
-        columnDef.cellEditor = AutocompleteCellEditorComponent;
-        columnDef.cellEditorParams = (params: any) => ({
-          placeholder: 'Type to search part numbers...',
-          useApiSearch: true, // Use API search for part numbers
-          isPartNumberSearch: true, // Flag to indicate part number search
-          context: {
-            dataService: this.dataService,
-          },
-        });
-      }
+      // Duplicate check removed - already handled above for both bomLinkPart and partNumber
 
       columns.push(columnDef);
     });
@@ -948,6 +938,184 @@ export class App implements OnInit {
     };
   }
 
+  /**
+   * Force AG Grid to recalculate header height once fonts/styles are loaded.
+   * This fixes the issue where autoHeaderHeight fails in JSP production builds
+   * due to CSS loading asynchronously before AG Grid measures header height.
+   *
+   * This ensures autoHeaderHeight works in JSP/Windchill exactly as it does in local dev.
+   * The fix waits for fonts/styles to load, then triggers AG Grid's internal
+   * autoHeaderHeight recalculation mechanism.
+   */
+  private forceHeaderAutoHeightFix(gridApi: any): void {
+    if (!gridApi) return;
+
+    let fixAttempts = 0;
+    const maxAttempts = 5;
+    let lastMeasuredHeight = 0;
+
+    // Check if all stylesheets are loaded
+    const areStylesheetsLoaded = (): boolean => {
+      const stylesheets = Array.from(document.styleSheets);
+      return stylesheets.every((sheet) => {
+        try {
+          return sheet.cssRules || sheet.rules; // Access to check if loaded
+        } catch (e) {
+          // Cross-origin stylesheet, assume loaded
+          return true;
+        }
+      });
+    };
+
+    // Function to recalculate header height (mimics AG Grid's internal autoHeaderHeight logic)
+    const recalculateHeaderHeight = (attempt: number = 1): void => {
+      if (!gridApi || attempt > maxAttempts) return;
+
+      // Get all header cell text elements (this is what AG Grid measures internally)
+      const headerTextElements = document.querySelectorAll('.ag-header-cell-text');
+      const headerCells = document.querySelectorAll('.ag-header-cell');
+
+      if (headerTextElements.length === 0 || headerCells.length === 0) {
+        // Headers not rendered yet, retry later
+        if (attempt < maxAttempts) {
+          setTimeout(() => recalculateHeaderHeight(attempt + 1), 500);
+        }
+        return;
+      }
+
+      // Measure the maximum height needed (AG Grid does this internally)
+      let maxTextHeight = 0;
+      let maxCellHeight = 0;
+
+      headerTextElements.forEach((el: any) => {
+        // Get the actual scrollHeight after fonts/styles are applied
+        const height = el.scrollHeight || el.offsetHeight || 0;
+        if (height > maxTextHeight) {
+          maxTextHeight = height;
+        }
+      });
+
+      // Also measure full cell height (includes padding)
+      headerCells.forEach((el: any) => {
+        const cellHeight = el.scrollHeight || el.offsetHeight || 0;
+        if (cellHeight > maxCellHeight) {
+          maxCellHeight = cellHeight;
+        }
+      });
+
+      // Use the larger measurement, or calculate from text + padding
+      const measuredHeight = Math.max(maxCellHeight, maxTextHeight + 20);
+
+      // Only update if we got a valid measurement and it's different from last attempt
+      if (measuredHeight > 0 && measuredHeight !== lastMeasuredHeight) {
+        const headerHeight = Math.max(measuredHeight, 40); // Minimum 40px
+        lastMeasuredHeight = headerHeight;
+
+        // Find the grid container
+        const firstHeaderElement = headerTextElements[0] as HTMLElement;
+        if (firstHeaderElement) {
+          const gridContainer = firstHeaderElement.closest('.ag-theme-alpine') as HTMLElement;
+
+          if (gridContainer) {
+            // Strategy 1: Set CSS variable (primary method)
+            gridContainer.style.setProperty('--ag-header-height', `${headerHeight}px`, 'important');
+
+            // Strategy 2: Set on header container
+            const headerContainer = gridContainer.querySelector('.ag-header') as HTMLElement;
+            if (headerContainer) {
+              headerContainer.style.setProperty('height', `${headerHeight}px`, 'important');
+              headerContainer.style.setProperty('min-height', `${headerHeight}px`, 'important');
+            }
+
+            // Strategy 3: Set on all header rows
+            const headerRows = gridContainer.querySelectorAll('.ag-header-row');
+            headerRows.forEach((row: any) => {
+              if (row) {
+                row.style.setProperty('height', `${headerHeight}px`, 'important');
+                row.style.setProperty('min-height', `${headerHeight}px`, 'important');
+              }
+            });
+
+            // Strategy 4: Set on all header cells
+            headerCells.forEach((cell: any) => {
+              if (cell && gridContainer.contains(cell)) {
+                cell.style.setProperty('height', `${headerHeight}px`, 'important');
+                cell.style.setProperty('min-height', `${headerHeight}px`, 'important');
+              }
+            });
+          }
+        }
+
+        // Force AG Grid to recalculate using multiple methods
+        try {
+          // Method 1: Refresh header
+          gridApi.refreshHeader();
+
+          // Method 2: Force resize event
+          setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+            gridApi.refreshHeader();
+
+            // Method 3: Verify the fix worked
+            setTimeout(() => {
+              const currentHeaderRow = document.querySelector('.ag-header-row') as HTMLElement;
+              const currentHeight = currentHeaderRow?.offsetHeight || 0;
+
+              if (currentHeight < headerHeight - 5) {
+                // Fix didn't work, retry
+                console.warn(
+                  `[AutoHeaderHeight Fix] Attempt ${attempt}: Fix not applied (expected: ${headerHeight}px, got: ${currentHeight}px), retrying...`
+                );
+                if (attempt < maxAttempts) {
+                  setTimeout(() => recalculateHeaderHeight(attempt + 1), 500);
+                }
+              } else {
+                console.log(
+                  `[AutoHeaderHeight Fix] Success! Header height set to ${headerHeight}px (text: ${maxTextHeight}px, cell: ${maxCellHeight}px)`
+                );
+              }
+            }, 100);
+          }, 100);
+        } catch (e) {
+          console.warn('[AutoHeaderHeight Fix] Error during refresh:', e);
+          if (attempt < maxAttempts) {
+            setTimeout(() => recalculateHeaderHeight(attempt + 1), 500);
+          }
+        }
+      } else if (measuredHeight === 0 && attempt < maxAttempts) {
+        // No valid measurement yet, retry
+        setTimeout(() => recalculateHeaderHeight(attempt + 1), 500);
+      }
+    };
+
+    // Wait for fonts to load (critical for accurate measurements)
+    const applyFix = () => {
+      // Wait a bit more to ensure all CSS is applied
+      setTimeout(() => {
+        recalculateHeaderHeight(1);
+      }, 300);
+    };
+
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        // Also check if stylesheets are loaded
+        if (areStylesheetsLoaded()) {
+          applyFix();
+        } else {
+          // Wait a bit more for stylesheets
+          setTimeout(applyFix, 500);
+        }
+      });
+    } else {
+      // Fallback if FontFaceSet API not available
+      setTimeout(applyFix, 800);
+    }
+
+    // Additional fallback - retry after longer delays
+    setTimeout(() => recalculateHeaderHeight(1), 1500);
+    setTimeout(() => recalculateHeaderHeight(1), 3000);
+  }
+
   onGridReady(params: any): void {
     this.gridApi = params.api;
 
@@ -963,6 +1131,10 @@ export class App implements OnInit {
     if (this.rowData && this.rowData.length > 0) {
       this.applyHierarchicalSearch();
     }
+
+    // Force recalculation of header height once fonts/styles are ready
+    // This fixes autoHeaderHeight in JSP production builds
+    this.forceHeaderAutoHeightFix(this.gridApi);
   }
 
   getColumnDisplayName(col: any): string {
@@ -1031,8 +1203,7 @@ export class App implements OnInit {
 
   onCellClicked(event: any): void {
     console.log('[App] onCellClicked - colDef.field:', event.colDef.field);
-    // Handle bomLinkPart clicks FIRST - make it editable for all rows
-    if (event.colDef.field === 'bomLinkPart') {
+    if (event.colDef.field === 'bomLinkPart' || event.colDef.field === 'partNumber') {
       event.api.startEditingCell({
         rowIndex: event.rowIndex,
         colKey: event.column.getId(),

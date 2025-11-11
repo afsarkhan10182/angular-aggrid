@@ -448,15 +448,21 @@ export class AutocompleteCellEditorComponent
     console.log('[Part Search] Field name:', fieldName);
 
     // Check for part number search first (higher priority)
+    // Support both 'bomLinkPart' (local) and 'partNumber' (production) field names
     this.isPartNumberSearch =
-      params.isPartNumberSearch === true || fieldName === 'bomLinkPart' || fieldName === 'part';
+      params.isPartNumberSearch === true ||
+      fieldName === 'bomLinkPart' ||
+      fieldName === 'partNumber' ||
+      fieldName === 'part';
 
     console.log('[Part Search] isPartNumberSearch calculated:', this.isPartNumberSearch);
     console.log(
       '[Part Search] params.isPartNumberSearch === true:',
       params.isPartNumberSearch === true
     );
+    console.log('[Part Search] fieldName:', fieldName);
     console.log('[Part Search] fieldName === "bomLinkPart":', fieldName === 'bomLinkPart');
+    console.log('[Part Search] fieldName === "partNumber":', fieldName === 'partNumber');
     console.log('[Part Search] fieldName === "part":', fieldName === 'part');
 
     // Material search should only be true if NOT part number search
@@ -917,7 +923,9 @@ export class AutocompleteCellEditorComponent
     if (this.isPartNumberSearch) {
       // For part number search, only populate the part number field itself
       // Don't auto-populate color or supplier - let user choose from dropdown
-      const partFieldName = fieldName === 'bomLinkPart' ? 'bomLinkPart' : 'part';
+      // Support both 'bomLinkPart' (local) and 'partNumber' (production) field names
+      const partFieldName =
+        fieldName === 'bomLinkPart' || fieldName === 'partNumber' ? fieldName : 'part';
 
       // Try to get data from fullResult first (raw API response), then fallback to transformed material
       const fullResult = material.fullResult || {};
@@ -971,20 +979,30 @@ export class AutocompleteCellEditorComponent
       const partNumberFromMaterial = materialColor.partNumber || material.partNumber || '';
 
       if (partNumberFromMaterial) {
-        const existingPartNumber = originalData.bomLinkPart || originalData.part || '';
+        // Use the actual field name (could be 'bomLinkPart' or 'partNumber' depending on environment)
+        const partFieldName =
+          fieldName === 'bomLinkPart' || fieldName === 'partNumber' ? fieldName : 'bomLinkPart';
+        const existingPartNumber =
+          originalData[partFieldName] ||
+          originalData.bomLinkPart ||
+          originalData.partNumber ||
+          originalData.part ||
+          '';
         if (existingPartNumber !== partNumberFromMaterial) {
-          this.params.node.setDataValue('bomLinkPart', partNumberFromMaterial);
+          this.params.node.setDataValue(partFieldName, partNumberFromMaterial);
           if (this.params.node.data) {
-            this.params.node.data.bomLinkPart = partNumberFromMaterial;
+            this.params.node.data[partFieldName] = partNumberFromMaterial;
           }
-          console.log(`Auto-populated part number from material: ${partNumberFromMaterial}`);
+          console.log(
+            `Auto-populated part number from material: ${partNumberFromMaterial} (field: ${partFieldName})`
+          );
 
           // Refresh the grid to show the updated value
           if (this.params.api) {
             setTimeout(() => {
               this.params.api.refreshCells({
                 rowNodes: [this.params.node],
-                columns: ['bomLinkPart'],
+                columns: [partFieldName],
                 force: true,
               });
             }, 50);
@@ -1376,22 +1394,31 @@ export class AutocompleteCellEditorComponent
       console.log(`Auto-populated supplier: ${supplierName}`);
     }
 
-    // Auto-populate part number (bomLinkPart) if available
-    const existingPartNumber = currentData.bomLinkPart || currentData.part || '';
+    // Auto-populate part number if available
+    // Use the actual field name (could be 'bomLinkPart' or 'partNumber' depending on environment)
+    const fieldName = this.params.column?.getColId() || this.params.colDef?.field || '';
+    const partFieldName =
+      fieldName === 'bomLinkPart' || fieldName === 'partNumber' ? fieldName : 'bomLinkPart';
+    const existingPartNumber =
+      currentData[partFieldName] ||
+      currentData.bomLinkPart ||
+      currentData.partNumber ||
+      currentData.part ||
+      '';
     if (partNumber && existingPartNumber !== partNumber) {
-      // Always populate bomLinkPart field (this is the standard field name in the grid)
-      this.params.node.setDataValue('bomLinkPart', partNumber);
+      // Populate the part number field using the actual field name
+      this.params.node.setDataValue(partFieldName, partNumber);
       if (this.params.node.data) {
-        this.params.node.data.bomLinkPart = partNumber;
+        this.params.node.data[partFieldName] = partNumber;
       }
-      console.log(`Auto-populated part number: ${partNumber}`);
+      console.log(`Auto-populated part number: ${partNumber} (field: ${partFieldName})`);
 
       // Also refresh the grid to show the updated value
       if (this.params.api) {
         setTimeout(() => {
           this.params.api.refreshCells({
             rowNodes: [this.params.node],
-            columns: ['bomLinkPart'],
+            columns: [partFieldName],
             force: true,
           });
         }, 50);
