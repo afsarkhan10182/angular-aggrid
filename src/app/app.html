@@ -102,8 +102,16 @@
 
     <!-- AG Grid with Toggle Button Container -->
     <div class="ag-grid-section">
+      <!-- Loading Spinner -->
+      <div *ngIf="isLoading" class="loading-spinner-container">
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+          <p>Loading data...</p>
+        </div>
+      </div>
+
       <!-- AG Grid Container -->
-      <div class="ag-grid-container-wrapper">
+      <div class="ag-grid-container-wrapper" [class.loading]="isLoading">
         <div class="ag-grid-container">
           <ag-grid-angular
             style="width: 100%; height: calc(100vh - 200px)"

@@ -188,8 +188,12 @@ export class ColumnService {
         cellEditorParams: (params: any) => {
           // Use row-specific part numbers if available (from material selection), otherwise use global list
           const availablePartNumbers = params.data?._availablePartNumbers;
-          
-          if (availablePartNumbers && Array.isArray(availablePartNumbers) && availablePartNumbers.length > 0) {
+
+          if (
+            availablePartNumbers &&
+            Array.isArray(availablePartNumbers) &&
+            availablePartNumbers.length > 0
+          ) {
             // Use part numbers from selected material
             return {
               values: availablePartNumbers,
@@ -1227,7 +1231,7 @@ export class ColumnService {
         return baseStyle;
       },
     };
-    
+
     return defaultColDef;
   }
 }

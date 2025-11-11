@@ -70,6 +70,9 @@ export class App implements OnInit {
   // BOM information from API
   public bomName: string = 'MBOM'; // Default fallback
 
+  // Loading state
+  public isLoading: boolean = true;
+
   // Master list for column visibility panel (includes both real and virtual columns)
   public allColumns = [
     // Core Part Information
@@ -373,49 +376,59 @@ export class App implements OnInit {
   */
 
   loadData(): void {
-    this.dataService.loadData().subscribe((data) => {
-      // Get BOM name and modify timestamp from API response
-      const bomPartInfo = this.dataService.getBomPartInfo();
-      if (bomPartInfo?.bomName) {
-        this.bomName = bomPartInfo.bomName;
+    this.isLoading = true;
+    this.dataService.loadData().subscribe(
+      (data) => {
+        this.isLoading = false;
+        // Get BOM name and modify timestamp from API response
+        const bomPartInfo = this.dataService.getBomPartInfo();
+        if (bomPartInfo?.bomName) {
+          this.bomName = bomPartInfo.bomName;
+        }
+        if (bomPartInfo?.modifyTimestamp) {
+          // Parse timestamp from API (format: "2025-10-29 11:52:20.0")
+          this.lastSavedAt = new Date(bomPartInfo.modifyTimestamp);
+          // Save to localStorage for persistence
+          localStorage.setItem('lastSavedAt', this.lastSavedAt.toISOString());
+        }
+
+        // Transform data to hierarchical structure
+        this.rowData = this.transformToHierarchicalData(data);
+
+        // Initialize columns after data is loaded
+        this.initializeColumns();
+
+        // Set the initial flattened data to the grid (respecting search filter if any)
+        // Apply hierarchical search which will handle both filtered and unfiltered cases
+        if (this.gridApi) {
+          // Refresh header to ensure filter icons are displayed
+          this.gridApi.refreshHeader();
+          // autoHeaderHeight is now enabled - it should work properly with synchronous CSS loading
+          this.applyHierarchicalSearch();
+        } else {
+          // Grid not ready yet, use initial display data
+          this.displayData = this.getInitialDisplayData();
+        }
+
+        // Make only some parts clickable (random selection from first 20 rows)
+        // Use displayData for clickable parts calculation
+        const dataForClickableParts =
+          this.displayData.length > 0 ? this.displayData : this.getInitialDisplayData();
+        this.clickableParts =
+          this.gridCommonService.initializeClickableParts(dataForClickableParts);
+
+        // Force horizontal scroll after data is loaded
+        if (this.gridApi) {
+          setTimeout(() => {
+            this.gridCommonService.forceHorizontalScrollbarVisibility(this.gridApi);
+          }, 200);
+        }
+      },
+      (error) => {
+        this.isLoading = false;
+        console.error('Error loading data:', error);
       }
-      if (bomPartInfo?.modifyTimestamp) {
-        // Parse timestamp from API (format: "2025-10-29 11:52:20.0")
-        this.lastSavedAt = new Date(bomPartInfo.modifyTimestamp);
-        // Save to localStorage for persistence
-        localStorage.setItem('lastSavedAt', this.lastSavedAt.toISOString());
-      }
-
-      // Transform data to hierarchical structure
-      this.rowData = this.transformToHierarchicalData(data);
-
-      // Initialize columns after data is loaded
-      this.initializeColumns();
-
-      // Set the initial flattened data to the grid (respecting search filter if any)
-      // Apply hierarchical search which will handle both filtered and unfiltered cases
-      if (this.gridApi) {
-        // Refresh header to ensure filter icons are displayed
-        this.gridApi.refreshHeader();
-        this.applyHierarchicalSearch();
-      } else {
-        // Grid not ready yet, use initial display data
-        this.displayData = this.getInitialDisplayData();
-      }
-
-      // Make only some parts clickable (random selection from first 20 rows)
-      // Use displayData for clickable parts calculation
-      const dataForClickableParts =
-        this.displayData.length > 0 ? this.displayData : this.getInitialDisplayData();
-      this.clickableParts = this.gridCommonService.initializeClickableParts(dataForClickableParts);
-
-      // Force horizontal scroll after data is loaded
-      if (this.gridApi) {
-        setTimeout(() => {
-          this.gridCommonService.forceHorizontalScrollbarVisibility(this.gridApi);
-        }, 200);
-      }
-    });
+    );
   }
 
   initializeColumns(): void {
