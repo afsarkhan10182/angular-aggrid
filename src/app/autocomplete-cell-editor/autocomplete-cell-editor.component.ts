@@ -376,12 +376,18 @@ export class AutocompleteCellEditorComponent
 
     // Determine if this is material or part number search
     const fieldName = params.column?.getColId() || params.colDef?.field || '';
-    this.isPartNumberSearch = fieldName === 'bomLinkPart' || fieldName === 'part';
+
+    // Check for part number search first (higher priority)
+    this.isPartNumberSearch =
+      params.isPartNumberSearch === true || fieldName === 'bomLinkPart' || fieldName === 'part';
+
+    // Material search should only be true if NOT part number search
     this.isMaterialSearch =
-      params.useApiSearch ||
-      (this.dataService &&
-        (this.placeholder.includes('material') || this.placeholder.includes('Material'))) ||
-      (this.dataService && fieldName === 'material');
+      !this.isPartNumberSearch &&
+      (params.useApiSearch === true ||
+        (this.dataService &&
+          (this.placeholder.includes('material') || this.placeholder.includes('Material'))) ||
+        (this.dataService && fieldName === 'material'));
 
     // Get options from params - support multiple formats
     // Note: cellEditorParams can be a function, but AG Grid calls it and passes the result as params
@@ -416,20 +422,25 @@ export class AutocompleteCellEditorComponent
     }
 
     // Only filter options if we have static options (not using Material API or Part Number search)
+    // If using API search, don't filter static options
     if (this.options.length > 0 && !this.isMaterialSearch && !this.isPartNumberSearch) {
       this.filterOptions();
     }
 
+    // If using API search for part numbers, ensure we trigger search when value exists
+    if (this.isPartNumberSearch && this.dataService && this.value && this.value.length >= 1) {
+      // Will be triggered in ngAfterViewInit
+    }
+
     console.log(
-      'Autocomplete initialized - field:',
-      fieldName,
-      'options:',
-      this.options.length,
-      'isMaterialSearch:',
-      this.isMaterialSearch,
-      'isPartNumberSearch:',
-      this.isPartNumberSearch
-    ); // Debug
+      `Autocomplete initialized - field: ${fieldName}, mode: ${
+        this.isPartNumberSearch
+          ? 'part number search'
+          : this.isMaterialSearch
+          ? 'material search'
+          : 'static options'
+      }`
+    );
   }
 
   getValue(): any {
@@ -752,10 +763,6 @@ export class AutocompleteCellEditorComponent
     const originalData = { ...this.params.node.data };
     const fieldName = this.params.column?.getColId() || this.params.colDef?.field || '';
 
-    console.log('Auto-populate - material object:', material); // Debug
-    console.log('Auto-populate - fieldName:', fieldName); // Debug
-    console.log('Auto-populate - isPartNumberSearch:', this.isPartNumberSearch); // Debug
-
     // Populate based on search type
     if (this.isPartNumberSearch) {
       // For part number search, only populate the part number field itself
@@ -772,28 +779,25 @@ export class AutocompleteCellEditorComponent
         material.materialcolorPartNumber ||
         material.partNumber ||
         '';
-      console.log('Auto-populate - partValue:', partValue, 'for field:', partFieldName); // Debug
-
       if (partValue && originalData[partFieldName] !== partValue) {
         this.params.node.setDataValue(partFieldName, partValue);
         if (this.params.node.data) {
           this.params.node.data[partFieldName] = partValue;
         }
-        console.log('Auto-populated part field:', partFieldName, 'with value:', partValue); // Debug
+        console.log(`Auto-populated ${partFieldName}: ${partValue}`);
       }
 
       // Populate material from material.ptcmaterialName (this is okay to auto-populate)
       const materialObj = fullResult.material || {};
       const materialValue =
         materialObj.ptcmaterialName || material.ptcmaterialName || material.materialName || '';
-      console.log('Auto-populate - materialValue:', materialValue); // Debug
 
       if (materialValue && originalData.material !== materialValue) {
         this.params.node.setDataValue('material', materialValue);
         if (this.params.node.data) {
           this.params.node.data.material = materialValue;
         }
-        console.log('Auto-populated material field with value:', materialValue); // Debug
+        console.log(`Auto-populated material: ${materialValue}`);
       }
 
       // Fetch ALL parts with the same part number to get all available colors and suppliers
@@ -805,14 +809,47 @@ export class AutocompleteCellEditorComponent
       // For material search, populate material and other fields
       // Since we're not grouping anymore, each material entry is a unique combination
       const materialValue = material.ptcmaterialName || material.materialName || '';
+
       if (materialValue && originalData.material !== materialValue) {
         this.params.node.setDataValue('material', materialValue);
         if (this.params.node.data) {
           this.params.node.data.material = materialValue;
         }
+        console.log(`Auto-populated material: ${materialValue}`);
       }
 
-      // Don't auto-populate part number - let user choose from dropdown
+      // Auto-populate part number from selected material
+      // Extract part number from the selected material object
+      const fullResult = material.fullResult || {};
+      const materialColor = fullResult['material-color'] || {};
+      const partNumberFromMaterial =
+        materialColor.materialcolorPartNumber ||
+        material.materialcolorPartNumber ||
+        material.partNumber ||
+        '';
+
+      if (partNumberFromMaterial) {
+        const existingPartNumber = originalData.bomLinkPart || originalData.part || '';
+        if (existingPartNumber !== partNumberFromMaterial) {
+          this.params.node.setDataValue('bomLinkPart', partNumberFromMaterial);
+          if (this.params.node.data) {
+            this.params.node.data.bomLinkPart = partNumberFromMaterial;
+          }
+          console.log(`Auto-populated part number from material: ${partNumberFromMaterial}`);
+
+          // Refresh the grid to show the updated value
+          if (this.params.api) {
+            setTimeout(() => {
+              this.params.api.refreshCells({
+                rowNodes: [this.params.node],
+                columns: ['bomLinkPart'],
+                force: true,
+              });
+            }, 50);
+          }
+        }
+      }
+
       // Set filtered values from the selected material entry only (not all materials with same name)
       // This ensures supplier and color dropdowns show only the values linked to the selected material
       if (materialValue) {
@@ -1147,6 +1184,7 @@ export class AutocompleteCellEditorComponent
       selectedMaterial.supplier ||
       selectedMaterial.supplierName ||
       '';
+    // Extract part number from multiple possible locations
     const partNumber =
       materialColor.materialcolorPartNumber ||
       selectedMaterial.materialcolorPartNumber ||
@@ -1163,21 +1201,18 @@ export class AutocompleteCellEditorComponent
     if (this.params.node.data) {
       this.params.node.data._availableColors = availableColors;
     }
-    console.log('Stored available colors for selected material:', availableColors); // Debug
 
     // Always set _availableSuppliers (even if empty) to ensure filtered list is used
     this.params.node.setDataValue('_availableSuppliers', availableSuppliers);
     if (this.params.node.data) {
       this.params.node.data._availableSuppliers = availableSuppliers;
     }
-    console.log('Stored available suppliers for selected material:', availableSuppliers); // Debug
 
     if (availablePartNumbers.length > 0) {
       this.params.node.setDataValue('_availablePartNumbers', availablePartNumbers);
       if (this.params.node.data) {
         this.params.node.data._availablePartNumbers = availablePartNumbers;
       }
-      console.log('Stored available part numbers for selected material:', availablePartNumbers); // Debug
     }
 
     // Auto-populate supplier and color from selected material
@@ -1191,7 +1226,7 @@ export class AutocompleteCellEditorComponent
       if (this.params.node.data) {
         this.params.node.data.color = colorName;
       }
-      console.log('Auto-populated color:', colorName); // Debug
+      console.log(`Auto-populated color: ${colorName}`);
     }
 
     // Auto-populate supplier if available
@@ -1200,7 +1235,7 @@ export class AutocompleteCellEditorComponent
       if (this.params.node.data) {
         this.params.node.data.supplier = supplierName;
       }
-      console.log('Auto-populated supplier:', supplierName); // Debug
+      console.log(`Auto-populated supplier: ${supplierName}`);
     }
 
     // Auto-populate part number (bomLinkPart) if available
@@ -1211,7 +1246,18 @@ export class AutocompleteCellEditorComponent
       if (this.params.node.data) {
         this.params.node.data.bomLinkPart = partNumber;
       }
-      console.log('Auto-populated part number:', partNumber, 'in bomLinkPart field'); // Debug
+      console.log(`Auto-populated part number: ${partNumber}`);
+
+      // Also refresh the grid to show the updated value
+      if (this.params.api) {
+        setTimeout(() => {
+          this.params.api.refreshCells({
+            rowNodes: [this.params.node],
+            columns: ['bomLinkPart'],
+            force: true,
+          });
+        }, 50);
+      }
     }
   }
 
@@ -1298,14 +1344,12 @@ export class AutocompleteCellEditorComponent
           if (this.params.node.data) {
             this.params.node.data._availableColors = availableColors;
           }
-          console.log('Stored available colors for part number:', availableColors); // Debug
 
           // Always set _availableSuppliers (even if empty) to ensure filtered list is used
           this.params.node.setDataValue('_availableSuppliers', availableSuppliers);
           if (this.params.node.data) {
             this.params.node.data._availableSuppliers = availableSuppliers;
           }
-          console.log('Stored available suppliers for part number:', availableSuppliers); // Debug
 
           // Validate and update color field
           const currentData = this.params.node.data || {};
@@ -1320,7 +1364,7 @@ export class AutocompleteCellEditorComponent
               if (this.params.node.data) {
                 this.params.node.data.color = initialColorValue;
               }
-              console.log('Auto-populated color (single option):', initialColorValue); // Debug
+              console.log(`Auto-populated color: ${initialColorValue}`);
             }
           } else if (availableColors.length > 1) {
             // Multiple colors available - validate existing value is in the list
@@ -1329,7 +1373,6 @@ export class AutocompleteCellEditorComponent
               if (this.params.node.data) {
                 this.params.node.data.color = '';
               }
-              console.log('Cleared color field - not in filtered list:', existingColor); // Debug
             }
           }
 
@@ -1341,7 +1384,7 @@ export class AutocompleteCellEditorComponent
               if (this.params.node.data) {
                 this.params.node.data.supplier = initialSupplierValue;
               }
-              console.log('Auto-populated supplier (single option):', initialSupplierValue); // Debug
+              console.log(`Auto-populated supplier: ${initialSupplierValue}`);
             }
           } else if (availableSuppliers.length > 1) {
             // Multiple suppliers available - validate existing value is in the list
@@ -1350,7 +1393,6 @@ export class AutocompleteCellEditorComponent
               if (this.params.node.data) {
                 this.params.node.data.supplier = '';
               }
-              console.log('Cleared supplier field - not in filtered list:', existingSupplier); // Debug
             }
           }
         }

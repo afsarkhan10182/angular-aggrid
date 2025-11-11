@@ -532,8 +532,9 @@ export class App implements OnInit {
       if (field === 'bomLinkPart') {
         columnDef.cellEditor = AutocompleteCellEditorComponent;
         columnDef.cellEditorParams = (params: any) => ({
-          values: this.getAvailablePartNumbers(),
           placeholder: 'Type to search part numbers...',
+          useApiSearch: true, // Use API search for part numbers
+          isPartNumberSearch: true, // Flag to indicate part number search
           context: {
             dataService: this.dataService,
           },

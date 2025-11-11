@@ -1044,10 +1044,11 @@ export class ColumnService {
               },
             };
           } else {
-            // For part numbers, use static values
+            // For part numbers (bomLinkPart or part), use API search
             return {
-              values: componentInstance.getAvailablePartNumbers(),
               placeholder: 'Type to search part numbers...',
+              useApiSearch: true, // Use API search for part numbers
+              isPartNumberSearch: true, // Flag to indicate part number search
               context: {
                 dataService: dataService,
               },
