@@ -1053,12 +1053,13 @@ body {
   font-weight: 500 !important;
 }
 
+/* Selected rows - no hover effect needed since they're already visually distinct */
 .ag-row.ag-row-selected:hover {
-  background: #bfdbfe !important;
+  background: #dbeafe !important;
 }
 
 .ag-row.ag-row-selected:hover .ag-cell {
-  background: #bfdbfe !important;
+  background: #dbeafe !important;
 }
 
 /* Override any other row classes that might interfere */
@@ -1219,6 +1220,24 @@ body {
   min-height: var(--ag-row-height) !important;
   max-height: var(--ag-row-height) !important;
   box-sizing: border-box !important;
+  transition: background-color 0.15s ease !important;
+}
+
+/* Row hover highlighting - Works via JavaScript-synced class for pinned columns */
+.ag-theme-alpine .ag-row:hover:not(.ag-row-selected),
+.ag-theme-alpine .ag-row.ag-row-hover:not(.ag-row-selected) {
+  background-color: #f1f5f9 !important;
+}
+
+.ag-theme-alpine .ag-row:hover:not(.ag-row-selected) .ag-cell,
+.ag-theme-alpine .ag-row.ag-row-hover:not(.ag-row-selected) .ag-cell {
+  background-color: #f1f5f9 !important;
+}
+
+/* Ensure actions column gets hover effect */
+.ag-theme-alpine .ag-row:hover:not(.ag-row-selected) .ag-cell[col-id='actions'],
+.ag-theme-alpine .ag-row.ag-row-hover:not(.ag-row-selected) .ag-cell[col-id='actions'] {
+  background-color: #f1f5f9 !important;
 }
 
 .ag-body-viewport .ag-cell,
@@ -1396,8 +1415,6 @@ body {
 /* Ensure Part and Supplier columns have consistent cell backgrounds */
 .ag-theme-alpine .ag-cell[col-id='part'],
 .ag-theme-alpine .ag-cell[col-id='supplier'] {
-  background: white !important;
-  background-color: white !important;
   border-right: 1px solid #d1d5db !important; /* Consistent with other columns */
 }
 
@@ -1410,8 +1427,8 @@ body {
 
 .ag-row.ag-row-selected:hover .ag-cell[col-id='supplier'],
 .ag-row.ag-row-selected:hover .ag-cell[col-id='part'] {
-  background: #bfdbfe !important;
-  background-color: #bfdbfe !important;
+  background: #dbeafe !important;
+  background-color: #dbeafe !important;
 }
 
 /* Override for subrows - supplier and part columns should inherit subrow green background */
@@ -1527,6 +1544,28 @@ body {
 .ag-theme-alpine .ag-row.section-header-row .ag-cell[col-id='actions'] {
   border-right: 1px solid #e2e8f0 !important;
   --ag-cell-vertical-border-width: 1px !important;
+}
+
+/* Disable hover highlighting for section header rows */
+.ag-theme-alpine .ag-row.section-header-row:hover {
+  background-color: #eff6ff !important;
+  cursor: default !important;
+}
+
+.ag-theme-alpine .ag-row.section-header-row:hover .ag-cell {
+  background-color: #eff6ff !important;
+}
+
+/* Prevent selection styling for section header rows */
+.ag-theme-alpine .ag-row.section-header-row.ag-row-selected {
+  background-color: #eff6ff !important;
+  border-left: none !important;
+}
+
+.ag-theme-alpine .ag-row.section-header-row.ag-row-selected .ag-cell {
+  background-color: #eff6ff !important;
+  color: inherit !important;
+  font-weight: bold !important;
 }
 
 /* Force red text for matching values and inherit backgrounds - High specificity */

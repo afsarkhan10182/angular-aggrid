@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { GridApi, GridOptions } from 'ag-grid-community';
+import { GridApi, GridOptions, IRowNode } from 'ag-grid-community';
 import { DataService } from './data.service';
 
 @Injectable({
@@ -28,7 +28,7 @@ export class GridCommonService {
       const horizontalScrollViewport = document.querySelector(
         '.ag-body-horizontal-scroll-viewport'
       ) as HTMLElement;
-      
+
       if (horizontalScrollViewport) {
         horizontalScrollViewport.style.overflowX = 'auto';
         horizontalScrollViewport.style.overflowY = 'hidden';
@@ -326,6 +326,10 @@ export class GridCommonService {
       stopEditingWhenCellsLoseFocus: true,
       suppressClickEdit: false,
       singleClickEdit: true,
+      isRowSelectable: (params) => {
+        // Prevent selection of section header rows
+        return !(params.data && params.data.isSectionHeader);
+      },
       getRowClass: (params) => {
         let classes = [];
 
@@ -362,6 +366,11 @@ export class GridCommonService {
         componentInstance.gridApi = params.api;
         this.forceHorizontalScrollbarVisibility(params.api);
       },
+      onFirstDataRendered: (params) => {
+        // Setup row hover synchronization after grid is fully rendered
+        // Using onFirstDataRendered ensures DOM is ready without setTimeout
+        this.setupRowHoverSync(params.api);
+      },
       onRowSelected: (params) => {
         // Ensure only one row can be selected at a time
         if (params.node.isSelected()) {
@@ -382,7 +391,7 @@ export class GridCommonService {
           if (selectedNodes.length > 0) {
             // If multiple selected, keep only the first one
             if (selectedNodes.length > 1) {
-              selectedNodes.slice(1).forEach(node => node.setSelected(false));
+              selectedNodes.slice(1).forEach((node) => node.setSelected(false));
             }
             // Don't auto-scroll - let user control scrolling to prevent layout issues
             // Only scroll if row is completely out of view (not just partially)
@@ -471,7 +480,7 @@ export class GridCommonService {
         if (params.colDef.field === 'actions') {
           return;
         }
-        
+
         // Toggle row selection on cell click (but not during text selection)
         if (params.event) {
           const mouseEvent = params.event as MouseEvent;
@@ -521,6 +530,138 @@ export class GridCommonService {
           componentInstance.applyHierarchicalSort(params);
         }
       },
+    };
+  }
+
+  /**
+   * Setup row hover synchronization across pinned columns
+   *
+   * NOTE: AG Grid doesn't provide a built-in API for synchronizing hover states
+   * across pinned columns. This is a common limitation that requires DOM manipulation.
+   *
+   * This implementation:
+   * - Uses AG Grid's stable `row-index` attribute (used internally by AG Grid)
+   * - Uses `getDisplayedRowAtIndex()` API for row state checks
+   * - Properly cleans up event listeners
+   * - Works with AG Grid's virtual scrolling and row updates
+   *
+   * Future-proof considerations:
+   * - Uses standard DOM events (mouseenter/mouseleave)
+   * - Relies on stable AG Grid attributes (row-index)
+   * - Uses AG Grid's official API methods where possible
+   */
+  private setupRowHoverSync(gridApi: GridApi): void {
+    const gridElement = document.querySelector('.ag-theme-alpine');
+    if (!gridElement) return;
+
+    const mainBody = gridElement.querySelector('.ag-body-viewport');
+    const pinnedLeft = gridElement.querySelector('.ag-pinned-left-cols-viewport');
+    const pinnedRight = gridElement.querySelector('.ag-pinned-right-cols-viewport');
+
+    if (!mainBody) return;
+
+    // Store event handlers for cleanup
+    const eventHandlers: Array<{
+      container: Element;
+      type: string;
+      handler: EventListener;
+    }> = [];
+
+    // Synchronize hover state across all row containers
+    const syncHover = (rowIndex: number | null, add: boolean) => {
+      if (rowIndex === null || rowIndex === undefined) return;
+
+      // Use AG Grid's API to get row node state
+      const rowNode = gridApi.getDisplayedRowAtIndex(rowIndex);
+
+      // Find all row elements with matching row-index (main body + pinned columns)
+      // Note: row-index is a stable AG Grid attribute used for row identification
+      const allRows = gridElement.querySelectorAll(`.ag-row[row-index="${rowIndex}"]`);
+
+      allRows.forEach((rowElement) => {
+        // Only add hover if row is not selected and not a section header
+        if (rowNode) {
+          if (add && !rowNode.isSelected() && !rowNode.data?.isSectionHeader) {
+            rowElement.classList.add('ag-row-hover');
+          } else {
+            rowElement.classList.remove('ag-row-hover');
+          }
+        } else {
+          // Fallback: toggle class if node not found (shouldn't happen in normal operation)
+          if (add) {
+            rowElement.classList.add('ag-row-hover');
+          } else {
+            rowElement.classList.remove('ag-row-hover');
+          }
+        }
+      });
+    };
+
+    // Create reusable event handler factory
+    const createMouseEnterHandler = (): EventListener => {
+      return (e: Event) => {
+        const target = e.target as HTMLElement;
+        if (!target) return;
+
+        // Find the row element (could be cell, cell content, or row itself)
+        const cell = target.closest('.ag-cell');
+        const row = target.closest('.ag-row') || cell?.closest('.ag-row') || null;
+
+        if (row) {
+          const rowIndexAttr = row.getAttribute('row-index');
+          if (rowIndexAttr !== null) {
+            const rowIndex = parseInt(rowIndexAttr, 10);
+            if (!isNaN(rowIndex)) {
+              syncHover(rowIndex, true);
+            }
+          }
+        }
+      };
+    };
+
+    const createMouseLeaveHandler = (): EventListener => {
+      return (e: Event) => {
+        const target = e.target as HTMLElement;
+        if (!target) return;
+
+        const cell = target.closest('.ag-cell');
+        const row = target.closest('.ag-row') || cell?.closest('.ag-row') || null;
+
+        if (row) {
+          const rowIndexAttr = row.getAttribute('row-index');
+          if (rowIndexAttr !== null) {
+            const rowIndex = parseInt(rowIndexAttr, 10);
+            if (!isNaN(rowIndex)) {
+              syncHover(rowIndex, false);
+            }
+          }
+        }
+      };
+    };
+
+    // Add event listeners to all containers
+    [mainBody, pinnedLeft, pinnedRight].forEach((container) => {
+      if (!container) return;
+
+      const mouseEnterHandler = createMouseEnterHandler();
+      const mouseLeaveHandler = createMouseLeaveHandler();
+
+      container.addEventListener('mouseenter', mouseEnterHandler, true);
+      container.addEventListener('mouseleave', mouseLeaveHandler, true);
+
+      // Store for cleanup
+      eventHandlers.push(
+        { container, type: 'mouseenter', handler: mouseEnterHandler },
+        { container, type: 'mouseleave', handler: mouseLeaveHandler }
+      );
+    });
+
+    // Cleanup function - store on gridApi for potential future cleanup
+    // Note: In Angular, component destruction will handle cleanup, but this is defensive
+    (gridApi as any)._hoverSyncCleanup = () => {
+      eventHandlers.forEach(({ container, type, handler }) => {
+        container.removeEventListener(type, handler, true);
+      });
     };
   }
 }
