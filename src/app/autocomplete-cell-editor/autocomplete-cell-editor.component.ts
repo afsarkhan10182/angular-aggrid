@@ -270,9 +270,6 @@ export class AutocompleteCellEditorComponent
               this.currentQuery = query;
               this.fromIndex = 1;
               this.toIndex = 20;
-              console.log(
-                `[Part Search] Calling searchMaterials with query: "${query}", isPartNumberSearch: ${this.isPartNumberSearch}`
-              );
               return this.dataService.searchMaterials(
                 query,
                 this.fromIndex,
@@ -282,15 +279,6 @@ export class AutocompleteCellEditorComponent
             }
             return of({ results: [], resultCount: 0, hasMore: false });
           } else {
-            // Log why API search is not being used
-            if (this.isPartNumberSearch || this.isMaterialSearch) {
-              console.warn(
-                `[Part Search] API search skipped - isPartNumberSearch: ${
-                  this.isPartNumberSearch
-                }, isMaterialSearch: ${this.isMaterialSearch}, hasDataService: ${!!this
-                  .dataService}`
-              );
-            }
             if (query && query.length >= 2) {
               // Fallback to local filtering for non-material fields
               return of({
@@ -314,10 +302,6 @@ export class AutocompleteCellEditorComponent
         if (!this.isDestroyed) {
           const materials = response.results || [];
           this.hasMore = response.hasMore || false;
-
-          console.log(
-            `[Part Search] Response received - results: ${materials.length}, isPartNumberSearch: ${this.isPartNumberSearch}, hasMore: ${this.hasMore}`
-          );
 
           if (Array.isArray(materials) && materials.length > 0) {
             // API response format - extract display value based on search type
@@ -360,15 +344,8 @@ export class AutocompleteCellEditorComponent
   }
 
   ngAfterViewInit() {
-    console.log('[Part Search] ====== ngAfterViewInit CALLED ======');
-    console.log('[Part Search] isPartNumberSearch:', this.isPartNumberSearch);
-    console.log('[Part Search] isMaterialSearch:', this.isMaterialSearch);
-    console.log('[Part Search] hasDataService:', !!this.dataService);
-    console.log('[Part Search] Current value:', this.value);
-
     // Focus the input after view is initialized
     setTimeout(() => {
-      console.log('[Part Search] Focusing input in ngAfterViewInit');
       this.input.nativeElement.focus();
       this.input.nativeElement.select();
 
@@ -398,16 +375,6 @@ export class AutocompleteCellEditorComponent
   }
 
   agInit(params: any): void {
-    console.log('[Part Search] ====== agInit CALLED ======');
-    console.log('[Part Search] Full params object:', params);
-    console.log('[Part Search] params.column:', params.column);
-    console.log('[Part Search] params.colDef:', params.colDef);
-    console.log('[Part Search] params.context:', params.context);
-    console.log('[Part Search] params.params:', params.params);
-    console.log('[Part Search] params.api:', params.api);
-    console.log('[Part Search] params.isPartNumberSearch:', params.isPartNumberSearch);
-    console.log('[Part Search] params.useApiSearch:', params.useApiSearch);
-
     this.params = params;
 
     // Get DataService from multiple sources (with fallback to grid API context)
@@ -419,33 +386,12 @@ export class AutocompleteCellEditorComponent
         : null) ||
       (params.api?.getContext ? params.api.getContext()?.dataService : null);
 
-    // Debug: Log dataService availability
-    console.log('[Part Search] DataService found:', !!this.dataService);
-    if (!this.dataService) {
-      console.error('[Part Search] ❌ DataService NOT FOUND - checking all sources...');
-      console.log('[Part Search] params.context?.dataService:', params.context?.dataService);
-      console.log(
-        '[Part Search] params.params?.context?.dataService:',
-        params.params?.context?.dataService
-      );
-      console.log(
-        '[Part Search] params.api?.gridOptionsService?.get:',
-        params.api?.gridOptionsService?.get
-      );
-      console.log('[Part Search] params.api?.getContext:', params.api?.getContext);
-    } else {
-      console.log('[Part Search] ✅ DataService found and available');
-    }
-
     // Ensure value is always a string
     this.value = params.value ? String(params.value) : '';
     this.placeholder = params.placeholder || 'Type to search materials...';
-    console.log('[Part Search] Initial value:', this.value);
-    console.log('[Part Search] Placeholder:', this.placeholder);
 
     // Determine if this is material or part number search
     const fieldName = params.column?.getColId() || params.colDef?.field || '';
-    console.log('[Part Search] Field name:', fieldName);
 
     // Check for part number search first (higher priority)
     // Support both 'bomLinkPart' (local) and 'partNumber' (production) field names
@@ -455,16 +401,6 @@ export class AutocompleteCellEditorComponent
       fieldName === 'partNumber' ||
       fieldName === 'part';
 
-    console.log('[Part Search] isPartNumberSearch calculated:', this.isPartNumberSearch);
-    console.log(
-      '[Part Search] params.isPartNumberSearch === true:',
-      params.isPartNumberSearch === true
-    );
-    console.log('[Part Search] fieldName:', fieldName);
-    console.log('[Part Search] fieldName === "bomLinkPart":', fieldName === 'bomLinkPart');
-    console.log('[Part Search] fieldName === "partNumber":', fieldName === 'partNumber');
-    console.log('[Part Search] fieldName === "part":', fieldName === 'part');
-
     // Material search should only be true if NOT part number search
     this.isMaterialSearch =
       !this.isPartNumberSearch &&
@@ -472,14 +408,6 @@ export class AutocompleteCellEditorComponent
         (this.dataService &&
           (this.placeholder.includes('material') || this.placeholder.includes('Material'))) ||
         (this.dataService && fieldName === 'material'));
-
-    console.log('[Part Search] isMaterialSearch calculated:', this.isMaterialSearch);
-    console.log(
-      '[Part Search] Final flags - isPartNumberSearch:',
-      this.isPartNumberSearch,
-      ', isMaterialSearch:',
-      this.isMaterialSearch
-    );
 
     // Get options from params - support multiple formats
     // Note: cellEditorParams can be a function, but AG Grid calls it and passes the result as params
@@ -523,24 +451,6 @@ export class AutocompleteCellEditorComponent
     if (this.isPartNumberSearch && this.dataService && this.value && this.value.length >= 1) {
       // Will be triggered in ngAfterViewInit
     }
-
-    console.log(`[Part Search] ====== Autocomplete INITIALIZED ======`);
-    console.log(`[Part Search] Field: ${fieldName}`);
-    console.log(
-      `[Part Search] Mode: ${
-        this.isPartNumberSearch
-          ? 'PART NUMBER SEARCH'
-          : this.isMaterialSearch
-          ? 'MATERIAL SEARCH'
-          : 'STATIC OPTIONS'
-      }`
-    );
-    console.log(`[Part Search] isPartNumberSearch: ${this.isPartNumberSearch}`);
-    console.log(`[Part Search] isMaterialSearch: ${this.isMaterialSearch}`);
-    console.log(`[Part Search] hasDataService: ${!!this.dataService}`);
-    console.log(`[Part Search] params.isPartNumberSearch: ${params.isPartNumberSearch}`);
-    console.log(`[Part Search] params.useApiSearch: ${params.useApiSearch}`);
-    console.log(`[Part Search] ====== END agInit ======`);
   }
 
   getValue(): any {
@@ -552,35 +462,19 @@ export class AutocompleteCellEditorComponent
   }
 
   onInputChange(event: any): void {
-    console.log('[Part Search] ====== onInputChange CALLED ======');
-    console.log('[Part Search] Event:', event);
-    console.log('[Part Search] New value:', event.target.value);
-
     this.value = event.target.value || '';
-
-    console.log('[Part Search] isPartNumberSearch:', this.isPartNumberSearch);
-    console.log('[Part Search] isMaterialSearch:', this.isMaterialSearch);
-    console.log('[Part Search] hasDataService:', !!this.dataService);
-    console.log('[Part Search] Value length:', this.value.length);
 
     // For material or part number search, trigger API search
     if (this.isMaterialSearch || this.isPartNumberSearch) {
       // Ensure dataService is available before triggering search
       if (this.dataService) {
-        console.log('[Part Search] ✅ Triggering searchSubject.next with value:', this.value);
         this.searchSubject.next(this.value);
-      } else {
-        console.error('[Part Search] ❌ DataService not available, cannot perform search');
-        console.error('[Part Search] Current dataService:', this.dataService);
       }
     } else {
-      console.log('[Part Search] Using local filtering (not API search)');
       // For static options (color, supplier, etc.), filter locally
       this.filterOptions();
       this.showDropdown = this.filteredOptions.length > 0;
     }
-
-    console.log('[Part Search] ====== END onInputChange ======');
 
     this.selectedIndex = -1;
 
@@ -636,73 +530,43 @@ export class AutocompleteCellEditorComponent
   }
 
   onInputClick(): void {
-    console.log('[Part Search] ====== onInputClick CALLED ======');
-    console.log('[Part Search] isPartNumberSearch:', this.isPartNumberSearch);
-    console.log('[Part Search] isMaterialSearch:', this.isMaterialSearch);
-    console.log('[Part Search] hasDataService:', !!this.dataService);
-    console.log('[Part Search] Current value:', this.value);
-
     // Re-read options from node data for supplier/color fields to get latest filtered values
     this.refreshOptionsFromNodeData();
 
     // Show dropdown when input is clicked
     if (!this.isMaterialSearch && !this.isPartNumberSearch) {
-      console.log('[Part Search] Using local filtering on click');
       this.filterOptions();
       this.showDropdown = this.filteredOptions.length > 0;
     } else if (this.isPartNumberSearch || this.isMaterialSearch) {
-      console.log('[Part Search] API search mode - will show dropdown after search results');
       // For API search, trigger search if we have a value
       if (this.dataService && this.value && this.value.length >= 1) {
-        console.log('[Part Search] Triggering search on click with value:', this.value);
         this.searchSubject.next(this.value);
-      } else if (this.dataService) {
-        console.log('[Part Search] No value to search yet, waiting for user input');
-      } else {
-        console.error('[Part Search] ❌ DataService not available on click');
       }
     }
 
     if (this.showDropdown) {
       setTimeout(() => this.positionDropdown(), 0);
     }
-
-    console.log('[Part Search] ====== END onInputClick ======');
   }
 
   onInputFocus(): void {
-    console.log('[Part Search] ====== onInputFocus CALLED ======');
-    console.log('[Part Search] isPartNumberSearch:', this.isPartNumberSearch);
-    console.log('[Part Search] isMaterialSearch:', this.isMaterialSearch);
-    console.log('[Part Search] hasDataService:', !!this.dataService);
-    console.log('[Part Search] Current value:', this.value);
-
     // Re-read options from node data for supplier/color fields to get latest filtered values
     this.refreshOptionsFromNodeData();
 
     // Show dropdown when input is focused
     if (!this.isMaterialSearch && !this.isPartNumberSearch) {
-      console.log('[Part Search] Using local filtering on focus');
       this.filterOptions();
       this.showDropdown = this.filteredOptions.length > 0;
     } else if (this.isPartNumberSearch || this.isMaterialSearch) {
-      console.log('[Part Search] API search mode - will show dropdown after search results');
       // For API search, trigger search if we have a value
       if (this.dataService && this.value && this.value.length >= 1) {
-        console.log('[Part Search] Triggering search on focus with value:', this.value);
         this.searchSubject.next(this.value);
-      } else if (this.dataService) {
-        console.log('[Part Search] No value to search yet, waiting for user input');
-      } else {
-        console.error('[Part Search] ❌ DataService not available on focus');
       }
     }
 
     if (this.showDropdown) {
       setTimeout(() => this.positionDropdown(), 0);
     }
-
-    console.log('[Part Search] ====== END onInputFocus ======');
   }
 
   /**
@@ -938,7 +802,6 @@ export class AutocompleteCellEditorComponent
         if (this.params.node.data) {
           this.params.node.data[partFieldName] = partValue;
         }
-        console.log(`Auto-populated ${partFieldName}: ${partValue}`);
       }
 
       // Populate material from material.ptcmaterialName (this is okay to auto-populate)
@@ -951,7 +814,6 @@ export class AutocompleteCellEditorComponent
         if (this.params.node.data) {
           this.params.node.data.material = materialValue;
         }
-        console.log(`Auto-populated material: ${materialValue}`);
       }
 
       // Fetch ALL parts with the same part number to get all available colors and suppliers
@@ -969,7 +831,6 @@ export class AutocompleteCellEditorComponent
         if (this.params.node.data) {
           this.params.node.data.material = materialValue;
         }
-        console.log(`Auto-populated material: ${materialValue}`);
       }
 
       // Auto-populate part number from selected material
@@ -993,9 +854,6 @@ export class AutocompleteCellEditorComponent
           if (this.params.node.data) {
             this.params.node.data[partFieldName] = partNumberFromMaterial;
           }
-          console.log(
-            `Auto-populated part number from material: ${partNumberFromMaterial} (field: ${partFieldName})`
-          );
 
           // Refresh the grid to show the updated value
           if (this.params.api) {
@@ -1382,7 +1240,6 @@ export class AutocompleteCellEditorComponent
       if (this.params.node.data) {
         this.params.node.data.color = colorName;
       }
-      console.log(`Auto-populated color: ${colorName}`);
     }
 
     // Auto-populate supplier if available
@@ -1391,7 +1248,6 @@ export class AutocompleteCellEditorComponent
       if (this.params.node.data) {
         this.params.node.data.supplier = supplierName;
       }
-      console.log(`Auto-populated supplier: ${supplierName}`);
     }
 
     // Auto-populate part number if available
@@ -1411,7 +1267,6 @@ export class AutocompleteCellEditorComponent
       if (this.params.node.data) {
         this.params.node.data[partFieldName] = partNumber;
       }
-      console.log(`Auto-populated part number: ${partNumber} (field: ${partFieldName})`);
 
       // Also refresh the grid to show the updated value
       if (this.params.api) {
@@ -1529,7 +1384,6 @@ export class AutocompleteCellEditorComponent
               if (this.params.node.data) {
                 this.params.node.data.color = initialColorValue;
               }
-              console.log(`Auto-populated color: ${initialColorValue}`);
             }
           } else if (availableColors.length > 1) {
             // Multiple colors available - validate existing value is in the list
@@ -1549,7 +1403,6 @@ export class AutocompleteCellEditorComponent
               if (this.params.node.data) {
                 this.params.node.data.supplier = initialSupplierValue;
               }
-              console.log(`Auto-populated supplier: ${initialSupplierValue}`);
             }
           } else if (availableSuppliers.length > 1) {
             // Multiple suppliers available - validate existing value is in the list

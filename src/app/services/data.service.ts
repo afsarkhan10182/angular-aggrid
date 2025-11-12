@@ -656,7 +656,6 @@ export class DataService {
   // Get service host URL from JSP data attribute (passed from Windchill)
   getServiceHostUrl(): string {
     const hostFromJsp = this.getJspDataAttribute('data-host');
-    console.log('[getServiceHostUrl] Host from bomComposer.jsp data-host:', hostFromJsp);
 
     if (!hostFromJsp) {
       return '';

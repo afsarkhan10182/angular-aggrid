@@ -30,7 +30,6 @@ import { environment } from '../environments/environment';
 })
 export class App implements OnInit {
   private gridApi!: GridApi;
-  private _lastHeaderHeight?: number;
   public showColumnVisibilityPanel = false;
 
   @ViewChild('columnPanel') columnPanel!: ElementRef;
@@ -545,7 +544,6 @@ export class App implements OnInit {
       // Add specific cell editors for different field types
       // Handle both 'bomLinkPart' (local) and 'partNumber' (production) field names
       if (field === 'bomLinkPart' || field === 'partNumber') {
-        console.log(`Part number field detected: ${field}`);
         columnDef.cellEditor = AutocompleteCellEditorComponent;
         columnDef.cellEditorParams = (params: any) => ({
           placeholder: 'Type to search part numbers...',
@@ -940,7 +938,6 @@ export class App implements OnInit {
   }
 
   onGridReady(params: any): void {
-    console.log('[GridReady] 🎯 onGridReady called at:', new Date().toISOString());
     this.gridApi = params.api;
 
     this.gridCommonService.sizeColumnsToFit(this.gridApi);
@@ -948,7 +945,6 @@ export class App implements OnInit {
 
     // Refresh header
     if (this.gridApi) {
-      console.log('[GridReady] 🔄 Calling initial refreshHeader()');
       this.gridApi.refreshHeader();
     }
 
@@ -956,43 +952,6 @@ export class App implements OnInit {
     if (this.rowData && this.rowData.length > 0) {
       this.applyHierarchicalSearch();
     }
-
-    // Monitor scroll events to see if they trigger header recalculation
-    this.setupScrollMonitoring();
-  }
-
-  /**
-   * Monitor scroll events to track if scrolling triggers header height changes
-   */
-  private setupScrollMonitoring(): void {
-    // Monitor scroll on the grid viewport
-    setTimeout(() => {
-      const gridViewport = document.querySelector('.ag-body-viewport');
-      if (gridViewport) {
-        let scrollTimeout: any;
-        gridViewport.addEventListener('scroll', () => {
-          clearTimeout(scrollTimeout);
-          scrollTimeout = setTimeout(() => {
-            const headerRow = document.querySelector('.ag-header-row') as HTMLElement;
-            const currentHeight = headerRow?.offsetHeight || 0;
-            console.log('[Scroll Monitor] 📜 Grid scrolled - Header height:', currentHeight + 'px');
-
-            // Check if header height changed unexpectedly
-            if (this._lastHeaderHeight && Math.abs(currentHeight - this._lastHeaderHeight) > 2) {
-              console.warn('[Scroll Monitor] ⚠️ Header height changed during scroll!', {
-                previous: this._lastHeaderHeight + 'px',
-                current: currentHeight + 'px',
-                difference: currentHeight - this._lastHeaderHeight + 'px',
-              });
-            }
-            this._lastHeaderHeight = currentHeight;
-          }, 100);
-        });
-        console.log('[Scroll Monitor] ✅ Scroll monitoring enabled on grid viewport');
-      } else {
-        console.warn('[Scroll Monitor] ⚠️ Grid viewport not found for scroll monitoring');
-      }
-    }, 500);
   }
 
   getColumnDisplayName(col: any): string {
@@ -1060,7 +1019,6 @@ export class App implements OnInit {
   }
 
   onCellClicked(event: any): void {
-    console.log('[App] onCellClicked - colDef.field:', event.colDef.field);
     if (event.colDef.field === 'bomLinkPart' || event.colDef.field === 'partNumber') {
       event.api.startEditingCell({
         rowIndex: event.rowIndex,
