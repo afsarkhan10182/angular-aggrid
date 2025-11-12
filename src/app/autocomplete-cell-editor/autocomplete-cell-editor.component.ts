@@ -85,6 +85,7 @@ import { of, Subject } from 'rxjs';
             {{ option }}
           </div>
         </div>
+        <div *ngIf="isLoadingMore" class="dropdown-loading">Loading more...</div>
       </div>
     </div>
   `,
@@ -218,12 +219,25 @@ import { of, Subject } from 'rxjs';
         margin: 2px 0;
         line-height: 1.4;
       }
+
+      .dropdown-loading {
+        padding: 12px !important;
+        text-align: center !important;
+        color: #64748b !important;
+        font-size: 12px !important;
+        font-style: italic !important;
+        background: #f8fafc !important;
+        border-top: 1px solid #e2e8f0 !important;
+      }
     `,
   ],
 })
 export class AutocompleteCellEditorComponent
   implements ICellEditorAngularComp, OnInit, AfterViewInit, OnDestroy
 {
+  // Page size for pagination
+  private readonly PAGE_SIZE: number = 20;
+
   @ViewChild('input') input!: ElementRef<HTMLInputElement>;
   @ViewChild('dropdown') dropdown!: ElementRef<HTMLDivElement>;
 
@@ -236,6 +250,7 @@ export class AutocompleteCellEditorComponent
   public selectedIndex: number = -1;
   public isMaterialSearch: boolean = false; // Flag to determine if this is material search
   public isPartNumberSearch: boolean = false; // Flag to determine if this is part number search
+  public isLoadingMore: boolean = false; // Flag to show loading indicator
 
   private params: any;
   private originalValue: string = '';
@@ -245,9 +260,8 @@ export class AutocompleteCellEditorComponent
   private isDestroyed: boolean = false;
   private currentQuery: string = '';
   private fromIndex: number = 1;
-  private toIndex: number = 20;
+  private toIndex: number = this.PAGE_SIZE; // Use PAGE_SIZE constant
   private hasMore: boolean = false;
-  private isLoadingMore: boolean = false;
 
   constructor() {
     // DataService will be set in agInit when params are available
@@ -267,9 +281,11 @@ export class AutocompleteCellEditorComponent
           if ((this.isMaterialSearch || this.isPartNumberSearch) && this.dataService) {
             // Use API search (minimum 1 character for better UX)
             if (query && query.length >= 1) {
+              // Reset pagination for new search
               this.currentQuery = query;
               this.fromIndex = 1;
-              this.toIndex = 20;
+              this.toIndex = this.PAGE_SIZE;
+              this.isLoadingMore = false;
               return this.dataService.searchMaterials(
                 query,
                 this.fromIndex,
@@ -277,6 +293,10 @@ export class AutocompleteCellEditorComponent
                 this.isPartNumberSearch
               );
             }
+            // Reset state when query is cleared
+            this.fromIndex = 1;
+            this.toIndex = this.PAGE_SIZE;
+            this.hasMore = false;
             return of({ results: [], resultCount: 0, hasMore: false });
           } else {
             if (query && query.length >= 2) {
@@ -301,7 +321,11 @@ export class AutocompleteCellEditorComponent
       .subscribe((response) => {
         if (!this.isDestroyed) {
           const materials = response.results || [];
-          this.hasMore = response.hasMore || false;
+          const resultCount = response.resultCount || 0;
+
+          // Determine if there are more results to load
+          // hasMore is true if resultCount > current toIndex
+          this.hasMore = resultCount > this.toIndex;
 
           if (Array.isArray(materials) && materials.length > 0) {
             // API response format - extract display value based on search type
@@ -309,7 +333,7 @@ export class AutocompleteCellEditorComponent
               // First page - replace existing results
               this.materialOptions = materials;
             } else {
-              // Subsequent pages - append results
+              // Subsequent pages - append results (shouldn't happen in initial search, but handle it)
               this.materialOptions = [...this.materialOptions, ...materials];
             }
 
@@ -326,9 +350,8 @@ export class AutocompleteCellEditorComponent
           } else if (this.fromIndex === 1) {
             // First page with no results - clear everything
             this.materialOptions = [];
-            this.filteredOptions = Array.isArray(materials)
-              ? materials.filter((m) => m && m.length > 0)
-              : [];
+            this.filteredOptions = [];
+            this.hasMore = false;
           }
 
           this.isLoadingMore = false;
@@ -626,8 +649,10 @@ export class AutocompleteCellEditorComponent
     if (this.isLoadingMore || !this.hasMore || !this.dataService || !this.currentQuery) return;
 
     this.isLoadingMore = true;
+
+    // Calculate next page indices: fromIndex = previous toIndex + 1, toIndex = fromIndex + (PAGE_SIZE - 1)
     this.fromIndex = this.toIndex + 1;
-    this.toIndex = this.fromIndex + 19; // Load next 20 items
+    this.toIndex = this.fromIndex + (this.PAGE_SIZE - 1); // Load next PAGE_SIZE items (e.g., 11-20, 21-30, etc.)
 
     this.dataService
       .searchMaterials(this.currentQuery, this.fromIndex, this.toIndex, this.isPartNumberSearch)
@@ -635,54 +660,15 @@ export class AutocompleteCellEditorComponent
         next: (response) => {
           if (!this.isDestroyed) {
             const materials = response.results || [];
-            this.hasMore = response.hasMore || false;
+            const resultCount = response.resultCount || 0;
+
+            // Determine if there are more results to load
+            // hasMore is true if resultCount > current toIndex
+            this.hasMore = resultCount > this.toIndex;
 
             if (Array.isArray(materials) && materials.length > 0) {
-              // For material search with grouped results, merge new materials into existing groups
-              if (this.isMaterialSearch && !this.isPartNumberSearch) {
-                // Merge new materials with existing grouped materials
-                const existingMap = new Map(
-                  this.materialOptions.map((m: any) => [
-                    m.ptcmaterialName || m.materialName || m.name,
-                    m,
-                  ])
-                );
-
-                materials.forEach((newMat: any) => {
-                  const key = newMat.ptcmaterialName || newMat.materialName || newMat.name;
-                  if (existingMap.has(key)) {
-                    // Merge into existing group
-                    const existing = existingMap.get(key)!;
-                    if (newMat.colorName && !existing.colors?.includes(newMat.colorName)) {
-                      existing.colors = existing.colors || [];
-                      existing.colors.push(newMat.colorName);
-                    }
-                    if (newMat.supplier && !existing.suppliers?.includes(newMat.supplier)) {
-                      existing.suppliers = existing.suppliers || [];
-                      existing.suppliers.push(newMat.supplier);
-                    }
-                    if (newMat.partNumber && !existing.partNumbers?.includes(newMat.partNumber)) {
-                      existing.partNumbers = existing.partNumbers || [];
-                      existing.partNumbers.push(newMat.partNumber);
-                    }
-                    if (newMat.variants) {
-                      existing.variants = existing.variants || [];
-                      existing.variants.push(...newMat.variants);
-                    } else {
-                      existing.variants = existing.variants || [];
-                      existing.variants.push(newMat);
-                    }
-                  } else {
-                    // New material, add to map
-                    existingMap.set(key, newMat);
-                  }
-                });
-
-                this.materialOptions = Array.from(existingMap.values());
-              } else {
-                // For part number search or non-grouped, just append
-                this.materialOptions = [...this.materialOptions, ...materials];
-              }
+              // Append new materials to existing results (both material and part number searches)
+              this.materialOptions = [...this.materialOptions, ...materials];
 
               // Update filtered options
               this.filteredOptions = this.materialOptions
@@ -694,6 +680,9 @@ export class AutocompleteCellEditorComponent
                   }
                 })
                 .filter((name) => name.length > 0);
+            } else {
+              // No more results
+              this.hasMore = false;
             }
 
             this.isLoadingMore = false;
@@ -702,6 +691,7 @@ export class AutocompleteCellEditorComponent
         error: (error) => {
           console.error('Error loading more results:', error);
           this.isLoadingMore = false;
+          this.hasMore = false;
         },
       });
   }
