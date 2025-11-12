@@ -1213,7 +1213,6 @@ export class ColumnService {
       suppressAutoSize: false,
       floatingFilter: false,
       wrapHeaderText: true,
-      autoHeaderHeight: true,
       headerClass: 'custom-header-with-border',
       width: 140,
       minWidth: 100,
