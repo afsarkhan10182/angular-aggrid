@@ -42,26 +42,112 @@ export class GridCommonService {
   }
 
   /**
-   * Date formatter function for MM/DD/YYYY format
+   * Parse MM/DD/YYYY format string to Date object
+   * @param dateStr - Date string in MM/DD/YYYY format or any parseable date format
+   * @returns Date object or null if invalid
    */
-  dateFormatter(params: any): string {
-    if (!params.value) return '';
-
-    if (typeof params.value === 'string') {
-      const mmddyyyyPattern = /^\d{2}\/\d{2}\/\d{4}$/;
-      if (mmddyyyyPattern.test(params.value)) {
-        return params.value;
+  parseDateString(dateStr: string): Date | null {
+    if (!dateStr || dateStr === '') return null;
+    // Handle MM/DD/YYYY format (e.g., "10/31/2025")
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+      const month = parseInt(parts[0], 10) - 1; // Month is 0-indexed
+      const day = parseInt(parts[1], 10);
+      const year = parseInt(parts[2], 10);
+      const date = new Date(year, month, day);
+      if (!isNaN(date.getTime())) {
+        return date;
       }
     }
+    // Fallback to standard Date parsing
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) ? null : date;
+  }
 
-    const date = new Date(params.value);
-    if (isNaN(date.getTime())) return params.value;
-
+  /**
+   * Format Date object to MM/DD/YYYY string format
+   * @param date - Date object to format
+   * @returns Formatted string in MM/DD/YYYY format (e.g., "10/31/2025")
+   */
+  formatDateToString(date: Date): string {
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
     const year = date.getFullYear();
-
     return `${month}/${day}/${year}`;
+  }
+
+  /**
+   * Convert any date value (Date object, string, etc.) to MM/DD/YYYY format string
+   * @param value - Date value (Date object, string, or any parseable date)
+   * @returns Formatted string in MM/DD/YYYY format or empty string if invalid
+   */
+  formatDateToMMDDYYYY(value: any): string {
+    if (!value) return '';
+
+    // If it's already a Date object, format it
+    if (value instanceof Date) {
+      return this.formatDateToString(value);
+    }
+
+    // If it's already a string, check if it's in the correct format
+    if (typeof value === 'string') {
+      const mmddyyyyPattern = /^\d{2}\/\d{2}\/\d{4}$/;
+      if (mmddyyyyPattern.test(value)) {
+        return value;
+      }
+      // Try to parse and reformat
+      const date = this.parseDateString(value);
+      if (date) {
+        return this.formatDateToString(date);
+      }
+    }
+
+    // Try to parse as Date
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return '';
+
+    return this.formatDateToString(date);
+  }
+
+  /**
+   * Convert Date object from editor to MM/DD/YYYY format string for storage
+   * @param dateValue - Date object or any value from date editor
+   * @returns Formatted string in MM/DD/YYYY format or empty string
+   */
+  convertDateEditorValueToString(dateValue: any): string {
+    if (!dateValue) return '';
+
+    // If it's a Date object (from date editor)
+    if (dateValue && typeof dateValue === 'object' && 'toLocaleDateString' in dateValue) {
+      return this.formatDateToString(dateValue as Date);
+    }
+
+    // If it's already a string in MM/DD/YYYY format, return as-is
+    if (typeof dateValue === 'string') {
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateValue)) {
+        return dateValue;
+      }
+      // Try to parse and format
+      const date = this.parseDateString(dateValue);
+      if (date) {
+        return this.formatDateToString(date);
+      }
+    }
+
+    // Try to parse as Date
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return '';
+
+    return this.formatDateToString(date);
+  }
+
+  /**
+   * Date formatter function for AG Grid valueFormatter (MM/DD/YYYY format)
+   * @param params - AG Grid params object
+   * @returns Formatted date string
+   */
+  dateFormatter(params: any): string {
+    return this.formatDateToMMDDYYYY(params.value);
   }
 
   /**

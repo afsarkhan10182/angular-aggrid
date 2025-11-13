@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { GridApi } from 'ag-grid-community';
 import { DataService } from './data.service';
+import { GridCommonService } from './grid-common.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class RowManagementService {
-  constructor() {}
+  constructor(private gridCommonService: GridCommonService) {}
 
   /**
    * Add row after a specific row index
@@ -25,8 +26,10 @@ export class RowManagementService {
       supplier: '',
       color: '',
       feature: '',
-      startDate: '',
-      endDate: '',
+      bomLinkStartDate: '', // Use bomLinkStartDate to match API field names
+      bomLinkEndDate: '', // Use bomLinkEndDate to match API field names
+      startDate: '', // Keep for backward compatibility
+      endDate: '', // Keep for backward compatibility
       qty: 0,
       material: '', // Add empty material field
       isNewRow: true,
@@ -301,12 +304,15 @@ export class RowManagementService {
             if (existingPartData[fieldName] !== undefined && existingPartData[fieldName] !== null) {
               let valueToSet = existingPartData[fieldName];
 
-              // Special handling for date fields
-              if (fieldName === 'startDate' || fieldName === 'endDate') {
-                const date = new Date(valueToSet);
-                if (!isNaN(date.getTime())) {
-                  valueToSet = date.toISOString();
-                }
+              // Special handling for date fields - keep in MM/DD/YYYY format
+              if (
+                fieldName === 'startDate' ||
+                fieldName === 'endDate' ||
+                fieldName === 'bomLinkStartDate' ||
+                fieldName === 'bomLinkEndDate'
+              ) {
+                // Use centralized function to format date to MM/DD/YYYY
+                valueToSet = this.gridCommonService.formatDateToMMDDYYYY(valueToSet);
               }
 
               // Only update if value is different

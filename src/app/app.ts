@@ -628,39 +628,74 @@ export class App implements OnInit {
             };
           };
         }
-      } else if (field === 'startDate' || field === 'endDate') {
+      } else if (
+        field === 'bomLinkStartDate' ||
+        field === 'bomLinkEndDate' ||
+        field === 'startDate' ||
+        field === 'endDate'
+      ) {
         // Date columns should use date picker and date filter
         columnDef.filter = false; // Filters disabled
         columnDef.cellEditor = 'agDateCellEditor';
-        columnDef.cellDataType = 'date';
+        // Don't use cellDataType when using valueGetter - let valueGetter handle the conversion
+        // Ensure date columns are editable for new rows
+        columnDef.editable = (params: any) => {
+          return params.data && params.data.isNewRow && !params.data.isSectionHeader;
+        };
+        // Override cellRenderer to ensure dates are formatted correctly
+        columnDef.cellRenderer = (params: any) => {
+          // Show values for data rows and material headers (header carries parent data)
+          if (params.data.isSectionHeader || params.data.isBranchHeader) {
+            return '';
+          }
+          // Use valueFormatter to get the formatted date string
+          let formattedValue = '';
+          if (columnDef.valueFormatter && typeof columnDef.valueFormatter === 'function') {
+            formattedValue = columnDef.valueFormatter(params) || '';
+          }
+          const columnWidth = params.column?.getActualWidth() || columnDef.width || 150;
+          return this.createCellContentWithTooltip(formattedValue, columnWidth);
+        };
+        // Use centralized date formatting functions from grid-common.service
+        // Use valueGetter only for editing - convert to Date objects for the date editor
+        // Return undefined (not null) for empty cells so date editor can initialize properly
+        columnDef.valueGetter = (params: any) => {
+          if (!params.data) return undefined;
+          const value = params.data[field];
+          if (!value || value === '') return undefined;
+          // If it's already a Date object, return it
+          if (value instanceof Date) return value;
+          // Parse MM/DD/YYYY format string using centralized function
+          return this.gridCommonService.parseDateString(String(value)) || undefined;
+        };
+        // Use simple object for cellEditorParams - AG Grid will handle value from valueGetter
         columnDef.cellEditorParams = {
           browserDatePicker: true,
           minValidYear: 2000,
           maxValidYear: 2050,
           format: 'mm/dd/yyyy',
         };
+        // valueFormatter always formats the raw data value to MM/DD/YYYY format
         columnDef.valueFormatter = (params: any) => {
-          // Just return the value as-is, keeping the original string format
-          return params.value || '';
+          // Get the raw value from data, not from valueGetter
+          if (!params.data) return '';
+          const rawValue = params.data[field];
+          // Use centralized formatting function
+          return this.gridCommonService.formatDateToMMDDYYYY(rawValue);
         };
         columnDef.valueParser = (params: any) => {
           if (!params.newValue) return '';
-          // Keep dates as strings to match mock2.json format
-          if (
-            params.newValue &&
-            typeof params.newValue === 'object' &&
-            'toLocaleDateString' in params.newValue
-          ) {
-            return (params.newValue as Date).toLocaleDateString('en-US');
-          }
-          // Return the string value as-is
-          return String(params.newValue);
+          // Use centralized function to convert date editor value to MM/DD/YYYY string
+          return this.gridCommonService.convertDateEditorValueToString(params.newValue);
         };
         columnDef.valueSetter = (params: any) => {
-          if (!params.newValue) return false;
-          const date = new Date(params.newValue);
-          if (isNaN(date.getTime())) return false;
-          params.data[params.colDef.field as string] = date.toISOString();
+          if (!params.newValue) {
+            params.data[params.colDef.field as string] = '';
+            return true;
+          }
+          // Use centralized function to convert and store as MM/DD/YYYY string
+          const dateStr = this.gridCommonService.convertDateEditorValueToString(params.newValue);
+          params.data[params.colDef.field as string] = dateStr;
           return true;
         };
       }
@@ -1089,12 +1124,51 @@ export class App implements OnInit {
       // Check if this is an editable field (not actions, not SKU fields)
       const field = event.colDef.field;
       if (field && field !== 'actions' && !field.startsWith('sku')) {
-        event.api.startEditingCell({
-          rowIndex: event.rowIndex,
-          colKey: event.column.getId(),
-          rowPinned: event.rowPinned,
-          keyPress: event.event?.key,
-        });
+        // For date columns, ensure the editor opens properly
+        const isDateColumn =
+          field === 'bomLinkStartDate' ||
+          field === 'bomLinkEndDate' ||
+          field === 'startDate' ||
+          field === 'endDate';
+
+        if (isDateColumn) {
+          // Start editing the cell
+          event.api.startEditingCell({
+            rowIndex: event.rowIndex,
+            colKey: event.column.getId(),
+            rowPinned: event.rowPinned,
+          });
+          // Try to find and open the date picker after editor starts
+          setTimeout(() => {
+            // Try to find the date input in the currently editing cell
+            // AG Grid adds 'ag-cell-inline-editing' class to editing cells
+            const editingCell = document.querySelector('.ag-cell-inline-editing') as HTMLElement;
+            if (editingCell) {
+              const dateInput =
+                (editingCell.querySelector('input[type="date"]') as HTMLInputElement) ||
+                (editingCell.querySelector('input.ag-date-input') as HTMLInputElement) ||
+                (editingCell.querySelector('input') as HTMLInputElement);
+
+              if (dateInput) {
+                dateInput.focus();
+                // Try to open the picker directly (supported in modern browsers)
+                if (typeof dateInput.showPicker === 'function') {
+                  dateInput.showPicker();
+                } else {
+                  // Fallback: click on the input to trigger the picker
+                  dateInput.click();
+                }
+              }
+            }
+          }, 150);
+        } else {
+          event.api.startEditingCell({
+            rowIndex: event.rowIndex,
+            colKey: event.column.getId(),
+            rowPinned: event.rowPinned,
+            keyPress: event.event?.key,
+          });
+        }
         return;
       }
     }

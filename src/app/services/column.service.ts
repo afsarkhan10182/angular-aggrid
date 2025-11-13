@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { ColDef } from 'ag-grid-community';
 import { AutocompleteCellEditorComponent } from '../autocomplete-cell-editor/autocomplete-cell-editor.component';
+import { GridCommonService } from './grid-common.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ColumnService {
-  constructor() {}
+  constructor(private gridCommonService: GridCommonService) {}
 
   /**
    * Builds column definitions for the grid
@@ -387,27 +388,22 @@ export class ColumnService {
           maxValidYear: 2050,
         },
         valueFormatter: (params) => {
-          // Just return the value as-is, keeping the original string format
-          return params.value || '';
+          // Use centralized date formatting function
+          return this.gridCommonService.formatDateToMMDDYYYY(params.value);
         },
         valueParser: (params) => {
           if (!params.newValue) return '';
-          // Keep dates as strings to match mock2.json format
-          if (
-            params.newValue &&
-            typeof params.newValue === 'object' &&
-            'toLocaleDateString' in params.newValue
-          ) {
-            return (params.newValue as Date).toLocaleDateString('en-US');
-          }
-          // Return the string value as-is
-          return String(params.newValue);
+          // Use centralized function to convert date editor value to MM/DD/YYYY string
+          return this.gridCommonService.convertDateEditorValueToString(params.newValue);
         },
         valueSetter: (params) => {
-          if (!params.newValue) return false;
-          const date = new Date(params.newValue);
-          if (isNaN(date.getTime())) return false;
-          params.data[params.colDef.field as string] = date.toISOString();
+          if (!params.newValue) {
+            params.data[params.colDef.field as string] = '';
+            return true;
+          }
+          // Use centralized function to convert and store as MM/DD/YYYY string
+          const dateStr = this.gridCommonService.convertDateEditorValueToString(params.newValue);
+          params.data[params.colDef.field as string] = dateStr;
           return true;
         },
         cellStyle: (params: any) => {
@@ -456,27 +452,22 @@ export class ColumnService {
           maxValidYear: 2050,
         },
         valueFormatter: (params) => {
-          // Just return the value as-is, keeping the original string format
-          return params.value || '';
+          // Use centralized date formatting function
+          return this.gridCommonService.formatDateToMMDDYYYY(params.value);
         },
         valueParser: (params) => {
           if (!params.newValue) return '';
-          // Keep dates as strings to match mock2.json format
-          if (
-            params.newValue &&
-            typeof params.newValue === 'object' &&
-            'toLocaleDateString' in params.newValue
-          ) {
-            return (params.newValue as Date).toLocaleDateString('en-US');
-          }
-          // Return the string value as-is
-          return String(params.newValue);
+          // Use centralized function to convert date editor value to MM/DD/YYYY string
+          return this.gridCommonService.convertDateEditorValueToString(params.newValue);
         },
         valueSetter: (params) => {
-          if (!params.newValue) return false;
-          const date = new Date(params.newValue);
-          if (isNaN(date.getTime())) return false;
-          params.data[params.colDef.field as string] = date.toISOString();
+          if (!params.newValue) {
+            params.data[params.colDef.field as string] = '';
+            return true;
+          }
+          // Use centralized function to convert and store as MM/DD/YYYY string
+          const dateStr = this.gridCommonService.convertDateEditorValueToString(params.newValue);
+          params.data[params.colDef.field as string] = dateStr;
           return true;
         },
         // filterParams removed - filters disabled
@@ -1148,12 +1139,8 @@ export class ColumnService {
             typeof params.newValue === 'object' &&
             'toLocaleDateString' in params.newValue
           ) {
-            // Convert Date to MM/DD/YYYY format to match mock2.json exactly
-            const date = params.newValue as Date;
-            const month = (date.getMonth() + 1).toString().padStart(2, '0');
-            const day = date.getDate().toString().padStart(2, '0');
-            const year = date.getFullYear();
-            return `${month}/${day}/${year}`;
+            // Use centralized function to convert Date to MM/DD/YYYY format
+            return this.gridCommonService.formatDateToString(params.newValue as Date);
           }
           // Return the string value as-is
           return String(params.newValue);
@@ -1161,24 +1148,13 @@ export class ColumnService {
         columnDef.valueSetter = (params) => {
           // Store dates as strings to match mock2.json format
           if (params.colDef.field && params.data) {
-            if (
-              params.newValue &&
-              typeof params.newValue === 'object' &&
-              'toLocaleDateString' in params.newValue
-            ) {
-              // Convert Date to MM/DD/YYYY format to match mock2.json exactly
-              const date = params.newValue as Date;
-              const month = (date.getMonth() + 1).toString().padStart(2, '0');
-              const day = date.getDate().toString().padStart(2, '0');
-              const year = date.getFullYear();
-              params.data[params.colDef.field] = `${month}/${day}/${year}`;
+            if (!params.newValue) {
+              params.data[params.colDef.field] = '';
               return true;
             }
-            if (params.newValue) {
-              params.data[params.colDef.field] = String(params.newValue);
-              return true;
-            }
-            params.data[params.colDef.field] = '';
+            // Use centralized function to convert and store as MM/DD/YYYY string
+            const dateStr = this.gridCommonService.convertDateEditorValueToString(params.newValue);
+            params.data[params.colDef.field] = dateStr;
             return true;
           }
           return false;
