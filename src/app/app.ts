@@ -93,9 +93,6 @@ export class App implements OnInit {
     { field: 'longDesc', headerName: 'Long Description', hide: false, isVirtual: false },
     { field: 'serviceDescription', headerName: 'Service Description', hide: true, isVirtual: true },
 
-    // Features and Specifications
-    { field: 'feature', headerName: 'BOM Feature', hide: false, isVirtual: false },
-
     // Service Information
     { field: 'tcgEquivalent', headerName: 'TCG Equivalent', hide: true, isVirtual: true },
     { field: 'serviceSub1', headerName: 'Service Sub1', hide: true, isVirtual: true },
@@ -484,9 +481,9 @@ export class App implements OnInit {
       },
     });
 
-    // Add Material column as the second column with hierarchical display
+    // Add Material/Feature column as the second column with hierarchical display
     columns.push({
-      headerName: '',
+      headerName: 'Feature',
       field: 'material',
       width: 150,
       minWidth: 150,
@@ -494,11 +491,15 @@ export class App implements OnInit {
       sortable: false,
       filter: false,
       tooltipValueGetter: (params: any) => {
-        // Always show tooltip for material column
         if (!params.data) return null;
-        const materialValue = params.data.material || params.value || '';
-        if (!materialValue) return null;
-        return String(materialValue);
+        // For section headers, show section name
+        if (params.data.isSectionHeader) {
+          return params.data.section || null;
+        }
+        // For other rows, show feature value
+        const featureValue = this.getFeatureValue(params.data);
+        if (!featureValue) return null;
+        return String(featureValue);
       },
       cellRenderer: (params: any) => {
         return this.renderHierarchicalCell(params);
@@ -511,6 +512,9 @@ export class App implements OnInit {
 
     // Add columns based on response column mapping
     Object.keys(columnMapping).forEach((field) => {
+      if (field === 'bomLinkFeature' || field === 'feature') {
+        return;
+      }
       const headerName = columnMapping[field];
       const columnDef: ColDef = {
         headerName: headerName,
@@ -791,17 +795,13 @@ export class App implements OnInit {
     if (data.isMaterialHeader) {
       const materialIndex = data.materialIndex || 0;
       const linkIcon = data.hasLinkedBom ? '🔗' : '⧉';
-      // Show section name with accordion functionality, but no material name
       return `
         <div style="
-          
           cursor: pointer; 
-          
         " 
              onclick="window.toggleMaterial('${data.section}', '${data.material}', ${materialIndex})"
              onmouseover="this.style.background='#dcfce7'; this.style.borderLeftColor='#059669'"
              onmouseout="this.style.background='#f0fdf4'; this.style.borderLeftColor='#10b981'">
-        
           <span style="
               margin-right: 6px;
               font-size: 12px;
@@ -838,15 +838,23 @@ export class App implements OnInit {
       `;
     }
 
-    // Direct row (no accordion)
+    // Direct row (no accordion) - show feature value like regular cell
     if (data.isDirectRow) {
-      const directIndent = ''; // No indent - same level as section headers
-      return '';
+      const featureValue = this.getFeatureValue(data);
+      if (!featureValue || featureValue.trim().length === 0) {
+        return '';
+      }
+      const columnWidth = 220; // Feature column width
+      return this.createCellContentWithTooltip(featureValue, columnWidth);
     }
 
-    // Regular data row (sub-row)
-    const dataIndent = '&nbsp;'.repeat(24);
-    return '';
+    // Regular data row (sub-row) - show feature value like regular cell
+    const featureValue = this.getFeatureValue(data);
+    if (!featureValue || featureValue.trim().length === 0) {
+      return '';
+    }
+    const columnWidth = 220; // Feature column width
+    return this.createCellContentWithTooltip(featureValue, columnWidth);
   }
 
   // Helper method to escape HTML for tooltip
@@ -855,6 +863,21 @@ export class App implements OnInit {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  private getFeatureValue(row: any): string {
+    if (!row) return '';
+    const rawValue =
+      row.bomLinkFeature ??
+      row.feature ??
+      row.BOMFeature ??
+      row.bomlinkfeature ??
+      row.Feature ??
+      '';
+    if (rawValue === null || rawValue === undefined) {
+      return '';
+    }
+    return String(rawValue);
   }
 
   // Helper method to estimate if text will be truncated based on column width
@@ -1197,7 +1220,8 @@ export class App implements OnInit {
           return;
         }
       }
-    } else if (event.colDef.field === 'material') {
+    } else if (event.colDef.field === 'material' && event.colDef.headerName === 'Material') {
+      // Only handle Material column clicks, not Feature column (which also uses field: 'material')
       event.api.startEditingCell({
         rowIndex: event.rowIndex,
         colKey: event.column.getId(),
