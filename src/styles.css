@@ -1060,6 +1060,7 @@ body {
 
 .ag-row.ag-row-selected:hover .ag-cell {
   background: #dbeafe !important;
+  color: #1e40af !important;
 }
 
 /* Override any other row classes that might interfere */
@@ -1412,23 +1413,35 @@ body {
   border-right: 1px solid #d1d5db !important; /* Consistent with other columns */
 }
 
-/* Ensure Part and Supplier columns have consistent cell backgrounds */
+/* Ensure Part/Material/Supplier columns stay visible */
 .ag-theme-alpine .ag-cell[col-id='part'],
+.ag-theme-alpine .ag-cell[col-id='bomLinkPart'],
+.ag-theme-alpine .ag-cell[col-id='material'],
+.ag-theme-alpine .ag-cell[col-id^='material'],
 .ag-theme-alpine .ag-cell[col-id='supplier'] {
+  color: #1f2937 !important;
   border-right: 1px solid #d1d5db !important; /* Consistent with other columns */
 }
 
-/* Override for selected rows - supplier column should inherit row background */
+/* Override for selected rows - all columns should inherit row background and text color */
 .ag-row.ag-row-selected .ag-cell[col-id='supplier'],
-.ag-row.ag-row-selected .ag-cell[col-id='part'] {
+.ag-row.ag-row-selected .ag-cell[col-id='bomLinkPart'],
+.ag-row.ag-row-selected .ag-cell[col-id='material'],
+.ag-row.ag-row-selected .ag-cell[col-id^='material'],
+.ag-row.ag-row-selected .ag-cell[col-id='color'] {
   background: #dbeafe !important;
   background-color: #dbeafe !important;
+  color: #1e40af !important;
 }
 
 .ag-row.ag-row-selected:hover .ag-cell[col-id='supplier'],
-.ag-row.ag-row-selected:hover .ag-cell[col-id='part'] {
+.ag-row.ag-row-selected:hover .ag-cell[col-id='bomLinkPart'],
+.ag-row.ag-row-selected:hover .ag-cell[col-id='material'],
+.ag-row.ag-row-selected:hover .ag-cell[col-id^='material'],
+.ag-row.ag-row-selected:hover .ag-cell[col-id='color'] {
   background: #dbeafe !important;
   background-color: #dbeafe !important;
+  color: #1e40af !important;
 }
 
 /* Override for subrows - supplier and part columns should inherit subrow green background */

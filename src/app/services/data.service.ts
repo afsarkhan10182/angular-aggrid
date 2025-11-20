@@ -8,7 +8,6 @@ export interface PartData {
   branchID: string;
   quantity: string;
   bomLinkFeature: string;
-  bomLinkSpecSheetExtra: string;
   bomLinkPart: string;
   skus: SkuData[];
   color: string;
@@ -24,9 +23,9 @@ export interface PartData {
   flexBomLinkID: string;
   linkedBom: string;
   supplierDescription: string;
-  bomLinkIncludeInSpecSheet: string;
   sortingNumber: string;
   colorDescription: string;
+  bomLinkCountryOfOrigin: string;
   materialcolorLongDescription: string;
   materialcolorShortDescription: string;
   materialSupplierComments: string;
@@ -318,6 +317,104 @@ export class DataService {
   }
 
   /**
+   * Search BOM features using Windchill API (or mock data when using mock API)
+   */
+  searchBomFeatures(
+    query: string,
+    fetchLimit: number = 20
+  ): Observable<{ results: any[]; resultCount: number; hasMore: boolean }> {
+    return this.searchFlexInstances(
+      'Business Object\\bomFeature',
+      'name',
+      query,
+      fetchLimit,
+      'bomLinkFeature'
+    );
+  }
+
+  /**
+   * Search Countries of Origin using Windchill API (shared endpoint)
+   */
+  searchCountriesOfOrigin(
+    query: string,
+    fetchLimit: number = 20
+  ): Observable<{ results: any[]; resultCount: number; hasMore: boolean }> {
+    return this.searchFlexInstances('Country', 'name', query, fetchLimit, 'bomLinkCountryOfOrigin');
+  }
+
+  private searchFlexInstances(
+    flexTypeName: string,
+    attributeName: string,
+    query: string,
+    fetchLimit: number,
+    mockFieldName: string
+  ): Observable<{ results: any[]; resultCount: number; hasMore: boolean }> {
+    const searchTerm = (query || '').trim();
+
+    if (environment.useMockApi) {
+      const allValues =
+        this.apiData?.mbom
+          ?.map((item: any) => {
+            const value = item?.[mockFieldName];
+            return typeof value === 'string' ? value : '';
+          })
+          .filter((value: string) => value && value.length > 0) || [];
+
+      const uniqueValues = Array.from(new Set(allValues));
+      const filtered =
+        searchTerm.length > 0
+          ? uniqueValues.filter((value) => value.toLowerCase().includes(searchTerm.toLowerCase()))
+          : uniqueValues;
+
+      const resultCount = filtered.length;
+      const limited = filtered.slice(0, fetchLimit).map((value, index) => ({
+        displayValue: value,
+        id: `${mockFieldName}-${index}`,
+      }));
+
+      return of({
+        results: limited,
+        resultCount,
+        hasMore: resultCount > fetchLimit,
+      });
+    }
+
+    const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/instances`;
+    const csrfToken = this.sessionService.getCsrfNonce();
+    const headers: any = {
+      accept: 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    if (csrfToken) {
+      headers['CSRF_NONCE'] = csrfToken;
+    }
+
+    const requestBody = {
+      flexTypeName,
+      attributeName,
+      attributeValue: searchTerm.length > 0 ? `${searchTerm}*` : '*',
+      fetchLimit,
+    };
+
+    return this.http.post<any>(apiUrl, requestBody, { headers }).pipe(
+      map((response) => {
+        const rows = Array.isArray(response?.rows) ? response.rows : [];
+        const totalRows = response?.totalNumberOfRows || rows.length;
+        return {
+          results: rows,
+          resultCount: totalRows,
+          hasMore: totalRows > rows.length,
+        };
+      }),
+      catchError((error) => {
+        console.error(`${flexTypeName} search API error:`, error);
+        return of({ results: [], resultCount: 0, hasMore: false });
+      })
+    );
+  }
+
+  /**
    * Get unique material combinations (material + supplier + color)
    * Each combination is shown as a separate option in the dropdown
    */
@@ -389,7 +486,7 @@ export class DataService {
   }
 
   // Transform backend data to grid format with SKU columns and hierarchical structure
-  transformToGridData(parts: PartData[], isSbom: boolean = false): any[] {
+  transformToGridData(parts: PartData[]): any[] {
     if (!this.apiData) return [];
 
     const skuInfo = this.getSkuInfo();
@@ -480,7 +577,6 @@ export class DataService {
       branchID: part.branchID,
       quantity: part.quantity,
       bomLinkFeature: part.bomLinkFeature,
-      bomLinkSpecSheetExtra: part.bomLinkSpecSheetExtra,
       bomLinkPart: part.bomLinkPart,
       color: part.color,
       part: part.part,
@@ -495,9 +591,9 @@ export class DataService {
       flexBomLinkID: part.flexBomLinkID,
       linkedBom: part.linkedBom,
       supplierDescription: part.supplierDescription,
-      bomLinkIncludeInSpecSheet: part.bomLinkIncludeInSpecSheet,
       sortingNumber: part.sortingNumber,
       colorDescription: part.colorDescription,
+      bomLinkCountryOfOrigin: part.bomLinkCountryOfOrigin,
       // New fields from mock2.json
       materialcolorLongDescription: part.materialcolorLongDescription,
       materialcolorShortDescription: part.materialcolorShortDescription,
@@ -562,71 +658,6 @@ export class DataService {
     });
 
     gridApi.setGridOption('rowData', newRowData);
-  }
-
-  // Generate additional mock data to reach 1000 rows
-  generateAdditionalData(
-    baseParts: PartData[],
-    targetCount: number = 1000,
-    isSbom: boolean = false
-  ): any[] {
-    const additionalData = [];
-    const baseSkuInfo = this.getSkuInfo();
-
-    for (let i = baseParts.length; i < targetCount; i++) {
-      const partNum = (5289555 + i).toString(); // Keep as string
-      const supplierNum = i + 1; // Continue numbering beyond 20
-      const colorNum = i + 1; // Continue numbering beyond 20
-
-      // Generate feature based on pattern
-      let feature = '';
-      const featureIndex = i % 9;
-      if (featureIndex < 3) {
-        feature = 'Frame';
-      } else if (featureIndex === 3) {
-        feature = 'FrameHardware1';
-      } else if (featureIndex === 4) {
-        feature = 'FrameHardware2';
-      } else if (featureIndex === 5) {
-        feature = 'FrameHardware3';
-      } else {
-        const complianceNum = featureIndex - 5;
-        feature = `Compliance Label${complianceNum}`;
-      }
-
-      const hasSkuData = Math.random() > 0.7;
-      const dataRow: any = {
-        part: partNum,
-        supplier: `Supplier ${supplierNum}`,
-        color: `Color ${colorNum}`,
-        feature: feature,
-        shortDesc: `Short description for ${partNum}`,
-        longDesc: `Long description for part ${partNum} with feature ${feature}`,
-        startDate: '08/18/2024',
-        endDate: '08/18/2026',
-        qty: Math.floor(Math.random() * 50) + 5,
-      };
-
-      // Add SBOM-specific fields
-      if (isSbom) {
-        // Random values: Y, N, or C for both fields
-        const specSheetValues = ['Y', 'N', 'C'];
-        dataRow.SpecSheet = specSheetValues[Math.floor(Math.random() * specSheetValues.length)];
-        dataRow.SpecSheetExtra =
-          specSheetValues[Math.floor(Math.random() * specSheetValues.length)];
-      }
-
-      // Add SKU columns for all 20 SKUs
-      baseSkuInfo.forEach((sku) => {
-        const fieldName = `sku${sku.sku}`;
-        // Randomly assign SKU data to some columns
-        dataRow[fieldName] = hasSkuData && Math.random() > 0.7 ? partNum : '';
-      });
-
-      additionalData.push(dataRow);
-    }
-
-    return additionalData;
   }
 
   // Get SKU metadata for a specific part

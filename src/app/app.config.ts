@@ -4,9 +4,8 @@ import { provideHttpClient, withFetch } from '@angular/common/http';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 
 import { routes } from './app.routes';
-import { AuthInterceptor } from './interceptors/auth.interceptor';
+import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { SessionService } from './services/session.service';
-import { ModalService } from './services/modal.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -16,7 +15,6 @@ export const appConfig: ApplicationConfig = {
 
     // Services
     SessionService,
-    ModalService,
 
     // Interceptors
     {

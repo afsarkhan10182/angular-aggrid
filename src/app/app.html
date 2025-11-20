@@ -1,8 +1,4 @@
-<!-- Router outlet for SBOM component - only show when on SBOM route -->
-<router-outlet *ngIf="router.url === '/sbom'"></router-outlet>
-
-<!-- Main Grid View - only show when NOT on SBOM route -->
-<div class="app-container" *ngIf="router.url !== '/sbom'">
+<div class="app-container">
   <!-- Header -->
   <div class="app-header">
     <h2>BOM COMPOSER</h2>

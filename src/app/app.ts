@@ -1,13 +1,5 @@
-import {
-  Component,
-  OnInit,
-  ViewContainerRef,
-  ViewChild,
-  ElementRef,
-  HostListener,
-} from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
@@ -18,13 +10,12 @@ import { ColumnService } from './services/column.service';
 import { GridCommonService } from './services/grid-common.service';
 import { RowManagementService } from './services/row-management.service';
 import { SessionService } from './services/session.service';
-import { ModalService } from './services/modal.service';
 import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, AgGridAngular, PartModalComponent],
+  imports: [CommonModule, FormsModule, AgGridAngular, PartModalComponent],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
 })
@@ -77,8 +68,6 @@ export class App implements OnInit {
   public allColumns = [
     // Core Part Information
     { field: 'actions', headerName: '', hide: false, isVirtual: false },
-    { field: 'SpecSheet', headerName: 'Include In Spec Sheet', hide: true, isVirtual: true },
-    // { field: 'SpecSheetExtra', headerName: 'SpecSheet Extra', hide: true, isVirtual: true },
     { field: 'part', headerName: 'Part Number', hide: false, isVirtual: false },
     { field: 'type', headerName: 'Type', hide: true, isVirtual: true },
     {
@@ -127,14 +116,11 @@ export class App implements OnInit {
   public totalRows = 1000;
 
   constructor(
-    public router: Router,
     public dataService: DataService,
     private columnService: ColumnService,
     private gridCommonService: GridCommonService,
     private rowManagementService: RowManagementService,
-    private sessionService: SessionService,
-    private modalService: ModalService,
-    private viewContainerRef: ViewContainerRef
+    private sessionService: SessionService
   ) {
     // Set the data service in grid context immediately
     this.gridOptions.context = {
@@ -151,7 +137,7 @@ export class App implements OnInit {
       this.lastSavedAt = new Date(savedTimestamp);
     }
 
-    this.defaultColDef = this.columnService.getDefaultColDef(this);
+    this.defaultColDef = this.columnService.getDefaultColDef();
     const commonOptions = this.gridCommonService.getCommonGridOptions(this);
     // Merge with our component registration - ensure components are preserved
     this.gridOptions = {
@@ -178,10 +164,10 @@ export class App implements OnInit {
     };
     (window as any).toggleMaterial = (
       section: string,
-      material: string,
+      materialIdentifier: string,
       materialIndex?: number
     ) => {
-      this.toggleMaterial(section, material, materialIndex);
+      this.toggleMaterial(section, materialIdentifier, materialIndex);
     };
   }
 
@@ -201,7 +187,11 @@ export class App implements OnInit {
   }
 
   // Toggle material expansion
-  public toggleMaterial(section: string, material: string, materialIndex?: number): void {
+  public toggleMaterial(
+    section: string,
+    materialIdentifier?: string,
+    materialIndex?: number
+  ): void {
     if (!this.gridApi) return;
 
     const sectionRow = this.rowData.find(
@@ -209,21 +199,32 @@ export class App implements OnInit {
     );
     if (!sectionRow) return;
 
-    // Find material row by material name and index if provided
+    // Find material row. Prefer stable identifiers (materialIndex/materialKey)
     let materialRow;
-    if (materialIndex !== undefined) {
-      // Find all material headers with this name and get the one at the specified index
-      const materialHeaders = sectionRow.children.filter(
-        (child: any) => child.material === material && child.isMaterialHeader
-      );
 
-      // Use the materialIndex from the data, not the array position
-      materialRow = materialHeaders.find((m: any) => m.materialIndex === materialIndex);
-    } else {
-      // Fallback to finding by name only
+    // 1) Use the materialIndex supplied from the template
+    if (materialIndex !== undefined) {
       materialRow = sectionRow.children.find(
-        (child: any) => child.material === material && child.isMaterialHeader
+        (child: any) => child.isMaterialHeader && child.materialIndex === materialIndex
       );
+    }
+
+    // 2) Fall back to matching by identifier (material key, part number, etc.)
+    if (!materialRow && materialIdentifier) {
+      materialRow = sectionRow.children.find((child: any) => {
+        if (!child.isMaterialHeader) {
+          return false;
+        }
+
+        const candidateValues = [
+          child.materialKey,
+          child.material,
+          child.part,
+          child.partNumber,
+        ].filter((val) => val !== undefined && val !== null);
+
+        return candidateValues.some((val) => val === materialIdentifier);
+      });
     }
 
     if (!materialRow) return;
@@ -319,59 +320,6 @@ export class App implements OnInit {
     });
   }
 
-  // TODO: Re-enable login modal and getUserDetails API in future
-  /*
-  private async promptForCredentials(): Promise<void> {
-    try {
-      const credentials = await this.modalService.showSignInModal(this.viewContainerRef);
-
-      if (!credentials) {
-        this.showNotification('Authentication is required to access this application.', 'error');
-        return;
-      }
-
-      // Validate credentials for mock API
-      if (environment.useMockApi) {
-        const expectedUsername = environment.credentials.username;
-        const expectedPassword = environment.credentials.password;
-
-        if (
-          credentials.username !== expectedUsername ||
-          credentials.password !== expectedPassword
-        ) {
-          this.showNotification('Invalid credentials. Please try again.', 'error');
-          this.promptForCredentials();
-          return;
-        }
-      }
-
-      // Update environment credentials
-      environment.credentials.username = credentials.username;
-      environment.credentials.password = credentials.password;
-
-      // Call getUserDetails POST with credentials and CSRF token
-      this.sessionService.initSession().subscribe({
-        next: (user) => {
-          if (user && user.name && user.userName) {
-            this.currentUser = user;
-            this.loadData();
-          } else {
-            this.showNotification('Authentication failed. Please check your credentials.', 'error');
-            this.promptForCredentials();
-          }
-        },
-        error: (error) => {
-          this.showNotification(
-            'Authentication failed. Please check your credentials and try again.',
-            'error'
-          );
-          this.promptForCredentials();
-        },
-      });
-    } catch (error) {}
-  }
-  */
-
   loadData(): void {
     this.isLoading = true;
     this.dataService.loadData().subscribe(
@@ -449,7 +397,7 @@ export class App implements OnInit {
       pinned: 'left',
       resizable: false,
       sortable: false,
-      filter: false,
+      filter: true,
       cellRenderer: (params: any) => {
         // Show red "e" for expired data
         if (params.data.isExpired) {
@@ -481,15 +429,16 @@ export class App implements OnInit {
       },
     });
 
-    // Add Material/Feature column as the second column with hierarchical display
+    // Add Feature column (unpinned by default, users can pin via AG Grid UI)
     columns.push({
       headerName: 'Feature',
-      field: 'material',
+      field: 'bomLinkFeature',
       width: 150,
       minWidth: 150,
       pinned: 'left',
       sortable: false,
-      filter: false,
+      filter: true,
+      // Don't add pin header component - Feature column is always pinned
       tooltipValueGetter: (params: any) => {
         if (!params.data) return null;
         // For section headers, show section name
@@ -507,21 +456,66 @@ export class App implements OnInit {
       cellStyle: (params: any) => {
         return this.getHierarchicalCellStyle(params);
       },
-      editable: false, // Material column is not editable - it's just for hierarchical display
+      editable: (params: any) => {
+        return params.data && params.data.isNewRow && !params.data.isSectionHeader;
+      },
+      cellEditor: AutocompleteCellEditorComponent,
+      cellEditorParams: () => ({
+        placeholder: 'search BOM features...',
+        isBomFeatureSearch: true,
+        context: {
+          dataService: this.dataService,
+        },
+      }),
     });
 
     // Add columns based on response column mapping
     Object.keys(columnMapping).forEach((field) => {
-      if (field === 'bomLinkFeature' || field === 'feature') {
+      if (field === 'feature' || field === 'bomLinkFeature') {
         return;
       }
+
+      if (field === 'bomLinkCountryOfOrigin') {
+        const headerName = columnMapping[field];
+        columns.push({
+          headerName,
+          field,
+          width: 180,
+          minWidth: 140,
+          sortable: true,
+          cellRenderer: (params: any) => {
+            if (params.data.isSectionHeader || params.data.isBranchHeader) {
+              return '';
+            }
+            const columnWidth = params.column?.getActualWidth() || 180;
+            return this.createCellContentWithTooltip(params.value, columnWidth);
+          },
+          tooltipValueGetter: (params: any) => {
+            if (params.value === null || params.value === undefined) return null;
+            return String(params.value);
+          },
+          cellStyle: (params: any) => this.getDataCellStyle(params),
+          editable: (params: any) => {
+            return params.data && params.data.isNewRow && !params.data.isSectionHeader;
+          },
+          cellEditor: AutocompleteCellEditorComponent,
+          cellEditorParams: () => ({
+            placeholder: 'search countries...',
+            isCountrySearch: true,
+            context: {
+              dataService: this.dataService,
+            },
+          }),
+        });
+        return;
+      }
+
       const headerName = columnMapping[field];
       const columnDef: ColDef = {
         headerName: headerName,
         field: field,
         width: 150,
         minWidth: 100,
-        filter: false, // Filters disabled
         sortable: true,
         cellRenderer: (params: any) => {
           // Show values for data rows and material headers (header carries parent data)
@@ -550,7 +544,7 @@ export class App implements OnInit {
       if (field === 'bomLinkPart' || field === 'partNumber') {
         columnDef.cellEditor = AutocompleteCellEditorComponent;
         columnDef.cellEditorParams = (params: any) => ({
-          placeholder: 'Type to search part numbers...',
+          placeholder: 'search part numbers...',
           useApiSearch: true, // Use API search for part numbers
           isPartNumberSearch: true, // Flag to indicate part number search
           context: {
@@ -560,14 +554,13 @@ export class App implements OnInit {
       } else if (field === 'material') {
         columnDef.cellEditor = AutocompleteCellEditorComponent;
         columnDef.cellEditorParams = (params: any) => ({
-          placeholder: 'Type to search materials...',
+          placeholder: 'search materials...',
           useApiSearch: true, // Flag to indicate API search should be used
           context: {
             dataService: this.dataService,
           },
         });
       } else if (field === 'qty' || field === 'quantity') {
-        columnDef.filter = false; // Filters disabled
         columnDef.cellEditor = 'agNumberCellEditor';
         columnDef.cellEditorParams = {
           min: 0,
@@ -616,7 +609,7 @@ export class App implements OnInit {
             }
             return {
               values: values,
-              placeholder: `Type to search ${field}...`,
+              placeholder: `search ${field}...`,
               context: {
                 dataService: this.dataService,
               },
@@ -628,7 +621,7 @@ export class App implements OnInit {
           columnDef.cellEditorParams = (params: any) => {
             return {
               values: this.getUniqueFeatures(),
-              placeholder: `Type to search ${field}...`,
+              placeholder: `search ${field}...`,
             };
           };
         }
@@ -720,46 +713,49 @@ export class App implements OnInit {
       hasData: true,
     }));
 
-    const dynamicSkuColumns: ColDef[] = skuColumns.map((sku, index) => ({
-      headerName: `SKU - ${sku.skuId}\nProduct - ${sku.product}\nManufacturer - ${sku.manufacturer}\nColor - ${sku.color}\nSize - ${sku.size}`,
-      field: sku.fieldName,
-      filter: false, // Filters disabled
-      width: 200,
-      minWidth: 200,
-      maxWidth: 350,
-      resizable: true,
-      suppressSizeToFit: true,
-      suppressAutoSize: true,
-      headerClass: index === 0 ? 'first-sku-column-header' : '',
-      cellClass: index === 0 ? 'first-sku-column-cell' : '',
-      cellRenderer: (params: any) => {
-        const data = params.data || {};
+    const dynamicSkuColumns: ColDef[] = skuColumns.map((sku, index) => {
+      const skuHeader = `SKU - ${sku.skuId}\nProduct - ${sku.product}\nManufacturer - ${sku.manufacturer}\nColor - ${sku.color}\nSize - ${sku.size}`;
+      return {
+        headerName: skuHeader,
+        headerTooltip: skuHeader,
+        field: sku.fieldName,
+        width: 200,
+        minWidth: 200,
+        maxWidth: 350,
+        resizable: true,
+        suppressSizeToFit: true,
+        suppressAutoSize: true,
+        headerClass: index === 0 ? 'first-sku-column-header' : '',
+        cellClass: index === 0 ? 'first-sku-column-cell' : '',
+        cellRenderer: (params: any) => {
+          const data = params.data || {};
 
-        // Hide SKU values on section headers and branch headers
-        if (data.isSectionHeader || data.isBranchHeader) {
+          // Hide SKU values on section headers and branch headers
+          if (data.isSectionHeader || data.isBranchHeader) {
+            return '';
+          }
+
+          // Show SKU values on material headers (linked BOM) and direct rows
+          // Hide SKU values on child rows (subrows) since they're already on material header
+          if (data.isMaterialHeader || data.isDirectRow) {
+            const columnWidth = params.column?.getActualWidth() || 200;
+            return this.createCellContentWithTooltip(params.value, columnWidth);
+          }
+
+          // Hide on subrows (child rows under material headers)
           return '';
-        }
-
-        // Show SKU values on material headers (linked BOM) and direct rows
-        // Hide SKU values on child rows (subrows) since they're already on material header
-        if (data.isMaterialHeader || data.isDirectRow) {
-          const columnWidth = params.column?.getActualWidth() || 200;
-          return this.createCellContentWithTooltip(params.value, columnWidth);
-        }
-
-        // Hide on subrows (child rows under material headers)
-        return '';
-      },
-      tooltipValueGetter: (params: any) => {
-        // Always show tooltip for SKU columns
-        if (params.value === null || params.value === undefined) return null;
-        return String(params.value);
-      },
-      cellStyle: (params: any) => {
-        return this.getDataCellStyle(params);
-      },
-      editable: false,
-    }));
+        },
+        tooltipValueGetter: (params: any) => {
+          // Always show tooltip for SKU columns
+          if (params.value === null || params.value === undefined) return null;
+          return String(params.value);
+        },
+        cellStyle: (params: any) => {
+          return this.getDataCellStyle(params);
+        },
+        editable: false,
+      };
+    });
 
     const allColumns = [...columns, ...dynamicSkuColumns];
     return allColumns;
@@ -795,11 +791,13 @@ export class App implements OnInit {
     if (data.isMaterialHeader) {
       const materialIndex = data.materialIndex || 0;
       const linkIcon = data.hasLinkedBom ? '🔗' : '⧉';
+      const materialIdentifier =
+        data.materialKey || data.material || data.part || data.partNumber || '';
       return `
         <div style="
           cursor: pointer; 
         " 
-             onclick="window.toggleMaterial('${data.section}', '${data.material}', ${materialIndex})"
+             onclick="window.toggleMaterial('${data.section}', '${materialIdentifier}', ${materialIndex})"
              onmouseover="this.style.background='#dcfce7'; this.style.borderLeftColor='#059669'"
              onmouseout="this.style.background='#f0fdf4'; this.style.borderLeftColor='#10b981'">
           <span style="
@@ -1367,8 +1365,7 @@ export class App implements OnInit {
       this.displayData, // Use displayData instead of rowData
       this.gridApi,
       this.dataService,
-      this.nextRowId,
-      false // Not SBOM
+      this.nextRowId
     );
     this.nextRowId = result.newRowId;
     this.newRows.set(result.newRow.newRowId, result.newRow);
@@ -2099,18 +2096,6 @@ export class App implements OnInit {
         itemRow[fieldName] = '';
       });
     }
-  }
-
-  // Navigation
-  goToSbom(): void {
-    this.router.navigate(['/sbom']).then(
-      (success) => {
-        // Navigation completed
-      },
-      (error) => {
-        // Navigation failed
-      }
-    );
   }
 
   // Angular-friendly notification method

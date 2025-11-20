@@ -21,9 +21,9 @@
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
-                "glob": "**/*",
+                "glob": "bomComposer.jsp",
                 "input": "public",
-                "ignore": ["**/generate_mock_data.js", "**/ResultsTable-FilteredData.csv"]
+                "output": ""
               }
             ],
             "styles": ["src/styles.css"]
@@ -54,7 +54,14 @@
             "development": {
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true
+              "sourceMap": true,
+              "assets": [
+                {
+                  "glob": "**/*",
+                  "input": "public",
+                  "ignore": ["**/generate_mock_data.js", "**/ResultsTable-FilteredData.csv"]
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"

@@ -170,7 +170,7 @@ export class GridCommonService {
   /**
    * Generate expired entries for testing
    */
-  generateExpiredEntries(dataService: DataService, isSbom: boolean = false): any[] {
+  generateExpiredEntries(dataService: DataService): any[] {
     const expiredEntries = [
       {
         part: '5000001',
@@ -203,14 +203,6 @@ export class GridCommonService {
         isExpired: true,
       },
     ];
-
-    // Add SBOM-specific fields if needed
-    if (isSbom) {
-      expiredEntries.forEach((entry) => {
-        (entry as any).SpecSheet = 'N'; // Default to N for expired entries
-        (entry as any).SpecSheetExtra = 'N'; // Default to N for expired entries
-      });
-    }
 
     const skuInfo = dataService.getSkuInfo();
     expiredEntries.forEach((entry) => {

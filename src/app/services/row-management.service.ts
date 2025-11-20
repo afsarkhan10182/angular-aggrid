@@ -17,31 +17,27 @@ export class RowManagementService {
     rowData: any[],
     gridApi: GridApi,
     dataService: DataService,
-    nextRowId: number,
-    isSbom: boolean = false
+    nextRowId: number
   ): { newRow: any; newRowId: number } {
     const newRowIdValue = nextRowId;
     const newRow = {
       part: '', // Start with empty string for part
+      partNumber: '',
       supplier: '',
       color: '',
       feature: '',
+      bomLinkFeature: '',
       bomLinkStartDate: '', // Use bomLinkStartDate to match API field names
       bomLinkEndDate: '', // Use bomLinkEndDate to match API field names
       startDate: '', // Keep for backward compatibility
       endDate: '', // Keep for backward compatibility
       qty: 0,
       material: '', // Add empty material field
+      bomLinkCountryOfOrigin: '',
       isNewRow: true,
       newRowId: newRowIdValue, // Add the unique ID to the row data
       insertAfter: rowIndex,
     };
-
-    // Add SBOM-specific fields if needed
-    if (isSbom) {
-      (newRow as any).SpecSheet = ''; // Start empty for new rows
-      (newRow as any).SpecSheetExtra = ''; // Start empty for new rows
-    }
 
     // Add SKU columns with empty values
     const skuInfo = dataService.getSkuInfo();
@@ -321,22 +317,6 @@ export class RowManagementService {
                 if (params.node.data) {
                   (params.node.data as any)[fieldName] = valueToSet;
                 }
-              }
-            }
-          });
-
-          // Auto-populate SBOM-specific fields with default values for new rows
-          // Since these fields don't exist in the original mock data, we'll set default values
-          const sbomFields = ['SpecSheet', 'SpecSheetExtra'];
-          sbomFields.forEach((fieldName) => {
-            // Set default value 'N' for new rows (you can change this to 'Y' or 'C' as needed)
-            const valueToSet = 'N';
-
-            // Only update if value is different
-            if (oldData[fieldName] !== valueToSet) {
-              params.node.setDataValue(fieldName, valueToSet);
-              if (params.node.data) {
-                (params.node.data as any)[fieldName] = valueToSet;
               }
             }
           });
