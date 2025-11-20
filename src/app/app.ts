@@ -6,7 +6,6 @@ import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { PartModalComponent } from './part-modal/part-modal.component';
 import { AutocompleteCellEditorComponent } from './autocomplete-cell-editor/autocomplete-cell-editor.component';
 import { DataService } from './services/data.service';
-import { ColumnService } from './services/column.service';
 import { GridCommonService } from './services/grid-common.service';
 import { RowManagementService } from './services/row-management.service';
 import { SessionService } from './services/session.service';
@@ -26,45 +25,17 @@ export class App implements OnInit {
   @ViewChild('columnPanel') columnPanel!: ElementRef;
   @ViewChild('toggleBtn') toggleBtn!: ElementRef;
   public showExpiredData = false;
-  public expiredDataCount = 0;
-
-  // Material modal state
   public showMaterialModal = false;
   public selectedMaterialData: any = {};
   public selectedMaterialSkuData: any[] = [];
-
-  // Search functionality
   public searchText: string = '';
-
-  // Save message state
   public saveMessage: string = '';
   public saveMessageType: string = '';
-  // Last saved timestamp
-  public lastSavedAt: Date | null = null;
-  // Track which parts are clickable (random selection)
-  public clickableParts = new Set<number>();
-  // Editable state
   public editedRows = new Set<number>();
-  // Add row state
-  public newRows = new Map<number, any>();
-  public nextRowId = 10000; // Unique ID for new rows
-
-  // Copy/Paste state for SKU columns in new rows
-  public copiedSkuValue: string = '';
-  public copiedFromRowId: number | null = null; // Track which row the value was copied from
-  public copiedFromCellKey: string = ''; // Track which cell was copied from (for visual indicator)
-  public copiedCellIndicator: string = ''; // Visual indicator for copied cell
-
-  // Current user state
   public currentUser: any = null;
-
-  // BOM information from API
-  public bomName: string = 'MBOM'; // Default fallback
-
-  // Loading state
+  public bomName: string = 'MBOM';
   public isLoading: boolean = true;
 
-  // Master list for column visibility panel (includes both real and virtual columns)
   public allColumns = [
     // Core Part Information
     { field: 'actions', headerName: '', hide: false, isVirtual: false },
@@ -103,62 +74,47 @@ export class App implements OnInit {
     { field: 'startDate', headerName: 'Start Date', hide: false, isVirtual: false },
     { field: 'endDate', headerName: 'End Date', hide: false, isVirtual: false },
   ];
-  // Grid configuration - client-side
+
   public gridOptions: GridOptions = {} as GridOptions;
 
   public defaultColDef: any;
 
   public columnDefs: ColDef[] = [];
-  public skuColumns: any[] = []; // Dynamic SKU columns
 
   public rowData: any[] = [];
   public displayData: any[] = []; // Flattened data for display
-  public totalRows = 1000;
 
   constructor(
     public dataService: DataService,
-    private columnService: ColumnService,
     private gridCommonService: GridCommonService,
     private rowManagementService: RowManagementService,
     private sessionService: SessionService
   ) {
-    // Set the data service in grid context immediately
     this.gridOptions.context = {
       dataService: this.dataService,
     };
 
-    // Load expired data state from localStorage
     const savedState = localStorage.getItem('showExpiredData');
     this.showExpiredData = savedState === 'true';
 
-    // Load last saved timestamp from localStorage
-    const savedTimestamp = localStorage.getItem('lastSavedAt');
-    if (savedTimestamp) {
-      this.lastSavedAt = new Date(savedTimestamp);
-    }
-
-    this.defaultColDef = this.columnService.getDefaultColDef();
+    this.defaultColDef = this.gridCommonService.getDefaultColDef();
     const commonOptions = this.gridCommonService.getCommonGridOptions(this);
-    // Merge with our component registration - ensure components are preserved
     this.gridOptions = {
       ...commonOptions,
       components: {
         ...(commonOptions.components || {}),
         AutocompleteCellEditorComponent: AutocompleteCellEditorComponent,
       },
-      // Set dataService in context so AutocompleteCellEditor can access it
       context: {
         ...(commonOptions.context || {}),
         dataService: this.dataService,
       },
     };
 
-    // Initialize authentication check
     this.checkAuthentication();
   }
 
   ngOnInit(): void {
-    // Make accordion functions available globally
     (window as any).toggleSection = (section: string) => {
       this.toggleSection(section);
     };
@@ -171,7 +127,6 @@ export class App implements OnInit {
     };
   }
 
-  // Toggle section expansion
   public toggleSection(section: string): void {
     if (!this.gridApi) return;
 
@@ -181,12 +136,9 @@ export class App implements OnInit {
     if (!sectionRow) return;
 
     sectionRow.isExpanded = !sectionRow.isExpanded;
-
-    // Re-apply search filter to respect current search state
     this.applyHierarchicalSearch();
   }
 
-  // Toggle material expansion
   public toggleMaterial(
     section: string,
     materialIdentifier?: string,
@@ -199,17 +151,14 @@ export class App implements OnInit {
     );
     if (!sectionRow) return;
 
-    // Find material row. Prefer stable identifiers (materialIndex/materialKey)
     let materialRow;
 
-    // 1) Use the materialIndex supplied from the template
     if (materialIndex !== undefined) {
       materialRow = sectionRow.children.find(
         (child: any) => child.isMaterialHeader && child.materialIndex === materialIndex
       );
     }
 
-    // 2) Fall back to matching by identifier (material key, part number, etc.)
     if (!materialRow && materialIdentifier) {
       materialRow = sectionRow.children.find((child: any) => {
         if (!child.isMaterialHeader) {
@@ -229,18 +178,10 @@ export class App implements OnInit {
 
     if (!materialRow) return;
     materialRow.isExpanded = !materialRow.isExpanded;
-
-    // Re-apply search filter to respect current search state
-    this.applyHierarchicalSearch();
-  }
-
-  private updateGridData(): void {
-    // Re-apply search filter to respect current search state
     this.applyHierarchicalSearch();
   }
 
   private getInitialDisplayData(): any[] {
-    // Show all expanded data initially
     return this.flattenHierarchicalData(this.rowData);
   }
 
@@ -254,10 +195,8 @@ export class App implements OnInit {
         if (item.children && Array.isArray(item.children)) {
           item.children.forEach((child: any) => {
             if (child.isDirectRow) {
-              // Direct row - show immediately without accordion
               result.push(child);
             } else if (child.isMaterialHeader) {
-              // Material header with accordion
               result.push(child);
 
               if (child.isExpanded && child.children && Array.isArray(child.children)) {
@@ -276,16 +215,13 @@ export class App implements OnInit {
 
   private checkAuthentication(): void {
     if (!environment.enableHttpBasicAuth) {
-      // Authentication disabled - load data directly
       this.loadData();
       return;
     }
 
-    // Get username from JSP data attribute (using DataService for consistency)
     const userName = this.dataService.getUserNameFromJsp();
 
     if (userName) {
-      // Set current user from JSP data
       this.currentUser = {
         name: userName,
         fullName: userName,
@@ -293,29 +229,15 @@ export class App implements OnInit {
       };
     }
 
-    // Step 1: Get CSRF token (keep this call as it uses existing FlexPLM session)
     this.sessionService.getCsrfToken().subscribe({
       next: (csrfToken) => {
-        // CSRF token received successfully - skip login modal and getUserDetails for now
-        // TODO: Re-enable in future when needed
-        // setTimeout(() => {
-        //   this.promptForCredentials();
-        // }, 100);
-
-        // Load data directly without authentication
         this.loadData();
       },
       error: (error) => {
-        // CSRF API failed - app must be accessed outside FlexPLM
-        // Show error and DO NOT load data
         this.showNotification(
           'This application must be accessed through FlexPLM. Please login to FlexPLM first.',
           'error'
         );
-        // TODO: Re-enable modal in future if needed
-        // setTimeout(() => {
-        //   this.promptForCredentials();
-        // }, 100);
       },
     });
   }
@@ -325,44 +247,24 @@ export class App implements OnInit {
     this.dataService.loadData().subscribe(
       (data) => {
         this.isLoading = false;
-        // Get BOM name and modify timestamp from API response
         const bomPartInfo = this.dataService.getBomPartInfo();
         if (bomPartInfo?.bomName) {
           this.bomName = bomPartInfo.bomName;
         }
         if (bomPartInfo?.modifyTimestamp) {
-          // Parse timestamp from API (format: "2025-10-29 11:52:20.0")
-          this.lastSavedAt = new Date(bomPartInfo.modifyTimestamp);
-          // Save to localStorage for persistence
-          localStorage.setItem('lastSavedAt', this.lastSavedAt.toISOString());
+          this.rowManagementService.setLastSavedAt(new Date(bomPartInfo.modifyTimestamp));
         }
 
-        // Transform data to hierarchical structure
         this.rowData = this.transformToHierarchicalData(data);
-
-        // Initialize columns after data is loaded
         this.initializeColumns();
 
-        // Set the initial flattened data to the grid (respecting search filter if any)
-        // Apply hierarchical search which will handle both filtered and unfiltered cases
         if (this.gridApi) {
-          // Refresh header to ensure filter icons are displayed
           this.gridApi.refreshHeader();
-          // autoHeaderHeight is now enabled - it should work properly with synchronous CSS loading
           this.applyHierarchicalSearch();
         } else {
-          // Grid not ready yet, use initial display data
           this.displayData = this.getInitialDisplayData();
         }
 
-        // Make only some parts clickable (random selection from first 20 rows)
-        // Use displayData for clickable parts calculation
-        const dataForClickableParts =
-          this.displayData.length > 0 ? this.displayData : this.getInitialDisplayData();
-        this.clickableParts =
-          this.gridCommonService.initializeClickableParts(dataForClickableParts);
-
-        // Force horizontal scroll after data is loaded
         if (this.gridApi) {
           setTimeout(() => {
             this.gridCommonService.forceHorizontalScrollbarVisibility(this.gridApi);
@@ -377,17 +279,13 @@ export class App implements OnInit {
   }
 
   initializeColumns(): void {
-    // Get column mapping from data service
     const columnMapping = this.dataService.getColumnMapping();
-
-    // Create hierarchical columns based on response structure
     this.columnDefs = this.createHierarchicalColumns(columnMapping);
   }
 
   createHierarchicalColumns(columnMapping: any): ColDef[] {
     const columns: ColDef[] = [];
 
-    // Add Actions column as the first column (never changes based on selection)
     columns.push({
       headerName: '',
       field: 'actions',
@@ -399,27 +297,21 @@ export class App implements OnInit {
       sortable: false,
       filter: true,
       cellRenderer: (params: any) => {
-        // Show red "e" for expired data
         if (params.data.isExpired) {
           return `<span class="expired-indicator" title="Expired">e</span>`;
         }
 
         const partId = params.data.part || '';
 
-        // For new rows, show delete button
         if (params.data.isNewRow) {
           const newRowId = params.data.newRowId;
           return `<span class="delete-row-btn" data-new-row-id="${newRowId}" title="Delete">−</span>`;
         }
 
-        // Only show add/remove buttons on parent level materials
-        // This includes: isMaterialHeader (materials with children) OR isDirectRow (materials without children)
-        // Both are at level 1 and represent parent materials
         if ((params.data.isMaterialHeader && params.data.hasLinkedBom) || params.data.isDirectRow) {
           return `<span class="add-row-btn" data-part-id="${partId}" title="Add">+</span>`;
         }
 
-        // For all other rows (section headers, sub-rows, direct rows), show nothing
         return '';
       },
       cellStyle: {
@@ -429,7 +321,6 @@ export class App implements OnInit {
       },
     });
 
-    // Add Feature column (unpinned by default, users can pin via AG Grid UI)
     columns.push({
       headerName: 'Feature',
       field: 'bomLinkFeature',
@@ -438,14 +329,11 @@ export class App implements OnInit {
       pinned: 'left',
       sortable: false,
       filter: true,
-      // Don't add pin header component - Feature column is always pinned
       tooltipValueGetter: (params: any) => {
         if (!params.data) return null;
-        // For section headers, show section name
         if (params.data.isSectionHeader) {
           return params.data.section || null;
         }
-        // For other rows, show feature value
         const featureValue = this.getFeatureValue(params.data);
         if (!featureValue) return null;
         return String(featureValue);
@@ -469,7 +357,6 @@ export class App implements OnInit {
       }),
     });
 
-    // Add columns based on response column mapping
     Object.keys(columnMapping).forEach((field) => {
       if (field === 'feature' || field === 'bomLinkFeature') {
         return;
@@ -518,7 +405,6 @@ export class App implements OnInit {
         minWidth: 100,
         sortable: true,
         cellRenderer: (params: any) => {
-          // Show values for data rows and material headers (header carries parent data)
           if (params.data.isSectionHeader || params.data.isBranchHeader) {
             return '';
           }
@@ -526,27 +412,23 @@ export class App implements OnInit {
           return this.createCellContentWithTooltip(params.value, columnWidth);
         },
         tooltipValueGetter: (params: any) => {
-          // Always show tooltip if value exists
           if (params.value === null || params.value === undefined) return null;
           return String(params.value);
         },
         cellStyle: (params: any) => {
           return this.getDataCellStyle(params);
         },
-        // Make all fields editable for new rows, but not for section headers
         editable: (params: any) => {
           return params.data && params.data.isNewRow && !params.data.isSectionHeader;
         },
       };
 
-      // Add specific cell editors for different field types
-      // Handle both 'bomLinkPart' (local) and 'partNumber' (production) field names
       if (field === 'bomLinkPart' || field === 'partNumber') {
         columnDef.cellEditor = AutocompleteCellEditorComponent;
         columnDef.cellEditorParams = (params: any) => ({
           placeholder: 'search part numbers...',
-          useApiSearch: true, // Use API search for part numbers
-          isPartNumberSearch: true, // Flag to indicate part number search
+          useApiSearch: true,
+          isPartNumberSearch: true,
           context: {
             dataService: this.dataService,
           },
@@ -555,7 +437,7 @@ export class App implements OnInit {
         columnDef.cellEditor = AutocompleteCellEditorComponent;
         columnDef.cellEditorParams = (params: any) => ({
           placeholder: 'search materials...',
-          useApiSearch: true, // Flag to indicate API search should be used
+          useApiSearch: true,
           context: {
             dataService: this.dataService,
           },
@@ -566,45 +448,35 @@ export class App implements OnInit {
           min: 0,
           max: 9999,
         };
-        // Qty field is always editable (like in SBOM), but not for section headers
         columnDef.editable = (params: any) => {
-          // Don't allow editing expired rows or section headers
           if (params.data && (params.data.isExpired || params.data.isSectionHeader)) {
             return false;
           }
-          // Always allow editing quantity field
           return true;
         };
       } else if (field === 'supplier' || field === 'color' || field === 'feature') {
         if (field === 'supplier' || field === 'color') {
-          // Use AutocompleteCellEditorComponent for supplier and color
           columnDef.cellEditor = AutocompleteCellEditorComponent;
           columnDef.cellEditorParams = (params: any) => {
-            // Read directly from node data to ensure we get the latest values
-            // This is important because _availableSuppliers and _availableColors are set dynamically
             const nodeData = params.node?.data || params.data || {};
             let values: string[] = [];
             if (field === 'supplier') {
-              // Use filtered suppliers if they exist (even if empty array), otherwise use global list
-              // This ensures that when a material is selected, only its suppliers are shown
               if (
                 nodeData._availableSuppliers !== undefined &&
                 Array.isArray(nodeData._availableSuppliers)
               ) {
                 values = nodeData._availableSuppliers;
               } else {
-                values = this.getUniqueSuppliers();
+                values = this.gridCommonService.getUniqueSuppliers(this.rowData);
               }
             } else if (field === 'color') {
-              // Use filtered colors if they exist (even if empty array), otherwise use global list
-              // This ensures that when a material is selected, only its colors are shown
               if (
                 nodeData._availableColors !== undefined &&
                 Array.isArray(nodeData._availableColors)
               ) {
                 values = nodeData._availableColors;
               } else {
-                values = this.getUniqueColors();
+                values = this.gridCommonService.getUniqueColors(this.rowData);
               }
             }
             return {
@@ -616,11 +488,10 @@ export class App implements OnInit {
             };
           };
         } else {
-          // Feature field uses text editor
           columnDef.cellEditor = 'agTextCellEditor';
           columnDef.cellEditorParams = (params: any) => {
             return {
-              values: this.getUniqueFeatures(),
+              values: this.gridCommonService.getUniqueFeatures(this.rowData),
               placeholder: `search ${field}...`,
             };
           };
@@ -631,21 +502,15 @@ export class App implements OnInit {
         field === 'startDate' ||
         field === 'endDate'
       ) {
-        // Date columns should use date picker and date filter
-        columnDef.filter = false; // Filters disabled
+        columnDef.filter = false;
         columnDef.cellEditor = 'agDateCellEditor';
-        // Don't use cellDataType when using valueGetter - let valueGetter handle the conversion
-        // Ensure date columns are editable for new rows
         columnDef.editable = (params: any) => {
           return params.data && params.data.isNewRow && !params.data.isSectionHeader;
         };
-        // Override cellRenderer to ensure dates are formatted correctly
         columnDef.cellRenderer = (params: any) => {
-          // Show values for data rows and material headers (header carries parent data)
           if (params.data.isSectionHeader || params.data.isBranchHeader) {
             return '';
           }
-          // Use valueFormatter to get the formatted date string
           let formattedValue = '';
           if (columnDef.valueFormatter && typeof columnDef.valueFormatter === 'function') {
             formattedValue = columnDef.valueFormatter(params) || '';
@@ -653,36 +518,26 @@ export class App implements OnInit {
           const columnWidth = params.column?.getActualWidth() || columnDef.width || 150;
           return this.createCellContentWithTooltip(formattedValue, columnWidth);
         };
-        // Use centralized date formatting functions from grid-common.service
-        // Use valueGetter only for editing - convert to Date objects for the date editor
-        // Return undefined (not null) for empty cells so date editor can initialize properly
         columnDef.valueGetter = (params: any) => {
           if (!params.data) return undefined;
           const value = params.data[field];
           if (!value || value === '') return undefined;
-          // If it's already a Date object, return it
           if (value instanceof Date) return value;
-          // Parse MM/DD/YYYY format string using centralized function
           return this.gridCommonService.parseDateString(String(value)) || undefined;
         };
-        // Use simple object for cellEditorParams - AG Grid will handle value from valueGetter
         columnDef.cellEditorParams = {
           browserDatePicker: true,
           minValidYear: 2000,
           maxValidYear: 2050,
           format: 'mm/dd/yyyy',
         };
-        // valueFormatter always formats the raw data value to MM/DD/YYYY format
         columnDef.valueFormatter = (params: any) => {
-          // Get the raw value from data, not from valueGetter
           if (!params.data) return '';
           const rawValue = params.data[field];
-          // Use centralized formatting function
           return this.gridCommonService.formatDateToMMDDYYYY(rawValue);
         };
         columnDef.valueParser = (params: any) => {
           if (!params.newValue) return '';
-          // Use centralized function to convert date editor value to MM/DD/YYYY string
           return this.gridCommonService.convertDateEditorValueToString(params.newValue);
         };
         columnDef.valueSetter = (params: any) => {
@@ -690,19 +545,15 @@ export class App implements OnInit {
             params.data[params.colDef.field as string] = '';
             return true;
           }
-          // Use centralized function to convert and store as MM/DD/YYYY string
           const dateStr = this.gridCommonService.convertDateEditorValueToString(params.newValue);
           params.data[params.colDef.field as string] = dateStr;
           return true;
         };
       }
 
-      // Duplicate check removed - already handled above for both bomLinkPart and partNumber
-
       columns.push(columnDef);
     });
 
-    // Add SKU columns
     const skuColumns = this.dataService.getSkuInfo().map((sku) => ({
       skuId: sku.sku,
       product: sku.product,
@@ -730,23 +581,18 @@ export class App implements OnInit {
         cellRenderer: (params: any) => {
           const data = params.data || {};
 
-          // Hide SKU values on section headers and branch headers
           if (data.isSectionHeader || data.isBranchHeader) {
             return '';
           }
 
-          // Show SKU values on material headers (linked BOM) and direct rows
-          // Hide SKU values on child rows (subrows) since they're already on material header
           if (data.isMaterialHeader || data.isDirectRow) {
             const columnWidth = params.column?.getActualWidth() || 200;
             return this.createCellContentWithTooltip(params.value, columnWidth);
           }
 
-          // Hide on subrows (child rows under material headers)
           return '';
         },
         tooltipValueGetter: (params: any) => {
-          // Always show tooltip for SKU columns
           if (params.value === null || params.value === undefined) return null;
           return String(params.value);
         },
@@ -809,7 +655,6 @@ export class App implements OnInit {
       `;
     }
 
-    // Parent row (main item with children)
     if (data.isParentRow) {
       const parentIndent = '&nbsp;'.repeat(16);
       return `
@@ -836,26 +681,23 @@ export class App implements OnInit {
       `;
     }
 
-    // Direct row (no accordion) - show feature value like regular cell
     if (data.isDirectRow) {
       const featureValue = this.getFeatureValue(data);
       if (!featureValue || featureValue.trim().length === 0) {
         return '';
       }
-      const columnWidth = 220; // Feature column width
+      const columnWidth = 220;
       return this.createCellContentWithTooltip(featureValue, columnWidth);
     }
 
-    // Regular data row (sub-row) - show feature value like regular cell
     const featureValue = this.getFeatureValue(data);
     if (!featureValue || featureValue.trim().length === 0) {
       return '';
     }
-    const columnWidth = 220; // Feature column width
+    const columnWidth = 220;
     return this.createCellContentWithTooltip(featureValue, columnWidth);
   }
 
-  // Helper method to escape HTML for tooltip
   private escapeHtml(text: string): string {
     if (!text) return '';
     const div = document.createElement('div');
@@ -878,29 +720,22 @@ export class App implements OnInit {
     return String(rawValue);
   }
 
-  // Helper method to estimate if text will be truncated based on column width
   private isTextLikelyTruncated(text: string | null | undefined, columnWidth: number): boolean {
     if (!text) return false;
     const textStr = String(text);
-    // Estimate ~8-10 pixels per character (conservative estimate)
-    // Add some padding for cell padding (16px total)
     const estimatedPixelsNeeded = textStr.length * 9 + 16;
     return estimatedPixelsNeeded > columnWidth;
   }
 
-  // Helper method to create cell content with conditional tooltip
   private createCellContentWithTooltip(value: any, columnWidth: number): string {
     if (!value && value !== 0) return '';
     const textStr = String(value);
     const escapedText = this.escapeHtml(textStr);
     const shouldShowTooltip = this.isTextLikelyTruncated(textStr, columnWidth);
 
-    // Don't add title attribute here - let AG Grid's tooltipValueGetter handle tooltips
-    // This ensures tooltipValueGetter works properly with enableBrowserTooltips
     if (shouldShowTooltip) {
       return `<span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; width: 100%;">${escapedText}</span>`;
     }
-    // Return plain text without title attribute
     return escapedText;
   }
 
@@ -999,41 +834,21 @@ export class App implements OnInit {
     this.gridCommonService.sizeColumnsToFit(this.gridApi);
     this.gridCommonService.forceHorizontalScrollbarVisibility(this.gridApi);
 
-    // Refresh header
     if (this.gridApi) {
       this.gridApi.refreshHeader();
     }
 
-    // If data is already loaded, set it to the grid (respecting search filter if any)
     if (this.rowData && this.rowData.length > 0) {
       this.applyHierarchicalSearch();
     }
   }
 
-  getColumnDisplayName(col: any): string {
-    // Return the exact same header name as shown in the grid
-    return col.headerName || col.field;
-  }
-
   isSkuColumn(col: any): boolean {
-    // Check if the column is a SKU column by examining the field name
     return col.field && (col.field.startsWith('sku') || col.field.startsWith('actions'));
   }
 
-  getFirstSkuFieldName(): string {
-    // Get the first SKU column field name
-    const skuInfo = this.dataService.getSkuInfo();
-    if (skuInfo && skuInfo.length > 0) {
-      return `sku${skuInfo[0].sku}`;
-    }
-    return '';
-  }
-
   toggleExpiredData(): void {
-    // Save state to localStorage
     localStorage.setItem('showExpiredData', this.showExpiredData.toString());
-
-    // Reload data with or without expired entries
     this.loadData();
   }
 
@@ -1042,18 +857,13 @@ export class App implements OnInit {
       const visible = (event.target as HTMLInputElement).checked;
 
       if (col.isVirtual) {
-        // Just update metadata for virtual columns
         col.hide = !visible;
       } else {
-        // Real AG Grid column
         this.gridApi.setColumnsVisible([col.field], visible);
         col.hide = !visible;
       }
     } else {
-      // Toggle visibility panel
       this.showColumnVisibilityPanel = !this.showColumnVisibilityPanel;
-
-      // No need for manual event listeners - HostListener handles this
     }
   }
 
@@ -1065,7 +875,6 @@ export class App implements OnInit {
     const panel = this.columnPanel?.nativeElement;
     const toggleBtn = this.toggleBtn?.nativeElement;
 
-    // Check if click is outside all relevant elements
     const clickedOutside =
       panel && !panel.contains(target) && toggleBtn && !toggleBtn.contains(target);
 
@@ -1085,23 +894,19 @@ export class App implements OnInit {
       return;
     }
 
-    // Don't interfere with filter button clicks
     if (event.event && event.event.target) {
       const target = event.event.target as HTMLElement;
-      // Check if click is on filter button or its children
       if (
         target.closest('.ag-header-cell-filter-button') ||
         target.closest('.ag-icon-filter') ||
         target.classList.contains('ag-header-cell-filter-button') ||
         target.classList.contains('ag-icon-filter')
       ) {
-        // Let AG Grid handle the filter button click
         return;
       }
     }
     const target = event.event?.target as HTMLElement;
 
-    // Handle paste button click first
     const pasteButton = target?.closest('[data-action="paste"]');
     if (pasteButton) {
       event.event.preventDefault();
@@ -1112,19 +917,15 @@ export class App implements OnInit {
         event.data &&
         event.data.isNewRow
       ) {
-        // Ensure we're not in edit mode
         event.api.stopEditing(true);
 
-        // Small delay to ensure edit mode is fully cleared
         setTimeout(() => {
-          // Execute paste
-          this.pasteSkuValue(event);
+          this.rowManagementService.pasteSkuValue(event, this);
         }, 0);
       }
       return;
     }
 
-    // Handle copy button click
     if (target && (target.closest('.copy-button') || target.matches('.copy-button'))) {
       event.event.preventDefault();
       event.event.stopPropagation();
@@ -1135,17 +936,14 @@ export class App implements OnInit {
         event.data.isNewRow &&
         event.value
       ) {
-        this.copySkuValue(event);
+        this.rowManagementService.copySkuValue(event, this);
       }
       return;
     }
 
-    // Start editing for all editable fields in new rows (but not section headers)
     if (event.data && event.data.isNewRow && !event.data.isSectionHeader) {
-      // Check if this is an editable field (not actions, not SKU fields)
       const field = event.colDef.field;
       if (field && field !== 'actions' && !field.startsWith('sku')) {
-        // For date columns, ensure the editor opens properly
         const isDateColumn =
           field === 'bomLinkStartDate' ||
           field === 'bomLinkEndDate' ||
@@ -1153,16 +951,12 @@ export class App implements OnInit {
           field === 'endDate';
 
         if (isDateColumn) {
-          // Start editing the cell
           event.api.startEditingCell({
             rowIndex: event.rowIndex,
             colKey: event.column.getId(),
             rowPinned: event.rowPinned,
           });
-          // Try to find and open the date picker after editor starts
           setTimeout(() => {
-            // Try to find the date input in the currently editing cell
-            // AG Grid adds 'ag-cell-inline-editing' class to editing cells
             const editingCell = document.querySelector('.ag-cell-inline-editing') as HTMLElement;
             if (editingCell) {
               const dateInput =
@@ -1172,11 +966,9 @@ export class App implements OnInit {
 
               if (dateInput) {
                 dateInput.focus();
-                // Try to open the picker directly (supported in modern browsers)
                 if (typeof dateInput.showPicker === 'function') {
                   dateInput.showPicker();
                 } else {
-                  // Fallback: click on the input to trigger the picker
                   dateInput.click();
                 }
               }
@@ -1198,7 +990,6 @@ export class App implements OnInit {
       const target = event.event?.target as HTMLElement;
 
       if (target && target.classList.contains('add-row-btn')) {
-        // Use the row index instead of partId for reliable positioning
         const rowIndex = event.rowIndex;
         if (rowIndex !== null && rowIndex !== undefined) {
           this.addRowAfter(rowIndex);
@@ -1209,29 +1000,24 @@ export class App implements OnInit {
         const newRowId = target.getAttribute('data-new-row-id');
 
         if (newRowId !== null) {
-          // Delete by new row ID for new rows
           this.deleteRowById(parseInt(newRowId));
           return;
         } else if (partId) {
-          // Delete by part ID for existing rows
           this.deleteRow(partId);
           return;
         }
       }
     } else if (event.colDef.field === 'material' && event.colDef.headerName === 'Material') {
-      // Only handle Material column clicks, not Feature column (which also uses field: 'material')
       event.api.startEditingCell({
         rowIndex: event.rowIndex,
         colKey: event.column.getId(),
         rowPinned: event.rowPinned,
         keyPress: event.event?.key,
       });
-      // Don't open modal for new rows - they are in edit mode
       if (event.data && event.data.isNewRow) {
-        return; // Skip modal opening for new rows
+        return;
       }
 
-      // Open material modal if clicking on a material header or direct row with material data
       if (
         event.data &&
         (event.data.isMaterialHeader || event.data.isDirectRow) &&
@@ -1248,13 +1034,10 @@ export class App implements OnInit {
     const materialId = materialData.material || materialData.part;
     if (!materialId) return;
 
-    // Fetch Complex BOM data from API
     this.dataService.getComplexBOM(materialId).subscribe({
       next: (complexBOMData: any) => {
-        // Convert to key-value array format for table display
         const keyValuePairs: any[] = [];
 
-        // If API returns object, convert to array of {key, value} pairs
         if (
           complexBOMData &&
           typeof complexBOMData === 'object' &&
@@ -1269,26 +1052,19 @@ export class App implements OnInit {
             }
           });
         } else if (Array.isArray(complexBOMData)) {
-          // If API already returns array format
           keyValuePairs.push(...complexBOMData);
         }
 
-        // If API returned data, merge it with the original row data, otherwise use original row data
         const allRowData =
           keyValuePairs.length > 0
             ? { ...materialData, ...this.convertKeyValuePairsToObject(keyValuePairs) }
             : materialData;
 
-        // Set ALL row data (everything from that particular row)
         this.selectedMaterialData = allRowData;
-
-        // Get SKU data for the material
         this.selectedMaterialSkuData = this.dataService.getSkuDataForPart(materialData);
-
         this.showMaterialModal = true;
       },
       error: (error) => {
-        // Use original row data if API fails
         this.selectedMaterialData = materialData;
         this.selectedMaterialSkuData = this.dataService.getSkuDataForPart(materialData);
         this.showMaterialModal = true;
@@ -1312,24 +1088,11 @@ export class App implements OnInit {
     this.selectedMaterialSkuData = [];
   }
 
-  trackFieldChange(params: any): void {
-    this.rowManagementService.trackFieldChange(params, this.editedRows);
-  }
-
   saveChanges(): void {
     this.rowManagementService
       .saveChanges(this.rowData, this.editedRows, this.gridApi, this)
       .then((result) => {
         if (result.success) {
-          // Update last saved timestamp
-          this.lastSavedAt = new Date();
-
-          // Save timestamp to localStorage for persistence
-          localStorage.setItem('lastSavedAt', this.lastSavedAt.toISOString());
-
-          // Clear new rows tracking
-          this.newRows.clear();
-
           this.rowManagementService.showSaveMessage(result.message, 'success', this);
         } else {
           this.rowManagementService.showSaveMessage(result.message, 'info', this);
@@ -1337,40 +1100,14 @@ export class App implements OnInit {
       });
   }
 
-  showSaveMessage(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
-    this.rowManagementService.showSaveMessage(message, type, this);
-  }
-
-  clearSaveMessage(): void {
-    this.rowManagementService.clearSaveMessage(this);
-  }
-
-  // Copy SKU value from a cell (only for new rows)
-  copySkuValue(params: any): void {
-    this.rowManagementService.copySkuValue(params, this);
-  }
-
-  pasteSkuValue(params: any): void {
-    this.rowManagementService.pasteSkuValue(params, this);
-  }
-
-  // Clear copy state and visual indicators
-  clearCopyState(): void {
-    this.rowManagementService.clearCopyState(this.gridApi, this);
-  }
-
   addRowAfter(rowIndex: number): void {
     const result = this.rowManagementService.addRowAfter(
       rowIndex,
-      this.displayData, // Use displayData instead of rowData
+      this.displayData,
       this.gridApi,
-      this.dataService,
-      this.nextRowId
+      this.dataService
     );
-    this.nextRowId = result.newRowId;
-    this.newRows.set(result.newRow.newRowId, result.newRow);
 
-    // Force grid refresh to ensure cell editor is available
     setTimeout(() => {
       if (this.gridApi) {
         this.gridApi.refreshCells({ force: true });
@@ -1380,110 +1117,41 @@ export class App implements OnInit {
 
   deleteRowById(newRowId: number): void {
     this.rowManagementService.deleteRowById(newRowId, this.displayData, this.gridApi);
-    this.newRows.delete(newRowId);
   }
 
   deleteRow(partId: string): void {
-    this.rowManagementService.deleteRow(partId, this.rowData, this.gridApi);
-    this.newRows.delete(parseInt(partId));
+    this.rowManagementService.deleteRow(partId, this.displayData, this.gridApi);
   }
 
-  getUniqueFeatures(): string[] {
-    return this.gridCommonService.getUniqueFeatures(this.rowData);
+  getLastSavedText(): string {
+    const lastSavedAt = this.rowManagementService.getLastSavedAt();
+    if (!lastSavedAt) {
+      return 'No saves yet';
+    }
+    return 'Last Saved: ' + this.gridCommonService.formatLastSavedTime(lastSavedAt);
   }
 
-  // Helper: Check if column is actions column
+  clearSaveMessage(): void {
+    this.rowManagementService.clearSaveMessage(this);
+  }
+
   private isActionsColumn(params: any): boolean {
     const fieldName = params.colDef?.field;
     const colId = params.column?.getColId() || params.colDef?.colId || fieldName;
     return fieldName === 'actions' || colId === 'actions';
   }
 
-  // Get all columns for the visibility panel (real + virtual)
-  get allColumnsForPanel() {
-    return this.allColumns;
-  }
-
-  // Get only real columns for AG Grid (filter out virtual ones)
-  get realColumnsForGrid() {
-    return this.allColumns.filter((col) => !col.isVirtual);
-  }
-
-  // Get select all state
-  get selectAllState() {
-    const visibleColumns = this.allColumns.filter((col) => !col.isVirtual && !col.hide);
-    const totalColumns = this.allColumns.filter((col) => !col.isVirtual);
-
-    if (visibleColumns.length === 0) return false;
-    if (visibleColumns.length === totalColumns.length) return true;
-    return null; // indeterminate state
-  }
-
-  // Toggle select all
-  toggleSelectAll(event: Event): void {
-    const checked = (event.target as HTMLInputElement).checked;
-
-    this.allColumns.forEach((col) => {
-      if (!col.isVirtual) {
-        col.hide = !checked;
-        if (this.gridApi) {
-          this.gridApi.setColumnsVisible([col.field], checked);
-        }
-      }
-    });
-  }
-
-  getAvailablePartNumbers(): string[] {
-    return this.gridCommonService.getAvailablePartNumbers(this.displayData);
-  }
-
-  getAvailableMaterials(): string[] {
-    return this.gridCommonService.getAvailableMaterials(this.displayData);
-  }
-
-  getUniqueSuppliers(): string[] {
-    return this.gridCommonService.getUniqueSuppliers(this.rowData);
-  }
-
-  getUniqueColors(): string[] {
-    return this.gridCommonService.getUniqueColors(this.rowData);
-  }
-
-  // Method for future API integration
-  async searchPartNumbers(searchTerm: string): Promise<string[]> {
-    return this.gridCommonService.searchPartNumbers(searchTerm, this.rowData);
-  }
-
-  onNewRowValueChanged(params: any): void {
-    this.rowManagementService.onNewRowValueChanged(params, this.dataService, this.editedRows);
-  }
-
-  formatLastSavedTime(date: Date): string {
-    return this.gridCommonService.formatLastSavedTime(date);
-  }
-
-  // Date formatter utility method for use in column definitions
-  formatDate(params: any): string {
-    return this.gridCommonService.dateFormatter(params);
-  }
-
-  // Search functionality methods
   onSearchTextChange(): void {
-    // Auto-apply filter as user types (debounced)
     if (this.searchTextDebounceTimer) {
       clearTimeout(this.searchTextDebounceTimer);
     }
 
     this.searchTextDebounceTimer = setTimeout(() => {
       this.applyHierarchicalSearch();
-    }, 300); // 300ms debounce
+    }, 300);
   }
 
   private searchTextDebounceTimer: any;
-
-  applyQuickFilter(): void {
-    this.applyHierarchicalSearch();
-  }
 
   clearSearch(): void {
     this.searchText = '';
@@ -1493,7 +1161,6 @@ export class App implements OnInit {
     }
   }
 
-  // Check if a row matches the search text
   private rowMatchesSearch(row: any, searchText: string): boolean {
     if (!searchText || searchText.trim() === '') {
       return true;
@@ -1501,14 +1168,11 @@ export class App implements OnInit {
 
     const searchLower = searchText.toLowerCase().trim();
 
-    // Get visible column fields from grid
     const visibleFields = this.getVisibleColumnFields();
 
-    // If we can't get visible fields, fall back to searching all non-excluded fields
     const fieldsToSearch =
       visibleFields.length > 0 ? visibleFields : this.getAllSearchableFields(row);
 
-    // Exclude internal/system properties from search
     const excludedFields = new Set([
       'isSectionHeader',
       'isMaterialHeader',
@@ -1530,29 +1194,24 @@ export class App implements OnInit {
       '_availableSuppliers',
       '_availableColors',
       'newRowId',
-      'actions', // Don't search action column
+      'actions',
     ]);
 
-    // Search through specified fields
     for (const key of fieldsToSearch) {
-      // Skip excluded fields
       if (excludedFields.has(key)) {
         continue;
       }
 
-      // Skip if field doesn't exist in row
       if (!row.hasOwnProperty(key)) {
         continue;
       }
 
       const value = row[key];
 
-      // Skip null and undefined
       if (value === null || value === undefined) {
         continue;
       }
 
-      // Handle arrays - search through array elements
       if (Array.isArray(value)) {
         for (const item of value) {
           if (item !== null && item !== undefined) {
@@ -1565,12 +1224,10 @@ export class App implements OnInit {
         continue;
       }
 
-      // Skip objects (we only want to search primitive values and arrays)
       if (typeof value === 'object') {
         continue;
       }
 
-      // Convert value to string and check if it contains the search text
       const valueStr = String(value).toLowerCase();
       if (valueStr.includes(searchLower)) {
         return true;
@@ -1580,7 +1237,6 @@ export class App implements OnInit {
     return false;
   }
 
-  // Get visible column fields from the grid
   private getVisibleColumnFields(): string[] {
     if (!this.gridApi) {
       return [];
@@ -1594,9 +1250,7 @@ export class App implements OnInit {
         const colDef = column.getColDef();
         const field = colDef.field;
 
-        // Only include visible columns with fields (skip action columns, etc.)
         if (field && column.isVisible()) {
-          // Check if column is actually visible (not hidden)
           const isHidden = colDef.hide === true;
           if (!isHidden) {
             visibleFields.push(field);
@@ -1608,7 +1262,6 @@ export class App implements OnInit {
     return visibleFields;
   }
 
-  // Fallback: Get all searchable fields from row (excluding system fields)
   private getAllSearchableFields(row: any): string[] {
     const fields: string[] = [];
     const excludedFields = new Set([
@@ -1644,33 +1297,28 @@ export class App implements OnInit {
     return fields;
   }
 
-  // Filter hierarchical data while preserving structure
   private filterHierarchicalData(data: any[], searchText: string): any[] {
     if (!searchText || searchText.trim() === '') {
-      return data; // Return all data if no search text
+      return data;
     }
 
     const filteredData: any[] = [];
 
     data.forEach((sectionRow) => {
       if (!sectionRow.isSectionHeader) {
-        return; // Skip non-section rows
+        return;
       }
 
-      // Always keep section headers
       const filteredSection: any = {
         ...sectionRow,
         children: [],
       };
 
-      // Filter children (material headers and direct rows)
       if (sectionRow.children && Array.isArray(sectionRow.children)) {
         sectionRow.children.forEach((child: any) => {
           if (child.isMaterialHeader) {
-            // Check if material header matches
             const headerMatches = this.rowMatchesSearch(child, searchText);
 
-            // Check if any child matches
             let hasMatchingChildren = false;
             const filteredChildren: any[] = [];
 
@@ -1683,7 +1331,6 @@ export class App implements OnInit {
               });
             }
 
-            // Keep material header if header or any child matches
             if (headerMatches || hasMatchingChildren) {
               const filteredMaterialHeader: any = {
                 ...child,
@@ -1692,7 +1339,6 @@ export class App implements OnInit {
               filteredSection.children.push(filteredMaterialHeader);
             }
           } else if (child.isDirectRow) {
-            // Direct row - keep if it matches
             if (this.rowMatchesSearch(child, searchText)) {
               filteredSection.children.push(child);
             }
@@ -1700,7 +1346,6 @@ export class App implements OnInit {
         });
       }
 
-      // Only add section if it has matching children
       if (filteredSection.children.length > 0) {
         filteredData.push(filteredSection);
       }
@@ -1709,26 +1354,18 @@ export class App implements OnInit {
     return filteredData;
   }
 
-  // Apply hierarchical search
-  private applyHierarchicalSearch(): void {
+  public applyHierarchicalSearch(): void {
     if (!this.gridApi) return;
 
-    // Filter the hierarchical data
     const filteredHierarchicalData = this.filterHierarchicalData(this.rowData, this.searchText);
-
-    // Flatten the filtered data
     const flatData = this.flattenHierarchicalData(filteredHierarchicalData);
     this.displayData = flatData;
-
-    // Update grid with filtered data
     this.gridApi.setGridOption('rowData', flatData);
   }
 
-  // Get field name from colId by looking up column definition
   private getFieldNameFromColId(colId: string): string {
     if (!colId || !this.gridApi) return colId;
 
-    // Try to get column by colId
     const column = this.gridApi.getColumn(colId);
     if (column) {
       const field = column.getColDef().field;
@@ -1737,28 +1374,22 @@ export class App implements OnInit {
       }
     }
 
-    // Fallback to colId if field not found
     return colId;
   }
 
-  // Get sort value from a row for a given field
   private getSortValue(row: any, field: string): any {
     if (!row || !field) return null;
 
     const value = row[field];
 
-    // Handle null/undefined
     if (value === null || value === undefined) {
       return null;
     }
 
-    // Return the value as-is for comparison
     return value;
   }
 
-  // Compare two values for sorting
   private compareValues(a: any, b: any, sortDirection: 'asc' | 'desc'): number {
-    // Handle null/undefined values (always sort to end)
     if (a === null || a === undefined) {
       return b === null || b === undefined ? 0 : 1;
     }
@@ -1766,11 +1397,9 @@ export class App implements OnInit {
       return -1;
     }
 
-    // Convert to comparable types
     let aVal: any = a;
     let bVal: any = b;
 
-    // Try to convert to numbers if both are numeric strings
     const aNum = typeof a === 'string' ? parseFloat(a) : a;
     const bNum = typeof b === 'string' ? parseFloat(b) : b;
 
@@ -1778,12 +1407,10 @@ export class App implements OnInit {
       aVal = aNum;
       bVal = bNum;
     } else {
-      // Convert to strings for comparison
       aVal = String(a).toLowerCase();
       bVal = String(b).toLowerCase();
     }
 
-    // Compare values
     let result = 0;
     if (aVal < bVal) {
       result = -1;
@@ -1791,60 +1418,48 @@ export class App implements OnInit {
       result = 1;
     }
 
-    // Reverse if descending
     return sortDirection === 'desc' ? -result : result;
   }
 
-  // Sort hierarchical data while preserving structure
   private sortHierarchicalData(data: any[], sortModel: any[]): any[] {
     if (!sortModel || sortModel.length === 0) {
-      return data; // No sorting, return as-is
+      return data;
     }
 
     const sortedData: any[] = [];
-    // Get field name from colId (colId might be different from field name)
     const sortColId = sortModel[0].colId;
     const sortField = this.getFieldNameFromColId(sortColId) || sortModel[0].field || sortColId;
     const sortDirection = sortModel[0].sort as 'asc' | 'desc';
 
-    // Process ALL sections
     data.forEach((sectionRow) => {
       if (!sectionRow.isSectionHeader) {
-        return; // Skip non-section rows
+        return;
       }
 
-      // Create a copy of the section with empty children array
       const sortedSection: any = {
         ...sectionRow,
         children: [],
       };
 
-      // Sort children (material headers and direct rows) within this section
       if (
         sectionRow.children &&
         Array.isArray(sectionRow.children) &&
         sectionRow.children.length > 0
       ) {
-        // Sort material headers and direct rows within the section
         const sortedChildren = [...sectionRow.children].sort((a: any, b: any) => {
-          // Get sort values
           const aValue = this.getSortValue(a, sortField);
           const bValue = this.getSortValue(b, sortField);
 
-          // Compare values
           return this.compareValues(aValue, bValue, sortDirection);
         });
 
-        // Process each sorted child
         sortedChildren.forEach((child: any) => {
           if (child.isMaterialHeader) {
-            // Sort children within material header
             const sortedMaterialHeader: any = {
               ...child,
               children: [],
             };
 
-            // Sort child rows within this material group
             if (child.children && Array.isArray(child.children) && child.children.length > 0) {
               const sortedSubChildren = [...child.children].sort((a: any, b: any) => {
                 const aValue = this.getSortValue(a, sortField);
@@ -1856,56 +1471,43 @@ export class App implements OnInit {
 
             sortedSection.children.push(sortedMaterialHeader);
           } else if (child.isDirectRow) {
-            // Direct row - add to sorted section
             sortedSection.children.push(child);
           }
         });
       }
 
-      // Add the sorted section to the result (even if it has no children)
       sortedData.push(sortedSection);
     });
 
     return sortedData;
   }
 
-  // Apply hierarchical sort
   public applyHierarchicalSort(params: any): void {
     if (!this.gridApi) return;
 
-    // Use setTimeout to ensure sort state is updated
     setTimeout(() => {
-      // Get current sort model from grid
       const sortModel = this.gridApi.getColumnState().filter((col: any) => col.sort);
 
-      // If no sorting, just apply search filter
       if (!sortModel || sortModel.length === 0) {
         this.applyHierarchicalSearch();
         return;
       }
 
-      // Get the data to sort (apply search filter first if there's a search)
       let dataToSort = this.rowData;
       if (this.searchText && this.searchText.trim() !== '') {
         dataToSort = this.filterHierarchicalData(this.rowData, this.searchText);
       }
 
-      // Ensure we have data to sort
       if (!dataToSort || dataToSort.length === 0) {
         return;
       }
 
-      // Sort the hierarchical data (this processes ALL sections)
       const sortedData = this.sortHierarchicalData(dataToSort, sortModel);
-
-      // Flatten the sorted data
       const flatData = this.flattenHierarchicalData(sortedData);
       this.displayData = flatData;
 
-      // Update grid with our manually sorted data
       this.gridApi.setGridOption('rowData', flatData);
 
-      // Re-apply sort state to show UI indicators (data is already sorted by us)
       this.gridApi.applyColumnState({
         state: sortModel,
         defaultState: { sort: null },
@@ -1913,24 +1515,19 @@ export class App implements OnInit {
     }, 10);
   }
 
-  // Build SKU-based MBOM hierarchy
   private buildMbomHierarchy(data: any): any[] {
     const sections: any = {};
     const items = data.mbom;
 
-    // Group items by section and create material groups (not SKU-expanded)
     for (const item of items) {
       const section = item.section || 'NA';
       if (!sections[section]) sections[section] = [];
 
-      // Create unique key for material group (part + branchID + flexBomLinkID)
       const materialKey = `${item.part}_${item.branchID}_${item.flexBomLinkID}`;
 
-      // Check if this material group already exists
       let existingMaterial = sections[section].find((m: any) => m.materialKey === materialKey);
 
       if (!existingMaterial) {
-        // Create new material group with all SKUs
         existingMaterial = {
           ...item,
           materialKey,
@@ -1940,7 +1537,6 @@ export class App implements OnInit {
       }
     }
 
-    // Build tree recursively for children
     const buildTree = (branchID: string, allItems: any[]): any[] => {
       const children = allItems.filter((i: any) => i.masterBranchID == branchID);
       return children
@@ -1975,14 +1571,11 @@ export class App implements OnInit {
     return result;
   }
 
-  // Transform data to hierarchical structure using SKU-based grouping
   transformToHierarchicalData(data: any): any[] {
     const hierarchicalData: any[] = [];
 
-    // Build SKU-based hierarchy
     const sections = this.buildMbomHierarchy(data);
 
-    // Convert to AG Grid format
     sections.forEach((section: any) => {
       const sectionRow: any = {
         section: section.section,
@@ -1992,15 +1585,11 @@ export class App implements OnInit {
         level: 0,
       };
 
-      // Process materials in this section
       section.materials.forEach((material: any, materialIndex: number) => {
-        // Check if material has children
         const hasChildren = material.children && material.children.length > 0;
 
         if (hasChildren) {
-          // Create material header with children (NO separate parent row)
           const materialRow: any = {
-            // carry over all original material fields so other columns can show values
             ...material,
             section: section.section,
             material: material.part,
@@ -2014,10 +1603,8 @@ export class App implements OnInit {
             hasLinkedBom: true,
           };
 
-          // Add SKU data to material header
           this.addSkuDataToRow(materialRow, material);
 
-          // Add only child items under the header
           material.children.forEach((child: any) => {
             const childRow = {
               ...child,
@@ -2031,7 +1618,6 @@ export class App implements OnInit {
 
           sectionRow.children.push(materialRow);
         } else {
-          // No children - add material directly as a direct row
           const directRow = {
             ...material,
             section: section.section,
@@ -2047,7 +1633,6 @@ export class App implements OnInit {
       hierarchicalData.push(sectionRow);
     });
 
-    // Final guard
     if (hierarchicalData.length === 0) {
       return hierarchicalData;
     }
@@ -2055,42 +1640,16 @@ export class App implements OnInit {
     return hierarchicalData;
   }
 
-  // Sort sections according to the sectionOrder from the data
-  private sortSectionsByOrder(sectionNames: string[], sectionOrder: string[]): string[] {
-    const orderedSections: string[] = [];
-    const unorderedSections: string[] = [];
-
-    // First, add sections in the order specified by sectionOrder
-    sectionOrder.forEach((orderedSection) => {
-      if (sectionNames.includes(orderedSection)) {
-        orderedSections.push(orderedSection);
-      }
-    });
-
-    // Then add any remaining sections that weren't in the order
-    sectionNames.forEach((sectionName) => {
-      if (!orderedSections.includes(sectionName)) {
-        unorderedSections.push(sectionName);
-      }
-    });
-
-    return [...orderedSections, ...unorderedSections];
-  }
-
   private addSkuDataToRow(itemRow: any, originalItem: any): void {
-    // Get SKU info from data service
     const skuInfo = this.dataService.getSkuInfo();
 
-    // Map SKU data to the row
     if (originalItem.skus && Array.isArray(originalItem.skus)) {
       skuInfo.forEach((sku) => {
         const fieldName = `sku${sku.sku}`;
-        // Find matching SKU in the original item's skus array
         const matchingSku = originalItem.skus.find((s: any) => s.skuId === sku.sku);
         itemRow[fieldName] = matchingSku ? matchingSku.value : '';
       });
     } else {
-      // If no skus array, set empty values
       skuInfo.forEach((sku) => {
         const fieldName = `sku${sku.sku}`;
         itemRow[fieldName] = '';
@@ -2098,12 +1657,10 @@ export class App implements OnInit {
     }
   }
 
-  // Angular-friendly notification method
   private showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
     this.saveMessage = message;
     this.saveMessageType = type;
 
-    // Auto-clear after 5 seconds
     setTimeout(() => {
       this.saveMessage = '';
       this.saveMessageType = '';

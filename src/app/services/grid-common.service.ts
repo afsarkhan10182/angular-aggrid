@@ -8,6 +8,36 @@ import { DataService } from './data.service';
 export class GridCommonService {
   constructor() {}
 
+  getDefaultColDef() {
+    const defaultColDef = {
+      sortable: true,
+      comparator: () => 0,
+      filter: true,
+      resizable: true,
+      suppressSizeToFit: false,
+      suppressAutoSize: false,
+      floatingFilter: false,
+      wrapHeaderText: true,
+      headerClass: 'custom-header-with-border',
+      width: 140,
+      minWidth: 100,
+      maxWidth: 300,
+      wrapText: false,
+      autoHeight: false,
+      cellStyle: (params: any) => {
+        const baseStyle: any = {
+          padding: '8px 12px',
+        };
+        if (!params.data || !params.data.isSectionHeader) {
+          baseStyle.borderRight = '1px solid #e2e8f0';
+        }
+        return baseStyle;
+      },
+    };
+
+    return defaultColDef;
+  }
+
   /**
    * Helper method to size columns to fit with improved experience
    */
@@ -478,14 +508,14 @@ export class GridCommonService {
       },
       onCellValueChanged: (params) => {
         // Track changes for all editable fields
-        if (componentInstance.trackFieldChange) {
-          componentInstance.trackFieldChange(params);
+        if (componentInstance.rowManagementService && componentInstance.editedRows) {
+          componentInstance.rowManagementService.trackFieldChange(params, componentInstance.editedRows);
         }
 
         // Handle field changes for new rows (auto-population)
         if (params.data && params.data.isNewRow) {
-          if (componentInstance.onNewRowValueChanged) {
-            componentInstance.onNewRowValueChanged(
+          if (componentInstance.rowManagementService && componentInstance.dataService && componentInstance.editedRows) {
+            componentInstance.rowManagementService.onNewRowValueChanged(
               params,
               componentInstance.dataService,
               componentInstance.editedRows
@@ -590,8 +620,8 @@ export class GridCommonService {
           params.data &&
           params.data.isNewRow
         ) {
-          if (componentInstance.pasteSkuValue) {
-            componentInstance.pasteSkuValue(params as any);
+          if (componentInstance.rowManagementService) {
+            componentInstance.rowManagementService.pasteSkuValue(params as any, componentInstance);
           }
           params.event.preventDefault();
         }

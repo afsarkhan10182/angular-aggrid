@@ -31,7 +31,7 @@
                 placeholder="Search All Columns"
                 [(ngModel)]="searchText"
                 (input)="onSearchTextChange()"
-                (keyup.enter)="applyQuickFilter()"
+                (keyup.enter)="applyHierarchicalSearch()"
                 #searchInput
               />
               <button
@@ -45,7 +45,7 @@
             </div>
             <button
               class="search-filter-btn"
-              (click)="applyQuickFilter()"
+              (click)="applyHierarchicalSearch()"
               [disabled]="!searchText"
               title="Apply filter"
             >
@@ -60,9 +60,6 @@
       <div class="right-controls-group">
         <div class="toggle-switch-container">
           <span class="toggle-text">Show Expired:</span>
-          <span class="expired-count" *ngIf="showExpiredData && expiredDataCount > 0">{{
-            expiredDataCount
-          }}</span>
           <label class="toggle-switch">
             <input type="checkbox" [(ngModel)]="showExpiredData" (change)="toggleExpiredData()" />
             <span class="toggle-slider"></span>
@@ -73,7 +70,7 @@
           <div class="last-saved-display">
             <i class="fas fa-clock"></i>
             <span class="last-saved-text">
-              {{ lastSavedAt ? 'Last Saved: ' + formatLastSavedTime(lastSavedAt) : 'No saves yet' }}
+              {{ getLastSavedText() }}
             </span>
           </div>
           <!-- Save Changes Button -->

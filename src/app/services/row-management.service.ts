@@ -7,7 +7,49 @@ import { GridCommonService } from './grid-common.service';
   providedIn: 'root',
 })
 export class RowManagementService {
-  constructor(private gridCommonService: GridCommonService) {}
+  private nextRowId = 10000;
+  private newRows = new Map<number, any>();
+  private lastSavedAt: Date | null = null;
+  private copiedSkuValue: string = '';
+  private copiedFromRowId: number | null = null;
+  private copiedFromCellKey: string = '';
+
+  constructor(private gridCommonService: GridCommonService) {
+    // Load lastSavedAt from localStorage if available
+    const savedTimestamp = localStorage.getItem('lastSavedAt');
+    if (savedTimestamp) {
+      this.lastSavedAt = new Date(savedTimestamp);
+    }
+  }
+
+  /**
+   * Get the current nextRowId
+   */
+  getNextRowId(): number {
+    return this.nextRowId;
+  }
+
+  /**
+   * Get all new rows
+   */
+  getNewRows(): Map<number, any> {
+    return this.newRows;
+  }
+
+  /**
+   * Get last saved timestamp
+   */
+  getLastSavedAt(): Date | null {
+    return this.lastSavedAt;
+  }
+
+  /**
+   * Set last saved timestamp
+   */
+  setLastSavedAt(date: Date): void {
+    this.lastSavedAt = date;
+    localStorage.setItem('lastSavedAt', date.toISOString());
+  }
 
   /**
    * Add row after a specific row index
@@ -16,10 +58,9 @@ export class RowManagementService {
     rowIndex: number,
     rowData: any[],
     gridApi: GridApi,
-    dataService: DataService,
-    nextRowId: number
+    dataService: DataService
   ): { newRow: any; newRowId: number } {
-    const newRowIdValue = nextRowId;
+    const newRowIdValue = this.nextRowId;
     const newRow = {
       part: '', // Start with empty string for part
       partNumber: '',
@@ -83,7 +124,12 @@ export class RowManagementService {
         // Otherwise, don't scroll - let the user stay where they are
       }, 50);
     }
-    return { newRow, newRowId: newRowIdValue + 1 };
+
+    // Update state
+    this.nextRowId = newRowIdValue + 1;
+    this.newRows.set(newRowIdValue, newRow);
+
+    return { newRow, newRowId: this.nextRowId };
   }
 
   /**
@@ -113,6 +159,9 @@ export class RowManagementService {
 
     // Update our local rowData to stay in sync
     rowData.splice(rowIndex, 1);
+
+    // Update state
+    this.newRows.delete(newRowId);
   }
 
   /**
@@ -139,6 +188,12 @@ export class RowManagementService {
 
       // Update our local rowData to stay in sync
       rowData.splice(rowIndex, 1);
+
+      // Update state
+      const partIdNum = parseInt(partId, 10);
+      if (!isNaN(partIdNum)) {
+        this.newRows.delete(partIdNum);
+      }
     }
   }
 
@@ -150,9 +205,9 @@ export class RowManagementService {
       return;
     }
 
-    componentInstance.copiedSkuValue = params.value;
-    componentInstance.copiedFromRowId = params.data.newRowId;
-    componentInstance.copiedFromCellKey = `${params.node.rowIndex}-${params.colDef.field}`;
+    this.copiedSkuValue = params.value;
+    this.copiedFromRowId = params.data.newRowId;
+    this.copiedFromCellKey = `${params.node.rowIndex}-${params.colDef.field}`;
 
     // Visual feedback - refresh cells to show copy indicator
     params.api.refreshCells({
@@ -164,20 +219,20 @@ export class RowManagementService {
    * Paste SKU value to a cell
    */
   pasteSkuValue(params: any, componentInstance: any): void {
-    if (!params.data || !params.data.isNewRow || !componentInstance.copiedSkuValue) {
+    if (!params.data || !params.data.isNewRow || !this.copiedSkuValue) {
       return;
     }
 
     // Only allow pasting within the same row where the value was copied from
     if (
-      componentInstance.copiedFromRowId !== null &&
-      params.data.newRowId !== componentInstance.copiedFromRowId
+      this.copiedFromRowId !== null &&
+      params.data.newRowId !== this.copiedFromRowId
     ) {
       return;
     }
 
     // Don't paste if the cell already has the same value
-    if (params.value === componentInstance.copiedSkuValue) {
+    if (params.value === this.copiedSkuValue) {
       return;
     }
 
@@ -185,7 +240,7 @@ export class RowManagementService {
     params.api.stopEditing();
 
     // Set the value in the cell
-    params.node.setDataValue(params.colDef.field, componentInstance.copiedSkuValue);
+    params.node.setDataValue(params.colDef.field, this.copiedSkuValue);
 
     // Mark the row as edited
     if (params.data.newRowId) {
@@ -216,9 +271,9 @@ export class RowManagementService {
    * Clear copy state and visual indicators
    */
   clearCopyState(gridApi: GridApi, componentInstance: any): void {
-    componentInstance.copiedSkuValue = '';
-    componentInstance.copiedFromRowId = null;
-    componentInstance.copiedFromCellKey = '';
+    this.copiedSkuValue = '';
+    this.copiedFromRowId = null;
+    this.copiedFromCellKey = '';
 
     // Refresh grid to remove visual indicators
     gridApi.refreshCells({
@@ -396,6 +451,11 @@ export class RowManagementService {
 
         // Clear the edited state
         editedRows.clear();
+
+        // Update state
+        this.lastSavedAt = new Date();
+        localStorage.setItem('lastSavedAt', this.lastSavedAt.toISOString());
+        this.newRows.clear();
 
         // Clear copy state to remove copyable behavior after save
         this.clearCopyState(gridApi, componentInstance);
