@@ -38,7 +38,9 @@ class MenuStateService {
   template: `
     <div class="simple-pin-header">
       <div class="header-content-wrapper">
-        <div class="header-text ag-header-cell-text" (click)="onSortClick($event)">{{ displayName }}</div>
+        <div class="header-text ag-header-cell-text" (click)="onSortClick($event)">
+          {{ displayName }}
+        </div>
         <div class="header-controls">
           <div class="sort-indicator" *ngIf="sortState">
             <span *ngIf="sortState === 'asc'" class="modern-arrow">
@@ -146,7 +148,7 @@ class MenuStateService {
         height: 100%;
         display: flex;
         align-items: center;
-        padding: 0 8px;
+        padding: 0 6px;
         position: relative;
       }
 
@@ -162,7 +164,7 @@ class MenuStateService {
         align-items: center;
         justify-content: space-between;
         width: 100%;
-        gap: 8px;
+        gap: 4px;
       }
 
       .header-text {
@@ -176,14 +178,14 @@ class MenuStateService {
         font-weight: 700;
         color: inherit;
         font-size: 13px;
-        padding: 4px 6px;
+        padding: 2px 4px;
         border-radius: 4px;
       }
 
       .header-controls {
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 2px;
         flex-shrink: 0;
       }
 
@@ -191,7 +193,7 @@ class MenuStateService {
         display: flex;
         align-items: center;
         color: #64748b;
-        margin-right: 4px;
+        margin-right: 2px;
         padding: 0;
         height: 100%;
       }
@@ -211,10 +213,11 @@ class MenuStateService {
       }
 
       .menu-button {
-        min-width: 28px;
-        height: 28px;
+        min-width: 20px;
+        width: 20px;
+        height: 20px;
         padding: 0;
-        font-size: 15px;
+        font-size: 12px;
         border: 1px solid transparent;
         background: rgba(0, 0, 0, 0.04);
         color: #000000;
@@ -222,7 +225,7 @@ class MenuStateService {
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 6px;
+        border-radius: 4px;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         opacity: 0;
         visibility: hidden;
@@ -234,8 +237,8 @@ class MenuStateService {
         background-color: rgba(0, 0, 0, 0.08);
         border-color: rgba(0, 0, 0, 0.12);
         color: #000000;
-        transform: scale(1.05);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transform: scale(1.02);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
       }
 
       .menu-button:active {
@@ -258,14 +261,14 @@ class MenuStateService {
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 3px;
-        width: 16px;
-        height: 14px;
+        gap: 2px;
+        width: 12px;
+        height: 10px;
       }
 
       .hamburger-icon .bar {
         width: 100%;
-        height: 2px;
+        height: 1.5px;
         background-color: currentColor;
         border-radius: 1px;
         transition: all 0.2s ease;
@@ -275,13 +278,13 @@ class MenuStateService {
         position: fixed; /* Fixed to escape grid overflow */
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 8px;
+        border-radius: 6px;
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05),
           0 0 0 1px rgba(0, 0, 0, 0.05);
-        min-width: 220px;
-        max-width: 220px;
+        min-width: 180px;
+        max-width: 180px;
         z-index: 99999; /* High z-index to float over everything */
-        padding: 6px;
+        padding: 4px;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         animation: menuPopup 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         transform-origin: top left;
@@ -302,15 +305,15 @@ class MenuStateService {
       .menu-item {
         display: flex;
         align-items: center;
-        padding: 10px 12px;
+        padding: 6px 10px;
         cursor: pointer;
         color: #4b5563;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 500;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         user-select: none;
-        border-radius: 8px;
-        margin-bottom: 2px;
+        border-radius: 6px;
+        margin-bottom: 1px;
         position: relative;
         overflow: hidden;
       }
@@ -331,12 +334,12 @@ class MenuStateService {
       }
 
       .menu-icon {
-        width: 20px;
-        margin-right: 10px;
+        width: 16px;
+        margin-right: 8px;
         color: #9ca3af;
         display: flex;
         justify-content: center;
-        font-size: 14px;
+        font-size: 12px;
         transition: all 0.2s ease;
       }
 
@@ -352,13 +355,13 @@ class MenuStateService {
       .menu-check {
         color: #2563eb;
         font-weight: bold;
-        margin-left: 8px;
-        font-size: 14px;
+        margin-left: 6px;
+        font-size: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 20px;
-        height: 20px;
+        width: 16px;
+        height: 16px;
         background: rgba(37, 99, 235, 0.1);
         border-radius: 50%;
       }
@@ -366,7 +369,7 @@ class MenuStateService {
       .menu-divider {
         height: 1px;
         background: linear-gradient(to right, transparent, rgba(229, 231, 235, 0.8), transparent);
-        margin: 6px 12px;
+        margin: 4px 8px;
       }
     `,
   ],

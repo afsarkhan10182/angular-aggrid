@@ -5,7 +5,7 @@ import { environment } from '../../environments/environment';
 import { SessionService } from './session.service';
 
 export interface PartData {
-  branchID: string;
+  branchId: string;
   quantity: string;
   bomLinkFeature: string;
   bomLinkPart: string;
@@ -16,11 +16,11 @@ export interface PartData {
   section: string;
   partName: string;
   materialDescription: string;
-  masterBranchID: string;
+  masterBranchId: string;
   material: string;
   bomLinkStartDate: string;
   supplier: string;
-  flexBomLinkID: string;
+  flexBomLinkId: string;
   linkedBom: string;
   supplierDescription: string;
   sortingNumber: string;
@@ -42,7 +42,7 @@ export interface SkuInfo {
   product: string;
   manufacturer: string;
   color: string;
-  size: string;
+  size1: string;
 }
 
 export interface ApiData {
@@ -519,10 +519,10 @@ export class DataService {
         row.hasChildren = false; // Will be updated if children are found
         row.isExpanded = false; // Accordion starts collapsed
         row.children = [];
-        parentMap.set(part.branchID, row);
+        parentMap.set(part.branchId, row);
       } else {
         row.isChild = true;
-        row.parentBranchID = this.extractParentBranchID(part.branchID);
+        row.parentBranchID = this.extractParentBranchID(part.branchId);
         row.isVisible = false; // Children start hidden
       }
 
@@ -546,7 +546,7 @@ export class DataService {
     result.forEach((row) => {
       if (row.isParent) {
         // Use the parent from parentMap to ensure we have the children
-        const parentWithChildren = parentMap.get(row.branchID);
+        const parentWithChildren = parentMap.get(row.branchId);
         if (parentWithChildren) {
           finalResult.push(parentWithChildren);
         } else {
@@ -574,7 +574,7 @@ export class DataService {
   private createRowData(part: PartData, skuInfo: any[]): any {
     const row: any = {
       // Map all fields from the new backend structure
-      branchID: part.branchID,
+      branchId: part.branchId,
       quantity: part.quantity,
       bomLinkFeature: part.bomLinkFeature,
       bomLinkPart: part.bomLinkPart,
@@ -584,11 +584,11 @@ export class DataService {
       section: part.section,
       partName: part.partName,
       materialDescription: part.materialDescription,
-      masterBranchID: part.masterBranchID,
+      masterBranchId: part.masterBranchId,
       material: part.material,
       bomLinkStartDate: part.bomLinkStartDate,
       supplier: part.supplier,
-      flexBomLinkID: part.flexBomLinkID,
+      flexBomLinkId: part.flexBomLinkId,
       linkedBom: part.linkedBom,
       supplierDescription: part.supplierDescription,
       sortingNumber: part.sortingNumber,
@@ -630,7 +630,7 @@ export class DataService {
     const allRowData = gridApi
       .getDisplayedRowModel()
       .rootNode.children.map((node: any) => node.data);
-    const parentIndex = allRowData.findIndex((row: any) => row.branchID === parentRow.branchID);
+    const parentIndex = allRowData.findIndex((row: any) => row.branchId === parentRow.branchId);
 
     if (parentIndex === -1) return;
 
@@ -650,7 +650,7 @@ export class DataService {
       .getDisplayedRowModel()
       .rootNode.children.map((node: any) => node.data);
     const newRowData = allRowData.filter((row: any) => {
-      if (row.isSubRow && row.parent && row.parent.branchID === parentRow.branchID) {
+      if (row.isSubRow && row.parent && row.parent.branchId === parentRow.branchId) {
         row.isVisible = false;
         return false; // Remove from display
       }
@@ -673,7 +673,7 @@ export class DataService {
         product: sku.product,
         manufacturer: sku.manufacturer,
         color: sku.color,
-        size: sku.size,
+        size: sku.size1,
         value: partRow[`sku${sku.sku}`],
         partNumber: partRow.part.toString(),
       }));

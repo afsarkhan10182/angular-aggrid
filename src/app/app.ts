@@ -205,12 +205,15 @@ export class App implements OnInit {
 
   private getInitialDisplayData(): any[] {
     let hierarchicalData = this.rowData;
-    
+
     // Apply grouping if active
     if (this.activeGroupFields.length > 0) {
-      hierarchicalData = this.groupByService.groupHierarchicalData(hierarchicalData, this.activeGroupFields);
+      hierarchicalData = this.groupByService.groupHierarchicalData(
+        hierarchicalData,
+        this.activeGroupFields
+      );
     }
-    
+
     return this.flattenHierarchicalData(hierarchicalData);
   }
 
@@ -303,7 +306,7 @@ export class App implements OnInit {
   initializeColumns(): void {
     const columnMapping = this.dataService.getColumnMapping();
     this.columnDefs = this.createHierarchicalColumns(columnMapping);
-    
+
     // Initialize available group fields from column definitions
     this.availableGroupFields = this.columnDefs
       .filter((col) => col.field && col.field !== 'actions' && col.sortable !== false)
@@ -330,7 +333,7 @@ export class App implements OnInit {
         if (params.data.isGroupHeader) {
           return '';
         }
-        
+
         if (params.data.isExpired) {
           return `<span class="expired-indicator" title="Expired">e</span>`;
         }
@@ -405,7 +408,11 @@ export class App implements OnInit {
           minWidth: 140,
           sortable: true,
           cellRenderer: (params: any) => {
-            if (params.data.isSectionHeader || params.data.isBranchHeader || params.data.isGroupHeader) {
+            if (
+              params.data.isSectionHeader ||
+              params.data.isBranchHeader ||
+              params.data.isGroupHeader
+            ) {
               return '';
             }
             const columnWidth = params.column?.getActualWidth() || 180;
@@ -439,7 +446,11 @@ export class App implements OnInit {
         minWidth: 100,
         sortable: true,
         cellRenderer: (params: any) => {
-          if (params.data.isSectionHeader || params.data.isBranchHeader || params.data.isGroupHeader) {
+          if (
+            params.data.isSectionHeader ||
+            params.data.isBranchHeader ||
+            params.data.isGroupHeader
+          ) {
             return '';
           }
           const columnWidth = params.column?.getActualWidth() || columnDef.width || 150;
@@ -542,7 +553,11 @@ export class App implements OnInit {
           return params.data && params.data.isNewRow && !params.data.isSectionHeader;
         };
         columnDef.cellRenderer = (params: any) => {
-          if (params.data.isSectionHeader || params.data.isBranchHeader || params.data.isGroupHeader) {
+          if (
+            params.data.isSectionHeader ||
+            params.data.isBranchHeader ||
+            params.data.isGroupHeader
+          ) {
             return '';
           }
           let formattedValue = '';
@@ -593,16 +608,80 @@ export class App implements OnInit {
       product: sku.product,
       manufacturer: sku.manufacturer,
       color: sku.color,
-      size: sku.size,
+      size: sku.size1,
       fieldName: `sku${sku.sku}`,
       hasData: true,
     }));
 
+    // Custom header component class for SKU columns
+    class SkuHeaderComponent {
+      private eGui!: HTMLDivElement;
+      private params: any;
+
+      init(params: any) {
+        this.params = params;
+        const lines = params.lines || [];
+        // Build full tooltip text with all 5 values, each on new line
+        // Using \n for newlines (works in most browsers)
+        const fullText = lines.join('\n');
+
+        this.eGui = document.createElement('div');
+        this.eGui.className = 'sku-header-wrapper';
+        // Set title with full text - shows all 5 lines in tooltip when hovering anywhere on header
+        // This will display all 5 lines: SKU, Product, Manufacturer, Color, Size
+        this.eGui.setAttribute('title', fullText);
+
+        // Prevent text selection during resize
+        this.eGui.style.userSelect = 'none';
+        this.eGui.style.webkitUserSelect = 'none';
+
+        lines.forEach((line: string) => {
+          const div = document.createElement('div');
+          div.className = 'sku-line';
+          div.textContent = line;
+          // Explicitly remove any title attribute from child divs
+          // This ensures only the parent wrapper shows the tooltip with all 5 lines
+          div.removeAttribute('title');
+          this.eGui.appendChild(div);
+        });
+      }
+
+      getGui() {
+        return this.eGui;
+      }
+
+      refresh(params: any) {
+        // Return false - CSS handles truncation automatically, no need to recreate
+        // This prevents flickering during resize
+        return false;
+      }
+
+      destroy() {
+        // Cleanup if needed
+      }
+    }
+
     const dynamicSkuColumns: ColDef[] = skuColumns.map((sku, index) => {
-      const skuHeader = `SKU - ${sku.skuId}\nProduct - ${sku.product}\nManufacturer - ${sku.manufacturer}\nColor - ${sku.color}\nSize - ${sku.size}`;
+      // Individual lines for custom header
+      const lines = [
+        `SKU - ${sku.skuId}`,
+        `Product - ${sku.product}`,
+        `Manufacturer - ${sku.manufacturer}`,
+        `Color - ${sku.color}`,
+        `Size - ${sku.size}`,
+      ];
+
+      // Full header text for tooltip (each value on new line, no truncation)
+      const fullHeader = lines.join('\n');
+
       return {
-        headerName: skuHeader,
-        headerTooltip: skuHeader,
+        headerName: fullHeader,
+        headerTooltip: fullHeader,
+        headerComponent: SkuHeaderComponent,
+        headerComponentParams: {
+          lines: lines,
+          fullText: fullHeader,
+        },
         field: sku.fieldName,
         width: 200,
         minWidth: 200,
@@ -622,12 +701,12 @@ export class App implements OnInit {
           if (data.isMaterialHeader || data.isDirectRow) {
             const value = params.value;
             if (!value && value !== 0) return '';
-            
+
             // Convert value to string and preserve newlines
             const valueStr = String(value);
             // Replace newlines with <br> tags for HTML rendering
             const htmlValue = this.escapeHtml(valueStr).replace(/\n/g, '<br>');
-            
+
             return `<div style="white-space: pre-line; line-height: 1.5; padding: 4px 0;">${htmlValue}</div>`;
           }
 
@@ -654,14 +733,17 @@ export class App implements OnInit {
 
     if (data.isGroupHeader) {
       const arrowIcon = data.isExpanded ? '▼' : '▶';
-      const groupValue = data.groupValue !== null && data.groupValue !== undefined 
-        ? String(data.groupValue) 
-        : '(Empty)';
+      const groupValue =
+        data.groupValue !== null && data.groupValue !== undefined
+          ? String(data.groupValue)
+          : '(Empty)';
       const indent = '&nbsp;'.repeat(data.groupLevel * 16);
       const groupCount = this.groupByService.getGroupCount(data);
-      const bgColor = data.groupLevel === 0 ? '#f0f9ff' : data.groupLevel === 1 ? '#f0fdf4' : '#fef3c7';
-      const borderColor = data.groupLevel === 0 ? '#3b82f6' : data.groupLevel === 1 ? '#10b981' : '#f59e0b';
-      
+      const bgColor =
+        data.groupLevel === 0 ? '#f0f9ff' : data.groupLevel === 1 ? '#f0fdf4' : '#fef3c7';
+      const borderColor =
+        data.groupLevel === 0 ? '#3b82f6' : data.groupLevel === 1 ? '#10b981' : '#f59e0b';
+
       return `
         <div style="
           cursor: pointer;
@@ -673,7 +755,9 @@ export class App implements OnInit {
           align-items: center;
         " 
              onclick="window.toggleGroup('${data.groupKey}')"
-             onmouseover="this.style.background='${data.groupLevel === 0 ? '#e0f2fe' : data.groupLevel === 1 ? '#dcfce7' : '#fde68a'}'"
+             onmouseover="this.style.background='${
+               data.groupLevel === 0 ? '#e0f2fe' : data.groupLevel === 1 ? '#dcfce7' : '#fde68a'
+             }'"
              onmouseout="this.style.background='${bgColor}'">
           <span style="
             margin-right: 6px;
@@ -683,7 +767,9 @@ export class App implements OnInit {
             width: 16px;
             text-align: center;
           ">${arrowIcon}</span>
-          <span style="font-size: 13px; font-weight: 600; color: #1e293b;">${indent}${data.groupHeaderName}: ${this.escapeHtml(groupValue)}</span>
+          <span style="font-size: 13px; font-weight: 600; color: #1e293b;">${indent}${
+        data.groupHeaderName
+      }: ${this.escapeHtml(groupValue)}</span>
           <span style="margin-left: 8px; font-size: 11px; color: #64748b; font-weight: 500;">(${groupCount})</span>
         </div>
       `;
@@ -801,15 +887,18 @@ export class App implements OnInit {
   private renderGroupHeaderFullWidth(params: any): string {
     const data = params.data;
     const arrowIcon = data.isExpanded ? '▼' : '▶';
-    const groupValue = data.groupValue !== null && data.groupValue !== undefined 
-      ? String(data.groupValue) 
-      : '(Empty)';
+    const groupValue =
+      data.groupValue !== null && data.groupValue !== undefined
+        ? String(data.groupValue)
+        : '(Empty)';
     // Use padding for indent instead of &nbsp; for better alignment
     const indentPixels = data.groupLevel * 20;
     const groupCount = this.groupByService.getGroupCount(data);
-    const bgColor = data.groupLevel === 0 ? '#f0f9ff' : data.groupLevel === 1 ? '#f0fdf4' : '#fef3c7';
-    const borderColor = data.groupLevel === 0 ? '#3b82f6' : data.groupLevel === 1 ? '#10b981' : '#f59e0b';
-    
+    const bgColor =
+      data.groupLevel === 0 ? '#f0f9ff' : data.groupLevel === 1 ? '#f0fdf4' : '#fef3c7';
+    const borderColor =
+      data.groupLevel === 0 ? '#3b82f6' : data.groupLevel === 1 ? '#10b981' : '#f59e0b';
+
     return `
       <div style="
         cursor: pointer;
@@ -825,7 +914,9 @@ export class App implements OnInit {
         box-sizing: border-box;
       " 
            onclick="window.toggleGroup('${data.groupKey}')"
-           onmouseover="this.style.background='${data.groupLevel === 0 ? '#e0f2fe' : data.groupLevel === 1 ? '#dcfce7' : '#fde68a'}'"
+           onmouseover="this.style.background='${
+             data.groupLevel === 0 ? '#e0f2fe' : data.groupLevel === 1 ? '#dcfce7' : '#fde68a'
+           }'"
            onmouseout="this.style.background='${bgColor}'">
         <span style="
           margin-right: 6px;
@@ -836,7 +927,9 @@ export class App implements OnInit {
           text-align: center;
           display: inline-block;
         ">${arrowIcon}</span>
-        <span style="font-size: 13px; font-weight: 600; color: #1e293b;">${data.groupHeaderName}: ${this.escapeHtml(groupValue)}</span>
+        <span style="font-size: 13px; font-weight: 600; color: #1e293b;">${
+          data.groupHeaderName
+        }: ${this.escapeHtml(groupValue)}</span>
         <span style="margin-left: 8px; font-size: 11px; color: #64748b; font-weight: 500;">(${groupCount})</span>
       </div>
     `;
@@ -868,7 +961,8 @@ export class App implements OnInit {
     const isActionsColumn = this.isActionsColumn(params);
 
     if (isGroupHeader) {
-      const bgColor = data.groupLevel === 0 ? '#f0f9ff' : data.groupLevel === 1 ? '#f0fdf4' : '#fef3c7';
+      const bgColor =
+        data.groupLevel === 0 ? '#f0f9ff' : data.groupLevel === 1 ? '#f0fdf4' : '#fef3c7';
       return {
         backgroundColor: bgColor,
         borderTop: 'none',
@@ -927,7 +1021,8 @@ export class App implements OnInit {
     const isActionsColumn = this.isActionsColumn(params);
 
     if (isGroupHeader) {
-      const bgColor = data.groupLevel === 0 ? '#f0f9ff' : data.groupLevel === 1 ? '#f0fdf4' : '#fef3c7';
+      const bgColor =
+        data.groupLevel === 0 ? '#f0f9ff' : data.groupLevel === 1 ? '#f0fdf4' : '#fef3c7';
       return {
         backgroundColor: bgColor,
         color: 'transparent',
@@ -1018,7 +1113,7 @@ export class App implements OnInit {
   @HostListener('document:click', ['$event'])
   handleClickOutside(event: Event): void {
     const target = event.target as Element;
-    
+
     // Handle column visibility panel
     if (this.showColumnVisibilityPanel) {
       const panel = this.columnPanel?.nativeElement;
@@ -1029,7 +1124,7 @@ export class App implements OnInit {
         this.showColumnVisibilityPanel = false;
       }
     }
-    
+
     // Handle group by panel
     if (this.showGroupByPanel) {
       const panel = this.groupByPanel?.nativeElement;
@@ -1052,7 +1147,7 @@ export class App implements OnInit {
     if (this.activeGroupFields.some((g) => g.field === field.field)) {
       return;
     }
-    
+
     this.activeGroupFields.push(field);
     this.applyGrouping();
   }
@@ -1075,7 +1170,7 @@ export class App implements OnInit {
     // Toggle the expanded state
     const currentState = this.groupExpandedState.get(groupKey) ?? true;
     this.groupExpandedState.set(groupKey, !currentState);
-    
+
     // Regenerate display data with updated state
     this.applyGrouping();
   }
@@ -1086,33 +1181,36 @@ export class App implements OnInit {
     if (this.searchText && this.searchText.trim() !== '') {
       hierarchicalData = this.filterHierarchicalData(this.rowData, this.searchText);
     }
-    
+
     // Apply grouping if active
     if (this.activeGroupFields.length > 0) {
       // Group the hierarchical data (groups materials within sections)
-      let groupedHierarchicalData = this.groupByService.groupHierarchicalData(hierarchicalData, this.activeGroupFields);
-      
+      let groupedHierarchicalData = this.groupByService.groupHierarchicalData(
+        hierarchicalData,
+        this.activeGroupFields
+      );
+
       // Apply saved expand/collapse state to group headers
       const applyGroupState = (items: any[]): any[] => {
         return items.map((item) => {
           const newItem = { ...item };
-          
+
           if (newItem.isGroupHeader && newItem.groupKey) {
             const savedState = this.groupExpandedState.get(newItem.groupKey);
             // Default to expanded
             newItem.isExpanded = savedState !== undefined ? savedState : true;
           }
-          
+
           if (newItem.children && Array.isArray(newItem.children)) {
             newItem.children = applyGroupState(newItem.children);
           }
-          
+
           return newItem;
         });
       };
-      
+
       groupedHierarchicalData = applyGroupState(groupedHierarchicalData);
-      
+
       // Flatten the grouped hierarchical data
       this.displayData = this.flattenHierarchicalData(groupedHierarchicalData);
     } else {
@@ -1764,7 +1862,7 @@ export class App implements OnInit {
       const section = item.section || 'NA';
       if (!sections[section]) sections[section] = [];
 
-      const materialKey = `${item.part}_${item.branchID}_${item.flexBomLinkID}`;
+      const materialKey = `${item.part}_${item.branchId}_${item.flexBomLinkId}`;
 
       let existingMaterial = sections[section].find((m: any) => m.materialKey === materialKey);
 
@@ -1778,13 +1876,13 @@ export class App implements OnInit {
       }
     }
 
-    const buildTree = (branchID: string, allItems: any[]): any[] => {
-      const children = allItems.filter((i: any) => i.masterBranchID == branchID);
+    const buildTree = (branchId: string, allItems: any[]): any[] => {
+      const children = allItems.filter((i: any) => i.masterBranchId == branchId);
       return children
         .sort((a: any, b: any) => Number(a.sortingNumber || 0) - Number(b.sortingNumber || 0))
         .map((c: any) => ({
           ...c,
-          children: buildTree(c.branchID, allItems),
+          children: buildTree(c.branchId, allItems),
         }));
     };
 
@@ -1793,7 +1891,7 @@ export class App implements OnInit {
 
     for (const sectionName of sectionOrder) {
       const sectionItems = sections[sectionName] || [];
-      const roots = sectionItems.filter((i: any) => i.masterBranchID == '0');
+      const roots = sectionItems.filter((i: any) => i.masterBranchId == '0');
 
       if (roots.length > 0) {
         const sectionObj = {
@@ -1802,7 +1900,7 @@ export class App implements OnInit {
             .sort((a: any, b: any) => Number(a.sortingNumber || 0) - Number(b.sortingNumber || 0))
             .map((r: any) => ({
               ...r,
-              children: buildTree(r.branchID, sectionItems),
+              children: buildTree(r.branchId, sectionItems),
             })),
         };
         result.push(sectionObj);
