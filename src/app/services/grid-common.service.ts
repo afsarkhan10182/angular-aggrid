@@ -444,6 +444,16 @@ export class GridCommonService {
         if (params.data && params.data.isSectionHeader) {
           classes.push('section-header-row');
         }
+        if (params.data && params.data.isGroupHeader) {
+          classes.push('group-header-row');
+          if (params.data.groupLevel === 0) {
+            classes.push('group-level-0');
+          } else if (params.data.groupLevel === 1) {
+            classes.push('group-level-1');
+          } else {
+            classes.push('group-level-2');
+          }
+        }
         if (params.data && params.data.isExpired) {
           classes.push('expired-row');
         }
