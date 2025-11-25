@@ -478,7 +478,7 @@ export class App implements OnInit {
             dataService: this.dataService,
           },
         });
-      } else if (field === 'material') {
+      } else if (field === 'material' || field === 'materialDescription') {
         columnDef.cellEditor = AutocompleteCellEditorComponent;
         columnDef.cellEditorParams = (params: any) => ({
           placeholder: 'search materials...',
@@ -499,37 +499,49 @@ export class App implements OnInit {
           }
           return true;
         };
-      } else if (field === 'supplier' || field === 'color' || field === 'feature') {
-        if (field === 'supplier' || field === 'color') {
+      } else if (
+        field === 'supplier' ||
+        field === 'color' ||
+        field === 'colorDescription' ||
+        field === 'feature'
+      ) {
+        const isColorField = field === 'color' || field === 'colorDescription';
+
+        if (field === 'supplier' || isColorField) {
           columnDef.cellEditor = AutocompleteCellEditorComponent;
+
+          // Map color field to colorDescription (actual data field)
+          if (isColorField) {
+            columnDef.valueGetter = (params: any) =>
+              params.data?.colorDescription || params.data?.color || '';
+            columnDef.valueSetter = (params: any) => {
+              if (!params.data) return false;
+              params.data.color = params.newValue || '';
+              params.data.colorDescription = params.newValue || '';
+              return true;
+            };
+          }
+
           columnDef.cellEditorParams = (params: any) => {
             const nodeData = params.node?.data || params.data || {};
             let values: string[] = [];
+
             if (field === 'supplier') {
-              if (
-                nodeData._availableSuppliers !== undefined &&
-                Array.isArray(nodeData._availableSuppliers)
-              ) {
-                values = nodeData._availableSuppliers;
-              } else {
-                values = this.gridCommonService.getUniqueSuppliers(this.rowData);
-              }
-            } else if (field === 'color') {
-              if (
-                nodeData._availableColors !== undefined &&
-                Array.isArray(nodeData._availableColors)
-              ) {
-                values = nodeData._availableColors;
-              } else {
-                values = this.gridCommonService.getUniqueColors(this.rowData);
-              }
+              values =
+                nodeData._availableSuppliers && Array.isArray(nodeData._availableSuppliers)
+                  ? nodeData._availableSuppliers
+                  : this.gridCommonService.getUniqueSuppliers(this.rowData);
+            } else if (isColorField) {
+              values =
+                nodeData._availableColors && Array.isArray(nodeData._availableColors)
+                  ? nodeData._availableColors
+                  : this.gridCommonService.getUniqueColors(this.rowData);
             }
+
             return {
-              values: values,
-              placeholder: `search ${field}...`,
-              context: {
-                dataService: this.dataService,
-              },
+              values,
+              placeholder: `search ${isColorField ? 'color' : field}...`,
+              context: { dataService: this.dataService },
             };
           };
         } else {
@@ -1351,23 +1363,49 @@ export class App implements OnInit {
           return;
         }
       }
-    } else if (event.colDef.field === 'material' && event.colDef.headerName === 'Material') {
-      event.api.startEditingCell({
-        rowIndex: event.rowIndex,
-        colKey: event.column.getId(),
-        rowPinned: event.rowPinned,
-        keyPress: event.event?.key,
-      });
-      if (event.data && event.data.isNewRow) {
-        return;
-      }
-
+    } else if (event.colDef.field === 'material' || event.colDef.field === 'materialDescription') {
+      // Check if this is a material header or direct row - open modal instead of editing
       if (
         event.data &&
         (event.data.isMaterialHeader || event.data.isDirectRow) &&
-        event.data.material
+        !event.data.isNewRow
       ) {
-        this.openMaterialModal(event.data);
+        // Check for material value in all possible field names
+        // part is the primary field name in the grid
+        const materialValue =
+          event.data?.part ||
+          event.data?.bomLinkPart ||
+          event.data?.partNumber ||
+          event.data?.material ||
+          event.data?.materialKey ||
+          event.data?.materialDescription;
+
+        // Only open modal if we have a valid material identifier (not just description)
+        if (
+          materialValue &&
+          (event.data?.part ||
+            event.data?.bomLinkPart ||
+            event.data?.partNumber ||
+            event.data?.material ||
+            event.data?.materialKey)
+        ) {
+          // Prevent default editing and open modal instead
+          event.event?.preventDefault?.();
+          event.event?.stopPropagation?.();
+          this.openMaterialModal(event.data);
+          return;
+        }
+      }
+
+      // For new rows or when material is empty, allow editing
+      if (event.data && event.data.isNewRow) {
+        event.api.startEditingCell({
+          rowIndex: event.rowIndex,
+          colKey: event.column.getId(),
+          rowPinned: event.rowPinned,
+          keyPress: event.event?.key,
+        });
+        return;
       }
     }
   }
@@ -1375,10 +1413,29 @@ export class App implements OnInit {
   openMaterialModal(materialData: any): void {
     if (!materialData) return;
 
-    const materialId = materialData.material || materialData.part;
-    if (!materialId) return;
+    // Check for material ID in all possible field names
+    // part is the primary field name in the grid, partNumber is used in API responses
+    const materialId =
+      materialData.part ||
+      materialData.bomLinkPart ||
+      materialData.partNumber ||
+      materialData.material ||
+      materialData.materialKey ||
+      materialData.materialDescription;
 
-    this.dataService.getComplexBOM(materialId).subscribe({
+    if (!materialId) {
+      console.warn('No material ID found in materialData:', materialData);
+      return;
+    }
+
+    // Ensure materialId is a string and not undefined/null
+    const materialIdString = String(materialId).trim();
+    if (!materialIdString || materialIdString === 'undefined' || materialIdString === 'null') {
+      console.warn('Invalid material ID:', materialId, 'from materialData:', materialData);
+      return;
+    }
+
+    this.dataService.getComplexBOM(materialIdString).subscribe({
       next: (complexBOMData: any) => {
         const keyValuePairs: any[] = [];
 

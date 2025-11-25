@@ -59,18 +59,22 @@ export class AutocompleteCellEditorComponent
   }
 
   private getFieldName(): string {
+    let fieldName = '';
     if (this.params?.colDef?.field) {
-      return this.params.colDef.field;
-    }
-
-    if (this.params?.column?.getColId) {
+      fieldName = this.params.colDef.field;
+    } else if (this.params?.column?.getColId) {
       const colId = this.params.column.getColId();
       if (colId) {
-        return colId;
+        fieldName = colId;
       }
     }
 
-    return '';
+    // Normalize colorDescription to 'color' for consistent handling
+    if (fieldName === 'colorDescription') {
+      return 'color';
+    }
+
+    return fieldName;
   }
 
   ngOnInit() {
@@ -201,6 +205,9 @@ export class AutocompleteCellEditorComponent
       this.input.nativeElement.focus();
       this.input.nativeElement.select();
 
+      const fieldName = this.getFieldName();
+      const isColorOrSupplier = fieldName === 'color' || fieldName === 'supplier';
+
       if (this.isMaterialSearch || this.isPartNumberSearch) {
         if (this.dataService && this.value && this.value.length >= 1) {
           this.searchSubject.next(this.value);
@@ -210,8 +217,14 @@ export class AutocompleteCellEditorComponent
           this.searchSubject.next(this.value);
         }
       } else if (this.options.length > 0) {
-        this.filterOptions();
-        this.showDropdown = this.filteredOptions.length > 0;
+        // For color and supplier fields, show all options when initialized
+        if (isColorOrSupplier) {
+          this.filteredOptions = this.options.slice(0, 50); // Show up to 50 options
+          this.showDropdown = this.filteredOptions.length > 0;
+        } else {
+          this.filterOptions();
+          this.showDropdown = this.filteredOptions.length > 0;
+        }
       }
 
       if (this.showDropdown) {
@@ -255,7 +268,9 @@ export class AutocompleteCellEditorComponent
         : null) ||
       (params.api?.getContext ? params.api.getContext()?.dataService : null);
 
-    this.value = params.value ? String(params.value) : '';
+    // Handle value - valueGetter already handles colorDescription mapping, so just use params.value
+    this.value = params.value !== null && params.value !== undefined ? String(params.value) : '';
+    this.originalValue = this.value;
     this.placeholder = params.placeholder || 'search materials...';
 
     const fieldName = this.getFieldName();
@@ -277,7 +292,7 @@ export class AutocompleteCellEditorComponent
       (params.useApiSearch === true ||
         (this.dataService &&
           (this.placeholder.includes('material') || this.placeholder.includes('Material'))) ||
-        (this.dataService && fieldName === 'material'));
+        (this.dataService && (fieldName === 'material' || fieldName === 'materialDescription')));
 
     let valuesParam = params.values;
     if (typeof valuesParam === 'function') {
@@ -305,7 +320,11 @@ export class AutocompleteCellEditorComponent
       this.customFilterFunction = params.filterFunction;
     }
 
-    if (
+    // For color and supplier fields, refresh options from node data
+    const isColorOrSupplier = fieldName === 'color' || fieldName === 'supplier';
+    if (isColorOrSupplier) {
+      this.refreshOptionsFromNodeData();
+    } else if (
       this.options.length > 0 &&
       !this.isMaterialSearch &&
       !this.isPartNumberSearch &&
@@ -317,12 +336,7 @@ export class AutocompleteCellEditorComponent
   }
 
   getValue(): any {
-    if (this.params && this.params.node && this.value) {
-      const fieldName = this.getFieldName();
-      if (fieldName && this.params.node.data) {
-        this.params.node.data[fieldName] = this.value;
-      }
-    }
+    // valueSetter in app.ts handles colorDescription mapping, so just return the value
     return this.value;
   }
 
@@ -332,6 +346,14 @@ export class AutocompleteCellEditorComponent
 
   onInputChange(event: any): void {
     this.value = event.target.value || '';
+
+    const fieldName = this.getFieldName();
+    const isColorOrSupplier = fieldName === 'color' || fieldName === 'supplier';
+
+    // Refresh options when value is cleared for color/supplier fields
+    if (isColorOrSupplier && !this.value) {
+      this.refreshOptionsFromNodeData();
+    }
 
     if (
       this.isMaterialSearch ||
@@ -343,8 +365,14 @@ export class AutocompleteCellEditorComponent
         this.searchSubject.next(this.value);
       }
     } else {
-      this.filterOptions();
-      this.showDropdown = this.filteredOptions.length > 0;
+      // For color and supplier fields, when value is cleared, show all options
+      if (isColorOrSupplier && !this.value && this.options.length > 0) {
+        this.filteredOptions = this.options.slice(0, 50);
+        this.showDropdown = this.filteredOptions.length > 0;
+      } else {
+        this.filterOptions();
+        this.showDropdown = this.filteredOptions.length > 0;
+      }
     }
 
     this.selectedIndex = -1;
@@ -398,6 +426,9 @@ export class AutocompleteCellEditorComponent
   onInputClick(): void {
     this.refreshOptionsFromNodeData();
 
+    const fieldName = this.getFieldName();
+    const isColorOrSupplier = fieldName === 'color' || fieldName === 'supplier';
+
     if (this.isPartNumberSearch || this.isMaterialSearch) {
       if (this.dataService && this.value && this.value.length >= 1) {
         this.searchSubject.next(this.value);
@@ -407,8 +438,15 @@ export class AutocompleteCellEditorComponent
         this.searchSubject.next(this.value);
       }
     } else {
-      this.filterOptions();
-      this.showDropdown = this.filteredOptions.length > 0;
+      // For color and supplier fields, show all options when clicking (not filtered by current value)
+      if (isColorOrSupplier && this.options.length > 0) {
+        // Show all options, not filtered by current value
+        this.filteredOptions = this.options.slice(0, 50); // Show up to 50 options
+        this.showDropdown = this.filteredOptions.length > 0;
+      } else {
+        this.filterOptions();
+        this.showDropdown = this.filteredOptions.length > 0;
+      }
     }
 
     if (this.showDropdown) {
@@ -419,6 +457,9 @@ export class AutocompleteCellEditorComponent
   onInputFocus(): void {
     this.refreshOptionsFromNodeData();
 
+    const fieldName = this.getFieldName();
+    const isColorOrSupplier = fieldName === 'color' || fieldName === 'supplier';
+
     if (this.isPartNumberSearch || this.isMaterialSearch) {
       if (this.dataService && this.value && this.value.length >= 1) {
         this.searchSubject.next(this.value);
@@ -428,8 +469,15 @@ export class AutocompleteCellEditorComponent
         this.searchSubject.next(this.value);
       }
     } else {
-      this.filterOptions();
-      this.showDropdown = this.filteredOptions.length > 0;
+      // For color and supplier fields, show all options when focusing (not filtered by current value)
+      if (isColorOrSupplier && this.options.length > 0) {
+        // Show all options, not filtered by current value
+        this.filteredOptions = this.options.slice(0, 50); // Show up to 50 options
+        this.showDropdown = this.filteredOptions.length > 0;
+      } else {
+        this.filterOptions();
+        this.showDropdown = this.filteredOptions.length > 0;
+      }
     }
 
     if (this.showDropdown) {
@@ -443,29 +491,35 @@ export class AutocompleteCellEditorComponent
     const fieldName = this.getFieldName();
     const nodeData = this.params.node.data || {};
 
-    if (fieldName === 'supplier' || fieldName === 'color') {
-      let filteredValues: string[] = [];
+    if (fieldName !== 'supplier' && fieldName !== 'color') return;
 
-      if (
-        fieldName === 'supplier' &&
-        nodeData._availableSuppliers &&
-        Array.isArray(nodeData._availableSuppliers)
-      ) {
-        filteredValues = nodeData._availableSuppliers;
-      } else if (
-        fieldName === 'color' &&
-        nodeData._availableColors &&
-        Array.isArray(nodeData._availableColors)
-      ) {
-        filteredValues = nodeData._availableColors;
+    // Get filtered values from node data if available
+    const filteredValues =
+      (fieldName === 'supplier' && Array.isArray(nodeData._availableSuppliers)
+        ? nodeData._availableSuppliers
+        : fieldName === 'color' && Array.isArray(nodeData._availableColors)
+        ? nodeData._availableColors
+        : null) || [];
+
+    // Use filtered values or refresh from cellEditorParams
+    if (filteredValues.length > 0) {
+      this.options = filteredValues
+        .map((opt: any) => String(opt))
+        .filter((opt: string) => opt.length > 0);
+    } else {
+      let valuesParam = this.params.values;
+      if (typeof valuesParam === 'function') {
+        valuesParam = valuesParam(this.params);
       }
-
-      if (filteredValues.length > 0) {
-        this.options = filteredValues
+      if (Array.isArray(valuesParam)) {
+        this.options = valuesParam
           .map((opt: any) => String(opt))
           .filter((opt: string) => opt.length > 0);
-        this.filterOptions();
       }
+    }
+
+    if (this.options.length > 0) {
+      this.filterOptions();
     }
   }
 
@@ -587,13 +641,34 @@ export class AutocompleteCellEditorComponent
         this.triggerFeatureAutoPopulation(option);
       }
 
+      // Stop editing after selection to allow immediate re-editing
       if (this.params.api) {
+        // Refresh the edited field and related fields (color, supplier, etc.)
+        const columnsToRefresh = [fieldName];
+        if (selectedMaterial && (this.isMaterialSearch || this.isPartNumberSearch)) {
+          // Add color and supplier columns to refresh list
+          if (
+            fieldName === 'material' ||
+            fieldName === 'materialDescription' ||
+            fieldName === 'partNumber' ||
+            fieldName === 'bomLinkPart'
+          ) {
+            columnsToRefresh.push('color', 'colorDescription', 'supplier');
+          }
+        }
         this.params.api.refreshCells({
           rowNodes: [this.params.node],
-          columns: [fieldName],
+          columns: columnsToRefresh,
           force: true,
         });
       }
+
+      // Stop editing after selection to allow immediate re-editing (for supplier/color fields)
+      setTimeout(() => {
+        if (this.params && this.params.api) {
+          this.params.api.stopEditing();
+        }
+      }, 0);
     }
   }
 
@@ -656,6 +731,13 @@ export class AutocompleteCellEditorComponent
         this.params.node.setDataValue('color', colorName);
         if (this.params.node.data) {
           this.params.node.data.color = colorName;
+        }
+      }
+      // Also set colorDescription field (actual column field name)
+      if (colorName && originalData.colorDescription !== colorName) {
+        this.params.node.setDataValue('colorDescription', colorName);
+        if (this.params.node.data) {
+          this.params.node.data.colorDescription = colorName;
         }
       }
 
@@ -1013,13 +1095,18 @@ export class AutocompleteCellEditorComponent
     }
 
     const currentData = this.params.node.data || {};
-    const existingColor = currentData.color || '';
+    const existingColor = currentData.color || currentData.colorDescription || '';
     const existingSupplier = currentData.supplier || '';
 
     if (colorName && existingColor !== colorName) {
       this.params.node.setDataValue('color', colorName);
       if (this.params.node.data) {
         this.params.node.data.color = colorName;
+      }
+      // Also set colorDescription field (actual column field name)
+      this.params.node.setDataValue('colorDescription', colorName);
+      if (this.params.node.data) {
+        this.params.node.data.colorDescription = colorName;
       }
     }
 
@@ -1143,7 +1230,7 @@ export class AutocompleteCellEditorComponent
           }
 
           const currentData = this.params.node.data || {};
-          const existingColor = currentData.color || '';
+          const existingColor = currentData.color || currentData.colorDescription || '';
           const existingSupplier = currentData.supplier || '';
 
           if (availableColors.length === 1 && initialColorValue) {
@@ -1152,12 +1239,22 @@ export class AutocompleteCellEditorComponent
               if (this.params.node.data) {
                 this.params.node.data.color = initialColorValue;
               }
+              // Also set colorDescription field (actual column field name)
+              this.params.node.setDataValue('colorDescription', initialColorValue);
+              if (this.params.node.data) {
+                this.params.node.data.colorDescription = initialColorValue;
+              }
             }
           } else if (availableColors.length > 1) {
             if (existingColor && !availableColors.includes(existingColor)) {
               this.params.node.setDataValue('color', '');
               if (this.params.node.data) {
                 this.params.node.data.color = '';
+              }
+              // Also clear colorDescription field
+              this.params.node.setDataValue('colorDescription', '');
+              if (this.params.node.data) {
+                this.params.node.data.colorDescription = '';
               }
             }
           }
@@ -1176,6 +1273,17 @@ export class AutocompleteCellEditorComponent
                 this.params.node.data.supplier = '';
               }
             }
+          }
+
+          // Refresh color and supplier columns after populating
+          if (this.params.api) {
+            setTimeout(() => {
+              this.params.api.refreshCells({
+                rowNodes: [this.params.node],
+                columns: ['color', 'colorDescription', 'supplier'],
+                force: true,
+              });
+            }, 50);
           }
         }
       },
