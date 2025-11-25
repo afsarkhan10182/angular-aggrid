@@ -1380,15 +1380,18 @@ export class App implements OnInit {
           event.data?.materialKey ||
           event.data?.materialDescription;
 
-        // Only open modal if we have a valid material identifier (not just description)
-        if (
-          materialValue &&
-          (event.data?.part ||
-            event.data?.bomLinkPart ||
-            event.data?.partNumber ||
-            event.data?.material ||
-            event.data?.materialKey)
-        ) {
+        // Check if we have enough data to open modal:
+        // - Either a part identifier (part, bomLinkPart, partNumber, material, materialKey)
+        // - Or branchId + flexBomLinkId (for API call format)
+        const hasPartIdentifier =
+          event.data?.part ||
+          event.data?.bomLinkPart ||
+          event.data?.partNumber ||
+          event.data?.material ||
+          event.data?.materialKey;
+        const hasBomIdentifiers = event.data?.branchId && event.data?.flexBomLinkId;
+
+        if (materialValue && (hasPartIdentifier || hasBomIdentifiers)) {
           // Prevent default editing and open modal instead
           event.event?.preventDefault?.();
           event.event?.stopPropagation?.();
@@ -1413,25 +1416,40 @@ export class App implements OnInit {
   openMaterialModal(materialData: any): void {
     if (!materialData) return;
 
-    // Check for material ID in all possible field names
-    // part is the primary field name in the grid, partNumber is used in API responses
-    const materialId =
-      materialData.part ||
-      materialData.bomLinkPart ||
-      materialData.partNumber ||
-      materialData.material ||
-      materialData.materialKey ||
-      materialData.materialDescription;
+    // API expects format: {partNumber}_{branchId}_{flexBomLinkId}
+    // Extract components
+    const partNumber =
+      materialData.part || materialData.bomLinkPart || materialData.partNumber || '';
+    const branchId = materialData.branchId || '';
+    const flexBomLinkId = materialData.flexBomLinkId || '';
 
-    if (!materialId) {
-      console.warn('No material ID found in materialData:', materialData);
-      return;
+    // Construct materialId based on available fields
+    let materialIdString = '';
+
+    if (partNumber && branchId && flexBomLinkId) {
+      // Full format: partNumber_branchId_flexBomLinkId
+      materialIdString = `${partNumber}_${branchId}_${flexBomLinkId}`;
+    } else if (branchId && flexBomLinkId) {
+      // When partNumber is empty, use: branchId_flexBomLinkId
+      materialIdString = `${branchId}_${flexBomLinkId}`;
+    } else if (partNumber) {
+      // Fallback to just partNumber if branchId/flexBomLinkId are missing
+      materialIdString = String(partNumber).trim();
+    } else {
+      // Last resort: try other material identifiers
+      const fallbackId =
+        materialData.material || materialData.materialKey || materialData.materialDescription;
+      if (fallbackId) {
+        materialIdString = String(fallbackId).trim();
+      }
     }
 
-    // Ensure materialId is a string and not undefined/null
-    const materialIdString = String(materialId).trim();
     if (!materialIdString || materialIdString === 'undefined' || materialIdString === 'null') {
-      console.warn('Invalid material ID:', materialId, 'from materialData:', materialData);
+      console.warn('Invalid material ID constructed from materialData:', materialData);
+      // Still show modal with available data even if API call fails
+      this.selectedMaterialData = materialData;
+      this.selectedMaterialSkuData = this.dataService.getSkuDataForPart(materialData);
+      this.showMaterialModal = true;
       return;
     }
 
