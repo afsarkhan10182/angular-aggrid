@@ -1322,79 +1322,96 @@ body {
 }
 
 /* Wrapper for side buttons to stack them vertically */
+/* Wrapper for side buttons to stack them vertically */
+/* Wrapper for side buttons - Container for separate buttons */
+/* Wrapper for side buttons - Container for separate buttons */
 .side-buttons-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding-top: 8px;
-  background: #f8fafc; /* Match app background */
-  border-left: 1px solid #e2e8f0;
+  gap: 12px; /* Distinct gap between buttons */
+  margin: 0;
+  background: #f8fafc; /* Light background to fill the column track */
+  border-left: 1px solid #babfc7; /* Standard AG Grid border color for pinned columns */
+  z-index: 10;
+  width: 32px;
+  padding-top: 0;
+  box-shadow: -2px 0 5px rgba(0,0,0,0.02); /* Subtle shadow to enhance depth */
 }
 
-/* Grid-integrated Toggle Columns Button - Keep original position */
+/* Container reset */
 .grid-toggle-button-container {
   flex-shrink: 0;
-  width: 32px;
-  background: #f3f4f6 !important; /* Match AG Grid header background exactly */
-  border: 1px solid #e2e8f0;
-  border-left: none; /* No left border - grid provides it */
-  border-radius: 0 6px 6px 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 8px;
-  z-index: 10;
-  box-shadow: inset 2px 0 4px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  background: transparent !important;
+  border: none;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
 }
 
+/* Button Styling - Distinct Square Buttons */
 .grid-toggle-columns-btn {
-  background: #f3f4f6;
-  color: #374151;
-  border: 1px solid #e5e7eb;
-  width: 28px;
-  height: 160px;
-  border-radius: 4px;
+  background: #ffffff; /* White background for distinct look */
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  border-left: none; /* Attached to grid */
+  width: 100%;
+  height: 140px;
+  border-radius: 0 4px 4px 0; /* Slight rounding on outer edge for button feel */
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   position: relative;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05); /* Shadow to pop */
 }
 
+/* Hover State */
+/* Hover State - Disabled */
 .grid-toggle-columns-btn:hover {
-  background: #e5e7eb;
-  border-color: #d1d5db;
-  color: #1f2937;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* No hover effect */
+  background: #ffffff;
+  color: #64748b;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
+  transform: none;
 }
 
-.grid-toggle-columns-btn.active {
-  background: #3b82f6;
-  border-color: #2563eb;
-  color: #ffffff;
-}
-
-.grid-toggle-columns-btn.active:hover {
-  background: #2563eb;
-  border-color: #1d4ed8;
-}
-
-/* Active state when panel is open */
+/* Active State */
+.grid-toggle-columns-btn.active,
 .grid-toggle-button-container.panel-open .grid-toggle-columns-btn {
-  background: #d1d5db;
-  border-color: #9ca3af;
-  color: #374151;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #bfdbfe;
+  box-shadow: inset 0 0 0 1px #bfdbfe;
 }
 
-.grid-toggle-button-container.panel-open .grid-toggle-columns-btn.active {
+/* Active indicator strip */
+.grid-toggle-columns-btn.active::after,
+.grid-toggle-button-container.panel-open .grid-toggle-columns-btn::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
   background: #2563eb;
-  border-color: #1d4ed8;
-  color: #ffffff;
+  border-radius: 0 4px 4px 0;
+}
+
+/* Remove specific first/last child styling since they are separate now */
+.side-buttons-wrapper .grid-toggle-button-container:first-child .grid-toggle-columns-btn,
+.side-buttons-wrapper .grid-toggle-button-container:last-child .grid-toggle-columns-btn {
+  border-bottom: 1px solid #e2e8f0;
+  border-top: 1px solid #e2e8f0;
+  border-radius: 0 4px 4px 0;
+}
+
+/* Fix for active state border overrides */
+.grid-toggle-columns-btn.active {
+  border-color: #2563eb;
 }
 
 .toggle-button-content {
@@ -1583,6 +1600,27 @@ body {
 .ag-theme-alpine .ag-cell.first-sku-column-cell {
   background-color: #fff9c4 !important;
   background: #fff9c4 !important;
+}
+
+/* ========================================
+   PINNED COLUMN BORDERS
+   ======================================== */
+
+/* Ensure right-pinned columns have a distinct left border to separate from body */
+.ag-theme-alpine .ag-pinned-right-cols-container,
+.ag-theme-alpine .ag-pinned-right-header {
+  border-left: 1px solid #babfc7 !important;
+  box-shadow: -2px 0 5px rgba(0,0,0,0.05); /* Add subtle shadow for depth */
+}
+
+/* Ensure cells inside right-pinned container don't lose their borders */
+.ag-theme-alpine .ag-pinned-right-cols-container .ag-cell {
+  border-left: 1px solid transparent !important; /* Prevent double borders */
+}
+
+/* Specific fix for 'part' column when pinned right */
+.ag-theme-alpine .ag-pinned-right-cols-container .ag-cell[col-id='part'] {
+  border-left: none !important; /* Let container handle the main border */
 }
 
 /* Section header rows - Remove vertical borders except for actions column */

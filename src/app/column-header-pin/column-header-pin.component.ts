@@ -38,7 +38,7 @@ class MenuStateService {
   template: `
     <div class="simple-pin-header">
       <div class="header-content-wrapper">
-        <div class="header-text" (click)="onSortClick($event)">{{ displayName }}</div>
+        <div class="header-text ag-header-cell-text" (click)="onSortClick($event)">{{ displayName }}</div>
         <div class="header-controls">
           <div class="sort-indicator" *ngIf="sortState">
             <span *ngIf="sortState === 'asc'" class="modern-arrow">
@@ -167,13 +167,14 @@ class MenuStateService {
 
       .header-text {
         flex: 1;
+        min-width: 0; /* Critical for truncation in flex container */
         overflow: hidden;
         text-overflow: ellipsis;
-        white-space: nowrap;
+        white-space: nowrap; /* Default for non-SKU columns, overridden by styles.css for SKUs */
         cursor: pointer;
         user-select: none;
-        font-weight: 600;
-        color: #374151;
+        font-weight: 700;
+        color: inherit;
         font-size: 13px;
         padding: 4px 6px;
         border-radius: 4px;
