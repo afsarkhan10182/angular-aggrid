@@ -303,9 +303,11 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #e2e8f0;
+  margin: -16px -16px 12px -16px; /* Bleed to edges of panel */
+  padding: 12px 16px;
+  background: #f3f4f6; /* Match grid header background */
+  border-bottom: 1px solid #d1d5db; /* Match grid header border */
+  border-radius: 6px 6px 0 0; /* Match panel border radius */
 }
 
 .column-visibility-header h4 {
@@ -673,12 +675,12 @@ body {
 
 /* Actions column header - distinct styling */
 .ag-header-cell[col-id='actions'] {
-  background: #e5e7eb !important;
-  border-right: 2px solid #9ca3af !important;
+  background: #f3f4f6 !important;
+  border-right: 1px solid #d1d5db !important;
   min-width: 40px !important;
   max-width: 40px !important;
   padding: 12px 4px !important;
-  border-bottom: 2px solid #d1d5db !important;
+  border-bottom: 1px solid #d1d5db !important;
   font-size: 14px !important;
   font-weight: 700 !important;
   color: #374151 !important;
@@ -785,7 +787,7 @@ body {
     var(--ag-row-border-color) !important;
   border-left: none !important;
   border-top: none !important;
-  background: #f9fafb !important;
+  background: white !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -1335,7 +1337,7 @@ body {
   z-index: 10;
   width: 32px;
   padding-top: 0;
-  box-shadow: -2px 0 5px rgba(0,0,0,0.02); /* Subtle shadow to enhance depth */
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.02); /* Subtle shadow to enhance depth */
 }
 
 /* Container reset */
@@ -1351,9 +1353,9 @@ body {
 
 /* Button Styling - Distinct Square Buttons */
 .grid-toggle-columns-btn {
-  background: #ffffff; /* White background for distinct look */
-  color: #64748b;
-  border: 1px solid #e2e8f0;
+  background: #f3f4f6; /* Match grid header background */
+  color: #374151; /* Match grid header text color */
+  border: 1px solid #d1d5db; /* Match grid header border */
   border-left: none; /* Attached to grid */
   width: 100%;
   height: 140px;
@@ -1363,7 +1365,7 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700; /* Match grid header font weight */
   position: relative;
   transition: all 0.2s ease;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05); /* Shadow to pop */
@@ -1372,10 +1374,9 @@ body {
 /* Hover State */
 /* Hover State - Disabled */
 .grid-toggle-columns-btn:hover {
-  /* No hover effect */
-  background: #ffffff;
-  color: #64748b;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
+  background: #e5e7eb; /* Slightly darker on hover */
+  color: #1f2937;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
   transform: none;
 }
 
@@ -1610,7 +1611,7 @@ body {
 .ag-theme-alpine .ag-pinned-right-cols-container,
 .ag-theme-alpine .ag-pinned-right-header {
   border-left: 1px solid #babfc7 !important;
-  box-shadow: -2px 0 5px rgba(0,0,0,0.05); /* Add subtle shadow for depth */
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.05); /* Add subtle shadow for depth */
 }
 
 /* Ensure cells inside right-pinned container don't lose their borders */
