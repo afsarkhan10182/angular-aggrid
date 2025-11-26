@@ -1863,7 +1863,7 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
   padding: 16px !important;
   width: 350px !important;
-  max-height: 500px !important;
+  max-height: 450px !important;
   overflow-y: auto !important;
   position: relative;
   z-index: 10001;
@@ -1899,6 +1899,18 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
   margin-bottom: 16px;
   padding-bottom: 12px;
   border-bottom: 1px solid #e2e8f0;
+}
+
+.active-groups-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.active-groups-header .section-title {
+  margin-bottom: 0;
 }
 
 .section-title {
@@ -1963,7 +1975,7 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
 }
 
 .clear-all-groups-btn {
-  width: 100%;
+  width: auto;
   padding: 8px 12px;
   background: #fee2e2;
   color: #dc2626;
@@ -1977,6 +1989,10 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
   align-items: center;
   justify-content: center;
   gap: 6px;
+}
+
+.active-groups-header .clear-all-groups-btn {
+  flex-shrink: 0;
 }
 
 .clear-all-groups-btn:hover {

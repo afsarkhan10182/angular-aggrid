@@ -120,6 +120,7 @@
         </div>
       </div>
 
+      @defer (on idle) {
       <!-- Side Buttons Wrapper -->
       <div class="side-buttons-wrapper">
         <!-- Toggle Columns Button - Outside grid but visually integrated -->
@@ -138,7 +139,10 @@
         </div>
 
         <!-- Group By Button - Outside grid but visually integrated -->
-        <div class="grid-toggle-button-container group-by-container" [class.panel-open]="showGroupByPanel">
+        <div
+          class="grid-toggle-button-container group-by-container"
+          [class.panel-open]="showGroupByPanel"
+        >
           <button
             (click)="toggleGroupByPanel()"
             class="grid-toggle-columns-btn"
@@ -149,7 +153,9 @@
             <div class="toggle-button-content">
               <i class="fas fa-layer-group"></i>
               <span class="toggle-button-text">GROUP BY</span>
-              <span *ngIf="activeGroupFields.length > 0" class="group-count-badge">{{ activeGroupFields.length }}</span>
+              <span *ngIf="activeGroupFields.length > 0" class="group-count-badge">{{
+                activeGroupFields.length
+              }}</span>
             </div>
           </button>
         </div>
@@ -169,21 +175,6 @@
             </button>
           </div>
           <div class="column-checkboxes">
-            <!-- Select All Checkbox -->
-            <!-- <div class="column-checkbox select-all-checkbox">
-            <label>
-              <input type="checkbox" 
-                     [checked]="selectAllState === true"
-                     [indeterminate]="selectAllState === null"
-                     (change)="toggleSelectAll($event)">
-              <span class="column-name select-all-text"><strong>Select All</strong></span>
-            </label>
-          </div> -->
-
-            <!-- Divider -->
-            <!-- <div class="column-divider"></div> -->
-
-            <!-- Individual Column Checkboxes -->
             <ng-container *ngFor="let col of allColumns">
               <div *ngIf="!isSkuColumn(col)" class="column-checkbox">
                 <label>
@@ -213,10 +204,15 @@
               <i class="fas fa-times"></i>
             </button>
           </div>
-          
+
           <!-- Active Groups -->
           <div *ngIf="activeGroupFields.length > 0" class="active-groups-section">
-            <div class="section-title">Active Groups:</div>
+            <div class="active-groups-header">
+              <div class="section-title">Active Groups:</div>
+              <button (click)="clearAllGroups()" class="clear-all-groups-btn">
+                <i class="fas fa-trash"></i> Clear All
+              </button>
+            </div>
             <div class="active-groups-list">
               <div *ngFor="let group of activeGroupFields; let i = index" class="active-group-item">
                 <span class="group-level-badge">{{ i + 1 }}</span>
@@ -226,9 +222,6 @@
                 </button>
               </div>
             </div>
-            <button (click)="clearAllGroups()" class="clear-all-groups-btn">
-              <i class="fas fa-trash"></i> Clear All
-            </button>
           </div>
 
           <!-- Available Fields -->
@@ -238,11 +231,7 @@
               <ng-container *ngFor="let field of availableGroupFields">
                 <div class="column-checkbox" *ngIf="!isFieldGrouped(field.field)">
                   <label>
-                    <input
-                      type="checkbox"
-                      [checked]="false"
-                      (change)="addGroupField(field)"
-                    />
+                    <input type="checkbox" [checked]="false" (change)="addGroupField(field)" />
                     <span class="column-name">{{ field.headerName }}</span>
                   </label>
                 </div>
@@ -251,10 +240,31 @@
           </div>
         </div>
       </div>
+      } @placeholder {
+      <div class="side-buttons-wrapper defer-placeholder">
+        <div class="grid-toggle-button-container">
+          <button class="grid-toggle-columns-btn" disabled>
+            <div class="toggle-button-content">
+              <i class="fas fa-columns"></i>
+              <span class="toggle-button-text">COLUMNS</span>
+            </div>
+          </button>
+        </div>
+        <div class="grid-toggle-button-container group-by-container">
+          <button class="grid-toggle-columns-btn" disabled>
+            <div class="toggle-button-content">
+              <i class="fas fa-layer-group"></i>
+              <span class="toggle-button-text">GROUP BY</span>
+            </div>
+          </button>
+        </div>
+      </div>
+      }
     </div>
   </div>
 
   <!-- Material Detail Modal -->
+  @defer (when showMaterialModal) {
   <app-part-modal
     *ngIf="showMaterialModal"
     [partData]="selectedMaterialData"
@@ -262,4 +272,7 @@
     (close)="closeMaterialModal()"
   >
   </app-part-modal>
+  } @placeholder {
+  <!-- Modal placeholder intentionally empty -->
+  }
 </div>
