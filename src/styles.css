@@ -2453,6 +2453,15 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
   width: 100%;
   text-align: center;
   white-space: nowrap;
+  opacity: 0;
+  transform: translateY(2px);
+  pointer-events: none;
+}
+
+.sku-cell-action-wrapper:hover .sku-paste-part-btn {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 .sku-paste-part-btn:hover {
@@ -2475,6 +2484,13 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
   font-size: 12px;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sku-cell-action-wrapper:hover .sku-delete-btn {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .sku-delete-btn:hover {
