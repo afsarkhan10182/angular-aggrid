@@ -722,6 +722,10 @@ export class App implements OnInit {
             return `<div style="white-space: pre-line; line-height: 1.5; padding: 4px 0;">${htmlValue}</div>`;
           }
 
+          if (data.isNewRow) {
+            return this.renderNewRowSkuCell(params);
+          }
+
           return '';
         },
         tooltipValueGetter: (params: any) => {
@@ -964,6 +968,46 @@ export class App implements OnInit {
       return `<span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; width: 100%;">${escapedText}</span>`;
     }
     return escapedText;
+  }
+
+  private renderNewRowSkuCell(params: any): string {
+    const rowData = params.data || {};
+    const partNumber = this.getPartNumberValue(rowData);
+    if (!partNumber) {
+      return '';
+    }
+
+    const hasValue = params.value !== null && params.value !== undefined && params.value !== '';
+    const partLabel = this.escapeHtml(partNumber);
+
+    if (!hasValue) {
+      return `
+        <div class="sku-cell-action-wrapper empty">
+          <button type="button" class="sku-paste-part-btn" data-action="paste-part" title="Paste Part # ${partLabel}">
+             Paste Part #
+          </button>
+        </div>
+      `;
+    }
+
+    const valueText = this.escapeHtml(String(params.value));
+    return `
+      <div class="sku-cell-action-wrapper filled">
+        <span class="sku-cell-value" title="${valueText}">${valueText}</span>
+        <button type="button" class="sku-delete-btn" data-action="clear-sku" title="Remove value">
+          ✕
+        </button>
+      </div>
+    `;
+  }
+
+  private getPartNumberValue(row: any): string {
+    if (!row) return '';
+    const candidate = row.partNumber ?? row.part ?? row.partNum ?? '';
+    if (candidate === null || candidate === undefined) {
+      return '';
+    }
+    return String(candidate);
   }
 
   getHierarchicalCellStyle(params: any): any {
@@ -1263,8 +1307,8 @@ export class App implements OnInit {
     }
     const target = event.event?.target as HTMLElement;
 
-    const pasteButton = target?.closest('[data-action="paste"]');
-    if (pasteButton) {
+    const pastePartButton = target?.closest('[data-action="paste-part"]');
+    if (pastePartButton) {
       event.event.preventDefault();
       event.event.stopPropagation();
       if (
@@ -1273,26 +1317,22 @@ export class App implements OnInit {
         event.data &&
         event.data.isNewRow
       ) {
-        event.api.stopEditing(true);
-
-        setTimeout(() => {
-          this.rowManagementService.pasteSkuValue(event, this);
-        }, 0);
+        this.rowManagementService.pastePartNumber(event, this);
       }
       return;
     }
 
-    if (target && (target.closest('.copy-button') || target.matches('.copy-button'))) {
+    const deleteButton = target?.closest('[data-action="clear-sku"]');
+    if (deleteButton) {
       event.event.preventDefault();
       event.event.stopPropagation();
       if (
         event.colDef.field &&
         event.colDef.field.startsWith('sku') &&
         event.data &&
-        event.data.isNewRow &&
-        event.value
+        event.data.isNewRow
       ) {
-        this.rowManagementService.copySkuValue(event, this);
+        this.rowManagementService.clearSkuValue(event, this);
       }
       return;
     }

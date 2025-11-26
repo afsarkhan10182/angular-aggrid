@@ -201,11 +201,17 @@ export class RowManagementService {
    * Copy SKU value from a cell (only for new rows)
    */
   copySkuValue(params: any, componentInstance: any): void {
-    if (!params.data || !params.data.isNewRow || !params.value) {
+    if (!params.data || !params.data.isNewRow) {
       return;
     }
 
-    this.copiedSkuValue = params.value;
+    const valueToCopy = params.value || params.data.partNumber || params.data.part;
+
+    if (!valueToCopy) {
+      return;
+    }
+
+    this.copiedSkuValue = valueToCopy;
     this.copiedFromRowId = params.data.newRowId;
     this.copiedFromCellKey = `${params.node.rowIndex}-${params.colDef.field}`;
 
@@ -219,20 +225,29 @@ export class RowManagementService {
    * Paste SKU value to a cell
    */
   pasteSkuValue(params: any, componentInstance: any): void {
-    if (!params.data || !params.data.isNewRow || !this.copiedSkuValue) {
+    if (!params.data || !params.data.isNewRow) {
       return;
     }
 
-    // Only allow pasting within the same row where the value was copied from
-    if (
-      this.copiedFromRowId !== null &&
-      params.data.newRowId !== this.copiedFromRowId
-    ) {
+    let valueToPaste = this.copiedSkuValue;
+
+    // If we have a copied value, check the row restriction
+    if (valueToPaste) {
+      if (this.copiedFromRowId !== null && params.data.newRowId !== this.copiedFromRowId) {
+        // If restriction fails, fall back to local part number
+        valueToPaste = params.data.partNumber || params.data.part;
+      }
+    } else {
+      // No copied value, use local part number
+      valueToPaste = params.data.partNumber || params.data.part;
+    }
+
+    if (!valueToPaste) {
       return;
     }
 
     // Don't paste if the cell already has the same value
-    if (params.value === this.copiedSkuValue) {
+    if (params.value === valueToPaste) {
       return;
     }
 
@@ -240,7 +255,57 @@ export class RowManagementService {
     params.api.stopEditing();
 
     // Set the value in the cell
-    params.node.setDataValue(params.colDef.field, this.copiedSkuValue);
+    params.node.setDataValue(params.colDef.field, valueToPaste);
+
+    // Mark the row as edited
+    if (params.data.newRowId) {
+      componentInstance.editedRows.add(params.data.newRowId);
+    }
+
+    // Force immediate refresh of the entire row
+    params.api.redrawRows({
+      rowNodes: [params.node],
+    });
+
+    // Additional refresh after a short delay
+    setTimeout(() => {
+      params.api.refreshCells({
+        rowNodes: [params.node],
+        force: true,
+      });
+
+      // Flash the cell to show the paste was successful
+      params.api.flashCells({
+        rowNodes: [params.node],
+        columns: [params.colDef.field],
+      });
+    }, 50);
+  }
+
+  /**
+   * Paste Part Number specifically to a cell
+   */
+  pastePartNumber(params: any, componentInstance: any): void {
+    if (!params.data || !params.data.isNewRow) {
+      return;
+    }
+
+    const valueToPaste = params.data.partNumber || params.data.part;
+
+    if (!valueToPaste) {
+      return;
+    }
+
+    // Don't paste if the cell already has the same value
+    if (params.value === valueToPaste) {
+      return;
+    }
+
+    // Stop any ongoing editing
+    params.api.stopEditing();
+
+    // Set the value in the cell
+    params.node.setDataValue(params.colDef.field, valueToPaste);
 
     // Mark the row as edited
     if (params.data.newRowId) {
@@ -278,6 +343,43 @@ export class RowManagementService {
     // Refresh grid to remove visual indicators
     gridApi.refreshCells({
       force: true,
+    });
+  }
+
+  /**
+   * Clear SKU cell value for a new row
+   */
+  clearSkuValue(params: any, componentInstance: any): void {
+    if (!params?.data || !params.data.isNewRow) {
+      return;
+    }
+
+    const fieldName = params.colDef?.field;
+    if (!fieldName || !fieldName.startsWith('sku')) {
+      return;
+    }
+
+    const currentValue = params.node?.data ? params.node.data[fieldName] : params.value;
+    if (!currentValue) {
+      return;
+    }
+
+    params.api.stopEditing();
+    params.node.setDataValue(fieldName, '');
+
+    if (params.data.newRowId) {
+      componentInstance.editedRows.add(params.data.newRowId);
+    }
+
+    params.api.refreshCells({
+      rowNodes: [params.node],
+      columns: [fieldName],
+      force: true,
+    });
+
+    params.api.flashCells({
+      rowNodes: [params.node],
+      columns: [fieldName],
     });
   }
 
