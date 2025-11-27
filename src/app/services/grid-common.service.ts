@@ -53,7 +53,6 @@ export class GridCommonService {
   forceHorizontalScrollbarVisibility(gridApi: GridApi): void {
     if (!gridApi) return;
 
-    // Apply styles after a short delay to ensure DOM is ready
     setTimeout(() => {
       const horizontalScrollViewport = document.querySelector(
         '.ag-body-horizontal-scroll-viewport'
@@ -78,10 +77,9 @@ export class GridCommonService {
    */
   parseDateString(dateStr: string): Date | null {
     if (!dateStr || dateStr === '') return null;
-    // Handle MM/DD/YYYY format (e.g., "10/31/2025")
     const parts = dateStr.split('/');
     if (parts.length === 3) {
-      const month = parseInt(parts[0], 10) - 1; // Month is 0-indexed
+      const month = parseInt(parts[0], 10) - 1;
       const day = parseInt(parts[1], 10);
       const year = parseInt(parts[2], 10);
       const date = new Date(year, month, day);
@@ -114,25 +112,21 @@ export class GridCommonService {
   formatDateToMMDDYYYY(value: any): string {
     if (!value) return '';
 
-    // If it's already a Date object, format it
     if (value instanceof Date) {
       return this.formatDateToString(value);
     }
 
-    // If it's already a string, check if it's in the correct format
     if (typeof value === 'string') {
       const mmddyyyyPattern = /^\d{2}\/\d{2}\/\d{4}$/;
       if (mmddyyyyPattern.test(value)) {
         return value;
       }
-      // Try to parse and reformat
       const date = this.parseDateString(value);
       if (date) {
         return this.formatDateToString(date);
       }
     }
 
-    // Try to parse as Date
     const date = new Date(value);
     if (isNaN(date.getTime())) return '';
 
@@ -147,24 +141,20 @@ export class GridCommonService {
   convertDateEditorValueToString(dateValue: any): string {
     if (!dateValue) return '';
 
-    // If it's a Date object (from date editor)
     if (dateValue && typeof dateValue === 'object' && 'toLocaleDateString' in dateValue) {
       return this.formatDateToString(dateValue as Date);
     }
 
-    // If it's already a string in MM/DD/YYYY format, return as-is
     if (typeof dateValue === 'string') {
       if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateValue)) {
         return dateValue;
       }
-      // Try to parse and format
       const date = this.parseDateString(dateValue);
       if (date) {
         return this.formatDateToString(date);
       }
     }
 
-    // Try to parse as Date
     const date = new Date(dateValue);
     if (isNaN(date.getTime())) return '';
 
@@ -250,7 +240,6 @@ export class GridCommonService {
   initializeClickableParts(rowData: any[]): Set<number> {
     const clickableParts = new Set<number>();
 
-    // Filter out header rows and only process actual data rows
     const dataRows = rowData.filter(
       (row) => !row.isSectionHeader && !row.isMaterialHeader && !row.isBranchHeader && row.part
     );
@@ -399,22 +388,25 @@ export class GridCommonService {
   getCommonGridOptions(componentInstance: any): GridOptions {
     return {
       theme: 'legacy',
-      animateRows: false, // Disable row animations to prevent flickering
+      animateRows: false,
       enableCellTextSelection: true,
-      rowSelection: 'single' as const,
-      suppressRowClickSelection: true, // We handle selection manually in onCellClicked
-      suppressMultiRangeSelection: true, // Prevent multiple range selections
+      rowSelection: {
+        mode: 'singleRow',
+        enableClickSelection: false,
+        checkboxes: false,
+        isRowSelectable: (params) => {
+          return !(params.data && params.data.isSectionHeader);
+        },
+      },
       suppressColumnVirtualisation: false,
       suppressHorizontalScroll: false,
-      // Enable horizontal scrolling for wide grids
       enableCharts: false,
-      // Enable browser tooltips for cells
       enableBrowserTooltips: true,
       suppressColumnMoveAnimation: false,
       suppressDragLeaveHidesColumns: false,
       suppressFieldDotNotation: true,
       suppressContextMenu: false,
-      suppressScrollOnNewData: true, // Prevent scroll jump when accordion expands/collapses
+      suppressScrollOnNewData: true,
       allowDragFromColumnsToolPanel: true,
       suppressRowVirtualisation: false,
       domLayout: 'normal',
@@ -422,7 +414,6 @@ export class GridCommonService {
       includeHiddenColumnsInQuickFilter: false,
       cacheQuickFilter: true,
       rowModelType: 'clientSide',
-      // Sorting is handled manually in onSortChanged to preserve hierarchy
       navigateToNextCell: (params) => {
         return params.nextCellPosition;
       },
@@ -434,10 +425,6 @@ export class GridCommonService {
       stopEditingWhenCellsLoseFocus: true,
       suppressClickEdit: false,
       singleClickEdit: true,
-      isRowSelectable: (params) => {
-        // Prevent selection of section header rows
-        return !(params.data && params.data.isSectionHeader);
-      },
       getRowClass: (params) => {
         let classes = [];
 
@@ -475,7 +462,6 @@ export class GridCommonService {
 
         return classes.join(' ');
       },
-      enableRangeSelection: false,
       suppressAnimationFrame: true,
       context: {
         dataService: null,
@@ -485,14 +471,10 @@ export class GridCommonService {
         this.forceHorizontalScrollbarVisibility(params.api);
       },
       onFirstDataRendered: (params) => {
-        // Setup row hover synchronization after grid is fully rendered
-        // Using onFirstDataRendered ensures DOM is ready without setTimeout
         this.setupRowHoverSync(params.api);
       },
       onRowSelected: (params) => {
-        // Ensure only one row can be selected at a time
         if (params.node.isSelected()) {
-          // Deselect all other rows (use setTimeout to batch and prevent flickering)
           setTimeout(() => {
             params.api.forEachNode((node) => {
               if (node.id !== params.node.id && node.isSelected()) {
@@ -503,28 +485,27 @@ export class GridCommonService {
         }
       },
       onSelectionChanged: (params) => {
-        // Use setTimeout to batch operations and prevent flickering
         setTimeout(() => {
           const selectedNodes = params.api.getSelectedNodes();
-          if (selectedNodes.length > 0) {
-            // If multiple selected, keep only the first one
-            if (selectedNodes.length > 1) {
-              selectedNodes.slice(1).forEach((node) => node.setSelected(false));
-            }
-            // Don't auto-scroll - let user control scrolling to prevent layout issues
-            // Only scroll if row is completely out of view (not just partially)
+          if (selectedNodes.length > 1) {
+            selectedNodes.slice(1).forEach((node) => node.setSelected(false));
           }
         }, 0);
       },
       onCellValueChanged: (params) => {
-        // Track changes for all editable fields
         if (componentInstance.rowManagementService && componentInstance.editedRows) {
-          componentInstance.rowManagementService.trackFieldChange(params, componentInstance.editedRows);
+          componentInstance.rowManagementService.trackFieldChange(
+            params,
+            componentInstance.editedRows
+          );
         }
 
-        // Handle field changes for new rows (auto-population)
         if (params.data && params.data.isNewRow) {
-          if (componentInstance.rowManagementService && componentInstance.dataService && componentInstance.editedRows) {
+          if (
+            componentInstance.rowManagementService &&
+            componentInstance.dataService &&
+            componentInstance.editedRows
+          ) {
             componentInstance.rowManagementService.onNewRowValueChanged(
               params,
               componentInstance.dataService,
@@ -532,7 +513,6 @@ export class GridCommonService {
             );
           }
 
-          // Force refresh to ensure the value is displayed
           setTimeout(() => {
             params.api.refreshCells({
               rowNodes: [params.node],
@@ -541,40 +521,30 @@ export class GridCommonService {
           }, 100);
         }
 
-        // Ensure values are properly saved for new rows (only for non-part fields to avoid infinite loop)
         if (
           params.data &&
           params.data.isNewRow &&
           params.colDef.field &&
           params.colDef.field !== 'part'
         ) {
-          // Only update the data object directly to avoid triggering another onCellValueChanged
           if (params.node.data) {
             (params.node.data as any)[params.colDef.field] = params.newValue;
           }
         }
       },
-      onCellEditingStarted: (params) => {
-        // Cell editing started
-      },
-      onCellMouseOver: (params) => {
-        // Don't manually set title - let AG Grid's tooltipValueGetter handle it
-        // This allows tooltipValueGetter to work properly with enableBrowserTooltips
-      },
+      onCellEditingStarted: (params) => {},
+      onCellMouseOver: (params) => {},
       onCellEditingStopped: (params) => {
-        // Only commit if there's actually a new value and it's not a date or quantity column
-        // Date and quantity columns have their own valueSetter that handles the conversion properly
         if (
           params.data &&
           params.newValue !== undefined &&
           params.colDef.field &&
           params.newValue !== params.oldValue &&
-          !params.colDef.field.includes('Date') && // Skip date columns as they have valueSetter
-          params.colDef.field !== 'quantity' // Skip quantity column as it has valueSetter
+          !params.colDef.field.includes('Date') &&
+          params.colDef.field !== 'quantity'
         ) {
           params.data[params.colDef.field] = params.newValue;
         }
-        // Refresh the cell to show the updated value
         params.api.refreshCells({
           rowNodes: [params.node],
           columns: [params.column],
@@ -582,7 +552,6 @@ export class GridCommonService {
         });
       },
       onCellClicked: (params) => {
-        // Handle accordion toggle for the accordion icon column
         if (
           params.colDef.field === 'accordionIcon' &&
           params.data.isParent &&
@@ -591,25 +560,19 @@ export class GridCommonService {
           if (componentInstance.toggleAccordion) {
             componentInstance.toggleAccordion(params.data.branchID);
           }
-          return; // Don't toggle selection when clicking accordion
+          return;
         }
 
-        // Skip selection toggle for actions column (user wants to click action buttons)
         if (params.colDef.field === 'actions') {
           return;
         }
 
-        // Toggle row selection on cell click (but not during text selection)
         if (params.event) {
           const mouseEvent = params.event as MouseEvent;
-          // Clear any text selection first
           const selection = window.getSelection();
           if (selection && selection.toString().trim() === '') {
-            // Only toggle row if no text is selected and no modifier keys pressed
             if (!mouseEvent.shiftKey && !mouseEvent.ctrlKey && !mouseEvent.metaKey) {
-              // Use setTimeout to batch selection update and prevent flickering
               setTimeout(() => {
-                // Toggle selection: if selected, deselect; if not selected, select
                 const isSelected = params.node.isSelected();
                 params.node.setSelected(!isSelected);
               }, 0);
@@ -617,10 +580,7 @@ export class GridCommonService {
           }
         }
       },
-      // Prevent row selection during scrolling/dragging
-      suppressRowDeselection: false, // Allow deselecting
       onCellKeyDown: (params) => {
-        // Handle Ctrl+V for paste in SKU columns of new rows
         if (
           params.event &&
           (params.event as KeyboardEvent).ctrlKey &&
@@ -636,14 +596,9 @@ export class GridCommonService {
           params.event.preventDefault();
         }
       },
-      onFilterChanged: (params) => {
-        // Filter changed event
-      },
-      onFilterModified: (params) => {
-        // Filter modified event
-      },
+      onFilterChanged: (params) => {},
+      onFilterModified: (params) => {},
       onSortChanged: (params) => {
-        // Handle hierarchical sorting
         if (componentInstance.applyHierarchicalSort) {
           componentInstance.applyHierarchicalSort(params);
         }
@@ -662,11 +617,6 @@ export class GridCommonService {
    * - Uses `getDisplayedRowAtIndex()` API for row state checks
    * - Properly cleans up event listeners
    * - Works with AG Grid's virtual scrolling and row updates
-   *
-   * Future-proof considerations:
-   * - Uses standard DOM events (mouseenter/mouseleave)
-   * - Relies on stable AG Grid attributes (row-index)
-   * - Uses AG Grid's official API methods where possible
    */
   private setupRowHoverSync(gridApi: GridApi): void {
     const gridElement = document.querySelector('.ag-theme-alpine');
@@ -678,26 +628,19 @@ export class GridCommonService {
 
     if (!mainBody) return;
 
-    // Store event handlers for cleanup
     const eventHandlers: Array<{
       container: Element;
       type: string;
       handler: EventListener;
     }> = [];
 
-    // Synchronize hover state across all row containers
     const syncHover = (rowIndex: number | null, add: boolean) => {
       if (rowIndex === null || rowIndex === undefined) return;
 
-      // Use AG Grid's API to get row node state
       const rowNode = gridApi.getDisplayedRowAtIndex(rowIndex);
-
-      // Find all row elements with matching row-index (main body + pinned columns)
-      // Note: row-index is a stable AG Grid attribute used for row identification
       const allRows = gridElement.querySelectorAll(`.ag-row[row-index="${rowIndex}"]`);
 
       allRows.forEach((rowElement) => {
-        // Only add hover if row is not selected and not a section header
         if (rowNode) {
           if (add && !rowNode.isSelected() && !rowNode.data?.isSectionHeader) {
             rowElement.classList.add('ag-row-hover');
@@ -705,7 +648,6 @@ export class GridCommonService {
             rowElement.classList.remove('ag-row-hover');
           }
         } else {
-          // Fallback: toggle class if node not found (shouldn't happen in normal operation)
           if (add) {
             rowElement.classList.add('ag-row-hover');
           } else {
@@ -715,13 +657,11 @@ export class GridCommonService {
       });
     };
 
-    // Create reusable event handler factory
     const createMouseEnterHandler = (): EventListener => {
       return (e: Event) => {
         const target = e.target as HTMLElement;
         if (!target) return;
 
-        // Find the row element (could be cell, cell content, or row itself)
         const cell = target.closest('.ag-cell');
         const row = target.closest('.ag-row') || cell?.closest('.ag-row') || null;
 
@@ -757,7 +697,6 @@ export class GridCommonService {
       };
     };
 
-    // Add event listeners to all containers
     [mainBody, pinnedLeft, pinnedRight].forEach((container) => {
       if (!container) return;
 
@@ -767,15 +706,12 @@ export class GridCommonService {
       container.addEventListener('mouseenter', mouseEnterHandler, true);
       container.addEventListener('mouseleave', mouseLeaveHandler, true);
 
-      // Store for cleanup
       eventHandlers.push(
         { container, type: 'mouseenter', handler: mouseEnterHandler },
         { container, type: 'mouseleave', handler: mouseLeaveHandler }
       );
     });
 
-    // Cleanup function - store on gridApi for potential future cleanup
-    // Note: In Angular, component destruction will handle cleanup, but this is defensive
     (gridApi as any)._hoverSyncCleanup = () => {
       eventHandlers.forEach(({ container, type, handler }) => {
         container.removeEventListener(type, handler, true);

@@ -12,7 +12,6 @@ export class RowManagementService {
   private lastSavedAt: Date | null = null;
 
   constructor(private gridCommonService: GridCommonService) {
-    // Load lastSavedAt from localStorage if available
     const savedTimestamp = localStorage.getItem('lastSavedAt');
     if (savedTimestamp) {
       this.lastSavedAt = new Date(savedTimestamp);
@@ -59,70 +58,55 @@ export class RowManagementService {
   ): { newRow: any; newRowId: number } {
     const newRowIdValue = this.nextRowId;
     const newRow = {
-      part: '', // Start with empty string for part
+      part: '',
       partNumber: '',
       supplier: '',
       color: '',
       feature: '',
       bomLinkFeature: '',
-      bomLinkStartDate: '', // Use bomLinkStartDate to match API field names
-      bomLinkEndDate: '', // Use bomLinkEndDate to match API field names
-      startDate: '', // Keep for backward compatibility
-      endDate: '', // Keep for backward compatibility
+      bomLinkStartDate: '',
+      bomLinkEndDate: '',
+      startDate: '',
+      endDate: '',
       qty: 0,
-      material: '', // Add empty material field
+      material: '',
       bomLinkCountryOfOrigin: '',
       isNewRow: true,
-      newRowId: newRowIdValue, // Add the unique ID to the row data
+      newRowId: newRowIdValue,
       insertAfter: rowIndex,
     };
 
-    // Add SKU columns with empty values
     const skuInfo = dataService.getSkuInfo();
     skuInfo.forEach((sku) => {
       (newRow as any)[`sku${sku.sku}`] = '';
     });
 
-    // Use the provided row index directly
     const insertIndex = rowIndex;
 
     if (insertIndex >= 0 && insertIndex < rowData.length) {
-      // Store current scroll context
       const currentFirstVisibleRow = gridApi.getFirstDisplayedRowIndex();
       const currentLastVisibleRow = gridApi.getLastDisplayedRowIndex();
       const newRowIndex = insertIndex + 1;
 
-      // Use AG Grid's transaction API for efficient updates
       const transaction = {
-        addIndex: newRowIndex, // Insert after the target row
+        addIndex: newRowIndex,
         add: [newRow],
       };
 
-      // Apply the transaction - AG Grid handles the update efficiently
       gridApi.applyTransaction(transaction);
-
-      // Update our local rowData to stay in sync
       rowData.splice(newRowIndex, 0, newRow);
 
-      // Smart scroll behavior - show new row without jumping away from current area
       setTimeout(() => {
-        // If the new row is within or near the currently visible area
         if (newRowIndex >= currentFirstVisibleRow - 2 && newRowIndex <= currentLastVisibleRow + 2) {
-          // If the new row is below the current visible area, scroll just enough to show it
           if (newRowIndex > currentLastVisibleRow) {
             gridApi.ensureIndexVisible(newRowIndex, 'bottom');
-          }
-          // If the new row is above the current visible area, scroll just enough to show it
-          else if (newRowIndex < currentFirstVisibleRow) {
+          } else if (newRowIndex < currentFirstVisibleRow) {
             gridApi.ensureIndexVisible(newRowIndex, 'top');
           }
-          // If the new row is already visible, don't scroll at all
         }
-        // Otherwise, don't scroll - let the user stay where they are
       }, 50);
     }
 
-    // Update state
     this.nextRowId = newRowIdValue + 1;
     this.newRows.set(newRowIdValue, newRow);
 
@@ -141,23 +125,16 @@ export class RowManagementService {
 
     const rowToDelete = rowData[rowIndex];
 
-    // Only allow deletion of new rows
     if (!rowToDelete.isNewRow) {
       return;
     }
 
-    // Use AG Grid's transaction API for efficient deletion
     const transaction = {
       remove: [rowToDelete],
     };
 
-    // Apply the transaction
     gridApi.applyTransaction(transaction);
-
-    // Update our local rowData to stay in sync
     rowData.splice(rowIndex, 1);
-
-    // Update state
     this.newRows.delete(newRowId);
   }
 
@@ -170,23 +147,17 @@ export class RowManagementService {
     if (rowIndex !== -1) {
       const rowToDelete = rowData[rowIndex];
 
-      // Only allow deletion of new rows
       if (!rowToDelete.isNewRow) {
         return;
       }
 
-      // Use AG Grid's transaction API for efficient deletion
       const transaction = {
         remove: [rowToDelete],
       };
 
-      // Apply the transaction
       gridApi.applyTransaction(transaction);
-
-      // Update our local rowData to stay in sync
       rowData.splice(rowIndex, 1);
 
-      // Update state
       const partIdNum = parseInt(partId, 10);
       if (!isNaN(partIdNum)) {
         this.newRows.delete(partIdNum);
@@ -224,19 +195,16 @@ export class RowManagementService {
       componentInstance.editedRows.add(params.data.newRowId);
     }
 
-    // Force immediate refresh of the entire row
     params.api.redrawRows({
       rowNodes: [params.node],
     });
 
-    // Additional refresh after a short delay
     setTimeout(() => {
       params.api.refreshCells({
         rowNodes: [params.node],
         force: true,
       });
 
-      // Flash the cell to show the paste was successful
       params.api.flashCells({
         rowNodes: [params.node],
         columns: [params.colDef.field],
@@ -285,8 +253,6 @@ export class RowManagementService {
    * Track field changes
    */
   trackFieldChange(params: any, editedRows: Set<string | number>): void {
-    // Skip if values are the same (no actual change)
-    // Handle date comparison properly
     let valuesAreSame = false;
     if (params.oldValue instanceof Date && params.newValue instanceof Date) {
       valuesAreSame = params.oldValue.getTime() === params.newValue.getTime();
@@ -301,15 +267,12 @@ export class RowManagementService {
     const partId = params.data.part;
     const fieldName = params.colDef.field;
 
-    // Skip tracking during auto-population for SKU fields only
     if (params.data.isNewRow && fieldName.startsWith('sku')) {
       return;
     }
 
-    // Mark row as edited - use the part value directly (should be a number)
     editedRows.add(partId);
 
-    // Refresh the row to apply styling
     params.api.refreshCells({
       rowNodes: [params.node],
       force: true,
@@ -324,17 +287,13 @@ export class RowManagementService {
     dataService: DataService,
     editedRows: Set<string | number>
   ): void {
-    // If part number is changed, populate the feature from existing data
     if ((params.field === 'part' || params.colDef?.field === 'part') && params.newValue) {
-      // Get the original mock data from the data service
       const apiData = dataService.getApiData();
 
       if (apiData && apiData.mbom) {
-        // Search in the original API data
         const existingPart = apiData.mbom.find((part) => part.part === params.newValue);
 
         if (existingPart) {
-          // Auto-populate all available fields from the existing part
           const fieldsToPopulate = [
             'supplier',
             'color',
@@ -346,27 +305,21 @@ export class RowManagementService {
             'qty',
           ];
           const existingPartData = existingPart as any;
-
-          // Temporarily disable cell value changed events
           const oldData = { ...params.node.data };
 
-          // Auto-populate base fields
           fieldsToPopulate.forEach((fieldName) => {
             if (existingPartData[fieldName] !== undefined && existingPartData[fieldName] !== null) {
               let valueToSet = existingPartData[fieldName];
 
-              // Special handling for date fields - keep in MM/DD/YYYY format
               if (
                 fieldName === 'startDate' ||
                 fieldName === 'endDate' ||
                 fieldName === 'bomLinkStartDate' ||
                 fieldName === 'bomLinkEndDate'
               ) {
-                // Use centralized function to format date to MM/DD/YYYY
                 valueToSet = this.gridCommonService.formatDateToMMDDYYYY(valueToSet);
               }
 
-              // Only update if value is different
               if (oldData[fieldName] !== valueToSet) {
                 params.node.setDataValue(fieldName, valueToSet);
                 if (params.node.data) {
@@ -376,7 +329,6 @@ export class RowManagementService {
             }
           });
 
-          // Auto-populate SKU columns based on the skus array in the existing part
           const skuInfo = dataService.getSkuInfo();
           if (skuInfo && skuInfo.length > 0) {
             skuInfo.forEach((sku) => {
@@ -386,7 +338,6 @@ export class RowManagementService {
                   ? existingPartData.part
                   : '';
 
-              // Only update if value is different
               if (oldData[skuFieldName] !== newSkuValue) {
                 params.node.setDataValue(skuFieldName, newSkuValue);
                 if (params.node.data) {
@@ -396,7 +347,6 @@ export class RowManagementService {
             });
           }
 
-          // Refresh the row to show all updated values
           setTimeout(() => {
             params.api.refreshCells({
               rowNodes: [params.node],
@@ -407,7 +357,6 @@ export class RowManagementService {
       }
     }
 
-    // Track edited rows for styling
     if (!params.data.isNewRow) {
       editedRows.add(params.data.part.toString());
     }
@@ -428,15 +377,11 @@ export class RowManagementService {
         return;
       }
 
-      // Capture the number of changes before clearing
       const changesCount = editedRows.size;
 
-      // Simulate API call delay
       setTimeout(() => {
-        // Update new rows to be regular rows after save
         const updatedRowData = rowData.map((row) => {
           if (row.isNewRow) {
-            // Convert new row to regular row
             const updatedRow = { ...row };
             delete updatedRow.isNewRow;
             delete updatedRow.newRowId;
@@ -446,17 +391,13 @@ export class RowManagementService {
           return row;
         });
 
-        // Update the component's rowData with the updated data
         componentInstance.rowData = updatedRowData;
-
-        // Clear the edited state
         editedRows.clear();
 
-        // Update state
         this.lastSavedAt = new Date();
         localStorage.setItem('lastSavedAt', this.lastSavedAt.toISOString());
         this.newRows.clear();
-        // Refresh the grid to apply all changes
+
         gridApi.refreshCells({
           force: true,
           suppressFlash: false,

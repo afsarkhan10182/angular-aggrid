@@ -24,7 +24,6 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
   @Input() skuData: any[] = [];
   @Output() close = new EventEmitter<void>();
 
-  // Fields that are already displayed in overview (excluding 'part' which is in title, and dates which are in timeline)
   private displayedFields = new Set([
     'supplier',
     'feature',
@@ -60,11 +59,10 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
     if (!this.partData || typeof this.partData !== 'object') return [];
 
     const keyValuePairs: Array<{ key: string; value: any }> = [];
-    const seenKeys = new Set<string>(); // Prevent duplicates
+    const seenKeys = new Set<string>();
 
-    // Exclude only Angular internal properties and system-level properties
     const systemFields = new Set([
-      '$', // Angular internal
+      '$',
       'isMaterialHeader',
       'isDirectRow',
       'isSectionHeader',
@@ -79,21 +77,19 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
       'materialIndex',
       'section',
       'allSkus',
-      'skus', // Exclude SKU array
+      'skus',
     ]);
 
     Object.keys(this.partData).forEach((key) => {
-      // Validate key is a valid string
       if (!key || typeof key !== 'string' || key.trim() === '') {
         return;
       }
 
-      // Skip system/internal fields, Angular properties, and SKU fields
       if (
         !systemFields.has(key) &&
         !key.startsWith('$') &&
-        !key.startsWith('sku') && // Exclude SKU fields - they're shown in widget
-        !seenKeys.has(key) && // Prevent duplicates
+        !key.startsWith('sku') &&
+        !seenKeys.has(key) &&
         this.partData[key] !== null &&
         this.partData[key] !== undefined
       ) {
@@ -101,38 +97,31 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
 
         let displayValue = this.partData[key];
 
-        // Handle different value types
         if (typeof displayValue === 'object' && displayValue !== null) {
-          // Skip functions
           if (typeof displayValue === 'function') {
             return;
           }
 
-          // Convert arrays/objects to readable format
           if (Array.isArray(displayValue)) {
-            if (displayValue.length === 0) return; // Skip empty arrays
-            // Try to stringify arrays with valid data
+            if (displayValue.length === 0) return;
             try {
               displayValue = JSON.stringify(displayValue, null, 2);
             } catch (e) {
-              return; // Skip if can't stringify
+              return;
             }
           } else {
-            // For objects, only stringify if they have meaningful properties
             const objKeys = Object.keys(displayValue);
-            if (objKeys.length === 0) return; // Skip empty objects
+            if (objKeys.length === 0) return;
             try {
               displayValue = JSON.stringify(displayValue, null, 2);
             } catch (e) {
-              return; // Skip if can't stringify
+              return;
             }
           }
         }
 
-        // Convert to string and validate
         const stringValue = String(displayValue).trim();
 
-        // Only include if value is meaningful (not empty, not just whitespace)
         if (stringValue !== '' && stringValue !== 'null' && stringValue !== 'undefined') {
           keyValuePairs.push({
             key: key,
@@ -156,12 +145,9 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
     if (!this.partData || typeof this.partData !== 'object') return [];
 
     const skuData: Array<{ id: string; value: string }> = [];
-    const seenSkuIds = new Set<string>(); // Prevent duplicate SKU IDs
+    const seenSkuIds = new Set<string>();
 
-    // Extract SKU fields from partData
     Object.keys(this.partData).forEach((key) => {
-      // Only process fields that match pattern: "sku" followed by digits (e.g., sku100, sku100150)
-      // Exclude "skus" (plural array) and any non-numeric SKU fields
       if (
         key &&
         typeof key === 'string' &&
@@ -171,32 +157,25 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
       ) {
         const skuValue = this.partData[key];
 
-        // Validate SKU value exists and is valid
         if (skuValue !== null && skuValue !== undefined) {
-          // Skip if value is an object or array (these show as [object Object])
           if (typeof skuValue === 'object') {
-            return; // Skip object/array values
+            return;
           }
 
-          // Skip functions
           if (typeof skuValue === 'function') {
             return;
           }
 
           const stringValue = String(skuValue).trim();
 
-          // Validate the value is meaningful
           if (stringValue !== '' && stringValue !== 'null' && stringValue !== 'undefined') {
-            // Extract SKU number from field name (e.g., "sku100" -> "100")
             const skuNumber = key.replace('sku', '');
 
-            // Validate SKU number is actually a number
             const skuNum = parseInt(skuNumber);
             if (isNaN(skuNum) || skuNum <= 0) {
-              return; // Skip invalid SKU numbers
+              return;
             }
 
-            // Prevent duplicate SKU IDs
             if (!seenSkuIds.has(skuNumber)) {
               seenSkuIds.add(skuNumber);
               skuData.push({
@@ -209,7 +188,6 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
       }
     });
 
-    // Sort SKU fields by SKU number (numeric sort)
     return skuData.sort((a, b) => {
       const numA = parseInt(a.id) || 0;
       const numB = parseInt(b.id) || 0;
@@ -222,7 +200,6 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   formatKeyName(key: string): string {
-    // Convert camelCase or snake_case to Title Case
     return key
       .replace(/([A-Z])/g, ' $1')
       .replace(/_/g, ' ')

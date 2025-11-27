@@ -23,26 +23,20 @@ export class GroupByService {
     const result: any[] = [];
     let currentDataGroup: any[] = [];
 
-    // Process data while preserving section/material headers
     data.forEach((row) => {
-      // Keep section headers and material headers as-is
       if (row.isSectionHeader || row.isMaterialHeader || row.isGroupHeader) {
-        // If we have accumulated data rows, group them first
         if (currentDataGroup.length > 0) {
           const grouped = this.createNestedGroups(currentDataGroup, groupFields, 0);
           const flattened = this.flattenGroupedData(grouped);
           result.push(...flattened);
           currentDataGroup = [];
         }
-        // Add the section/material/group header
         result.push(row);
       } else {
-        // Accumulate data rows for grouping
         currentDataGroup.push(row);
       }
     });
 
-    // Group any remaining data rows
     if (currentDataGroup.length > 0) {
       const grouped = this.createNestedGroups(currentDataGroup, groupFields, 0);
       const flattened = this.flattenGroupedData(grouped);
@@ -67,7 +61,6 @@ export class GroupByService {
     const groupField = groupFields[level];
     const groups = new Map<string | null, any[]>();
 
-    // Group data by current field
     data.forEach((row) => {
       const groupValue = row[groupField.field];
       const key = groupValue !== null && groupValue !== undefined ? String(groupValue) : '__null__';
@@ -78,10 +71,8 @@ export class GroupByService {
       groups.get(key)!.push(row);
     });
 
-    // Process each group
     const result: any[] = [];
     const sortedGroups = Array.from(groups.entries()).sort((a, b) => {
-      // Sort groups: null values last, then alphabetically
       if (a[0] === '__null__') return 1;
       if (b[0] === '__null__') return -1;
       const aKey = a[0] || '';
@@ -92,7 +83,6 @@ export class GroupByService {
     sortedGroups.forEach(([key, groupRows]) => {
       const groupValue = key === '__null__' ? null : key;
       
-      // Create group header
       const groupHeader: any = {
         isGroupHeader: true,
         groupLevel: level,
@@ -100,18 +90,16 @@ export class GroupByService {
         groupHeaderName: groupField.headerName,
         groupValue: groupValue,
         groupKey: `${groupField.field}_${key}`,
-        isExpanded: true, // Default to expanded
+        isExpanded: true,
         children: [],
       };
 
-      // Recursively group children if there are more group fields
       if (level < groupFields.length - 1) {
         groupHeader.children = this.createNestedGroups(groupRows, groupFields, level + 1);
       } else {
         groupHeader.children = groupRows;
       }
 
-      // Only push the group header, children will be included when flattened
       result.push(groupHeader);
     });
 

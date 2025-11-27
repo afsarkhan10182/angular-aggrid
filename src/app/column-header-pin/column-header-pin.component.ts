@@ -1,6 +1,7 @@
 import {
   Component,
   OnInit,
+  OnDestroy,
   AfterViewInit,
   AfterViewChecked,
   ElementRef,
@@ -13,7 +14,6 @@ import { CommonModule } from '@angular/common';
 import { IHeaderParams } from 'ag-grid-community';
 import { IHeaderAngularComp } from 'ag-grid-angular';
 
-// Static service to ensure only one menu is open at a time
 class MenuStateService {
   private static currentOpenMenu: ColumnHeaderPinComponent | null = null;
 
@@ -385,7 +385,7 @@ class MenuStateService {
   ],
 })
 export class ColumnHeaderPinComponent
-  implements IHeaderAngularComp, OnInit, AfterViewInit, AfterViewChecked
+  implements IHeaderAngularComp, OnInit, OnDestroy, AfterViewInit, AfterViewChecked
 {
   params!: IHeaderParams;
   displayName: string = '';
@@ -415,6 +415,11 @@ export class ColumnHeaderPinComponent
     if (this.isMenuOpen) {
       this.moveDropdownToBody();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.closeMenu();
+    MenuStateService.clearOpenMenu(this);
   }
 
   moveDropdownToBody(): void {
@@ -458,7 +463,6 @@ export class ColumnHeaderPinComponent
       this.isPinned = pinned === 'left' || pinned === 'right';
       this.pinnedSide = pinned === 'left' ? 'left' : pinned === 'right' ? 'right' : null;
 
-      // Update sort state
       const sort = this.params.column.getSort();
       this.sortState = sort === 'asc' ? 'asc' : sort === 'desc' ? 'desc' : null;
     }
@@ -472,15 +476,12 @@ export class ColumnHeaderPinComponent
     const column = this.params.column;
     const colDef = column.getColDef();
 
-    // Only allow sorting if column is sortable
     if (colDef.sortable === false) {
       return;
     }
 
-    // Get current sort state
     const currentSort = column.getSort();
 
-    // Toggle sort: none -> asc -> desc -> none
     let newSort: 'asc' | 'desc' | null = null;
     if (!currentSort) {
       newSort = 'asc';
@@ -490,7 +491,6 @@ export class ColumnHeaderPinComponent
       newSort = null;
     }
 
-    // Use AG Grid's API to set sort via column state
     const columnId = column.getColId();
     if (newSort) {
       this.params.api.applyColumnState({
@@ -504,7 +504,6 @@ export class ColumnHeaderPinComponent
       });
     }
 
-    // Update sort state
     setTimeout(() => {
       this.updatePinnedState();
     }, 0);
@@ -519,29 +518,21 @@ export class ColumnHeaderPinComponent
       return;
     }
 
-    // Close any other open menus
     MenuStateService.setOpenMenu(this);
-
-    // Set menu open
     this.isMenuOpen = true;
-
-    // Force update to ensure element is created in DOM
     this.cdr.detectChanges();
 
-    // Calculate position immediately using viewport coordinates
     if (this.menuButton && this.menuButton.nativeElement) {
       const buttonRect = this.menuButton.nativeElement.getBoundingClientRect();
 
-      // Use fixed positioning relative to viewport
       this.dropdownStyle = {
         top: `${buttonRect.bottom + 4}px`,
-        left: `${buttonRect.left}px`, // Align left edge of menu with left edge of button
+        left: `${buttonRect.left}px`,
         position: 'fixed',
         zIndex: '99999',
         display: 'block',
       };
 
-      // Force update again to apply styles
       this.cdr.detectChanges();
     }
   }
@@ -574,7 +565,6 @@ export class ColumnHeaderPinComponent
   @HostListener('window:scroll', ['$event'])
   @HostListener('window:resize', ['$event'])
   handleScrollOrResize(event: Event): void {
-    // Close menu on scroll or resize to avoid positioning issues
     if (this.isMenuOpen) {
       this.closeMenu();
     }

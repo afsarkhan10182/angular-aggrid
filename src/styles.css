@@ -741,6 +741,8 @@ div.ag-header-cell[col-id='actions'] {
   background-color: #3b82f6 !important;
   width: 3px !important;
   transition: background-color 0.2s ease !important;
+  z-index: 1000 !important;
+  cursor: col-resize !important;
 }
 
 .ag-theme-alpine .ag-header-cell-resize:hover {
@@ -783,12 +785,6 @@ div.ag-header-cell[col-id='actions'] {
 .ag-theme-alpine.ag-resizing .ag-row.ag-row-selected {
   background-color: inherit !important;
   border-color: inherit !important;
-}
-
-/* Ensure resize handle is always visible and functional */
-.ag-theme-alpine .ag-header-cell-resize {
-  z-index: 1000 !important;
-  cursor: col-resize !important;
 }
 
 /* Prevent any visual glitches during resize */
@@ -1056,20 +1052,6 @@ div.ag-header-cell[col-id='actions'] {
   border-radius: 2px !important;
 }
 
-.new-row-text {
-  color: #6b7280;
-  font-style: italic;
-}
-
-.new-row-placeholder {
-  color: #9ca3af;
-  font-style: italic;
-  font-size: 12px;
-  user-select: none;
-  pointer-events: none;
-  opacity: 0.8;
-}
-
 /* Sub-row styling - children under material headers */
 .ag-row.subrow {
   background: #f0fdf4 !important;
@@ -1126,33 +1108,6 @@ div.ag-header-cell[col-id='actions'] {
 /* ========================================
    PART COLUMN & CLICKABLE ELEMENTS
    ======================================== */
-.part-text {
-  color: #374151;
-  cursor: default;
-}
-
-.part-cell-content {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  height: 28px;
-  overflow: hidden;
-}
-
-/* Clickable parts */
-.clickable,
-.ag-cell .clickable,
-.ag-cell[col-id='part'] .clickable,
-.part-link.clickable {
-  cursor: pointer !important;
-  pointer-events: auto !important;
-}
-
-.part-link.clickable {
-  color: #3b82f6;
-  text-decoration: underline;
-  font-weight: 500;
-}
 
 /* Part column editing */
 .ag-cell[col-id='part'] {
@@ -1254,12 +1209,6 @@ div.ag-header-cell[col-id='actions'] {
 /* ========================================
    ROW & VIEWPORT LAYOUT
    ======================================== */
-.ag-body-viewport {
-  overflow-x: auto;
-  overflow-y: auto;
-  background: white;
-  line-height: 1;
-}
 
 .ag-body-viewport-wrapper {
   overflow: hidden;
@@ -1361,22 +1310,6 @@ div.ag-header-cell[col-id='actions'] {
   }
 }
 
-/* AG Grid resize handle - Clean */
-.ag-theme-alpine .ag-header-cell-resize {
-  background: #3b82f6 !important;
-  width: 3px !important;
-  opacity: 0.8;
-}
-
-.ag-theme-alpine .ag-header-cell-resize:hover {
-  background: #1d4ed8 !important;
-  width: 4px !important;
-  opacity: 1;
-}
-
-/* Wrapper for side buttons to stack them vertically */
-/* Wrapper for side buttons to stack them vertically */
-/* Wrapper for side buttons - Container for separate buttons */
 /* Wrapper for side buttons - Container for separate buttons */
 .side-buttons-wrapper {
   display: flex;
@@ -1603,8 +1536,6 @@ div.ag-header-cell[col-id*='sku'] {
   min-height: 100px !important;
   max-height: 100px !important;
 }
-
-
 
 /* 6. SKU header text fallback - for non-custom headers */
 /* Hide default header text when using custom component */

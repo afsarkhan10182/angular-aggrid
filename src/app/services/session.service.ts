@@ -40,14 +40,12 @@ export class SessionService {
     return `${protocol}//${hostFromJsp}`;
   }
 
-  // Use CSRF API for authentication since it requires credentials
   getAuthUrl(): string {
     return environment.useMockApi
       ? environment.mockApiEndpoints.csrf
       : `${this.getServiceHostUrl()}${environment.csrfUrl}`;
   }
 
-  // getUser API URL for getting user information after authentication
   getUserApiUrl(): string {
     return environment.useMockApi
       ? environment.mockApiEndpoints.getUser
@@ -60,16 +58,13 @@ export class SessionService {
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
-  // Store CSRF token
   private csrfToken: string | null = null;
 
   constructor(private http: HttpClient) {}
 
-  // Call CSRF API to get token (before showing login modal)
   getCsrfToken(): Observable<string> {
     return this.http.get<any>(this.getAuthUrl()).pipe(
       map((csrfResponse: any) => {
-        // Extract CSRF token from response
         const token = csrfResponse?.items?.[0]?.attributes?.nonce || csrfResponse?.nonce || '';
         this.csrfToken = token;
         return token;
@@ -81,35 +76,29 @@ export class SessionService {
     );
   }
 
-  // Authenticate user with credentials (after modal)
   initSession(): Observable<LoggedInUserModel> {
     return this.getUserInfo().pipe(
       tap((user: LoggedInUserModel) => {
-        // Update session state when getUserDetails succeeds
         this.sessionSubject.next(user);
         this.isAuthenticatedSubject.next(true);
       }),
       catchError((error) => {
         this.sessionSubject.next(null);
         this.isAuthenticatedSubject.next(false);
-        // Throw the error so app.ts can handle it properly
         return throwError(() => error);
       })
     );
   }
 
-  // Get stored CSRF token
   getCsrfNonce(): string | null {
     return this.csrfToken;
   }
 
   private getUserInfo(): Observable<LoggedInUserModel> {
-    // Prepare request body with username from credentials
     const requestBody = {
       userName: environment.credentials.username,
     };
 
-    // Prepare headers with CSRF token
     let headers: any = {
       'Content-Type': 'application/json',
     };
@@ -120,9 +109,7 @@ export class SessionService {
 
     return this.http.post<any>(this.getUserApiUrl(), requestBody, { headers }).pipe(
       map((response: any) => {
-        // Map the response to our user model
         if (environment.useMockApi) {
-          // Development: Allow fallbacks for mock data
           const user: LoggedInUserModel = {
             name: response.name || response.userName || 'wcadmin',
             fullName: response.fullName || 'Administrator',
@@ -132,7 +119,6 @@ export class SessionService {
           };
           return user;
         } else {
-          // Production: Strict validation - backend must provide all fields
           if (!response.name || !response.fullName || !response.userName) {
             throw new Error('Invalid user data received from backend - missing required fields');
           }
@@ -149,7 +135,6 @@ export class SessionService {
       }),
       catchError((error) => {
         if (environment.useMockApi) {
-          // Development: Provide fallback for mock API failures
           const fallbackUser: LoggedInUserModel = {
             name: 'wcadmin',
             fullName: 'Administrator',
@@ -157,7 +142,6 @@ export class SessionService {
           };
           return of(fallbackUser);
         } else {
-          // Production: No fallbacks - authentication must fail
           return throwError(() => error);
         }
       })

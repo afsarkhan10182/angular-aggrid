@@ -1,8 +1,9 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
+import { Subscription } from 'rxjs';
 import { PartModalComponent } from './part-modal/part-modal.component';
 import { AutocompleteCellEditorComponent } from './autocomplete-cell-editor/autocomplete-cell-editor.component';
 import { DataService } from './services/data.service';
@@ -20,8 +21,9 @@ import { environment } from '../environments/environment';
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
 })
-export class App implements OnInit {
+export class App implements OnInit, OnDestroy {
   private gridApi!: GridApi;
+  private subscriptions: Subscription[] = [];
   public showColumnVisibilityPanel = false;
   public showGroupByPanel = false;
 
@@ -254,7 +256,7 @@ export class App implements OnInit {
       };
     }
 
-    this.sessionService.getCsrfToken().subscribe({
+    const csrfSub = this.sessionService.getCsrfToken().subscribe({
       next: (csrfToken) => {
         this.loadData();
       },
@@ -265,11 +267,12 @@ export class App implements OnInit {
         );
       },
     });
+    this.subscriptions.push(csrfSub);
   }
 
   loadData(): void {
     this.isLoading = true;
-    this.dataService.loadData().subscribe(
+    const loadSub = this.dataService.loadData().subscribe(
       (data) => {
         this.isLoading = false;
         const bomPartInfo = this.dataService.getBomPartInfo();
@@ -301,6 +304,7 @@ export class App implements OnInit {
         console.error('Error loading data:', error);
       }
     );
+    this.subscriptions.push(loadSub);
   }
 
   initializeColumns(): void {
@@ -1493,7 +1497,7 @@ export class App implements OnInit {
       return;
     }
 
-    this.dataService.getComplexBOM(materialIdString).subscribe({
+    const bomSub = this.dataService.getComplexBOM(materialIdString).subscribe({
       next: (complexBOMData: any) => {
         const keyValuePairs: any[] = [];
 
@@ -1529,6 +1533,7 @@ export class App implements OnInit {
         this.showMaterialModal = true;
       },
     });
+    this.subscriptions.push(bomSub);
   }
 
   private convertKeyValuePairsToObject(keyValuePairs: any[]): any {
@@ -2119,5 +2124,22 @@ export class App implements OnInit {
       this.saveMessage = '';
       this.saveMessageType = '';
     }, 5000);
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
+    this.subscriptions = [];
+
+    if (this.searchTextDebounceTimer) {
+      clearTimeout(this.searchTextDebounceTimer);
+    }
+
+    if (this.gridApi && (this.gridApi as any)._hoverSyncCleanup) {
+      (this.gridApi as any)._hoverSyncCleanup();
+    }
+
+    delete (window as any).toggleSection;
+    delete (window as any).toggleMaterial;
+    delete (window as any).toggleGroup;
   }
 }

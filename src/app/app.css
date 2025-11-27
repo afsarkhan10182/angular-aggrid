@@ -57,65 +57,6 @@
 
 /* Shared Grid Styles - Common styles for AG-Grid components */
 
-/* Accordion Display Styles */
-.parent-row {
-  background-color: #f8f9fa !important;
-  border-left: 3px solid #007bff !important;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.subrow {
-  background-color: #fafbfc !important;
-  border-left: 3px solid #28a745 !important;
-  margin-left: 20px;
-  transition: all 0.3s ease;
-  animation: slideDown 0.3s ease-out;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-}
-
-.accordion-arrow {
-  font-size: 16px;
-  color: #007bff;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-  display: inline-block;
-  padding: 4px;
-  border-radius: 4px;
-}
-
-.accordion-arrow:hover {
-  background-color: #e3f2fd;
-  transform: scale(1.1);
-}
-
-.subrow-indent {
-  color: #6c757d;
-  font-size: 14px;
-  margin-left: 10px;
-}
-
 /* Parent row styling */
 .ag-row.parent-row {
   background-color: #f8f9fa !important;
@@ -136,48 +77,6 @@
 .ag-row.subrow .ag-cell {
   background-color: #fafbfc !important;
   padding-left: 20px;
-}
-
-/* Subrow icon column styling */
-.ag-cell[col-id='subrowIcon'] {
-  text-align: center;
-  padding: 4px;
-}
-
-.ag-cell[col-id='subrowIcon'] .subrow-icon {
-  font-size: 16px;
-  color: #007bff;
-}
-
-.ag-cell[col-id='subrowIcon'] .subrow-indent {
-  color: #6c757d;
-  font-size: 14px;
-}
-
-/* Simple highlighting for editable fields in new rows */
-.ag-cell[col-id='part'] .ag-cell-wrapper {
-  border: 1px solid #007bff !important;
-}
-
-.ag-cell[col-id='feature'] .ag-cell-wrapper {
-  border: 1px solid #007bff !important;
-}
-
-.ag-cell[col-id='startDate'] .ag-cell-wrapper {
-  border: 1px solid #007bff !important;
-}
-
-.ag-cell[col-id='qty'] .ag-cell-wrapper {
-  border: 1px solid #007bff !important;
-}
-
-/* Simple styling for new rows - light blue border for editable fields */
-.ag-row.new-row .ag-cell[col-id='part'],
-.ag-row.new-row .ag-cell[col-id='feature'],
-.ag-row.new-row .ag-cell[col-id='startDate'],
-.ag-row.new-row .ag-cell[col-id='qty'] {
-  border: 1px solid #007bff !important;
-  background: white !important;
 }
 
 /* Ensure all sides have blue borders for editable cells in new rows */
@@ -297,16 +196,6 @@
   transform: translateX(26px) !important;
   -webkit-transform: translateX(26px) !important;
   -moz-transform: translateX(26px) !important;
-}
-
-.toggle-label {
-  font-size: 12px !important;
-  color: #374151 !important;
-  white-space: nowrap !important;
-  margin-left: 8px !important;
-  font-weight: 500 !important;
-  min-width: 20px !important;
-  text-align: center !important;
 }
 
 /* Ensure toggle switch is visible and properly styled */

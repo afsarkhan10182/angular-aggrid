@@ -74,12 +74,10 @@ export class DataService {
   }
 
   loadData(): Observable<ApiData> {
-    // Use full URL for production API
     let apiUrl = environment.useMockApi
       ? environment.dataApiPath
       : `${this.getServiceHostUrl()}${environment.dataApiPath}`;
 
-    // In production, append bomId from JSP data attribute
     if (!environment.useMockApi) {
       const bomId = this.getJspDataAttribute('data-bomid');
 
@@ -104,17 +102,14 @@ export class DataService {
    */
   getComplexBOM(materialId: string): Observable<any> {
     let apiUrl = environment.useMockApi
-      ? `/api/complexBOM/${materialId}` // Mock endpoint
+      ? `/api/complexBOM/${materialId}`
       : `${this.getServiceHostUrl()}/api/complexBOM/${materialId}`;
 
     return this.http.get<any>(apiUrl).pipe(
       map((data) => {
-        // Transform API response to key-value pairs if needed
-        // If API already returns key-value format, return as-is
         if (data && typeof data === 'object' && !Array.isArray(data)) {
           return data;
         }
-        // If API returns array, convert to object
         if (Array.isArray(data)) {
           const keyValuePairs: any = {};
           data.forEach((item: any) => {
@@ -144,15 +139,12 @@ export class DataService {
     toIndex: number = 20,
     isPartNumberSearch: boolean = false
   ): Observable<{ results: any[]; resultCount: number; hasMore: boolean }> {
-    // Determine data source based on environment
     let dataSource: Observable<any>;
 
     if (environment.useMockApi) {
-      // Mock: Load from JSON file
       const mockApiUrl = environment.mockApiEndpoints.material;
       dataSource = this.http.get<any>(mockApiUrl).pipe(
         map((mockResponse) => {
-          // Filter results based on query (case-insensitive) - client-side filtering for mock
           const queryLower = query.trim().toLowerCase();
           let filteredResults = mockResponse.results || [];
 
@@ -186,7 +178,6 @@ export class DataService {
       // Production: Use real API with CSRF token
       const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/rfa/materials/search`;
 
-      // Build attribute parameters based on search type
       const attributeParameters: any[] = [];
       if (isPartNumberSearch) {
         attributeParameters.push({
@@ -202,7 +193,6 @@ export class DataService {
         });
       }
 
-      // Build the request body
       const requestBody = {
         typeName: 'com.lcs.wc.material.LCSMaterial',
         parameters: [
@@ -219,23 +209,19 @@ export class DataService {
         ],
       };
 
-      // Get CSRF token from SessionService
       const csrfToken = this.sessionService.getCsrfNonce();
 
-      // Prepare headers
       const headers: any = {
         accept: 'application/json',
         'Content-Type': 'application/json',
       };
 
-      // Add CSRF token if available
       if (csrfToken) {
         headers['CSRF_NONCE'] = csrfToken;
       }
 
       dataSource = this.http.post<any>(apiUrl, requestBody, { headers }).pipe(
         map((response) => {
-          // Server-side filtering and pagination - extract results and pagination info
           if (!response || !response.results || !Array.isArray(response.results)) {
             return { results: [], resultCount: 0, hasMore: false };
           }
@@ -259,39 +245,29 @@ export class DataService {
         const resultCount = data.resultCount || 0;
         const hasMore = data.hasMore || false;
 
-        // Transform results to common format
         const transformedResults = results.map((result: any) => {
           const material = result.material || {};
           const supplier = result.supplier || {};
           const materialColor = result['material-color'] || {};
           const color = result.color || {};
 
-          // Extract supplier name - prefer supplierName, fallback to name
           const supplierName = supplier.supplierName || supplier.name || '';
-
-          // Extract color name - prefer colorName, fallback to name
           const colorName = color.colorName || color.name || '';
 
           return {
-            // Extract ptcmaterialName from material object
             name: material.ptcmaterialName || '',
             materialName: material.ptcmaterialName || '',
             ptcmaterialName: material.ptcmaterialName || '',
             versionId: material.versionId || '',
             materialMaster: material.materialMaster || '',
             materialVersionId: material.versionId || '',
-            // Supplier information - ensure we have the actual supplier name
             supplier: supplierName,
             supplierName: supplierName,
             supplierVersionId: supplier.versionId || '',
-            // Part number information
             partNumber: materialColor.partNumber || '',
-            // Color information - ensure we have the actual color name
             colorName: colorName,
             color: colorName,
-            // Material-supplier relationship
             materialSupplierVersionId: result['material-supplier']?.versionId || '',
-            // Full result object for reference (contains original API structure)
             fullResult: result,
           };
         });

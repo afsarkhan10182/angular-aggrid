@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ICellEditorAngularComp } from 'ag-grid-angular';
 import { DataService } from '../services/data.service';
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
-import { of, Subject } from 'rxjs';
+import { of, Subject, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-autocomplete-cell-editor',
@@ -48,6 +48,7 @@ export class AutocompleteCellEditorComponent
   private customFilterFunction?: (searchTerm: string, options: string[]) => string[];
   private dataService: DataService;
   private searchSubject = new Subject<string>();
+  private subscriptions: Subscription[] = [];
   private isDestroyed: boolean = false;
   private currentQuery: string = '';
   private fromIndex: number = 1;
@@ -80,7 +81,7 @@ export class AutocompleteCellEditorComponent
   ngOnInit() {
     this.originalValue = this.value;
 
-    this.searchSubject
+    const searchSub = this.searchSubject
       .pipe(
         debounceTime(300),
         distinctUntilChanged(),
@@ -198,6 +199,7 @@ export class AutocompleteCellEditorComponent
           }
         }
       });
+    this.subscriptions.push(searchSub);
   }
 
   ngAfterViewInit() {
@@ -234,7 +236,13 @@ export class AutocompleteCellEditorComponent
   }
 
   ngOnDestroy() {
+    this.isDestroyed = true;
     this.closeDropdown();
+
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
+    this.subscriptions = [];
+
+    this.searchSubject.complete();
   }
 
   agInit(params: any): void {
@@ -553,7 +561,7 @@ export class AutocompleteCellEditorComponent
     this.fromIndex = this.toIndex + 1;
     this.toIndex = this.fromIndex + (this.PAGE_SIZE - 1);
 
-    this.dataService
+    const loadMoreSub = this.dataService
       .searchMaterials(this.currentQuery, this.fromIndex, this.toIndex, this.isPartNumberSearch)
       .subscribe({
         next: (response) => {
@@ -579,6 +587,7 @@ export class AutocompleteCellEditorComponent
           this.hasMore = false;
         },
       });
+    this.subscriptions.push(loadMoreSub);
   }
 
   selectOption(option: string, optionIndex?: number): void {
@@ -1179,7 +1188,7 @@ export class AutocompleteCellEditorComponent
       }
     }
 
-    this.dataService.searchMaterials(partNumber, 1, 1000, true).subscribe({
+    const materialsSub = this.dataService.searchMaterials(partNumber, 1, 1000, true).subscribe({
       next: (response) => {
         if (!this.isDestroyed && this.params && this.params.node) {
           const allParts = response.results || [];
@@ -1291,5 +1300,6 @@ export class AutocompleteCellEditorComponent
         console.error('Error fetching all parts for dropdowns:', error);
       },
     });
+    this.subscriptions.push(materialsSub);
   }
 }
