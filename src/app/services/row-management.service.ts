@@ -10,9 +10,6 @@ export class RowManagementService {
   private nextRowId = 10000;
   private newRows = new Map<number, any>();
   private lastSavedAt: Date | null = null;
-  private copiedSkuValue: string = '';
-  private copiedFromRowId: number | null = null;
-  private copiedFromCellKey: string = '';
 
   constructor(private gridCommonService: GridCommonService) {
     // Load lastSavedAt from localStorage if available
@@ -198,91 +195,6 @@ export class RowManagementService {
   }
 
   /**
-   * Copy SKU value from a cell (only for new rows)
-   */
-  copySkuValue(params: any, componentInstance: any): void {
-    if (!params.data || !params.data.isNewRow) {
-      return;
-    }
-
-    const valueToCopy = params.value || params.data.partNumber || params.data.part;
-
-    if (!valueToCopy) {
-      return;
-    }
-
-    this.copiedSkuValue = valueToCopy;
-    this.copiedFromRowId = params.data.newRowId;
-    this.copiedFromCellKey = `${params.node.rowIndex}-${params.colDef.field}`;
-
-    // Visual feedback - refresh cells to show copy indicator
-    params.api.refreshCells({
-      force: true,
-    });
-  }
-
-  /**
-   * Paste SKU value to a cell
-   */
-  pasteSkuValue(params: any, componentInstance: any): void {
-    if (!params.data || !params.data.isNewRow) {
-      return;
-    }
-
-    let valueToPaste = this.copiedSkuValue;
-
-    // If we have a copied value, check the row restriction
-    if (valueToPaste) {
-      if (this.copiedFromRowId !== null && params.data.newRowId !== this.copiedFromRowId) {
-        // If restriction fails, fall back to local part number
-        valueToPaste = params.data.partNumber || params.data.part;
-      }
-    } else {
-      // No copied value, use local part number
-      valueToPaste = params.data.partNumber || params.data.part;
-    }
-
-    if (!valueToPaste) {
-      return;
-    }
-
-    // Don't paste if the cell already has the same value
-    if (params.value === valueToPaste) {
-      return;
-    }
-
-    // Stop any ongoing editing
-    params.api.stopEditing();
-
-    // Set the value in the cell
-    params.node.setDataValue(params.colDef.field, valueToPaste);
-
-    // Mark the row as edited
-    if (params.data.newRowId) {
-      componentInstance.editedRows.add(params.data.newRowId);
-    }
-
-    // Force immediate refresh of the entire row
-    params.api.redrawRows({
-      rowNodes: [params.node],
-    });
-
-    // Additional refresh after a short delay
-    setTimeout(() => {
-      params.api.refreshCells({
-        rowNodes: [params.node],
-        force: true,
-      });
-
-      // Flash the cell to show the paste was successful
-      params.api.flashCells({
-        rowNodes: [params.node],
-        columns: [params.colDef.field],
-      });
-    }, 50);
-  }
-
-  /**
    * Paste Part Number specifically to a cell
    */
   pastePartNumber(params: any, componentInstance: any): void {
@@ -330,20 +242,6 @@ export class RowManagementService {
         columns: [params.colDef.field],
       });
     }, 50);
-  }
-
-  /**
-   * Clear copy state and visual indicators
-   */
-  clearCopyState(gridApi: GridApi, componentInstance: any): void {
-    this.copiedSkuValue = '';
-    this.copiedFromRowId = null;
-    this.copiedFromCellKey = '';
-
-    // Refresh grid to remove visual indicators
-    gridApi.refreshCells({
-      force: true,
-    });
   }
 
   /**
@@ -558,10 +456,6 @@ export class RowManagementService {
         this.lastSavedAt = new Date();
         localStorage.setItem('lastSavedAt', this.lastSavedAt.toISOString());
         this.newRows.clear();
-
-        // Clear copy state to remove copyable behavior after save
-        this.clearCopyState(gridApi, componentInstance);
-
         // Refresh the grid to apply all changes
         gridApi.refreshCells({
           force: true,
