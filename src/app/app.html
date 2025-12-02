@@ -19,7 +19,7 @@
       <div class="left-controls-group">
         <div class="criteria-display">
           <strong>Criteria:</strong> Parts of SKUs chosen -
-          {{ dataService.getProductInfo()?.productId }}
+          {{ dataService.getBomOwners() }}
         </div>
         <div class="search-filter-section">
           <div class="search-filter-container">
@@ -176,7 +176,7 @@
           </div>
           <div class="column-checkboxes">
             <ng-container *ngFor="let col of allColumns">
-              <div *ngIf="!isSkuColumn(col)" class="column-checkbox">
+              <div *ngIf="!isSkuColumn(col) && !isFieldGrouped(col.field)" class="column-checkbox">
                 <label>
                   <input
                     type="checkbox"

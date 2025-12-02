@@ -276,11 +276,14 @@ export class App implements OnInit, OnDestroy {
       (data) => {
         this.isLoading = false;
         const bomPartInfo = this.dataService.getBomPartInfo();
-        if (bomPartInfo?.bomName) {
-          this.bomName = bomPartInfo.bomName;
-        }
-        if (bomPartInfo?.modifyTimestamp) {
-          this.rowManagementService.setLastSavedAt(new Date(bomPartInfo.modifyTimestamp));
+        if (bomPartInfo) {
+          const bomPartInfoArray = Array.isArray(bomPartInfo) ? bomPartInfo : [bomPartInfo];
+          if (bomPartInfoArray.length > 0 && bomPartInfoArray[0]?.bomName) {
+            this.bomName = bomPartInfoArray[0].bomName;
+          }
+          if (bomPartInfoArray.length > 0 && bomPartInfoArray[0]?.modifyTimestamp) {
+            this.rowManagementService.setLastSavedAt(new Date(bomPartInfoArray[0].modifyTimestamp));
+          }
         }
 
         this.rowData = this.transformToHierarchicalData(data);
@@ -311,13 +314,21 @@ export class App implements OnInit, OnDestroy {
     const columnMapping = this.dataService.getColumnMapping();
     this.columnDefs = this.createHierarchicalColumns(columnMapping);
 
-    // Initialize available group fields from column definitions
     this.availableGroupFields = this.columnDefs
       .filter((col) => col.field && col.field !== 'actions' && col.sortable !== false)
       .map((col) => ({
         field: col.field!,
         headerName: col.headerName || col.field!,
       }));
+
+    if (this.gridApi && this.activeGroupFields.length > 0) {
+      const groupedFields = this.activeGroupFields
+        .map((g) => g.field)
+        .filter((f): f is string => !!f);
+      groupedFields.forEach((field) => {
+        this.gridApi.setColumnsVisible([field], false);
+      });
+    }
   }
 
   createHierarchicalColumns(columnMapping: any): ColDef[] {
@@ -1203,22 +1214,47 @@ export class App implements OnInit, OnDestroy {
   }
 
   addGroupField(field: GroupConfig): void {
-    // Check if already grouped by this field
     if (this.activeGroupFields.some((g) => g.field === field.field)) {
       return;
     }
 
     this.activeGroupFields.push(field);
+
+    if (this.gridApi && field.field) {
+      this.gridApi.setColumnsVisible([field.field], false);
+    }
+
     this.applyGrouping();
   }
 
   removeGroupField(field: GroupConfig): void {
     this.activeGroupFields = this.activeGroupFields.filter((g) => g.field !== field.field);
+
+    if (this.gridApi && field.field) {
+      const colDef = this.columnDefs.find((col) => col.field === field.field);
+      if (colDef && !colDef.hide) {
+        this.gridApi.setColumnsVisible([field.field], true);
+      }
+    }
+
     this.applyGrouping();
   }
 
   clearAllGroups(): void {
+    const groupedFields = this.activeGroupFields
+      .map((g) => g.field)
+      .filter((f): f is string => !!f);
     this.activeGroupFields = [];
+
+    if (this.gridApi && groupedFields.length > 0) {
+      groupedFields.forEach((field) => {
+        const colDef = this.columnDefs.find((col) => col.field === field);
+        if (colDef && !colDef.hide) {
+          this.gridApi.setColumnsVisible([field], true);
+        }
+      });
+    }
+
     this.applyGrouping();
   }
 

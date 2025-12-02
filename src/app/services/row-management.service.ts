@@ -291,7 +291,7 @@ export class RowManagementService {
       const apiData = dataService.getApiData();
 
       if (apiData && apiData.mbom) {
-        const existingPart = apiData.mbom.find((part) => part.part === params.newValue);
+        const existingPart = apiData.mbom.find((part) => part.partNumber === params.newValue);
 
         if (existingPart) {
           const fieldsToPopulate = [

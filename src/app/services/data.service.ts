@@ -8,27 +8,29 @@ export interface PartData {
   branchId: string;
   quantity: string;
   bomLinkFeature: string;
-  bomLinkPart: string;
   skus: SkuData[];
-  color: string;
-  part: string;
   bomLinkEndDate: string;
   section: string;
-  partName: string;
-  materialDescription: string;
+  bomPartMasterId: string;
+  bomPartRev: string;
+  partSixtyCharacterDescription: string;
   masterBranchId: string;
-  material: string;
   bomLinkStartDate: string;
   supplier: string;
+  bomLinkNotes: string;
   flexBomLinkId: string;
-  linkedBom: string;
   supplierDescription: string;
+  bomLinkIncludeInSpecSheet: string;
   sortingNumber: string;
-  colorDescription: string;
   bomLinkCountryOfOrigin: string;
-  materialcolorLongDescription: string;
-  materialcolorShortDescription: string;
+  partThirtyCharacterDescription: string;
+  bomLinkSpecSheetExtra: string;
+  materialDescription: string;
+  dimensionId: string;
+  sectionInternalName: string;
+  partNumber: string;
   materialSupplierComments: string;
+  colorDescription: string;
 }
 
 export interface SkuData {
@@ -40,23 +42,32 @@ export interface SkuData {
 export interface SkuInfo {
   sku: string;
   product: string;
+  productId?: string;
   manufacturer: string;
   color: string;
   size1: string;
+  destination?: string;
+  colorDimensionId?: string;
+  sourceDimensionId?: string;
+  destinationDimensionId?: string;
+}
+
+export interface BomPartInfo {
+  bomMasterId?: string;
+  bomName: string;
+  bomOwnerId?: string;
+  bomOwner?: string;
+  modifyTimestamp: string;
 }
 
 export interface ApiData {
   mbom: PartData[];
-  columns: { [key: string]: string }; // Dynamic column mapping
-  productInfo: {
-    productId: string;
-    productName: string;
+  columns: { [key: string]: string };
+  skuInfo: {
     skus: SkuInfo[];
   };
-  bomPartInfo?: {
-    bomName: string;
-    modifyTimestamp: string;
-  };
+  bomPartInfo?: BomPartInfo | BomPartInfo[];
+  sectionOrder?: string[];
 }
 
 @Injectable({
@@ -442,19 +453,42 @@ export class DataService {
   }
 
   getSkuInfo(): SkuInfo[] {
-    return this.apiData?.productInfo.skus || [];
+    return this.apiData?.skuInfo.skus || [];
   }
 
   getProductInfo() {
-    return this.apiData?.productInfo;
+    const skuInfo = this.apiData?.skuInfo;
+    const bomPartInfo = this.apiData?.bomPartInfo;
+    const firstSku = skuInfo?.skus?.[0];
+
+    if (!skuInfo || !firstSku) {
+      return null;
+    }
+
+    const bomOwner = Array.isArray(bomPartInfo) ? bomPartInfo[0]?.bomOwner : bomPartInfo?.bomOwner;
+
+    return {
+      productId: firstSku.productId || '',
+      productName: bomOwner || firstSku.product || '',
+    };
+  }
+
+  getBomOwners(): string {
+    const bomPartInfo = this.apiData?.bomPartInfo;
+    if (!bomPartInfo) {
+      return '';
+    }
+
+    const bomPartInfoArray = Array.isArray(bomPartInfo) ? bomPartInfo : [bomPartInfo];
+    const bomOwners = bomPartInfoArray
+      .map((info) => info.bomOwner)
+      .filter((owner): owner is string => !!owner);
+
+    return bomOwners.join(', ');
   }
 
   getBomPartInfo() {
     return this.apiData?.bomPartInfo;
-  }
-
-  getDynamicColumns(): { [key: string]: string } {
-    return this.apiData?.columns || {};
   }
 
   getColumnMapping(): { [key: string]: string } {
@@ -485,12 +519,10 @@ export class DataService {
     const result: any[] = [];
     const parentMap = new Map<string, any>();
 
-    // First pass: Create all rows and identify parents
     parts.forEach((part) => {
       const row = this.createRowData(part, skuInfo);
 
-      // Check if this is a parent row (has linkedBom: "1")
-      if (part.linkedBom === '1') {
+      if (row.linkedBom === '1') {
         row.isParent = true;
         row.hasChildren = false; // Will be updated if children are found
         row.isExpanded = false; // Accordion starts collapsed
@@ -546,34 +578,37 @@ export class DataService {
     return null;
   }
 
-  // Create individual row data
   private createRowData(part: PartData, skuInfo: any[]): any {
     const row: any = {
-      // Map all fields from the new backend structure
       branchId: part.branchId,
       quantity: part.quantity,
       bomLinkFeature: part.bomLinkFeature,
-      bomLinkPart: part.bomLinkPart,
-      color: part.color,
-      part: part.part,
       bomLinkEndDate: part.bomLinkEndDate,
       section: part.section,
-      partName: part.partName,
-      materialDescription: part.materialDescription,
+      bomPartMasterId: part.bomPartMasterId,
+      bomPartRev: part.bomPartRev,
+      partSixtyCharacterDescription: part.partSixtyCharacterDescription,
       masterBranchId: part.masterBranchId,
-      material: part.material,
       bomLinkStartDate: part.bomLinkStartDate,
       supplier: part.supplier,
+      bomLinkNotes: part.bomLinkNotes,
       flexBomLinkId: part.flexBomLinkId,
-      linkedBom: part.linkedBom,
       supplierDescription: part.supplierDescription,
+      bomLinkIncludeInSpecSheet: part.bomLinkIncludeInSpecSheet,
       sortingNumber: part.sortingNumber,
-      colorDescription: part.colorDescription,
       bomLinkCountryOfOrigin: part.bomLinkCountryOfOrigin,
-      // New fields from mock2.json
-      materialcolorLongDescription: part.materialcolorLongDescription,
-      materialcolorShortDescription: part.materialcolorShortDescription,
+      partThirtyCharacterDescription: part.partThirtyCharacterDescription,
+      bomLinkSpecSheetExtra: part.bomLinkSpecSheetExtra,
+      materialDescription: part.materialDescription,
+      dimensionId: part.dimensionId,
+      sectionInternalName: part.sectionInternalName,
+      partNumber: part.partNumber,
       materialSupplierComments: part.materialSupplierComments,
+      colorDescription: part.colorDescription,
+      part: part.partNumber,
+      color: part.colorDescription,
+      bomLinkPart: part.partNumber,
+      linkedBom: part.bomPartMasterId ? '1' : '',
     };
 
     // Add SKU columns based on backend SKU data

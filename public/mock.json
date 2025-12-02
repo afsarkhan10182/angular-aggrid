@@ -1,3005 +1,2966 @@
 {
   "mbom": [
     {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "BG-Sand(EL101)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "",
       "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Packaging",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "346002",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "3",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "48",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:48",
+      "sectionInternalName": "enumSection014",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
     },
     {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "BG-Supernova(TK714-M)",
-      "shortDesc": "FRM GCM, MARLIN, 2023, L, AL",
-      "longDesc": "FRM GCM, MARLIN, 2023, L, AL",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "",
       "skus": [
-        "5134568",
-        "5134569"
-      ]
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "NA",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "276739",
+      "supplierDescription": "placeholder",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "16",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:16",
+      "sectionInternalName": "enumSection015",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
     },
     {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "BK-Black Hole(EL026)",
-      "shortDesc": "FRAME, TREK MARLIN, 2023, GCM, 6061,",
-      "longDesc": "FRAME, TREK MARLIN, 2023, GCM, 6061,",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "",
       "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Packaging",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "345542",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "2",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "47",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:47",
+      "sectionInternalName": "enumSection014",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
     },
     {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "BK-Black Licorice(EL022)",
-      "shortDesc": "FRM GCM, MARLIN, 2023, ML, AL",
-      "longDesc": "FRM GCM, MARLIN, 2023, ML, AL",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Compliance Label 3",
       "skus": [
-        "5134568",
-        "5134569"
-      ]
+        {
+          "isActive": true,
+          "value": "10033",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "10033",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10033",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10033",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "10033",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Packaging",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "Hartex Rubber Private Limited",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "318569",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "46",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "TIR ADV PRO 29X2.40",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:46",
+      "sectionInternalName": "enumSection014",
+      "partNumber": "10033",
+      "materialSupplierComments": "",
+      "colorDescription": "TL-yellow(yellow)"
     },
     {
-      "part": "601132",
-      "feature": "",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "BK-Dark Prismatic(TK016-P)",
-      "shortDesc": "FRM APR, ROSCO, 2022, XS, 6061",
-      "longDesc": "FRM APR, ROSCO, 2022, XS, 6061",
-      "startDate": "",
-      "endDate": "",
-      "qty": 0,
+      "bomLinkFeature": "Bom Feature_1",
       "skus": [
-        "5134569",
-        "5134570",
-        "5134571"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "BK-Shark Grey(EL025)",
-      "shortDesc": "FKSUS SUN SF19 XCE28 29 100",
-      "longDesc": "FKSUS SUN SF19 XCE28 29 100",
-      "startDate": "",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134569",
-        "5134570",
-        "5134571"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "RD-Sedona Red(TK434-S)",
-      "shortDesc": "RIM GLM LNC30 29D 28H CBK/BK",
-      "longDesc": "RIM GLM LNC30 29D 28H CBK/BK",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "RD-Spicy(EL438)",
-      "shortDesc": "HDPT GWH ADJEXP OD22.5 BK",
-      "longDesc": "HDPT GWH ADJEXP OD22.5 BK",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "SK-test color(8889999)",
-      "shortDesc": "FRM XDS, PWRFLY, 2025, SM, AL",
-      "longDesc": "FRM XDS, PWRFLY, 2025, SM, AL",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "SL-Chrome(1215)",
-      "shortDesc": "Testing",
-      "longDesc": "Testing",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "SL-Silver(1038)",
-      "shortDesc": "FRMMN GNT AL TOP FUEL 2025 S",
-      "longDesc": "FRMMN GNT AL TOP FUEL 2025 S",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "SL-irredescent yellow pearl(TK-SM0342214)",
-      "shortDesc": "AKIT OUT MY19ONE+ BUNGEE FRONT",
-      "longDesc": "AKIT OUT MY19ONE+ BUNGEE FRONT",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "WT-Era White(TK101-S)",
-      "shortDesc": "PTFM QCT CHKMTE SLR S BK-SK",
-      "longDesc": "PTFM QCT CHKMTE SLR S BK-SK",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "WT-Stardust(EL111)",
-      "shortDesc": "PTFM QCT CHKMTE SLR M BK-SK",
-      "longDesc": "PTFM QCT CHKMTE SLR M BK-SK",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "PTFM QCT CHKMTE SLR L BK-SK",
-      "longDesc": "PTFM QCT CHKMTE SLR L BK-SK",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "PTFM QCT CHKMTE SLR XL BK-SK",
-      "longDesc": "PTFM QCT CHKMTE SLR XL BK-SK",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "FRME QCT GRVL RACE SLR 25 XS",
-      "longDesc": "FRME QCT GRVL RACE SLR 25 XS",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "FRME QCT GRVL RACE SLR 25 S",
-      "longDesc": "FRME QCT GRVL RACE SLR 25 S",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "FRME QCT GRVL RACE SLR 25 M",
-      "longDesc": "FRME QCT GRVL RACE SLR 25 M",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "FRME QCT GRVL RACE SLR 25 M/L",
-      "longDesc": "FRME QCT GRVL RACE SLR 25 M/L",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "FRME QCT GRVL RACE SLR 25 L",
-      "longDesc": "FRME QCT GRVL RACE SLR 25 L",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "FRME QCT GRVL RACE SLR 25 XL",
-      "longDesc": "FRME QCT GRVL RACE SLR 25 XL",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "PFF MAD SLR DSC MY25 FRCST XS",
-      "longDesc": "PFF MAD SLR DSC MY25 FRCST XS",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "PFF MAD SLR DSC MY25 FRCST S",
-      "longDesc": "PFF MAD SLR DSC MY25 FRCST S",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "PFF MAD SLR DSC MY25 FRCST M",
-      "longDesc": "PFF MAD SLR DSC MY25 FRCST M",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "PFF MAD SLR DSC MY25 FRCST ML",
-      "longDesc": "PFF MAD SLR DSC MY25 FRCST ML",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "PFF MAD SLR DSC MY25 FRCST L",
-      "longDesc": "PFF MAD SLR DSC MY25 FRCST L",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "PFF MAD SLR DSC MY25 FRCST XL",
-      "longDesc": "PFF MAD SLR DSC MY25 FRCST XL",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR XS CN",
-      "longDesc": "PFF QCT MAD SLR XS CN",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR XS BL",
-      "longDesc": "PFF QCT MAD SLR XS BL",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR XS PR",
-      "longDesc": "PFF QCT MAD SLR XS PR",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR XS WT",
-      "longDesc": "PFF QCT MAD SLR XS WT",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR S CN",
-      "longDesc": "PFF QCT MAD SLR S CN",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR S BL",
-      "longDesc": "PFF QCT MAD SLR S BL",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR S PR",
-      "longDesc": "PFF QCT MAD SLR S PR",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR S WT",
-      "longDesc": "PFF QCT MAD SLR S WT",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR M CN",
-      "longDesc": "PFF QCT MAD SLR M CN",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR M BL",
-      "longDesc": "PFF QCT MAD SLR M BL",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR M PR",
-      "longDesc": "PFF QCT MAD SLR M PR",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR M WT",
-      "longDesc": "PFF QCT MAD SLR M WT",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR ML CN",
-      "longDesc": "PFF QCT MAD SLR ML CN",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR ML BL",
-      "longDesc": "PFF QCT MAD SLR ML BL",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR ML PR",
-      "longDesc": "PFF QCT MAD SLR ML PR",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR ML WT",
-      "longDesc": "PFF QCT MAD SLR ML WT",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR L CN",
-      "longDesc": "PFF QCT MAD SLR L CN",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR L BL",
-      "longDesc": "PFF QCT MAD SLR L BL",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR L PR",
-      "longDesc": "PFF QCT MAD SLR L PR",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR L WT",
-      "longDesc": "PFF QCT MAD SLR L WT",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR XL CN",
-      "longDesc": "PFF QCT MAD SLR XL CN",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR XL BL",
-      "longDesc": "PFF QCT MAD SLR XL BL",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR XL PR",
-      "longDesc": "PFF QCT MAD SLR XL PR",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "PFF QCT MAD SLR XL WT",
-      "longDesc": "PFF QCT MAD SLR XL WT",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "FRM XDS, MARLIN, 2023, XXS, AL",
-      "longDesc": "FRM XDS, MARLIN, 2023, XXS, AL",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "frameHardware",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-04 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134570",
-        "5134571",
-        "5134572"
-      ]
-    },
-    {
-      "part": "530518",
-      "feature": "",
-      "supplier": "Lee Chi - Lee Chi Enterprises Co - 81578",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134571",
-        "5134572",
-        "5134573",
-        "5134574"
-      ]
-    },
-    {
-      "part": "5319186",
-      "feature": "spokeProtector",
-      "supplier": "YUNG FANG PLASTIC (KUNSHAN) CO LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-06 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134572",
-        "5134573",
-        "5134574",
-        "5134575",
-        "5134576"
-      ]
-    },
-    {
-      "part": "5293689",
-      "feature": "cSGuard",
-      "supplier": "Bright Glory Inc - 32185",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134573",
-        "5134574",
-        "5134575",
-        "5134576",
-        "5134577"
-      ]
-    },
-    {
-      "part": "535694",
-      "feature": "",
+        {
+          "isActive": true,
+          "value": "10013",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "10013",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10013",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10013",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "10013",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "10013",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Reflector",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "11/06/2025",
       "supplier": "Glory Wheel Enterprise Co. LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134574",
-        "5134575",
-        "5134576"
-      ]
+      "bomLinkNotes": "",
+      "flexBomLinkId": "318578",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "45",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "12/19/2025",
+      "materialDescription": "TIR ADV PRO 29X2.40",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:45",
+      "sectionInternalName": "enumSection012",
+      "partNumber": "10013",
+      "materialSupplierComments": "",
+      "colorDescription": "MU-LF Green(2324)"
     },
     {
-      "part": "302359",
-      "feature": "",
+      "bomLinkFeature": "234 | Fuselage : 3 Speed Hardware Kit",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Media",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "GNC - Giant China-GC",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "318567",
+      "supplierDescription": "GNC - Giant China-GC",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "13",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "TIR ADV PRO 29X2.40",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:13",
+      "sectionInternalName": "enumSection013",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": "NA-Gold Yellow(990)"
+    },
+    {
+      "bomLinkFeature": "Storage Bag 2",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "10024",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "10024",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Fender",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
       "supplier": "Glory Wheel Enterprise Co. LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134575",
-        "5134576"
-      ]
+      "bomLinkNotes": "",
+      "flexBomLinkId": "318550",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "44",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "SPOKE SAPIM RACE 14G",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:44",
+      "sectionInternalName": "enumSection008",
+      "partNumber": "10024",
+      "materialSupplierComments": "",
+      "colorDescription": "NA-Light blue(3244)"
     },
     {
-      "part": "302359",
-      "feature": "",
+      "bomLinkFeature": "Storage Bag 2",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "10061",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "10061",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10061",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10061",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "10061",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "10061",
+          "skuId": "100480"
+        }
+      ],
+      "section": "E-System",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "CW Bearing Taiwan Co Limited",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "318538",
+      "linkedBom": "1",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "43",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "SADDLE COMFORT GEL",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:43",
+      "sectionInternalName": "enumSection006",
+      "partNumber": "10061",
+      "materialSupplierComments": "",
+      "colorDescription": "NA-Gold Yellow(990)"
+    },
+    {
+      "bomLinkFeature": "Frame",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "E-System",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:305489",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "43",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "305517",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "43-43",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "WLF TMC ARSL51 70D 12T CND",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:305489-REV:A-BRANCH:1",
+      "sectionInternalName": "enumSection006",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "bomLinkFeature": "Frame Hardware",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "E-System",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:305489",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "43",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "305519",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "2",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "43-43",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "WLF TMC ARSL51 70D 12T CND/LG",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:305489-REV:A-BRANCH:16",
+      "sectionInternalName": "enumSection006",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "bomLinkFeature": "Frame Hardware 2",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "E-System",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:305489",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "43",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "305518",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "3",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "43-43",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "WLR DTA ARSL51 70D 142 CND/LG",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:305489-REV:A-BRANCH:18",
+      "sectionInternalName": "enumSection006",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "bomLinkFeature": "Derailleur Hanger Bolt",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        }
+      ],
+      "section": "Compliance",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "11/06/2025",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "302354",
+      "supplierDescription": "Hartex Rubber Private Limited",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "11",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "11/08/2025",
+      "dimensionName": ":SOURCE:SIZE1",
+      "materialDescription": "KIT STARTER WRENCH SET",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:11-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:190534-SIZE1:m",
+      "sectionInternalName": "enumSection011",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": "TL-yellow(yellow)"
+    },
+    {
+      "bomLinkFeature": "Frame",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "10017",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "10017",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10017",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10017",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "10017",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "10017",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Brake",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "CW Bearing Taiwan Co Limited",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "333831",
+      "linkedBom": "1",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "US",
+      "partThirtyCharacterDescription": "",
+      "branchId": "42",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "WLR TMC ARSL51 70D 142 CND/LG",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:42",
+      "sectionInternalName": "enumSection005",
+      "partNumber": "10017",
+      "materialSupplierComments": "",
+      "colorDescription": "MU-LF Green(2324)"
+    },
+    {
+      "bomLinkFeature": "Framekit Hardware 1",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "10006",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "10006",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10006",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10006",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "10006",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "10006",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Brake",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:314430",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "42",
+      "bomLinkStartDate": "",
+      "supplier": "Yo Zu Metal Co. Ltd.",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "314894",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "42-42",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "WLR TMC ARSL51 70D 142 CNDSBK",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:314430-REV:A-BRANCH:66",
+      "sectionInternalName": "enumSection005",
+      "partNumber": "10006",
+      "materialSupplierComments": "",
+      "colorDescription": "Red"
+    },
+    {
+      "bomLinkFeature": "Frame Hardware 2",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Brake",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:314430",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "42",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "315307",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "2",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "42-42",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "WSHR YZI M5X1.0 316SS",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:314430-REV:A-BRANCH:18",
+      "sectionInternalName": "enumSection005",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "bomLinkFeature": "Frame Hardware",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Brake",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:314430",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "42",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "315345",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "3",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "42-42",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "Wheel Test 6 SM",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:314430-REV:A-BRANCH:34",
+      "sectionInternalName": "enumSection005",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "bomLinkFeature": "Derailleur Hanger",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Fuselage",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "318594",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "3",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "41",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:41",
+      "sectionInternalName": "enumSection001",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "bomLinkFeature": "Derailleur Hanger",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "10025",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "10025",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10025",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10025",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "10025",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "10025",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Accessory",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
       "supplier": "Glory Wheel Enterprise Co. LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134575",
-        "5134576"
-      ]
+      "bomLinkNotes": "",
+      "flexBomLinkId": "318553",
+      "supplierDescription": "Glory Wheel Enterprise Co. LTD",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "10",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "SPOKE SAPIM RACE 14G",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:10",
+      "sectionInternalName": "enumSection010",
+      "partNumber": "10025",
+      "materialSupplierComments": "",
+      "colorDescription": "NA-pink(3234)"
     },
     {
-      "part": "559003",
-      "feature": "headbadge",
-      "supplier": "Oriole Graphic Design Co. Ltd - Oriole Graphic Design Co. Ltd. - 378183",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Compliance Label 3",
       "skus": [
-        "5134576",
-        "5134577",
-        "5134578",
-        "5134579",
-        "5134580"
-      ]
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Fuselage",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "318595",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "10",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "40",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:40",
+      "sectionInternalName": "enumSection001",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
     },
     {
-      "part": "601132",
-      "feature": "frameHardware",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-04 00:00 GMT",
-      "endDate": "",
-      "qty": 2,
+      "bomLinkFeature": "Frame Hardware",
       "skus": [
-        "5134570",
-        "5134571",
-        "5134572"
-      ]
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Cockpit",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "313352",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "7",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "29",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:29",
+      "sectionInternalName": "enumSection002",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
     },
     {
-      "part": "565970",
-      "feature": "",
-      "supplier": "Sr Suntour Inc",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Derailleur Hanger Bolt",
       "skus": [
-        "5134577",
-        "5134578",
-        "5134579"
-      ]
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Cockpit",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "310087",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "28",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:28",
+      "sectionInternalName": "enumSection002",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
     },
     {
-      "part": "5282013",
-      "feature": "",
-      "supplier": "Full Speed Ahead",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Storage Door Hardware (Expanding)",
       "skus": [
-        "5134578",
-        "5134579",
-        "5134580"
-      ]
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Fuselage",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "318596",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "2",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "25",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:25",
+      "sectionInternalName": "enumSection001",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
     },
     {
-      "part": "313066",
-      "feature": "",
-      "supplier": "VP Components CO. LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "234 | Fuselage : 3 Speed Hardware Kit",
       "skus": [
-        "5134579",
-        "5134580",
-        "5134581",
-        "5134582",
-        "5134583"
-      ]
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Fuselage",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "308602",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "24",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:24",
+      "sectionInternalName": "enumSection001",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
     },
     {
-      "part": "320934",
-      "feature": "reflectorRear",
-      "supplier": "Kozaki Trading Co Ltd - 80738",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "234 | Fuselage : 3 Speed Hardware Kit",
       "skus": [
-        "5134580",
-        "5134581",
-        "5134582",
-        "5134583"
-      ]
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Wheel",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "312973",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "3",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "39",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:39",
+      "sectionInternalName": "enumSection004",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
     },
     {
-      "part": "534844",
-      "feature": "reflectorRearBracket",
-      "supplier": "Trek Approved",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Compliance Label 3",
       "skus": [
-        "5134581",
-        "5134582"
-      ]
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Wheel",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "312974",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "5",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "38",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:38",
+      "sectionInternalName": "enumSection004",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
     },
     {
-      "part": "5327852",
-      "feature": "",
-      "supplier": "KENDA RUBBER IND CO (TAIWAN) - Kenda Rubber (China) Co Ltd",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Derailleur Hanger",
       "skus": [
-        "5134582",
-        "5134583",
-        "5134584"
-      ]
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Wheel",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "312975",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "7",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "37",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:37",
+      "sectionInternalName": "enumSection004",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
     },
     {
-      "part": "5327852",
-      "feature": "",
-      "supplier": "KENDA RUBBER IND CO (TAIWAN) - Kenda Rubber (China) Co Ltd",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Storage Door Hardware (Expanding)",
       "skus": [
-        "5134582",
-        "5134583",
-        "5134584"
-      ]
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Wheel",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "310079",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "36",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:36",
+      "sectionInternalName": "enumSection004",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
     },
     {
-      "part": "580969",
-      "feature": "ownersManual",
-      "supplier": "Badger Graphic Systems - Quality Resource Group Inc - 384957",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Framekit Hardware 1",
       "skus": [
-        "5134583",
-        "5134584"
-      ]
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Drivetrain",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "312976",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "3",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "35",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:35",
+      "sectionInternalName": "enumSection003",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
     },
     {
-      "part": "5264868",
-      "feature": "carton",
-      "supplier": "Trek Approved",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Storage Bag 1",
       "skus": [
-        "5134584",
-        "5134585"
-      ]
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Drivetrain",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "312977",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "5",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "34",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:34",
+      "sectionInternalName": "enumSection003",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
     },
     {
-      "part": "575356",
-      "feature": "",
-      "supplier": "KENDA RUBBER IND CO (TAIWAN) - Kenda Rubber (China) Co Ltd",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Storage Bag 2",
       "skus": [
-        "5134585",
-        "5134586"
-      ]
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Drivetrain",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "312978",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "7",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "33",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:33",
+      "sectionInternalName": "enumSection003",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
     },
     {
-      "part": "535694",
-      "feature": "",
+      "bomLinkFeature": "Storage Door Hardware (Expanding)",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "10054",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "10054",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10054",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10054",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "10054",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "10054",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Lighting",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "11/13/2025",
+      "supplier": "GNC - Giant China-GC",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "318579",
+      "supplierDescription": "GNC - Giant China-GC",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "9",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "12/11/2025",
+      "materialDescription": "PEDAL COMBO SPORT XTR",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:9",
+      "sectionInternalName": "enumSection009",
+      "partNumber": "10054",
+      "materialSupplierComments": "",
+      "colorDescription": "NA-pink(3234)"
+    },
+    {
+      "bomLinkFeature": "Frame Hardware 2",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Drivetrain",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "310083",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "32",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:32",
+      "sectionInternalName": "enumSection003",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "bomLinkFeature": "Derailleur Hanger Nut",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Cockpit",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "313351",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "3",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "31",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:31",
+      "sectionInternalName": "enumSection002",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "bomLinkFeature": "Storage Bag 1",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "10027",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "10027",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Rack",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "11/06/2025",
+      "supplier": "GNC - Giant China-GC",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "318580",
+      "supplierDescription": "GNC - Giant China-GC",
+      "bomLinkIncludeInSpecSheet": "Y",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "7",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "Yes",
+      "bomLinkEndDate": "12/18/2025",
+      "materialDescription": "SPOKE SAPIM RACE 14G",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:7",
+      "sectionInternalName": "enumSection007",
+      "partNumber": "10027",
+      "materialSupplierComments": "",
+      "colorDescription": "NA-Gold Yellow(990)"
+    },
+    {
+      "bomLinkFeature": "Frame",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100182"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Cockpit",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "313353",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "5",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "30",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:30",
+      "sectionInternalName": "enumSection002",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "bomLinkFeature": "",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100185"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        }
+      ],
+      "section": "Packaging",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "346003",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "3",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "48",
+      "quantity": "12",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "dimensionName": ":SOURCE",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:48-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931",
+      "sectionInternalName": "enumSection014",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "bomLinkFeature": "",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100185"
+        }
+      ],
+      "section": "Packaging",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "345543",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "2",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "47",
+      "quantity": "5",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "dimensionName": ":SOURCE",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:47-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931",
+      "sectionInternalName": "enumSection014",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
+    },
+    {
+      "bomLinkFeature": "Storage Bag 2",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "10024",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10024",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10024",
+          "skuId": "100185"
+        }
+      ],
+      "section": "Fender",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
       "supplier": "Glory Wheel Enterprise Co. LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134574",
-        "5134575",
-        "5134576"
-      ]
+      "bomLinkNotes": "",
+      "flexBomLinkId": "318583",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "44",
+      "quantity": "20",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "SPOKE SAPIM RACE 14G",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:44-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+      "sectionInternalName": "enumSection008",
+      "partNumber": "10024",
+      "materialSupplierComments": "",
+      "colorDescription": "NA-Light blue(3244)"
     },
     {
-      "part": "535694",
-      "feature": "",
+      "bomLinkFeature": "Derailleur Hanger Bolt",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100185"
+        }
+      ],
+      "section": "Compliance",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "11/06/2025",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "302356",
+      "supplierDescription": "Hartex Rubber Private Limited",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "11",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "11/08/2025",
+      "dimensionName": ":SOURCE:SIZE1",
+      "materialDescription": "HANDLEBAR GRIP RACING",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:11-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SIZE1:m",
+      "sectionInternalName": "enumSection011",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": "TL-yellow(yellow)"
+    },
+    {
+      "bomLinkFeature": "Derailleur Hanger",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "10031",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10031",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10031",
+          "skuId": "100185"
+        }
+      ],
+      "section": "Fuselage",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "GNC - Giant China-GC",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "313333",
+      "supplierDescription": "GNC - Giant China-GC",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "3",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "41",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "TIR ADV PRO 29X2.40",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:41-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+      "sectionInternalName": "enumSection001",
+      "partNumber": "10031",
+      "materialSupplierComments": "",
+      "colorDescription": "TL-yellow(yellow)"
+    },
+    {
+      "bomLinkFeature": "Compliance Label 3",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100185"
+        }
+      ],
+      "section": "Fuselage",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "Dt Swiss (Asia)",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "313335",
+      "supplierDescription": "Dt Swiss (Asia)",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "10",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "40",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "FASTENER CLIP-LOCK 8MM",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:40-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+      "sectionInternalName": "enumSection001",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": "MU-LF Green(2324)"
+    },
+    {
+      "bomLinkFeature": "Storage Bag 1",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "10027",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10027",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10027",
+          "skuId": "100185"
+        }
+      ],
+      "section": "Rack",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "11/06/2025",
+      "supplier": "GNC - Giant China-GC",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "318585",
+      "supplierDescription": "GNC - Giant China-GC",
+      "bomLinkIncludeInSpecSheet": "Y",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "7",
+      "quantity": "20",
+      "bomLinkSpecSheetExtra": "Yes",
+      "bomLinkEndDate": "12/18/2025",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "SPOKE SAPIM RACE 14G",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:7-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+      "sectionInternalName": "enumSection007",
+      "partNumber": "10027",
+      "materialSupplierComments": "",
+      "colorDescription": "NA-Gold Yellow(990)"
+    },
+    {
+      "bomLinkFeature": "234 | Fuselage : 3 Speed Hardware Kit",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "10034",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10034",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10034",
+          "skuId": "100185"
+        }
+      ],
+      "section": "Wheel",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
       "supplier": "Glory Wheel Enterprise Co. LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134574",
-        "5134575",
-        "5134576"
-      ]
-    },
-    {
-      "part": "5319186",
-      "feature": "spokeProtector",
-      "supplier": "YUNG FANG PLASTIC (KUNSHAN) CO LTD",
-      "color": "NA-RAW(1083)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-06 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134572",
-        "5134573",
-        "5134574",
-        "5134575",
-        "5134576"
-      ]
-    },
-    {
-      "part": "320929",
-      "feature": "reflectorFrontBracket",
-      "supplier": "Kozaki Trading Co Ltd - 80738",
-      "color": "BK-Black(TK100)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134586",
-        "5134587"
-      ]
-    },
-    {
-      "part": "320865",
-      "feature": "reflectorFront",
-      "supplier": "Kozaki Trading Co Ltd - 80738",
-      "color": "BK-Black(TK100)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134587",
-        "5134588"
-      ]
-    },
-    {
-      "part": "559003",
-      "feature": "headbadge",
-      "supplier": "Oriole Graphic Design Co. Ltd - Oriole Graphic Design Co. Ltd. - 378183",
-      "color": "BK-Black(TK100)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134576",
-        "5134577",
-        "5134578",
-        "5134579",
-        "5134580"
-      ]
-    },
-    {
-      "part": "5293689",
-      "feature": "cSGuard",
-      "supplier": "Bright Glory Inc - 32185",
-      "color": "BK-Black(TK100)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134573",
-        "5134574",
-        "5134575",
-        "5134576",
-        "5134577"
-      ]
-    },
-    {
-      "part": "5264868",
-      "feature": "carton",
-      "supplier": "Trek Approved",
-      "color": "NA-RAW(1083)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134584",
-        "5134585"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "534844",
-      "feature": "reflectorRearBracket",
-      "supplier": "Trek Approved",
-      "color": "BK-Black(TK100)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134581",
-        "5134582"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "320934",
-      "feature": "reflectorRear",
-      "supplier": "Kozaki Trading Co Ltd - 80738",
-      "color": "BK-Black(TK100)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134580",
-        "5134581",
-        "5134582",
-        "5134583"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "frameHardware",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "BK-Black(TK100)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-04 00:00 GMT",
-      "endDate": "",
-      "qty": 2,
-      "skus": [
-        "5134570",
-        "5134571",
-        "5134572"
-      ]
-    },
-    {
-      "part": "580969",
-      "feature": "ownersManual",
-      "supplier": "Badger Graphic Systems - Quality Resource Group Inc - 384957",
-      "color": "BK-Black(TK100)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134583",
-        "5134584"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134569",
-        "5134570",
-        "5134571"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134569",
-        "5134570",
-        "5134571"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134569",
-        "5134570",
-        "5134571"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134569",
-        "5134570",
-        "5134571"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134569",
-        "5134570",
-        "5134571"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134569",
-        "5134570",
-        "5134571"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134569",
-        "5134570",
-        "5134571"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134569",
-        "5134570",
-        "5134571"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134569",
-        "5134570",
-        "5134571"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134569",
-        "5134570",
-        "5134571"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134569",
-        "5134570",
-        "5134571"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134569",
-        "5134570",
-        "5134571"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134569",
-        "5134570",
-        "5134571"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134569",
-        "5134570",
-        "5134571"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "286249",
-      "feature": "skewerFront",
-      "supplier": "Hubtec International Limited",
-      "color": "GN-Blue Sage(TK630-S)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "2025-03-27 00:00 GMT",
-      "qty": 1,
-      "skus": [
-        "5134588",
-        "5134589",
-        "5134590",
-        "5134591"
-      ]
-    },
-    {
-      "part": "517372",
-      "feature": "skewerFront",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134589",
-        "5134590",
-        "5134591"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "286249",
-      "feature": "skewerFront",
-      "supplier": "Hubtec International Limited",
-      "color": "Blue Sage",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "2025-03-27 00:00 GMT",
-      "qty": 1,
-      "skus": [
-        "5134588",
-        "5134589",
-        "5134590",
-        "5134591"
-      ]
-    },
-    {
-      "part": "292031",
-      "feature": "bottomBracket",
-      "supplier": "VP Components CO. LTD",
-      "color": "Dark Star",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "2025-03-27 00:00 GMT",
-      "qty": 0,
-      "skus": [
-        "5134590",
-        "5134591",
-        "5134592"
-      ]
-    },
-    {
-      "part": "5257479",
-      "feature": "derailleurHangerBolt",
-      "supplier": "Chia Cherne Industry Co",
-      "color": "Black",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 2,
-      "skus": [
-        "5134591",
-        "5134592",
-        "5134593",
-        "5134594",
-        "5134595"
-      ]
-    },
-    {
-      "part": "517372",
-      "feature": "skewerFront",
-      "supplier": "Hubtec International Limited",
-      "color": "Blue Sage",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134589",
-        "5134590",
-        "5134591"
-      ]
-    },
-    {
-      "part": "598807",
-      "feature": "chain",
-      "supplier": "KMC (Kuei Meng) International Inc",
-      "color": "Dark Start",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "2025-03-27 00:00 GMT",
-      "qty": 0,
-      "skus": [
-        "5134592",
-        "5134593",
-        "5134594",
-        "5134595"
-      ]
-    },
-    {
-      "part": "286249",
-      "feature": "skewerFront",
-      "supplier": "Hubtec International Limited",
-      "color": "GN-Blue Sage(TK630-S)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "2025-03-27 00:00 GMT",
-      "qty": 1,
-      "skus": [
-        "5134588",
-        "5134589",
-        "5134590",
-        "5134591"
-      ]
-    },
-    {
-      "part": "517372",
-      "feature": "skewerFront",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134589",
-        "5134590",
-        "5134591"
-      ]
-    },
-    {
-      "part": "301743",
-      "feature": "hubFront",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 0,
-      "skus": [
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "305728",
-      "feature": "hubRear",
-      "supplier": "Hubtec International Limited",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-04-01 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134567",
-        "5134568",
-        "5134569"
-      ]
-    },
-    {
-      "part": "286249",
-      "feature": "skewerFront",
-      "supplier": "Hubtec International Limited",
-      "color": "Blue Sage",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "2025-03-27 00:00 GMT",
-      "qty": 1,
-      "skus": [
-        "5134588",
-        "5134589",
-        "5134590",
-        "5134591"
-      ]
-    },
-    {
-      "part": "292031",
-      "feature": "bottomBracket",
-      "supplier": "VP Components CO. LTD",
-      "color": "Dark Star",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "2025-03-27 00:00 GMT",
-      "qty": 0,
-      "skus": [
-        "5134590",
-        "5134591",
-        "5134592"
-      ]
-    },
-    {
-      "part": "5257479",
-      "feature": "derailleurHangerBolt",
-      "supplier": "Chia Cherne Industry Co",
-      "color": "Black",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 2,
-      "skus": [
-        "5134591",
-        "5134592",
-        "5134593",
-        "5134594",
-        "5134595"
-      ]
-    },
-    {
-      "part": "517372",
-      "feature": "skewerFront",
-      "supplier": "Hubtec International Limited",
-      "color": "Blue Sage",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134589",
-        "5134590",
-        "5134591"
-      ]
-    },
-    {
-      "part": "598807",
-      "feature": "chain",
-      "supplier": "KMC (Kuei Meng) International Inc",
-      "color": "Dark Start",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "2025-03-27 00:00 GMT",
-      "qty": 0,
-      "skus": [
-        "5134592",
-        "5134593",
-        "5134594",
-        "5134595"
-      ]
-    },
-    {
-      "part": "5319831",
-      "feature": "",
-      "supplier": "AURIGA HuiZhou Technology Co. LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134593",
-        "5134594"
-      ]
-    },
-    {
-      "part": "320929",
-      "feature": "reflectorFrontBracket",
-      "supplier": "Kozaki Trading Co Ltd - 80738",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134586",
-        "5134587"
-      ]
-    },
-    {
-      "part": "320865",
-      "feature": "reflectorFront",
-      "supplier": "Kozaki Trading Co Ltd - 80738",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134587",
-        "5134588"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "frameHardware",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-04 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134570",
-        "5134571",
-        "5134572"
-      ]
-    },
-    {
-      "part": "530518",
-      "feature": "",
-      "supplier": "Lee Chi - Lee Chi Enterprises Co - 81578",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134571",
-        "5134572",
-        "5134573",
-        "5134574"
-      ]
-    },
-    {
-      "part": "5319186",
-      "feature": "spokeProtector",
-      "supplier": "YUNG FANG PLASTIC (KUNSHAN) CO LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-06 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134572",
-        "5134573",
-        "5134574",
-        "5134575",
-        "5134576"
-      ]
-    },
-    {
-      "part": "5293689",
-      "feature": "cSGuard",
-      "supplier": "Bright Glory Inc - 32185",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134573",
-        "5134574",
-        "5134575",
-        "5134576",
-        "5134577"
-      ]
-    },
-    {
-      "part": "535694",
-      "feature": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "313787",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "3",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "39",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "TIR KND BRE PRO XR 27.5X2.5 BK",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:39-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+      "sectionInternalName": "enumSection004",
+      "partNumber": "10034",
+      "materialSupplierComments": "",
+      "colorDescription": "GY-Brown(9080)"
+    },
+    {
+      "bomLinkFeature": "Compliance Label 3",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "10035",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10035",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10035",
+          "skuId": "100185"
+        }
+      ],
+      "section": "Wheel",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
       "supplier": "Glory Wheel Enterprise Co. LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134574",
-        "5134575",
-        "5134576"
-      ]
+      "bomLinkNotes": "",
+      "flexBomLinkId": "313785",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "5",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "38",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "TIR KND BRE PRO XR 29X2.50 BK",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:38-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+      "sectionInternalName": "enumSection004",
+      "partNumber": "10035",
+      "materialSupplierComments": "",
+      "colorDescription": "NA-Gold Yellow(990)"
     },
     {
-      "part": "302359",
-      "feature": "",
+      "bomLinkFeature": "Derailleur Hanger",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "10036",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10036",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10036",
+          "skuId": "100185"
+        }
+      ],
+      "section": "Wheel",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
       "supplier": "Glory Wheel Enterprise Co. LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134575",
-        "5134576"
-      ]
+      "bomLinkNotes": "",
+      "flexBomLinkId": "313788",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "7",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "37",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "TIR KND(I) H2 HCL 700X40C RFL",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:37-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+      "sectionInternalName": "enumSection004",
+      "partNumber": "10036",
+      "materialSupplierComments": "",
+      "colorDescription": "NA-pink(3234)"
     },
     {
-      "part": "302359",
-      "feature": "",
+      "bomLinkFeature": "Storage Door Hardware (Expanding)",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "10028",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10028",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10028",
+          "skuId": "100185"
+        }
+      ],
+      "section": "Wheel",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "Hartex Rubber Private Limited",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "313786",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "36",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "TEST DISC 2025 SAMP",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:36-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+      "sectionInternalName": "enumSection004",
+      "partNumber": "10028",
+      "materialSupplierComments": "",
+      "colorDescription": "GY-Brown(9080)"
+    },
+    {
+      "bomLinkFeature": "Framekit Hardware 1",
+      "skus": [
+        {
+          "isActive": true,
+          "value": "10022",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10022",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10022",
+          "skuId": "100185"
+        }
+      ],
+      "section": "Drivetrain",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
       "supplier": "Glory Wheel Enterprise Co. LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134575",
-        "5134576"
-      ]
+      "bomLinkNotes": "",
+      "flexBomLinkId": "312989",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "3",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "35",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "PEDAL COMBO SPORT XTR",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:35-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+      "sectionInternalName": "enumSection003",
+      "partNumber": "10022",
+      "materialSupplierComments": "",
+      "colorDescription": "NA-Gold Yellow(990)"
     },
     {
-      "part": "559003",
-      "feature": "headbadge",
-      "supplier": "Oriole Graphic Design Co. Ltd - Oriole Graphic Design Co. Ltd. - 378183",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Storage Bag 1",
       "skus": [
-        "5134576",
-        "5134577",
-        "5134578",
-        "5134579",
-        "5134580"
-      ]
+        {
+          "isActive": true,
+          "value": "10052",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10052",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10052",
+          "skuId": "100185"
+        }
+      ],
+      "section": "Drivetrain",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "GNC - Giant China-GC",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "312984",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "5",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "34",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "PEDAL COMBO SPORT XTR",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:34-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+      "sectionInternalName": "enumSection003",
+      "partNumber": "10052",
+      "materialSupplierComments": "",
+      "colorDescription": "NA-Gold Yellow(990)"
     },
     {
-      "part": "601132",
-      "feature": "frameHardware",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-04 00:00 GMT",
-      "endDate": "",
-      "qty": 2,
+      "bomLinkFeature": "Storage Bag 2",
       "skus": [
-        "5134570",
-        "5134571",
-        "5134572"
-      ]
+        {
+          "isActive": true,
+          "value": "10058",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10058",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10058",
+          "skuId": "100185"
+        }
+      ],
+      "section": "Drivetrain",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "Hartex Rubber Private Limited",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "312979",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "7",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "33",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "PEDAL COMBO SPORT XTR",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:33-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+      "sectionInternalName": "enumSection003",
+      "partNumber": "10058",
+      "materialSupplierComments": "",
+      "colorDescription": "NA-Light blue(3244)"
     },
     {
-      "part": "565970",
-      "feature": "",
-      "supplier": "Sr Suntour Inc",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Frame Hardware 2",
       "skus": [
-        "5134577",
-        "5134578",
-        "5134579"
-      ]
+        {
+          "isActive": true,
+          "value": "10021",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10021",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10021",
+          "skuId": "100185"
+        }
+      ],
+      "section": "Drivetrain",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "GNC - Giant China-GC",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "312990",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "32",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "KIT STARTER WRENCH SET",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:32-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+      "sectionInternalName": "enumSection003",
+      "partNumber": "10021",
+      "materialSupplierComments": "",
+      "colorDescription": "NA-Gold Yellow(990)"
     },
     {
-      "part": "5282013",
-      "feature": "",
-      "supplier": "Full Speed Ahead",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Derailleur Hanger Nut",
       "skus": [
-        "5134578",
-        "5134579",
-        "5134580"
-      ]
+        {
+          "isActive": true,
+          "value": "10012",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10012",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10012",
+          "skuId": "100185"
+        }
+      ],
+      "section": "Cockpit",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "GNC - Giant China-GC",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "313365",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "3",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "31",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "KIT STARTER WRENCH SET",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:31-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+      "sectionInternalName": "enumSection002",
+      "partNumber": "10012",
+      "materialSupplierComments": "",
+      "colorDescription": "MU-LF Green(2324)"
     },
     {
-      "part": "313066",
-      "feature": "",
-      "supplier": "VP Components CO. LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Frame",
       "skus": [
-        "5134579",
-        "5134580",
-        "5134581",
-        "5134582",
-        "5134583"
-      ]
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100185"
+        }
+      ],
+      "section": "Cockpit",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "Dt Swiss (Asia)",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "312988",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "5",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "30",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "FASTENER CLIP-LOCK 8MM",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:30-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+      "sectionInternalName": "enumSection002",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": "NA-Gold Yellow(990)"
     },
     {
-      "part": "320934",
-      "feature": "reflectorRear",
-      "supplier": "Kozaki Trading Co Ltd - 80738",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Frame Hardware",
       "skus": [
-        "5134580",
-        "5134581",
-        "5134582",
-        "5134583"
-      ]
+        {
+          "isActive": true,
+          "value": "10020",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10020",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10020",
+          "skuId": "100185"
+        }
+      ],
+      "section": "Cockpit",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "Formula - Hubtec International Limited",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "312983",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "7",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "29",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "HANDLEBAR GRIP RACING",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:29-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+      "sectionInternalName": "enumSection002",
+      "partNumber": "10020",
+      "materialSupplierComments": "",
+      "colorDescription": "NA-Gold Yellow(990)"
     },
     {
-      "part": "534844",
-      "feature": "reflectorRearBracket",
-      "supplier": "Trek Approved",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Derailleur Hanger Bolt",
       "skus": [
-        "5134581",
-        "5134582"
-      ]
+        {
+          "isActive": true,
+          "value": "10045",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "10045",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "10045",
+          "skuId": "100185"
+        }
+      ],
+      "section": "Cockpit",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "Formula - Hubtec International Limited",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "313364",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "28",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "HANDLEBAR GRIP RACING",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:28-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+      "sectionInternalName": "enumSection002",
+      "partNumber": "10045",
+      "materialSupplierComments": "",
+      "colorDescription": "NA-pink(3234)"
     },
     {
-      "part": "5327852",
-      "feature": "",
-      "supplier": "KENDA RUBBER IND CO (TAIWAN) - Kenda Rubber (China) Co Ltd",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Storage Door Hardware (Expanding)",
       "skus": [
-        "5134582",
-        "5134583",
-        "5134584"
-      ]
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100185"
+        }
+      ],
+      "section": "Fuselage",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "10/30/2025",
+      "supplier": "CW Bearing Taiwan Co Limited",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "313334",
+      "supplierDescription": "CW Bearing Taiwan Co Limited",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "2",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "25",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "Yes",
+      "bomLinkEndDate": "10/30/2025",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "DERAILLEUR CAGE REAR",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:25-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+      "sectionInternalName": "enumSection001",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": "NA-pink(3234)"
     },
     {
-      "part": "5327852",
-      "feature": "",
-      "supplier": "KENDA RUBBER IND CO (TAIWAN) - Kenda Rubber (China) Co Ltd",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "234 | Fuselage : 3 Speed Hardware Kit",
       "skus": [
-        "5134582",
-        "5134583",
-        "5134584"
-      ]
+        {
+          "isActive": true,
+          "value": "100011",
+          "skuId": "100183"
+        },
+        {
+          "isActive": true,
+          "value": "100011",
+          "skuId": "100184"
+        },
+        {
+          "isActive": true,
+          "value": "100011",
+          "skuId": "100185"
+        }
+      ],
+      "section": "Fuselage",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "10/30/2025",
+      "supplier": "A&J (VIETNAM) CO.LTD",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "312981",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "24",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "10/29/2025",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "BEARING SEALED 608Z",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:24-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+      "sectionInternalName": "enumSection001",
+      "partNumber": "100011",
+      "materialSupplierComments": "",
+      "colorDescription": "TL-yellow(yellow)"
     },
     {
-      "part": "580969",
-      "feature": "ownersManual",
-      "supplier": "Badger Graphic Systems - Quality Resource Group Inc - 384957",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "",
       "skus": [
-        "5134583",
-        "5134584"
-      ]
+        {
+          "isActive": true,
+          "value": "",
+          "skuId": "100476"
+        }
+      ],
+      "section": "Packaging",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
+      "supplier": "",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "345558",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "2",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "47",
+      "quantity": "10",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:47-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:196650",
+      "sectionInternalName": "enumSection014",
+      "partNumber": "",
+      "materialSupplierComments": "",
+      "colorDescription": ""
     },
     {
-      "part": "5264868",
-      "feature": "carton",
-      "supplier": "Trek Approved",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Compliance Label 3",
       "skus": [
-        "5134584",
-        "5134585"
-      ]
+        {
+          "isActive": true,
+          "value": "10033",
+          "skuId": "100476"
+        }
+      ],
+      "section": "Packaging",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "11/26/2025",
+      "supplier": "Hartex Rubber Private Limited",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "344425",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "46",
+      "quantity": "23",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "11/26/2025",
+      "dimensionName": ":SOURCE:SKU:SIZE1:DESTINATION",
+      "materialDescription": "TIR ADV PRO 29X2.40",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:46-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:196650-SIZE1:s-DESTINATION:com.lcs.wc.product.ProductDestination:256445",
+      "sectionInternalName": "enumSection014",
+      "partNumber": "10033",
+      "materialSupplierComments": "",
+      "colorDescription": "TL-yellow(yellow)"
     },
     {
-      "part": "575356",
-      "feature": "",
-      "supplier": "KENDA RUBBER IND CO (TAIWAN) - Kenda Rubber (China) Co Ltd",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Storage Bag 2",
       "skus": [
-        "5134585",
-        "5134586"
-      ]
-    },
-    {
-      "part": "535694",
-      "feature": "",
+        {
+          "isActive": true,
+          "value": "10024",
+          "skuId": "100476"
+        }
+      ],
+      "section": "Fender",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "",
       "supplier": "Glory Wheel Enterprise Co. LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134574",
-        "5134575",
-        "5134576"
-      ]
+      "bomLinkNotes": "",
+      "flexBomLinkId": "318582",
+      "supplierDescription": "",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "44",
+      "quantity": "10",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "SPOKE SAPIM RACE 14G",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:44-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:196650",
+      "sectionInternalName": "enumSection008",
+      "partNumber": "10024",
+      "materialSupplierComments": "",
+      "colorDescription": "NA-Light blue(3244)"
     },
     {
-      "part": "535694",
-      "feature": "",
-      "supplier": "Glory Wheel Enterprise Co. LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Derailleur Hanger Bolt",
       "skus": [
-        "5134574",
-        "5134575",
-        "5134576"
-      ]
+        {
+          "isActive": true,
+          "value": "10060",
+          "skuId": "100476"
+        },
+        {
+          "isActive": true,
+          "value": "10060",
+          "skuId": "100480"
+        }
+      ],
+      "section": "Compliance",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "11/06/2025",
+      "supplier": "Hartex Rubber Private Limited",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "318581",
+      "supplierDescription": "Hartex Rubber Private Limited",
+      "bomLinkIncludeInSpecSheet": "",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "11",
+      "quantity": "",
+      "bomLinkSpecSheetExtra": "No",
+      "bomLinkEndDate": "11/08/2025",
+      "materialDescription": "PEDAL COMBO SPORT XTR",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:11",
+      "sectionInternalName": "enumSection011",
+      "partNumber": "10060",
+      "materialSupplierComments": "",
+      "colorDescription": "TL-yellow(yellow)"
     },
     {
-      "part": "5319186",
-      "feature": "spokeProtector",
-      "supplier": "YUNG FANG PLASTIC (KUNSHAN) CO LTD",
-      "color": "NA-RAW(1083)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-06 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
+      "bomLinkFeature": "Storage Bag 1",
       "skus": [
-        "5134572",
-        "5134573",
-        "5134574",
-        "5134575",
-        "5134576"
-      ]
-    },
-    {
-      "part": "320929",
-      "feature": "reflectorFrontBracket",
-      "supplier": "Kozaki Trading Co Ltd - 80738",
-      "color": "BK-Black(TK100)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134586",
-        "5134587"
-      ]
-    },
-    {
-      "part": "320865",
-      "feature": "reflectorFront",
-      "supplier": "Kozaki Trading Co Ltd - 80738",
-      "color": "BK-Black(TK100)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134587",
-        "5134588"
-      ]
-    },
-    {
-      "part": "559003",
-      "feature": "headbadge",
-      "supplier": "Oriole Graphic Design Co. Ltd - Oriole Graphic Design Co. Ltd. - 378183",
-      "color": "BK-Black(TK100)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134576",
-        "5134577",
-        "5134578",
-        "5134579",
-        "5134580"
-      ]
-    },
-    {
-      "part": "5293689",
-      "feature": "cSGuard",
-      "supplier": "Bright Glory Inc - 32185",
-      "color": "BK-Black(TK100)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134573",
-        "5134574",
-        "5134575",
-        "5134576",
-        "5134577"
-      ]
-    },
-    {
-      "part": "5264868",
-      "feature": "carton",
-      "supplier": "Trek Approved",
-      "color": "NA-RAW(1083)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134584",
-        "5134585"
-      ]
-    },
-    {
-      "part": "534844",
-      "feature": "reflectorRearBracket",
-      "supplier": "Trek Approved",
-      "color": "BK-Black(TK100)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134581",
-        "5134582"
-      ]
-    },
-    {
-      "part": "320934",
-      "feature": "reflectorRear",
-      "supplier": "Kozaki Trading Co Ltd - 80738",
-      "color": "BK-Black(TK100)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134580",
-        "5134581",
-        "5134582",
-        "5134583"
-      ]
-    },
-    {
-      "part": "601132",
-      "feature": "frameHardware",
-      "supplier": "A&J (VIETNAM) CO.,LTD",
-      "color": "BK-Black(TK100)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-04 00:00 GMT",
-      "endDate": "",
-      "qty": 2,
-      "skus": [
-        "5134570",
-        "5134571",
-        "5134572"
-      ]
-    },
-    {
-      "part": "580969",
-      "feature": "ownersManual",
-      "supplier": "Badger Graphic Systems - Quality Resource Group Inc - 384957",
-      "color": "BK-Black(TK100)",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134583",
-        "5134584"
-      ]
-    },
-    {
-      "part": "5319831",
-      "feature": "",
-      "supplier": "AURIGA HuiZhou Technology Co. LTD",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134593",
-        "5134594"
-      ]
-    },
-    {
-      "part": "320929",
-      "feature": "reflectorFrontBracket",
-      "supplier": "Kozaki Trading Co Ltd - 80738",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134586",
-        "5134587"
-      ]
-    },
-    {
-      "part": "320865",
-      "feature": "reflectorFront",
-      "supplier": "Kozaki Trading Co Ltd - 80738",
-      "color": "",
-      "shortDesc": "",
-      "longDesc": "",
-      "startDate": "2025-06-10 00:00 GMT",
-      "endDate": "",
-      "qty": 1,
-      "skus": [
-        "5134587",
-        "5134588"
-      ]
+        {
+          "isActive": true,
+          "value": "10027",
+          "skuId": "100476"
+        }
+      ],
+      "section": "Rack",
+      "bomPartMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomPartRev": "A",
+      "partSixtyCharacterDescription": "",
+      "masterBranchId": "0",
+      "bomLinkStartDate": "11/06/2025",
+      "supplier": "GNC - Giant China-GC",
+      "bomLinkNotes": "",
+      "flexBomLinkId": "318584",
+      "supplierDescription": "GNC - Giant China-GC",
+      "bomLinkIncludeInSpecSheet": "Y",
+      "sortingNumber": "1",
+      "bomLinkCountryOfOrigin": "",
+      "partThirtyCharacterDescription": "",
+      "branchId": "7",
+      "quantity": "10",
+      "bomLinkSpecSheetExtra": "Yes",
+      "bomLinkEndDate": "12/18/2025",
+      "dimensionName": ":SOURCE:SKU",
+      "materialDescription": "SPOKE SAPIM RACE 14G",
+      "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:276669-REV:A-BRANCH:7-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:196650",
+      "sectionInternalName": "enumSection007",
+      "partNumber": "10027",
+      "materialSupplierComments": "",
+      "colorDescription": "NA-Gold Yellow(990)"
     }
   ],
-  "productInfo": {
-    "productId": "100690",
-    "productName": "Product 100690",
+  "bomPartInfo": [
+    {
+      "bomMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:276669",
+      "bomName": "002 : MBOM",
+      "bomOwnerId": "VR:com.lcs.wc.product.LCSProduct:157273",
+      "bomOwner": "MF3",
+      "modifyTimestamp": "2025-11-28 07:07:45.0"
+    }
+  ],
+  "columns": {
+    "bomLinkFeature": "Feature",
+    "materialDescription": "Material",
+    "supplier": "Supplier",
+    "colorDescription": "Color",
+    "partNumber": "Part #",
+    "bomLinkStartDate": "Start Date",
+    "bomLinkEndDate": "End Date",
+    "quantity": "Quantity",
+    "bomLinkNotes": "Notes",
+    "bomLinkCountryOfOrigin": "Country Of Origin",
+    "partThirtyCharacterDescription": "30 Character Description",
+    "partSixtyCharacterDescription": "60 Character Description"
+  },
+  "sectionOrder": [
+    "Fuselage",
+    "Cockpit",
+    "Drivetrain",
+    "Wheel",
+    "Brake",
+    "E-System",
+    "Rack",
+    "Fender",
+    "Lighting",
+    "Accessory",
+    "Compliance",
+    "Reflector",
+    "Media",
+    "Packaging",
+    "NA"
+  ],
+  "skuInfo": {
     "skus": [
       {
-        "sku": "5134567",
-        "product": "100690",
-        "manufacturer": "Hubtec International Limited",
-        "color": "Generic Color",
-        "size": "Size 1"
+        "product": "MF3",
+        "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size1": "m",
+        "destination": "CN",
+        "colorDimensionId": "186677",
+        "sku": "100182",
+        "sourceDimensionId": "190534",
+        "destinationDimensionId": "313797",
+        "manufacturer": "GNC - Giant China-GC"
       },
       {
-        "sku": "5134568",
-        "product": "100690",
-        "manufacturer": "Hubtec International Limited",
-        "color": "Generic Color",
-        "size": "Size 2"
+        "product": "MF3",
+        "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size1": "m",
+        "destination": "AU",
+        "colorDimensionId": "186677",
+        "sku": "100183",
+        "sourceDimensionId": "189931",
+        "destinationDimensionId": "313799",
+        "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC"
       },
       {
-        "sku": "5134569",
-        "product": "100690",
-        "manufacturer": "Hubtec International Limited",
-        "color": "Generic Color",
-        "size": "Size 3"
+        "product": "MF3",
+        "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size1": "m",
+        "destination": "CA",
+        "colorDimensionId": "186677",
+        "sku": "100184",
+        "sourceDimensionId": "189931",
+        "destinationDimensionId": "256445",
+        "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC"
       },
       {
-        "sku": "5134570",
-        "product": "100690",
-        "manufacturer": "A&J (VIETNAM) CO.,LTD",
-        "color": "Generic Color",
-        "size": "Size 2"
+        "product": "MF3",
+        "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size1": "m",
+        "destination": "CN",
+        "colorDimensionId": "186677",
+        "sku": "100185",
+        "sourceDimensionId": "189931",
+        "destinationDimensionId": "313797",
+        "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC"
       },
       {
-        "sku": "5134571",
-        "product": "100690",
-        "manufacturer": "A&J (VIETNAM) CO.,LTD",
-        "color": "Generic Color",
-        "size": "Size 3"
+        "product": "MF3",
+        "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+        "color": "RD-red(red) TL-yellow(yellow) (MF3)",
+        "size1": "s",
+        "destination": "CA",
+        "colorDimensionId": "196650",
+        "sku": "100476",
+        "sourceDimensionId": "189931",
+        "destinationDimensionId": "256445",
+        "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC"
       },
       {
-        "sku": "5134572",
-        "product": "100690",
-        "manufacturer": "A&J (VIETNAM) CO.,LTD",
-        "color": "Generic Color",
-        "size": "Size 3"
-      },
-      {
-        "sku": "5134573",
-        "product": "100690",
-        "manufacturer": "Lee Chi ",
-        "color": "Generic Color",
-        "size": "Size 3"
-      },
-      {
-        "sku": "5134574",
-        "product": "100690",
-        "manufacturer": "Lee Chi ",
-        "color": "Generic Color",
-        "size": "Size 4"
-      },
-      {
-        "sku": "5134575",
-        "product": "100690",
-        "manufacturer": "YUNG FANG PLASTIC (KUNSHAN) CO LTD",
-        "color": "Generic Color",
-        "size": "Size 4"
-      },
-      {
-        "sku": "5134576",
-        "product": "100690",
-        "manufacturer": "YUNG FANG PLASTIC (KUNSHAN) CO LTD",
-        "color": "Generic Color",
-        "size": "Size 5"
-      },
-      {
-        "sku": "5134577",
-        "product": "100690",
-        "manufacturer": "Bright Glory Inc ",
-        "color": "Generic Color",
-        "size": "Size 5"
-      },
-      {
-        "sku": "5134578",
-        "product": "100690",
-        "manufacturer": "Oriole Graphic Design Co. Ltd ",
-        "color": "Generic Color",
-        "size": "Size 3"
-      },
-      {
-        "sku": "5134579",
-        "product": "100690",
-        "manufacturer": "Oriole Graphic Design Co. Ltd ",
-        "color": "Generic Color",
-        "size": "Size 4"
-      },
-      {
-        "sku": "5134580",
-        "product": "100690",
-        "manufacturer": "Oriole Graphic Design Co. Ltd ",
-        "color": "Generic Color",
-        "size": "Size 5"
-      },
-      {
-        "sku": "5134581",
-        "product": "100690",
-        "manufacturer": "VP Components CO. LTD",
-        "color": "Generic Color",
-        "size": "Size 3"
-      },
-      {
-        "sku": "5134582",
-        "product": "100690",
-        "manufacturer": "VP Components CO. LTD",
-        "color": "Generic Color",
-        "size": "Size 4"
-      },
-      {
-        "sku": "5134583",
-        "product": "100690",
-        "manufacturer": "VP Components CO. LTD",
-        "color": "Generic Color",
-        "size": "Size 5"
-      },
-      {
-        "sku": "5134584",
-        "product": "100690",
-        "manufacturer": "KENDA RUBBER IND CO (TAIWAN) ",
-        "color": "Generic Color",
-        "size": "Size 3"
-      },
-      {
-        "sku": "5134585",
-        "product": "100690",
-        "manufacturer": "Trek Approved",
-        "color": "Generic Color",
-        "size": "Size 2"
-      },
-      {
-        "sku": "5134586",
-        "product": "100690",
-        "manufacturer": "KENDA RUBBER IND CO (TAIWAN) ",
-        "color": "Generic Color",
-        "size": "Size 2"
-      },
-      {
-        "sku": "5134587",
-        "product": "100690",
-        "manufacturer": "Kozaki Trading Co Ltd ",
-        "color": "Generic Color",
-        "size": "Size 2"
-      },
-      {
-        "sku": "5134588",
-        "product": "100690",
-        "manufacturer": "Kozaki Trading Co Ltd ",
-        "color": "Generic Color",
-        "size": "Size 2"
-      },
-      {
-        "sku": "5134589",
-        "product": "100690",
-        "manufacturer": "Hubtec International Limited",
-        "color": "Generic Color",
-        "size": "Size 2"
-      },
-      {
-        "sku": "5134590",
-        "product": "100690",
-        "manufacturer": "Hubtec International Limited",
-        "color": "Generic Color",
-        "size": "Size 3"
-      },
-      {
-        "sku": "5134591",
-        "product": "100690",
-        "manufacturer": "Hubtec International Limited",
-        "color": "Generic Color",
-        "size": "Size 4"
-      },
-      {
-        "sku": "5134592",
-        "product": "100690",
-        "manufacturer": "VP Components CO. LTD",
-        "color": "Generic Color",
-        "size": "Size 3"
-      },
-      {
-        "sku": "5134593",
-        "product": "100690",
-        "manufacturer": "Chia Cherne Industry Co",
-        "color": "Generic Color",
-        "size": "Size 3"
-      },
-      {
-        "sku": "5134594",
-        "product": "100690",
-        "manufacturer": "Chia Cherne Industry Co",
-        "color": "Generic Color",
-        "size": "Size 4"
-      },
-      {
-        "sku": "5134595",
-        "product": "100690",
-        "manufacturer": "Chia Cherne Industry Co",
-        "color": "Generic Color",
-        "size": "Size 5"
+        "product": "MF3",
+        "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size1": "s",
+        "destination": "CA",
+        "colorDimensionId": "186677",
+        "sku": "100480",
+        "sourceDimensionId": "190534",
+        "destinationDimensionId": "256445",
+        "manufacturer": "GNC - Giant China-GC"
       }
     ]
   }
