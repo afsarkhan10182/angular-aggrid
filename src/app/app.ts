@@ -636,6 +636,7 @@ export class App implements OnInit, OnDestroy {
       manufacturer: sku.manufacturer,
       color: sku.color,
       size: sku.size1,
+      destination: sku.destination,
       fieldName: `sku${sku.skuId}`,
       hasData: true,
     }));
@@ -648,14 +649,14 @@ export class App implements OnInit, OnDestroy {
       init(params: any) {
         this.params = params;
         const lines = params.lines || [];
-        // Build full tooltip text with all 5 values, each on new line
+        // Build full tooltip text with all values, each on new line
         // Using \n for newlines (works in most browsers)
         const fullText = lines.join('\n');
 
         this.eGui = document.createElement('div');
         this.eGui.className = 'sku-header-wrapper';
-        // Set title with full text - shows all 5 lines in tooltip when hovering anywhere on header
-        // This will display all 5 lines: SKU, Product, Manufacturer, Color, Size
+        // Set title with full text - shows all lines in tooltip when hovering anywhere on header
+        // Displays: SKU, Product, Manufacturer, Color, Size, and Destination (if present)
         this.eGui.setAttribute('title', fullText);
 
         // Prevent text selection during resize
@@ -667,7 +668,7 @@ export class App implements OnInit, OnDestroy {
           div.className = 'sku-line';
           div.textContent = line;
           // Explicitly remove any title attribute from child divs
-          // This ensures only the parent wrapper shows the tooltip with all 5 lines
+          // This ensures only the parent wrapper shows the tooltip with all lines
           div.removeAttribute('title');
           this.eGui.appendChild(div);
         });
@@ -697,6 +698,11 @@ export class App implements OnInit, OnDestroy {
         `Color - ${sku.color}`,
         `Size - ${sku.size}`,
       ];
+
+      // Add Destination if present, otherwise stop at Size
+      if (sku.destination && sku.destination.trim() !== '') {
+        lines.push(`Destination - ${sku.destination}`);
+      }
 
       // Full header text for tooltip (each value on new line, no truncation)
       const fullHeader = lines.join('\n');
