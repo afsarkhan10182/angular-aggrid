@@ -2160,6 +2160,46 @@ export class App implements OnInit, OnDestroy {
   }
 
   /**
+   * Build skus array from row SKU fields (reusable helper)
+   * Converts individual SKU fields (sku100150, sku100152, etc.) back to skus array format
+   */
+  private buildSkusArrayFromRow(row: any, skuInfo: any[]): any[] {
+    const skus: any[] = [];
+
+    skuInfo.forEach((sku) => {
+      const skuFieldName = `sku${sku.skuId}`;
+      const skuValue = row[skuFieldName];
+
+      // Only include SKU if it has a value
+      if (skuValue !== undefined && skuValue !== null && skuValue !== '') {
+        // Find original SKU data to preserve other properties
+        const originalSku = row.allSkus?.find((s: any) => s.skuId === sku.skuId);
+
+        if (originalSku) {
+          // Preserve original SKU object but update value
+          skus.push({
+            ...originalSku,
+            value: skuValue,
+          });
+        } else {
+          // Create minimal SKU object if original not found
+          skus.push({
+            skuId: sku.skuId,
+            value: skuValue,
+            product: sku.product || '',
+            manufacturer: sku.manufacturer || '',
+            color: sku.color || '',
+            size1: sku.size1 || '',
+            destination: sku.destination || '',
+          });
+        }
+      }
+    });
+
+    return skus;
+  }
+
+  /**
    * Transform grid row data back to API format (matching mock.json structure)
    * Converts flattened grid rows back to instances array with bom-link objects
    */
@@ -2222,39 +2262,8 @@ export class App implements OnInit, OnDestroy {
         bomLink.partNumber = row.partNumber || row.part || row.material || '';
       }
 
-      // Build skus array from SKU fields (sku100150, sku100152, etc.)
-      const skus: any[] = [];
-      skuInfo.forEach((sku) => {
-        const skuFieldName = `sku${sku.skuId}`;
-        const skuValue = row[skuFieldName];
-
-        // Only include SKU if it has a value
-        if (skuValue !== undefined && skuValue !== null && skuValue !== '') {
-          // Find original SKU data to preserve other properties
-          const originalSku = row.allSkus?.find((s: any) => s.skuId === sku.skuId);
-
-          if (originalSku) {
-            // Preserve original SKU object but update value
-            skus.push({
-              ...originalSku,
-              value: skuValue,
-            });
-          } else {
-            // Create minimal SKU object if original not found
-            skus.push({
-              skuId: sku.skuId,
-              value: skuValue,
-              product: sku.product || '',
-              manufacturer: sku.manufacturer || '',
-              color: sku.color || '',
-              size1: sku.size1 || '',
-              destination: sku.destination || '',
-            });
-          }
-        }
-      });
-
-      bomLink.skus = skus;
+      // Build skus array from SKU fields using reusable helper method
+      bomLink.skus = this.buildSkusArrayFromRow(row, skuInfo);
 
       // Add to instances array
       instances.push({

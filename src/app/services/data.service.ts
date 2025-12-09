@@ -86,6 +86,24 @@ export class DataService {
 
   constructor(private http: HttpClient, private sessionService: SessionService) {}
 
+  /**
+   * Build HTTP headers with CSRF token
+   * Reusable method to avoid duplication
+   */
+  private buildHttpHeaders(): any {
+    const csrfToken = this.sessionService.getCsrfNonce();
+    const headers: any = {
+      accept: 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    if (csrfToken) {
+      headers['CSRF_NONCE'] = csrfToken;
+    }
+
+    return headers;
+  }
+
   // Common method to get data attributes from JSP
   private getJspDataAttribute(attributeName: string): string | null {
     const angularRoot = document.getElementById('angular-root');
@@ -228,33 +246,24 @@ export class DataService {
         ],
       };
 
-      const csrfToken = this.sessionService.getCsrfNonce();
+      dataSource = this.http
+        .post<any>(apiUrl, requestBody, { headers: this.buildHttpHeaders() })
+        .pipe(
+          map((response) => {
+            if (!response || !response.results || !Array.isArray(response.results)) {
+              return { results: [], resultCount: 0, hasMore: false };
+            }
 
-      const headers: any = {
-        accept: 'application/json',
-        'Content-Type': 'application/json',
-      };
+            const resultCount = response.resultCount || 0;
+            const hasMore = resultCount > toIndex;
 
-      if (csrfToken) {
-        headers['CSRF_NONCE'] = csrfToken;
-      }
-
-      dataSource = this.http.post<any>(apiUrl, requestBody, { headers }).pipe(
-        map((response) => {
-          if (!response || !response.results || !Array.isArray(response.results)) {
-            return { results: [], resultCount: 0, hasMore: false };
-          }
-
-          const resultCount = response.resultCount || 0;
-          const hasMore = resultCount > toIndex;
-
-          return {
-            results: response.results,
-            resultCount,
-            hasMore,
-          };
-        })
-      );
+            return {
+              results: response.results,
+              resultCount,
+              hasMore,
+            };
+          })
+        );
     }
 
     // Common transformation logic for both mock and real API
@@ -376,16 +385,6 @@ export class DataService {
     }
 
     const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/instances`;
-    const csrfToken = this.sessionService.getCsrfNonce();
-    const headers: any = {
-      accept: 'application/json',
-      'Content-Type': 'application/json',
-    };
-
-    if (csrfToken) {
-      headers['CSRF_NONCE'] = csrfToken;
-    }
-
     const requestBody = {
       flexTypeName,
       attributeName,
@@ -393,7 +392,7 @@ export class DataService {
       fetchLimit,
     };
 
-    return this.http.post<any>(apiUrl, requestBody, { headers }).pipe(
+    return this.http.post<any>(apiUrl, requestBody, { headers: this.buildHttpHeaders() }).pipe(
       map((response) => {
         const rows = Array.isArray(response?.rows) ? response.rows : [];
         const totalRows = response?.totalNumberOfRows || rows.length;
@@ -470,17 +469,7 @@ export class DataService {
       ? '/api/updateBom'
       : `${this.getServiceHostUrl()}/api/updateBom`;
 
-    const csrfToken = this.sessionService.getCsrfNonce();
-    const headers: any = {
-      accept: 'application/json',
-      'Content-Type': 'application/json',
-    };
-
-    if (csrfToken) {
-      headers['CSRF_NONCE'] = csrfToken;
-    }
-
-    return this.http.put<any>(apiUrl, payload, { headers }).pipe(
+    return this.http.put<any>(apiUrl, payload, { headers: this.buildHttpHeaders() }).pipe(
       catchError((error: HttpErrorResponse) => {
         console.error('Update BOM API error:', error);
         return throwError(() => error);
