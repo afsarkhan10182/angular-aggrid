@@ -78,7 +78,7 @@ export class RowManagementService {
 
     const skuInfo = dataService.getSkuInfo();
     skuInfo.forEach((sku) => {
-      (newRow as any)[`sku${sku.sku}`] = '';
+      (newRow as any)[`sku${sku.skuId}`] = '';
     });
 
     const insertIndex = rowIndex;
@@ -290,75 +290,69 @@ export class RowManagementService {
     if ((params.field === 'part' || params.colDef?.field === 'part') && params.newValue) {
       const apiData = dataService.getApiData();
 
-      if (apiData && apiData.mbom) {
-        const existingPart = apiData.mbom.find((part) => part.partNumber === params.newValue);
+      const items = apiData!.instances;
+      const existingPart = items.find((item) => {
+        const bomLink = item['bom-link'];
+        return bomLink.partNumber === params.newValue;
+      });
 
-        if (existingPart) {
-          const fieldsToPopulate = [
-            'supplier',
-            'color',
-            'feature',
-            'shortDesc',
-            'longDesc',
-            'startDate',
-            'endDate',
-            'qty',
-          ];
-          const existingPartData = existingPart as any;
-          const oldData = { ...params.node.data };
+      if (existingPart) {
+        const bomLink = existingPart['bom-link'];
+        const existingPartData = bomLink as any;
 
-          fieldsToPopulate.forEach((fieldName) => {
-            if (existingPartData[fieldName] !== undefined && existingPartData[fieldName] !== null) {
-              let valueToSet = existingPartData[fieldName];
+        const fieldsToPopulate = [
+          'supplier',
+          'colorDescription',
+          'bomLinkFeature',
+          'materialDescription',
+          'bomLinkStartDate',
+          'bomLinkEndDate',
+          'quantity',
+        ];
+        const oldData = { ...params.node.data };
 
-              if (
-                fieldName === 'startDate' ||
-                fieldName === 'endDate' ||
-                fieldName === 'bomLinkStartDate' ||
-                fieldName === 'bomLinkEndDate'
-              ) {
-                valueToSet = this.gridCommonService.formatDateToMMDDYYYY(valueToSet);
-              }
+        fieldsToPopulate.forEach((fieldName) => {
+          if (existingPartData[fieldName] !== undefined && existingPartData[fieldName] !== null) {
+            let valueToSet = existingPartData[fieldName];
 
-              if (oldData[fieldName] !== valueToSet) {
-                params.node.setDataValue(fieldName, valueToSet);
-                if (params.node.data) {
-                  (params.node.data as any)[fieldName] = valueToSet;
-                }
+            if (fieldName === 'bomLinkStartDate' || fieldName === 'bomLinkEndDate') {
+              valueToSet = this.gridCommonService.formatDateToMMDDYYYY(valueToSet);
+            }
+
+            if (oldData[fieldName] !== valueToSet) {
+              params.node.setDataValue(fieldName, valueToSet);
+              if (params.node.data) {
+                (params.node.data as any)[fieldName] = valueToSet;
               }
             }
-          });
-
-          const skuInfo = dataService.getSkuInfo();
-          if (skuInfo && skuInfo.length > 0) {
-            skuInfo.forEach((sku) => {
-              const skuFieldName = `sku${sku.sku}`;
-              const newSkuValue =
-                existingPartData.skus && existingPartData.skus.includes(sku.sku)
-                  ? existingPartData.part
-                  : '';
-
-              if (oldData[skuFieldName] !== newSkuValue) {
-                params.node.setDataValue(skuFieldName, newSkuValue);
-                if (params.node.data) {
-                  (params.node.data as any)[skuFieldName] = newSkuValue;
-                }
-              }
-            });
           }
+        });
 
-          setTimeout(() => {
-            params.api.refreshCells({
-              rowNodes: [params.node],
-              force: true,
-            });
-          }, 100);
-        }
+        const skuInfo = dataService.getSkuInfo();
+        skuInfo.forEach((sku) => {
+          const skuFieldName = `sku${sku.skuId}`;
+          const matchingSku = existingPartData.skus.find((s: any) => s.skuId === sku.skuId);
+          const newSkuValue = matchingSku ? matchingSku.value : '';
+
+          if (oldData[skuFieldName] !== newSkuValue) {
+            params.node.setDataValue(skuFieldName, newSkuValue);
+            if (params.node.data) {
+              (params.node.data as any)[skuFieldName] = newSkuValue;
+            }
+          }
+        });
+
+        setTimeout(() => {
+          params.api.refreshCells({
+            rowNodes: [params.node],
+            force: true,
+          });
+        }, 100);
       }
     }
 
     if (!params.data.isNewRow) {
-      editedRows.add(params.data.part.toString());
+      editedRows.add(params.data.partNumber.toString());
     }
   }
 
@@ -370,7 +364,7 @@ export class RowManagementService {
     editedRows: Set<string | number>,
     gridApi: GridApi,
     componentInstance: any
-  ): Promise<{ success: boolean; message: string }> {
+  ): Promise<{ success: boolean; message: string; payload?: any }> {
     return new Promise((resolve) => {
       if (editedRows.size === 0) {
         resolve({ success: false, message: 'No changes to save' });
@@ -378,6 +372,16 @@ export class RowManagementService {
       }
 
       const changesCount = editedRows.size;
+
+      // Transform grid data to API format (matching mock.json structure)
+      const apiPayload = componentInstance.transformGridDataToApiFormat
+        ? componentInstance.transformGridDataToApiFormat(rowData)
+        : null;
+
+      // Log the payload for debugging (can be removed in production)
+      if (apiPayload) {
+        console.log('Update API Payload:', JSON.stringify(apiPayload, null, 2));
+      }
 
       setTimeout(() => {
         const updatedRowData = rowData.map((row) => {
@@ -406,6 +410,7 @@ export class RowManagementService {
         resolve({
           success: true,
           message: `Successfully saved ${changesCount} changes!`,
+          payload: apiPayload, // Include payload in response for potential API call
         });
       }, 1000);
     });

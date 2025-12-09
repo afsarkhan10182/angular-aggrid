@@ -4,43 +4,47 @@ import { Observable, map, catchError, throwError, of, switchMap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { SessionService } from './session.service';
 
-export interface PartData {
-  branchId: string;
-  quantity: string;
-  bomLinkFeature: string;
-  skus: SkuData[];
-  bomLinkEndDate: string;
-  section: string;
-  bomPartMasterId: string;
-  bomPartRev: string;
-  partSixtyCharacterDescription: string;
-  masterBranchId: string;
-  bomLinkStartDate: string;
-  supplier: string;
-  bomLinkNotes: string;
-  flexBomLinkId: string;
-  supplierDescription: string;
-  bomLinkIncludeInSpecSheet: string;
-  sortingNumber: string;
-  bomLinkCountryOfOrigin: string;
-  partThirtyCharacterDescription: string;
-  bomLinkSpecSheetExtra: string;
-  materialDescription: string;
+export interface BomLinkSku {
+  product: string;
+  productId: string;
+  color: string;
+  destination: string;
+  isActive: boolean;
+  destinationDimensionId: string;
+  manufacturer: string;
   dimensionId: string;
-  sectionInternalName: string;
-  partNumber: string;
-  materialSupplierComments: string;
-  colorDescription: string;
+  size1: string;
+  colorDimensionId: string;
+  sourceDimensionId: string;
+  value: string;
+  skuId: string;
 }
 
-export interface SkuData {
-  skuId: string;
-  value: string;
-  isActive: boolean;
+export interface BomLink {
+  quantity: string;
+  bomLinkFeature: string;
+  bomLinkSpecSheetExtra: string;
+  skus: BomLinkSku[];
+  bomLinkEndDate: string;
+  section: string;
+  materialDescription: string;
+  partSixtyCharacterDescription: string;
+  bomLinkStartDate: string;
+  sectionInternalName: string;
+  supplier: string;
+  bomLinkNotes: string;
+  partNumber: string;
+  materialSupplierComments: string;
+  supplierDescription: string;
+  bomLinkIncludeInSpecSheet: string;
+  colorDescription: string;
+  bomLinkCountryOfOrigin: string;
+  partThirtyCharacterDescription: string;
+  linkedBom?: string;
 }
 
 export interface SkuInfo {
-  sku: string;
+  skuId: string; // Changed from 'sku' to match actual API response
   product: string;
   productId?: string;
   manufacturer: string;
@@ -60,8 +64,12 @@ export interface BomPartInfo {
   modifyTimestamp: string;
 }
 
+export interface BomInstance {
+  'bom-link': BomLink;
+}
+
 export interface ApiData {
-  mbom: PartData[];
+  instances: BomInstance[];
   columns: { [key: string]: string };
   skuInfo: {
     skus: SkuInfo[];
@@ -339,13 +347,14 @@ export class DataService {
     const searchTerm = (query || '').trim();
 
     if (environment.useMockApi) {
-      const allValues =
-        this.apiData?.mbom
-          ?.map((item: any) => {
-            const value = item?.[mockFieldName];
-            return typeof value === 'string' ? value : '';
-          })
-          .filter((value: string) => value && value.length > 0) || [];
+      const items = this.apiData!.instances;
+      const allValues = items
+        .map((item: BomInstance) => {
+          const bomLink = item['bom-link'];
+          const value = bomLink[mockFieldName as keyof BomLink];
+          return typeof value === 'string' ? value : '';
+        })
+        .filter((value: string) => value.length > 0);
 
       const uniqueValues = Array.from(new Set(allValues));
       const filtered =
@@ -452,8 +461,35 @@ export class DataService {
     return this.apiData;
   }
 
+  /**
+   * Update BOM data
+   * Sends the payload in the same format as mock.json (instances array with bom-link objects)
+   */
+  updateBomData(payload: { instances: Array<{ 'bom-link': BomLink }> }): Observable<any> {
+    let apiUrl = environment.useMockApi
+      ? '/api/updateBom'
+      : `${this.getServiceHostUrl()}/api/updateBom`;
+
+    const csrfToken = this.sessionService.getCsrfNonce();
+    const headers: any = {
+      accept: 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    if (csrfToken) {
+      headers['CSRF_NONCE'] = csrfToken;
+    }
+
+    return this.http.put<any>(apiUrl, payload, { headers }).pipe(
+      catchError((error: HttpErrorResponse) => {
+        console.error('Update BOM API error:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
   getSkuInfo(): SkuInfo[] {
-    return this.apiData?.skuInfo.skus || [];
+    return this.apiData!.skuInfo.skus;
   }
 
   getProductInfo() {
@@ -492,183 +528,7 @@ export class DataService {
   }
 
   getColumnMapping(): { [key: string]: string } {
-    return this.apiData?.columns || {};
-  }
-
-  // Transform backend data to grid format with SKU columns and hierarchical structure
-  transformToGridData(parts: PartData[]): any[] {
-    if (!this.apiData) return [];
-
-    const skuInfo = this.getSkuInfo();
-
-    // Sort parts by sortingNumber before mapping
-    const sortedParts = [...parts].sort((a, b) => {
-      const sortA = parseInt(a.sortingNumber) || 0;
-      const sortB = parseInt(b.sortingNumber) || 0;
-      return sortA - sortB;
-    });
-
-    // Create hierarchical structure
-    const hierarchicalData = this.createHierarchicalStructure(sortedParts, skuInfo);
-
-    return hierarchicalData;
-  }
-
-  // Create hierarchical structure for parent-child relationships with accordion functionality
-  private createHierarchicalStructure(parts: PartData[], skuInfo: any[]): any[] {
-    const result: any[] = [];
-    const parentMap = new Map<string, any>();
-
-    parts.forEach((part) => {
-      const row = this.createRowData(part, skuInfo);
-
-      if (row.linkedBom === '1') {
-        row.isParent = true;
-        row.hasChildren = false; // Will be updated if children are found
-        row.isExpanded = false; // Accordion starts collapsed
-        row.children = [];
-        parentMap.set(part.branchId, row);
-      } else {
-        row.isChild = true;
-        row.parentBranchID = this.extractParentBranchID(part.branchId);
-        row.isVisible = false; // Children start hidden
-      }
-
-      result.push(row);
-    });
-
-    // Second pass: Link children to parents
-    result.forEach((row) => {
-      if (row.isChild && row.parentBranchID) {
-        const parent = parentMap.get(row.parentBranchID);
-        if (parent) {
-          parent.hasChildren = true;
-          parent.children.push(row);
-          row.parent = parent;
-        }
-      }
-    });
-
-    // Third pass: Create accordion structure (only show parents initially)
-    const finalResult: any[] = [];
-    result.forEach((row) => {
-      if (row.isParent) {
-        // Use the parent from parentMap to ensure we have the children
-        const parentWithChildren = parentMap.get(row.branchId);
-        if (parentWithChildren) {
-          finalResult.push(parentWithChildren);
-        } else {
-          finalResult.push(row);
-        }
-      } else if (!row.isChild) {
-        // Standalone rows (no parent-child relationship)
-        finalResult.push(row);
-      }
-    });
-
-    return finalResult;
-  }
-
-  // Extract parent branch ID from child branch ID (e.g., "16-16" -> "16")
-  private extractParentBranchID(childBranchID: string): string | null {
-    const dashIndex = childBranchID.indexOf('-');
-    if (dashIndex > 0) {
-      return childBranchID.substring(0, dashIndex);
-    }
-    return null;
-  }
-
-  private createRowData(part: PartData, skuInfo: any[]): any {
-    const row: any = {
-      branchId: part.branchId,
-      quantity: part.quantity,
-      bomLinkFeature: part.bomLinkFeature,
-      bomLinkEndDate: part.bomLinkEndDate,
-      section: part.section,
-      bomPartMasterId: part.bomPartMasterId,
-      bomPartRev: part.bomPartRev,
-      partSixtyCharacterDescription: part.partSixtyCharacterDescription,
-      masterBranchId: part.masterBranchId,
-      bomLinkStartDate: part.bomLinkStartDate,
-      supplier: part.supplier,
-      bomLinkNotes: part.bomLinkNotes,
-      flexBomLinkId: part.flexBomLinkId,
-      supplierDescription: part.supplierDescription,
-      bomLinkIncludeInSpecSheet: part.bomLinkIncludeInSpecSheet,
-      sortingNumber: part.sortingNumber,
-      bomLinkCountryOfOrigin: part.bomLinkCountryOfOrigin,
-      partThirtyCharacterDescription: part.partThirtyCharacterDescription,
-      bomLinkSpecSheetExtra: part.bomLinkSpecSheetExtra,
-      materialDescription: part.materialDescription,
-      dimensionId: part.dimensionId,
-      sectionInternalName: part.sectionInternalName,
-      partNumber: part.partNumber,
-      materialSupplierComments: part.materialSupplierComments,
-      colorDescription: part.colorDescription,
-      part: part.partNumber,
-      color: part.colorDescription,
-      bomLinkPart: part.partNumber,
-      linkedBom: part.bomPartMasterId ? '1' : '',
-    };
-
-    // Add SKU columns based on backend SKU data
-    skuInfo.forEach((sku) => {
-      const fieldName = `sku${sku.sku}`;
-      // Find matching SKU in backend data
-      const matchingSku = part.skus.find((s) => s.skuId === sku.sku);
-      row[fieldName] = matchingSku ? matchingSku.value : '';
-    });
-
-    return row;
-  }
-
-  // Accordion functionality methods
-  toggleAccordion(parentRow: any, gridApi: any): void {
-    if (!parentRow.isParent || !parentRow.hasChildren) return;
-
-    parentRow.isExpanded = !parentRow.isExpanded;
-
-    if (parentRow.isExpanded) {
-      // Show children
-      this.showChildren(parentRow, gridApi);
-    } else {
-      // Hide children
-      this.hideChildren(parentRow, gridApi);
-    }
-  }
-
-  private showChildren(parentRow: any, gridApi: any): void {
-    const allRowData = gridApi
-      .getDisplayedRowModel()
-      .rootNode.children.map((node: any) => node.data);
-    const parentIndex = allRowData.findIndex((row: any) => row.branchId === parentRow.branchId);
-
-    if (parentIndex === -1) return;
-
-    // Insert children after parent
-    const newRowData = [...allRowData];
-    parentRow.children.forEach((child: any, index: number) => {
-      child.isSubRow = true;
-      child.isVisible = true;
-      newRowData.splice(parentIndex + 1 + index, 0, child);
-    });
-
-    gridApi.setGridOption('rowData', newRowData);
-  }
-
-  private hideChildren(parentRow: any, gridApi: any): void {
-    const allRowData = gridApi
-      .getDisplayedRowModel()
-      .rootNode.children.map((node: any) => node.data);
-    const newRowData = allRowData.filter((row: any) => {
-      if (row.isSubRow && row.parent && row.parent.branchId === parentRow.branchId) {
-        row.isVisible = false;
-        return false; // Remove from display
-      }
-      return true;
-    });
-
-    gridApi.setGridOption('rowData', newRowData);
+    return this.apiData!.columns;
   }
 
   // Get SKU metadata for a specific part
@@ -678,15 +538,15 @@ export class DataService {
     const skuInfo = this.getSkuInfo();
 
     return skuInfo
-      .filter((sku) => partRow[`sku${sku.sku}`]) // only keep SKUs that have values
+      .filter((sku) => partRow[`sku${sku.skuId}`]) // only keep SKUs that have values
       .map((sku) => ({
-        skuNumber: sku.sku,
+        skuNumber: sku.skuId,
         product: sku.product,
         manufacturer: sku.manufacturer,
         color: sku.color,
         size: sku.size1,
-        value: partRow[`sku${sku.sku}`],
-        partNumber: partRow.part.toString(),
+        value: partRow[`sku${sku.skuId}`],
+        partNumber: partRow.partNumber.toString(),
       }));
   }
 

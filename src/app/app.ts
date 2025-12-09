@@ -353,7 +353,7 @@ export class App implements OnInit, OnDestroy {
           return `<span class="expired-indicator" title="Expired">e</span>`;
         }
 
-        const partId = params.data.part || '';
+        const partId = params.data.partNumber;
 
         if (params.data.isNewRow) {
           const newRowId = params.data.newRowId;
@@ -631,12 +631,12 @@ export class App implements OnInit, OnDestroy {
     });
 
     const skuColumns = this.dataService.getSkuInfo().map((sku) => ({
-      skuId: sku.sku,
+      skuId: sku.skuId,
       product: sku.product,
       manufacturer: sku.manufacturer,
       color: sku.color,
       size: sku.size1,
-      fieldName: `sku${sku.sku}`,
+      fieldName: `sku${sku.skuId}`,
       hasData: true,
     }));
 
@@ -830,22 +830,27 @@ export class App implements OnInit, OnDestroy {
     }
 
     if (data.isMaterialHeader) {
-      const materialIndex = data.materialIndex || 0;
-      const linkIcon = data.hasLinkedBom ? '🔗' : '⧉';
-      const materialIdentifier =
-        data.materialKey || data.material || data.part || data.partNumber || '';
+      const materialIndex = data.materialIndex;
+      const linkIcon = data.hasLinkedBom ? '🔗' : '';
+      const materialIdentifier = data.materialKey;
       return `
         <div style="
           cursor: pointer; 
         " 
-             onclick="window.toggleMaterial('${data.section}', '${materialIdentifier}', ${materialIndex})"
+             onclick="window.toggleMaterial('${
+               data.section
+             }', '${materialIdentifier}', ${materialIndex})"
              onmouseover="this.style.background='#dcfce7'; this.style.borderLeftColor='#059669'"
              onmouseout="this.style.background='#f0fdf4'; this.style.borderLeftColor='#10b981'">
-          <span style="
+          ${
+            linkIcon
+              ? `<span style="
               margin-right: 6px;
               font-size: 12px;
               color: #0f766e;
-            ">${linkIcon}</span>
+            ">${linkIcon}</span>`
+              : ''
+          }
         </div>
       `;
     }
@@ -871,24 +876,34 @@ export class App implements OnInit, OnDestroy {
             font-size: 12px; 
             color: #1e40af;
             font-weight: 500;
-          ">${parentIndent}${data.part || data.material || 'Item'}</span>
+          ">${parentIndent}${data.part}</span>
         </div>
       `;
     }
 
     if (data.isDirectRow) {
-      const featureValue = this.getFeatureValue(data);
-      if (!featureValue || featureValue.trim().length === 0) {
-        return '';
-      }
-      const columnWidth = 220;
-      return this.createCellContentWithTooltip(featureValue, columnWidth);
+      const linkIcon = data.hasLinkedBom ? '🔗' : '';
+      return `
+        <div style="
+          display: flex;
+          align-items: center;
+          padding: 4px 6px;
+        ">
+          ${
+            linkIcon
+              ? `<span style="
+            margin-right: 6px;
+            font-size: 12px;
+            color: #0f766e;
+          ">${linkIcon}</span>`
+              : ''
+          }
+          <span>${this.escapeHtml(data.bomLinkFeature || '')}</span>
+        </div>
+      `;
     }
 
-    const featureValue = this.getFeatureValue(data);
-    if (!featureValue || featureValue.trim().length === 0) {
-      return '';
-    }
+    const featureValue = data.bomLinkFeature;
     const columnWidth = 220;
     return this.createCellContentWithTooltip(featureValue, columnWidth);
   }
@@ -901,18 +916,7 @@ export class App implements OnInit, OnDestroy {
   }
 
   private getFeatureValue(row: any): string {
-    if (!row) return '';
-    const rawValue =
-      row.bomLinkFeature ??
-      row.feature ??
-      row.BOMFeature ??
-      row.bomlinkfeature ??
-      row.Feature ??
-      '';
-    if (rawValue === null || rawValue === undefined) {
-      return '';
-    }
-    return String(rawValue);
+    return row.bomLinkFeature;
   }
 
   private renderGroupHeaderFullWidth(params: any): string {
@@ -1017,12 +1021,7 @@ export class App implements OnInit, OnDestroy {
   }
 
   private getPartNumberValue(row: any): string {
-    if (!row) return '';
-    const candidate = row.partNumber ?? row.part ?? row.partNum ?? '';
-    if (candidate === null || candidate === undefined) {
-      return '';
-    }
-    return String(candidate);
+    return row.partNumber;
   }
 
   getHierarchicalCellStyle(params: any): any {
@@ -1460,18 +1459,15 @@ export class App implements OnInit, OnDestroy {
           event.data?.materialKey ||
           event.data?.materialDescription;
 
-        // Check if we have enough data to open modal:
-        // - Either a part identifier (part, bomLinkPart, partNumber, material, materialKey)
-        // - Or branchId + flexBomLinkId (for API call format)
+        // Check if we have a part identifier to open modal
         const hasPartIdentifier =
           event.data?.part ||
           event.data?.bomLinkPart ||
           event.data?.partNumber ||
           event.data?.material ||
           event.data?.materialKey;
-        const hasBomIdentifiers = event.data?.branchId && event.data?.flexBomLinkId;
 
-        if (materialValue && (hasPartIdentifier || hasBomIdentifiers)) {
+        if (materialValue && hasPartIdentifier) {
           // Prevent default editing and open modal instead
           event.event?.preventDefault?.();
           event.event?.stopPropagation?.();
@@ -1496,42 +1492,9 @@ export class App implements OnInit, OnDestroy {
   openMaterialModal(materialData: any): void {
     if (!materialData) return;
 
-    // API expects format: {partNumber}_{branchId}_{flexBomLinkId}
-    // Extract components
-    const partNumber =
-      materialData.part || materialData.bomLinkPart || materialData.partNumber || '';
-    const branchId = materialData.branchId || '';
-    const flexBomLinkId = materialData.flexBomLinkId || '';
-
-    // Construct materialId based on available fields
-    let materialIdString = '';
-
-    if (partNumber && branchId && flexBomLinkId) {
-      // Full format: partNumber_branchId_flexBomLinkId
-      materialIdString = `${partNumber}_${branchId}_${flexBomLinkId}`;
-    } else if (branchId && flexBomLinkId) {
-      // When partNumber is empty, use: branchId_flexBomLinkId
-      materialIdString = `${branchId}_${flexBomLinkId}`;
-    } else if (partNumber) {
-      // Fallback to just partNumber if branchId/flexBomLinkId are missing
-      materialIdString = String(partNumber).trim();
-    } else {
-      // Last resort: try other material identifiers
-      const fallbackId =
-        materialData.material || materialData.materialKey || materialData.materialDescription;
-      if (fallbackId) {
-        materialIdString = String(fallbackId).trim();
-      }
-    }
-
-    if (!materialIdString || materialIdString === 'undefined' || materialIdString === 'null') {
-      console.warn('Invalid material ID constructed from materialData:', materialData);
-      // Still show modal with available data even if API call fails
-      this.selectedMaterialData = materialData;
-      this.selectedMaterialSkuData = this.dataService.getSkuDataForPart(materialData);
-      this.showMaterialModal = true;
-      return;
-    }
+    // Extract partNumber from material data
+    const partNumber = materialData.partNumber;
+    const materialIdString = partNumber.trim();
 
     const bomSub = this.dataService.getComplexBOM(materialIdString).subscribe({
       next: (complexBOMData: any) => {
@@ -2011,57 +1974,99 @@ export class App implements OnInit, OnDestroy {
   }
 
   private buildMbomHierarchy(data: any): any[] {
-    const sections: any = {};
-    const items = data.mbom;
+    const sections: Record<string, any[]> = {};
 
-    for (const item of items) {
-      const section = item.section || 'NA';
-      if (!sections[section]) sections[section] = [];
+    // Extract bom-link data from instances
+    const processedItems = data.instances.map((item: any) => {
+      const bomLink = item['bom-link'];
+      return {
+        ...bomLink,
+        part: bomLink.partNumber,
+        partNumber: bomLink.partNumber,
+        skus: bomLink.skus,
+        linkedBom: bomLink.linkedBom,
+      };
+    });
 
-      const materialKey = `${item.part}_${item.branchId}_${item.flexBomLinkId}`;
+    // Group items by section
+    for (const item of processedItems) {
+      const section = item.section;
+      if (!sections[section]) {
+        sections[section] = [];
+      }
 
-      let existingMaterial = sections[section].find((m: any) => m.materialKey === materialKey);
+      // Create a unique material key using partNumber and feature
+      const materialKey = `${item.partNumber}_${item.bomLinkFeature}`;
+
+      // Check if material already exists in this section
+      const existingMaterial = sections[section].find((m: any) => m.materialKey === materialKey);
 
       if (!existingMaterial) {
-        existingMaterial = {
+        const material = {
           ...item,
           materialKey,
-          allSkus: item.skus || [],
+          allSkus: item.skus,
+          part: item.partNumber,
+          partNumber: item.partNumber,
+          linkedBom: item.linkedBom,
         };
-        sections[section].push(existingMaterial);
+        sections[section].push(material);
       }
     }
 
-    const buildTree = (branchId: string, allItems: any[]): any[] => {
-      const children = allItems.filter((i: any) => i.masterBranchId == branchId);
-      return children
-        .sort((a: any, b: any) => Number(a.sortingNumber || 0) - Number(b.sortingNumber || 0))
-        .map((c: any) => ({
-          ...c,
-          children: buildTree(c.branchId, allItems),
-        }));
+    const result: Array<{ section: string; materials: any[] }> = [];
+    const sectionOrder = data.sectionOrder;
+
+    /**
+     * Sort function: by Feature (bomLinkFeature) first, then by Part# (partNumber)
+     * This ensures consistent ordering within each section
+     */
+    const sortMaterials = (a: any, b: any): number => {
+      // Primary sort: Feature (bomLinkFeature)
+      const featureA = a.bomLinkFeature.toLowerCase().trim();
+      const featureB = b.bomLinkFeature.toLowerCase().trim();
+
+      if (featureA !== featureB) {
+        return featureA.localeCompare(featureB);
+      }
+
+      // Secondary sort: Part# (partNumber) when features are the same
+      const partA = a.partNumber.toLowerCase().trim();
+      const partB = b.partNumber.toLowerCase().trim();
+
+      return partA.localeCompare(partB);
     };
 
-    const result: any[] = [];
-    const sectionOrder = data.sectionOrder || [];
-
+    // Process each section in order
     for (const sectionName of sectionOrder) {
-      const sectionItems = sections[sectionName] || [];
-      const roots = sectionItems.filter((i: any) => i.masterBranchId == '0');
+      const sectionItems = sections[sectionName];
 
-      if (roots.length > 0) {
+      if (sectionItems && sectionItems.length > 0) {
+        // Sort materials within section by Feature, then by Part#
+        const sortedMaterials = [...sectionItems].sort(sortMaterials);
+
         const sectionObj = {
           section: sectionName,
-          materials: roots
-            .sort((a: any, b: any) => Number(a.sortingNumber || 0) - Number(b.sortingNumber || 0))
-            .map((r: any) => ({
-              ...r,
-              children: buildTree(r.branchId, sectionItems),
-            })),
+          materials: sortedMaterials,
         };
         result.push(sectionObj);
       }
     }
+
+    // Also include sections that are not in sectionOrder but exist in data
+    Object.keys(sections).forEach((sectionName) => {
+      if (!sectionOrder.includes(sectionName)) {
+        const sectionItems = sections[sectionName];
+        if (sectionItems && sectionItems.length > 0) {
+          const sortedMaterials = [...sectionItems].sort(sortMaterials);
+          const sectionObj = {
+            section: sectionName,
+            materials: sortedMaterials,
+          };
+          result.push(sectionObj);
+        }
+      }
+    });
 
     return result;
   }
@@ -2095,7 +2100,11 @@ export class App implements OnInit, OnDestroy {
             children: [],
             level: 1,
             parent: sectionRow,
-            hasLinkedBom: true,
+            hasLinkedBom:
+              material.linkedBom === '1' ||
+              material.linkedBom === 1 ||
+              material.linkedBom === true ||
+              (material.linkedBom && material.linkedBom !== ''),
           };
 
           this.addSkuDataToRow(materialRow, material);
@@ -2119,6 +2128,11 @@ export class App implements OnInit, OnDestroy {
             isDirectRow: true,
             level: 1,
             parent: sectionRow,
+            hasLinkedBom:
+              material.linkedBom === '1' ||
+              material.linkedBom === 1 ||
+              material.linkedBom === true ||
+              (material.linkedBom && material.linkedBom !== ''),
           };
           this.addSkuDataToRow(directRow, material);
           sectionRow.children.push(directRow);
@@ -2138,18 +2152,117 @@ export class App implements OnInit, OnDestroy {
   private addSkuDataToRow(itemRow: any, originalItem: any): void {
     const skuInfo = this.dataService.getSkuInfo();
 
-    if (originalItem.skus && Array.isArray(originalItem.skus)) {
-      skuInfo.forEach((sku) => {
-        const fieldName = `sku${sku.sku}`;
-        const matchingSku = originalItem.skus.find((s: any) => s.skuId === sku.sku);
-        itemRow[fieldName] = matchingSku ? matchingSku.value : '';
+    skuInfo.forEach((sku) => {
+      const fieldName = `sku${sku.skuId}`;
+      const matchingSku = originalItem.skus.find((s: any) => s.skuId === sku.skuId);
+      itemRow[fieldName] = matchingSku ? matchingSku.value : '';
+    });
+  }
+
+  /**
+   * Transform grid row data back to API format (matching mock.json structure)
+   * Converts flattened grid rows back to instances array with bom-link objects
+   */
+  transformGridDataToApiFormat(rowData: any[]): { instances: Array<{ 'bom-link': any }> } {
+    const instances: Array<{ 'bom-link': any }> = [];
+    const skuInfo = this.dataService.getSkuInfo();
+
+    // UI-only fields to exclude from API payload
+    const uiOnlyFields = new Set([
+      'isSectionHeader',
+      'isMaterialHeader',
+      'isDirectRow',
+      'isSubRow',
+      'isParentRow',
+      'isNewRow',
+      'isExpanded',
+      'isGroupHeader',
+      'isBranchHeader',
+      'level',
+      'parent',
+      'children',
+      'materialIndex',
+      'materialKey',
+      'allSkus',
+      'hasLinkedBom',
+      'newRowId',
+      'insertAfter',
+      'groupKey',
+      'groupValue',
+      'groupLevel',
+      'groupHeaderName',
+      'material', // This is just partNumber, we use partNumber instead
+      'part', // This is also partNumber
+    ]);
+
+    rowData.forEach((row) => {
+      // Skip section headers, group headers, and other UI-only rows
+      if (
+        row.isSectionHeader ||
+        row.isGroupHeader ||
+        row.isBranchHeader ||
+        row.isParentRow ||
+        !row.section
+      ) {
+        return;
+      }
+
+      // Build bom-link object from row data
+      const bomLink: any = {};
+
+      // Copy all fields except UI-only fields and SKU fields
+      Object.keys(row).forEach((key) => {
+        if (!uiOnlyFields.has(key) && !key.startsWith('sku')) {
+          bomLink[key] = row[key];
+        }
       });
-    } else {
+
+      // Ensure partNumber is set (use partNumber, part, or material as fallback)
+      if (!bomLink.partNumber) {
+        bomLink.partNumber = row.partNumber || row.part || row.material || '';
+      }
+
+      // Build skus array from SKU fields (sku100150, sku100152, etc.)
+      const skus: any[] = [];
       skuInfo.forEach((sku) => {
-        const fieldName = `sku${sku.sku}`;
-        itemRow[fieldName] = '';
+        const skuFieldName = `sku${sku.skuId}`;
+        const skuValue = row[skuFieldName];
+
+        // Only include SKU if it has a value
+        if (skuValue !== undefined && skuValue !== null && skuValue !== '') {
+          // Find original SKU data to preserve other properties
+          const originalSku = row.allSkus?.find((s: any) => s.skuId === sku.skuId);
+
+          if (originalSku) {
+            // Preserve original SKU object but update value
+            skus.push({
+              ...originalSku,
+              value: skuValue,
+            });
+          } else {
+            // Create minimal SKU object if original not found
+            skus.push({
+              skuId: sku.skuId,
+              value: skuValue,
+              product: sku.product || '',
+              manufacturer: sku.manufacturer || '',
+              color: sku.color || '',
+              size1: sku.size1 || '',
+              destination: sku.destination || '',
+            });
+          }
+        }
       });
-    }
+
+      bomLink.skus = skus;
+
+      // Add to instances array
+      instances.push({
+        'bom-link': bomLink,
+      });
+    });
+
+    return { instances };
   }
 
   private showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {

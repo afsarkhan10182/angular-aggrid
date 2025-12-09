@@ -227,7 +227,7 @@ export class GridCommonService {
     const skuInfo = dataService.getSkuInfo();
     expiredEntries.forEach((entry) => {
       skuInfo.forEach((sku) => {
-        (entry as any)[`sku${sku.sku}`] = '';
+        (entry as any)[`sku${sku.skuId}`] = '';
       });
     });
 
@@ -552,17 +552,6 @@ export class GridCommonService {
         });
       },
       onCellClicked: (params) => {
-        if (
-          params.colDef.field === 'accordionIcon' &&
-          params.data.isParent &&
-          params.data.hasChildren
-        ) {
-          if (componentInstance.toggleAccordion) {
-            componentInstance.toggleAccordion(params.data.branchID);
-          }
-          return;
-        }
-
         if (params.colDef.field === 'actions') {
           return;
         }

@@ -807,10 +807,9 @@ export class AutocompleteCellEditorComponent
       const skuInfo = this.dataService?.getSkuInfo();
       if (skuInfo && skuInfo.length > 0) {
         skuInfo.forEach((sku) => {
-          const skuFieldName = `sku${sku.sku}`;
-          const skuValue = material.skus.includes(sku.sku)
-            ? material.name || material.materialName
-            : '';
+          const skuFieldName = `sku${sku.skuId}`;
+          const matchingSku = material.skus.find((s: any) => s.skuId === sku.skuId);
+          const skuValue = matchingSku ? matchingSku.value : '';
 
           if (originalData[skuFieldName] !== skuValue) {
             this.params.node.setDataValue(skuFieldName, skuValue);
@@ -842,62 +841,61 @@ export class AutocompleteCellEditorComponent
   private triggerFeatureAutoPopulationWithService(partNumber: string, dataService: any): void {
     const apiData = dataService.getApiData();
 
-    if (apiData && apiData.mbom) {
-      const existingPart = apiData.mbom.find((part: any) => part.part === partNumber);
-      if (existingPart) {
-        if (this.params && this.params.node) {
-          const fieldsToPopulate = [
-            'supplier',
-            'color',
-            'feature',
-            'shortDesc',
-            'longDesc',
-            'startDate',
-            'endDate',
-            'qty',
-          ];
+    const items = apiData!.instances;
+    const existingPart = items.find((item: any) => {
+      const bomLink = item['bom-link'];
+      return bomLink.partNumber === partNumber;
+    });
+    if (existingPart) {
+      const partData = existingPart['bom-link'];
+      if (this.params && this.params.node) {
+        const fieldsToPopulate = [
+          'supplier',
+          'colorDescription',
+          'bomLinkFeature',
+          'materialDescription',
+          'bomLinkStartDate',
+          'bomLinkEndDate',
+          'quantity',
+        ];
 
-          const oldData = { ...this.params.node.data };
+        const oldData = { ...this.params.node.data };
 
-          fieldsToPopulate.forEach((fieldName) => {
-            if (existingPart[fieldName] !== undefined && existingPart[fieldName] !== null) {
-              if (oldData[fieldName] !== existingPart[fieldName]) {
-                this.params.node.setDataValue(fieldName, existingPart[fieldName]);
-                if (this.params.node.data) {
-                  this.params.node.data[fieldName] = existingPart[fieldName];
-                }
+        fieldsToPopulate.forEach((fieldName) => {
+          if (partData[fieldName] !== undefined && partData[fieldName] !== null) {
+            if (oldData[fieldName] !== partData[fieldName]) {
+              this.params.node.setDataValue(fieldName, partData[fieldName]);
+              if (this.params.node.data) {
+                this.params.node.data[fieldName] = partData[fieldName];
               }
             }
+          }
+        });
+
+        const skuInfo = dataService.getSkuInfo();
+        skuInfo.forEach((sku: any) => {
+          const skuFieldName = `sku${sku.skuId}`;
+          const matchingSku = partData.skus.find((s: any) => s.skuId === sku.skuId);
+          const newSkuValue = matchingSku ? matchingSku.value : '';
+
+          if (oldData[skuFieldName] !== newSkuValue) {
+            this.params.node.setDataValue(skuFieldName, newSkuValue);
+            if (this.params.node.data) {
+              this.params.node.data[skuFieldName] = newSkuValue;
+            }
+          }
+        });
+
+        const partIdentifier = partData.partNumber;
+        if (partIdentifier) {
+          this.setPartIdentifiers(partIdentifier);
+        }
+
+        if (this.params.api) {
+          this.params.api.refreshCells({
+            rowNodes: [this.params.node],
+            force: true,
           });
-
-          const skuInfo = dataService.getSkuInfo();
-          if (skuInfo && skuInfo.length > 0) {
-            skuInfo.forEach((sku: any) => {
-              const skuFieldName = `sku${sku.sku}`;
-              const newSkuValue =
-                existingPart.skus && existingPart.skus.includes(sku.sku) ? existingPart.part : '';
-
-              if (oldData[skuFieldName] !== newSkuValue) {
-                this.params.node.setDataValue(skuFieldName, newSkuValue);
-                if (this.params.node.data) {
-                  this.params.node.data[skuFieldName] = newSkuValue;
-                }
-              }
-            });
-          }
-
-          const partIdentifier =
-            existingPart.partNumber || existingPart.bomLinkPart || existingPart.part || '';
-          if (partIdentifier) {
-            this.setPartIdentifiers(partIdentifier);
-          }
-
-          if (this.params.api) {
-            this.params.api.refreshCells({
-              rowNodes: [this.params.node],
-              force: true,
-            });
-          }
         }
       }
     }
