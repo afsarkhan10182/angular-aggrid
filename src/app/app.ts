@@ -2001,8 +2001,11 @@ export class App implements OnInit, OnDestroy {
         sections[section] = [];
       }
 
-      // Create a unique material key using partNumber and feature
-      const materialKey = `${item.partNumber}_${item.bomLinkFeature}`;
+      // Create a unique material key using partNumber, feature, and date range
+      // This ensures entries with same part/feature but different dates are separate rows
+      const materialKey = `${item.partNumber}_${item.bomLinkFeature}_${
+        item.bomLinkStartDate || ''
+      }_${item.bomLinkEndDate || ''}`;
 
       // Check if material already exists in this section
       const existingMaterial = sections[section].find((m: any) => m.materialKey === materialKey);

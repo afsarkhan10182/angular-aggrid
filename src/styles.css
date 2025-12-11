@@ -701,7 +701,7 @@ div.ag-header-cell[col-id='actions'] {
   min-width: 80px !important;
   max-width: 350px !important;
   padding: 6px 10px !important;
-  line-height: 1.4 !important;
+  line-height: 1.2 !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
