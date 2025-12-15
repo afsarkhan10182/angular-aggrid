@@ -1995,33 +1995,24 @@ export class App implements OnInit, OnDestroy {
     });
 
     // Group items by section
-    for (const item of processedItems) {
+    // Every instance from the response should be displayed as a separate row
+    processedItems.forEach((item: any, index: number) => {
       const section = item.section;
       if (!sections[section]) {
         sections[section] = [];
       }
 
-      // Create a unique material key using partNumber, feature, and date range
-      // This ensures entries with same part/feature but different dates are separate rows
-      const materialKey = `${item.partNumber}_${item.bomLinkFeature}_${
-        item.bomLinkStartDate || ''
-      }_${item.bomLinkEndDate || ''}`;
-
-      // Check if material already exists in this section
-      const existingMaterial = sections[section].find((m: any) => m.materialKey === materialKey);
-
-      if (!existingMaterial) {
-        const material = {
-          ...item,
-          materialKey,
-          allSkus: item.skus,
-          part: item.partNumber,
-          partNumber: item.partNumber,
-          linkedBom: item.linkedBom,
-        };
-        sections[section].push(material);
-      }
-    }
+      // Add every instance as a separate row - no deduplication
+      const material = {
+        ...item,
+        materialKey: `${item.partNumber}_${index}`, // Simple unique key for identification
+        allSkus: item.skus,
+        part: item.partNumber,
+        partNumber: item.partNumber,
+        linkedBom: item.linkedBom,
+      };
+      sections[section].push(material);
+    });
 
     const result: Array<{ section: string; materials: any[] }> = [];
     const sectionOrder = data.sectionOrder;
@@ -2046,20 +2037,18 @@ export class App implements OnInit, OnDestroy {
       return partA.localeCompare(partB);
     };
 
-    // Process each section in order
+    // Process each section in order - show ALL sections from sectionOrder
     for (const sectionName of sectionOrder) {
-      const sectionItems = sections[sectionName];
+      const sectionItems = sections[sectionName] || [];
 
-      if (sectionItems && sectionItems.length > 0) {
-        // Sort materials within section by Feature, then by Part#
-        const sortedMaterials = [...sectionItems].sort(sortMaterials);
+      // Sort materials within section by Feature, then by Part#
+      const sortedMaterials = [...sectionItems].sort(sortMaterials);
 
-        const sectionObj = {
-          section: sectionName,
-          materials: sortedMaterials,
-        };
-        result.push(sectionObj);
-      }
+      const sectionObj = {
+        section: sectionName,
+        materials: sortedMaterials,
+      };
+      result.push(sectionObj);
     }
 
     // Also include sections that are not in sectionOrder but exist in data
