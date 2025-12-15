@@ -5,6 +5,7 @@
 <%
     String ids = request.getParameter("ids");
 	System.out.println("ids = "+ids);
+  String bomType = request.getParameter("bomType");
 	WTUser wtUser = (WTUser) SessionHelper.manager.getPrincipal();
 	String userName = wtUser.getFullName();
 	WTProperties wtproperties = WTProperties.getLocalProperties();
@@ -21,7 +22,7 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
 <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;margin:0;padding:0;background-color:#f8fafc;color:#1e293b}</style><link rel="stylesheet" href="styles-GESULIMI.css"><noscript><link rel="stylesheet" href="styles-GESULIMI.css"></noscript></head>
 <body>
-<div id="angular-root" data-bomid="<%= ids %>" data-username="<%= userName %>" data-host="<%= windchillHost %>" > </div>
+<div id="angular-root" data-bomid="<%= ids %>" data-username="<%= userName %>" data-host="<%= windchillHost %>" data-bomtype="<%= bomType %>" > </div>
 <app-root></app-root>
 <script src="polyfills-B6TNHZQ6.js" type="module"></script><script src="main-NZBPGAFP.js" type="module"></script></body>
 <!-- You can add logic to display details or trigger actions for these IDs -->

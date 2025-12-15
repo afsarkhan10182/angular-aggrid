@@ -117,9 +117,13 @@ export class DataService {
 
     if (!environment.useMockApi) {
       const bomId = this.getJspDataAttribute('data-bomid');
+      const bomType = this.getJspDataAttribute('data-bomtype');
 
       if (bomId) {
         apiUrl += `/${bomId}`;
+      }
+      if (bomType) {
+        apiUrl += `?bomType=${bomType}`;
       }
     }
 
