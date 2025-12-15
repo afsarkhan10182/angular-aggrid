@@ -42,6 +42,8 @@ export class App implements OnInit, OnDestroy {
   public currentUser: any = null;
   public bomName: string = 'MBOM';
   public isLoading: boolean = true;
+  private originalRowValues = new Map<string | number, any>(); // Store original values for existing rows
+  private editedFields = new Map<string | number, Set<string>>(); // Track which specific fields were edited per row
 
   public allColumns = [
     // Core Part Information
@@ -287,6 +289,7 @@ export class App implements OnInit, OnDestroy {
         }
 
         this.rowData = this.transformToHierarchicalData(data);
+        this.storeOriginalValues(); // Store original values for tracking edits
         this.initializeColumns();
 
         if (this.gridApi) {
@@ -577,7 +580,16 @@ export class App implements OnInit, OnDestroy {
         columnDef.filter = false;
         columnDef.cellEditor = 'agDateCellEditor';
         columnDef.editable = (params: any) => {
-          return params.data && params.data.isNewRow && !params.data.isSectionHeader;
+          if (
+            params.data &&
+            (params.data.isSectionHeader ||
+              params.data.isGroupHeader ||
+              params.data.isBranchHeader ||
+              params.data.isMaterialHeader)
+          ) {
+            return false;
+          }
+          return true;
         };
         columnDef.cellRenderer = (params: any) => {
           if (
@@ -814,11 +826,14 @@ export class App implements OnInit, OnDestroy {
 
     if (data.isSectionHeader) {
       const arrowIcon = data.isExpanded ? '▼' : '▶';
+      // Use sectionDisplayName for UI display (always from API), but use section (internal name) for toggle function
+      const displayName = data.sectionDisplayName; // Always from API response
+      const internalName = data.section; // Keep internal name for toggle function
       return `
         <div style="
           cursor: pointer; 
         " 
-             onclick="window.toggleSection('${data.section}')"
+             onclick="window.toggleSection('${internalName}')"
              onmouseover="this.style.background='#e0f2fe'; this.style.borderLeftColor='#1d4ed8'"
              onmouseout="this.style.background='#f8fafc'; this.style.borderLeftColor='#3b82f6'">
           <span style="
@@ -830,7 +845,7 @@ export class App implements OnInit, OnDestroy {
             width: 16px;
             text-align: center;
           ">${arrowIcon}</span>
-          <span style="font-size: 14px; font-weight: 600;">${data.section}</span>
+          <span style="font-size: 14px; font-weight: 600;">${displayName}</span>
         </div>
       `;
     }
@@ -1981,25 +1996,37 @@ export class App implements OnInit, OnDestroy {
 
   private buildMbomHierarchy(data: any): any[] {
     const sections: Record<string, any[]> = {};
+    // Map to store section internal name -> display name mapping
+    const sectionDisplayNameMap: Record<string, string> = {};
 
     // Extract bom-link data from instances
     const processedItems = data.instances.map((item: any) => {
       const bomLink = item['bom-link'];
+      const sectionInternalName = bomLink.section; // e.g., "enumSection001"
+      const sectionDisplayName = bomLink.sectionDisplayName; // e.g., "Fuselage"
+
+      // Build mapping of internal name to display name
+      if (sectionInternalName && sectionDisplayName) {
+        sectionDisplayNameMap[sectionInternalName] = sectionDisplayName;
+      }
+
       return {
         ...bomLink,
         part: bomLink.partNumber,
         partNumber: bomLink.partNumber,
         skus: bomLink.skus,
         linkedBom: bomLink.linkedBom,
+        section: sectionInternalName, // Keep internal name for payload
+        sectionDisplayName: sectionDisplayName, // Store display name for UI
       };
     });
 
-    // Group items by section
+    // Group items by section (using internal name)
     // Every instance from the response should be displayed as a separate row
     processedItems.forEach((item: any, index: number) => {
-      const section = item.section;
-      if (!sections[section]) {
-        sections[section] = [];
+      const sectionInternalName = item.section;
+      if (!sections[sectionInternalName]) {
+        sections[sectionInternalName] = [];
       }
 
       // Add every instance as a separate row - no deduplication
@@ -2010,12 +2037,21 @@ export class App implements OnInit, OnDestroy {
         part: item.partNumber,
         partNumber: item.partNumber,
         linkedBom: item.linkedBom,
+        section: sectionInternalName, // Internal name for payload
+        sectionDisplayName: item.sectionDisplayName, // Display name for UI
       };
-      sections[section].push(material);
+      sections[sectionInternalName].push(material);
     });
 
-    const result: Array<{ section: string; materials: any[] }> = [];
-    const sectionOrder = data.sectionOrder;
+    const result: Array<{ section: string; sectionDisplayName: string; materials: any[] }> = [];
+    const sectionOrder = data.sectionOrder; // Now contains display names like "Fuselage"
+
+    // Create reverse mapping: display name -> internal name
+    const displayToInternalMap: Record<string, string> = {};
+    Object.keys(sectionDisplayNameMap).forEach((internalName) => {
+      const displayName = sectionDisplayNameMap[internalName];
+      displayToInternalMap[displayName] = internalName;
+    });
 
     /**
      * Sort function: by Feature (bomLinkFeature) first, then by Part# (partNumber)
@@ -2037,28 +2073,38 @@ export class App implements OnInit, OnDestroy {
       return partA.localeCompare(partB);
     };
 
-    // Process each section in order - show ALL sections from sectionOrder
-    for (const sectionName of sectionOrder) {
-      const sectionItems = sections[sectionName] || [];
+    // Process each section in order - sectionOrder now contains display names
+    // Show ALL sections from sectionOrder, even if they have no materials
+    for (const sectionDisplayName of sectionOrder) {
+      // Find internal name for this display name
+      const sectionInternalName = displayToInternalMap[sectionDisplayName];
+
+      // Get section items (empty array if section doesn't exist in data)
+      const sectionItems = sectionInternalName ? sections[sectionInternalName] || [] : [];
 
       // Sort materials within section by Feature, then by Part#
       const sortedMaterials = [...sectionItems].sort(sortMaterials);
 
+      // Create section object - API always provides sectionDisplayName
       const sectionObj = {
-        section: sectionName,
+        section: sectionInternalName || '', // Internal name for payload (empty if not found)
+        sectionDisplayName: sectionDisplayName, // Display name for UI (always from sectionOrder)
         materials: sortedMaterials,
       };
       result.push(sectionObj);
     }
 
     // Also include sections that are not in sectionOrder but exist in data
-    Object.keys(sections).forEach((sectionName) => {
-      if (!sectionOrder.includes(sectionName)) {
-        const sectionItems = sections[sectionName];
+    Object.keys(sections).forEach((sectionInternalName) => {
+      const sectionDisplayName = sectionDisplayNameMap[sectionInternalName];
+      // Check if this section's display name is not in sectionOrder
+      if (!sectionOrder.includes(sectionDisplayName)) {
+        const sectionItems = sections[sectionInternalName];
         if (sectionItems && sectionItems.length > 0) {
           const sortedMaterials = [...sectionItems].sort(sortMaterials);
           const sectionObj = {
-            section: sectionName,
+            section: sectionInternalName, // Internal name for payload
+            sectionDisplayName: sectionDisplayName, // Display name from API
             materials: sortedMaterials,
           };
           result.push(sectionObj);
@@ -2076,7 +2122,8 @@ export class App implements OnInit, OnDestroy {
 
     sections.forEach((section: any) => {
       const sectionRow: any = {
-        section: section.section,
+        section: section.section, // Internal name (e.g., "enumSection001") - used for payload
+        sectionDisplayName: section.sectionDisplayName, // Display name (e.g., "Fuselage") - always from API
         isSectionHeader: true,
         isExpanded: true, // Start expanded to show materials
         children: [],
@@ -2089,7 +2136,8 @@ export class App implements OnInit, OnDestroy {
         if (hasChildren) {
           const materialRow: any = {
             ...material,
-            section: section.section,
+            section: section.section, // Internal name for payload
+            sectionDisplayName: section.sectionDisplayName, // Display name for UI
             material: material.part,
             materialIndex: materialIndex,
             allSkus: material.allSkus,
@@ -2122,7 +2170,8 @@ export class App implements OnInit, OnDestroy {
         } else {
           const directRow = {
             ...material,
-            section: section.section,
+            section: section.section, // Internal name for payload
+            sectionDisplayName: section.sectionDisplayName, // Display name for UI
             isDirectRow: true,
             level: 1,
             parent: sectionRow,
@@ -2145,6 +2194,50 @@ export class App implements OnInit, OnDestroy {
     }
 
     return hierarchicalData;
+  }
+
+  /**
+   * Store original values for existing rows to track changes
+   * Only stores values for editable fields: startDate, endDate, quantity
+   */
+  private storeOriginalValues(): void {
+    this.originalRowValues.clear();
+    this.editedFields.clear();
+
+    const processRow = (row: any) => {
+      if (
+        row.isNewRow ||
+        row.isSectionHeader ||
+        row.isGroupHeader ||
+        row.isMaterialHeader ||
+        row.isBranchHeader
+      ) {
+        return;
+      }
+
+      const rowId = row.partNumber || row.newRowId;
+      if (!rowId) return;
+
+      // Store original values for editable fields
+      const originalValues: any = {
+        bomLinkStartDate: row.bomLinkStartDate || row.startDate || '',
+        bomLinkEndDate: row.bomLinkEndDate || row.endDate || '',
+        quantity: row.quantity || row.qty || '',
+      };
+
+      this.originalRowValues.set(rowId, originalValues);
+
+      // Process children if any
+      if (row.children && Array.isArray(row.children)) {
+        row.children.forEach((child: any) => processRow(child));
+      }
+    };
+
+    this.rowData.forEach((sectionRow: any) => {
+      if (sectionRow.children) {
+        sectionRow.children.forEach((child: any) => processRow(child));
+      }
+    });
   }
 
   private addSkuDataToRow(itemRow: any, originalItem: any): void {
@@ -2198,12 +2291,16 @@ export class App implements OnInit, OnDestroy {
   }
 
   /**
-   * Transform grid row data back to API format (matching mock.json structure)
-   * Converts flattened grid rows back to instances array with bom-link objects
+   * Transform grid row data back to API format with mixed edit/create support
+   * For existing rows: Uses _current/_new suffixes for edited fields (startDate, endDate, quantity)
+   * For new rows: Uses regular fields and adds childId + colorId
    */
-  transformGridDataToApiFormat(rowData: any[]): { instances: Array<{ 'bom-link': any }> } {
+  transformGridDataToApiFormat(rowData: any[]): any {
     const instances: Array<{ 'bom-link': any }> = [];
     const skuInfo = this.dataService.getSkuInfo();
+    // Get bomType from API response, fallback to JSP data attribute if not available
+    const bomType =
+      this.dataService.getBomTypeFromResponse() || this.dataService.getBomType() || 'MBOM';
 
     // UI-only fields to exclude from API payload
     const uiOnlyFields = new Set([
@@ -2229,8 +2326,9 @@ export class App implements OnInit, OnDestroy {
       'groupValue',
       'groupLevel',
       'groupHeaderName',
-      'material', // This is just partNumber, we use partNumber instead
-      'part', // This is also partNumber
+      'material',
+      'part',
+      'sectionDisplayName', // UI-only field - payload should use 'section' (internal name)
     ]);
 
     rowData.forEach((row) => {
@@ -2245,31 +2343,189 @@ export class App implements OnInit, OnDestroy {
         return;
       }
 
-      // Build bom-link object from row data
+      const rowId = row.partNumber || row.newRowId;
+      const isNewRow = row.isNewRow;
+      const isEdited = !isNewRow && this.editedRows.has(rowId);
       const bomLink: any = {};
 
-      // Copy all fields except UI-only fields and SKU fields
-      Object.keys(row).forEach((key) => {
-        if (!uiOnlyFields.has(key) && !key.startsWith('sku')) {
-          bomLink[key] = row[key];
-        }
-      });
+      if (isNewRow) {
+        // NEW ROW: Use regular fields and add childId + colorId
+        Object.keys(row).forEach((key) => {
+          if (!uiOnlyFields.has(key) && !key.startsWith('sku')) {
+            bomLink[key] = row[key];
+          }
+        });
 
-      // Ensure partNumber is set (use partNumber, part, or material as fallback)
-      if (!bomLink.partNumber) {
-        bomLink.partNumber = row.partNumber || row.part || row.material || '';
+        // Ensure partNumber is set
+        if (!bomLink.partNumber) {
+          bomLink.partNumber = row.partNumber || row.part || row.material || '';
+        }
+
+        // Add childId from material-supplier.materialSupplierMaster (value after colon)
+        // Example: "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:208845" -> "com.lcs.wc.material.LCSMaterialSupplierMaster:208845"
+        if (row.materialSupplierMasterId) {
+          bomLink.childId = row.materialSupplierMasterId;
+        } else if (row.materialSupplierVersionId) {
+          // Fallback: extract from versionId if materialSupplierMasterId not available
+          const colonIndex = row.materialSupplierVersionId.indexOf(':');
+          if (colonIndex !== -1) {
+            bomLink.childId = row.materialSupplierVersionId.substring(colonIndex + 1);
+          } else {
+            bomLink.childId = row.materialSupplierVersionId;
+          }
+        }
+
+        // Add colorId from color.iterationId (value after colon)
+        // Example: "OR:com.lcs.wc.color.LCSColor:208864" -> "com.lcs.wc.color.LCSColor:208864"
+        if (row.colorId) {
+          bomLink.colorId = row.colorId;
+        }
+
+        // Build skus array
+        bomLink.skus = this.buildSkusArrayFromRow(row, skuInfo);
+      } else if (isEdited) {
+        // EXISTING ROW WITH EDITS: Use _current/_new suffixes for edited fields
+        const originalValues = this.originalRowValues.get(rowId) || {};
+
+        // Copy all non-editable fields as-is
+        // Important: Preserve allSkus for SKU data reconstruction
+        Object.keys(row).forEach((key) => {
+          if (!uiOnlyFields.has(key) && !key.startsWith('sku')) {
+            // Skip editable fields - they'll be handled separately
+            if (
+              key !== 'bomLinkStartDate' &&
+              key !== 'bomLinkEndDate' &&
+              key !== 'startDate' &&
+              key !== 'endDate' &&
+              key !== 'quantity' &&
+              key !== 'qty'
+            ) {
+              bomLink[key] = row[key];
+            }
+          }
+        });
+
+        // Ensure allSkus is preserved for SKU data reconstruction
+        if (row.allSkus && Array.isArray(row.allSkus)) {
+          bomLink.allSkus = row.allSkus;
+        }
+
+        // Ensure partNumber is set
+        if (!bomLink.partNumber) {
+          bomLink.partNumber = row.partNumber || row.part || row.material || '';
+        }
+
+        // Handle editable fields with _current/_new suffixes
+        // Only include fields that were actually edited (touched)
+        const editedFieldsForRow = this.editedFields.get(rowId) || new Set<string>();
+
+        // Only include startDate if it was edited
+        if (editedFieldsForRow.has('bomLinkStartDate') || editedFieldsForRow.has('startDate')) {
+          const currentStartDate =
+            originalValues.bomLinkStartDate || originalValues.startDate || '';
+          const newStartDate = row.bomLinkStartDate || row.startDate || '';
+          if (currentStartDate !== newStartDate) {
+            bomLink.bomLinkStartDate_current = this.convertDateToApiFormat(currentStartDate);
+            bomLink.bomLinkStartDate_new = this.convertDateToApiFormat(newStartDate);
+          }
+        }
+
+        // Only include endDate if it was edited
+        if (editedFieldsForRow.has('bomLinkEndDate') || editedFieldsForRow.has('endDate')) {
+          const currentEndDate = originalValues.bomLinkEndDate || originalValues.endDate || '';
+          const newEndDate = row.bomLinkEndDate || row.endDate || '';
+          if (currentEndDate !== newEndDate) {
+            bomLink.bomLinkEndDate_current = this.convertDateToApiFormat(currentEndDate);
+            bomLink.bomLinkEndDate_new = this.convertDateToApiFormat(newEndDate);
+          }
+        }
+
+        // Only include quantity if it was edited
+        if (editedFieldsForRow.has('quantity') || editedFieldsForRow.has('qty')) {
+          const currentQuantity = originalValues.quantity || '';
+          const newQuantity = row.quantity || row.qty || '';
+          if (currentQuantity !== newQuantity) {
+            bomLink.quantity_current = currentQuantity;
+            bomLink.quantity_new = newQuantity;
+          }
+        }
+
+        // Build skus array
+        bomLink.skus = this.buildSkusArrayFromRow(row, skuInfo);
+      } else {
+        // EXISTING ROW WITHOUT EDITS: Skip (don't include unchanged rows)
+        return;
       }
 
-      // Build skus array from SKU fields using reusable helper method
-      bomLink.skus = this.buildSkusArrayFromRow(row, skuInfo);
-
-      // Add to instances array
       instances.push({
         'bom-link': bomLink,
       });
     });
 
-    return { instances };
+    // Build full payload with bomCheckIn, bomType, bomPartInfo, columns, sectionOrder, skuInfo, skuIds
+    const apiData = this.dataService.getApiData();
+    const bomPartInfo = this.dataService.getBomPartInfo();
+    const columns = this.dataService.getColumnMapping();
+    const sectionOrder = apiData?.sectionOrder || [];
+    const skuInfoData = apiData?.skuInfo || { skus: skuInfo };
+
+    // Collect all SKU IDs from instances
+    const skuIdsSet = new Set<string>();
+    instances.forEach((instance) => {
+      const bomLink = instance['bom-link'];
+      if (bomLink.skus && Array.isArray(bomLink.skus)) {
+        bomLink.skus.forEach((sku: any) => {
+          if (sku.skuId) {
+            skuIdsSet.add(sku.skuId);
+          }
+        });
+      }
+    });
+    const skuIds = Array.from(skuIdsSet).join(',');
+
+    return {
+      bomCheckIn: 'true',
+      bomType: bomType,
+      bomPartInfo: Array.isArray(bomPartInfo) ? bomPartInfo : bomPartInfo ? [bomPartInfo] : [],
+      instances: instances,
+      columns: columns,
+      sectionOrder: sectionOrder,
+      skuIds: skuIds || '',
+      skuInfo: skuInfoData,
+    };
+  }
+
+  /**
+   * Convert date from MM/DD/YYYY format to API format (YYYY/M/D)
+   * Example: "10/30/2025" -> "2025/10/30"
+   */
+  private convertDateToApiFormat(dateStr: string): string {
+    if (!dateStr) return '';
+
+    // If already in YYYY/M/D format, return as-is
+    if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(dateStr)) {
+      return dateStr;
+    }
+
+    // Try to parse MM/DD/YYYY format
+    const mmddyyyyPattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+    const match = dateStr.match(mmddyyyyPattern);
+    if (match) {
+      const [, month, day, year] = match;
+      return `${year}/${parseInt(month)}/${parseInt(day)}`;
+    }
+
+    // Try to parse as Date object or ISO string
+    const date = new Date(dateStr);
+    if (!isNaN(date.getTime())) {
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      return `${year}/${month}/${day}`;
+    }
+
+    // Return as-is if can't parse
+    return dateStr;
   }
 
   private showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {

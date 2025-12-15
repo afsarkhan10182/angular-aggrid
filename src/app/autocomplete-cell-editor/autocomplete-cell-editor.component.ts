@@ -750,6 +750,41 @@ export class AutocompleteCellEditorComponent
         }
       }
 
+      // Store childId from material-supplier.materialSupplierMaster (take value after colon)
+      const materialSupplier = fullResult['material-supplier'] || {};
+      const materialSupplierMaster = materialSupplier.materialSupplierMaster || '';
+      let childId = '';
+      if (materialSupplierMaster) {
+        // Extract value after first colon (e.g., "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:208845" -> "com.lcs.wc.material.LCSMaterialSupplierMaster:208845")
+        const colonIndex = materialSupplierMaster.indexOf(':');
+        if (colonIndex !== -1) {
+          childId = materialSupplierMaster.substring(colonIndex + 1);
+        }
+      }
+      if (childId && originalData.materialSupplierMasterId !== childId) {
+        this.params.node.setDataValue('materialSupplierMasterId', childId);
+        if (this.params.node.data) {
+          this.params.node.data.materialSupplierMasterId = childId;
+        }
+      }
+
+      // Store colorId from color.iterationId (take value after colon)
+      const colorIterationId = colorObj.iterationId || '';
+      let colorId = '';
+      if (colorIterationId) {
+        // Extract value after first colon (e.g., "OR:com.lcs.wc.color.LCSColor:208864" -> "com.lcs.wc.color.LCSColor:208864")
+        const colonIndex = colorIterationId.indexOf(':');
+        if (colonIndex !== -1) {
+          colorId = colorIterationId.substring(colonIndex + 1);
+        }
+      }
+      if (colorId && originalData.colorId !== colorId) {
+        this.params.node.setDataValue('colorId', colorId);
+        if (this.params.node.data) {
+          this.params.node.data.colorId = colorId;
+        }
+      }
+
       if (partValue && this.dataService) {
         this.fetchAllPartsForDropdowns(partValue, material);
       }
@@ -776,6 +811,42 @@ export class AutocompleteCellEditorComponent
 
       if (partNumberFromMaterial) {
         this.setPartIdentifiers(partNumberFromMaterial);
+      }
+
+      // Store childId from material-supplier.materialSupplierMaster (take value after colon)
+      const materialSupplier = fullResult['material-supplier'] || {};
+      const materialSupplierMaster = materialSupplier.materialSupplierMaster || '';
+      let childId = '';
+      if (materialSupplierMaster) {
+        // Extract value after first colon (e.g., "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:208845" -> "com.lcs.wc.material.LCSMaterialSupplierMaster:208845")
+        const colonIndex = materialSupplierMaster.indexOf(':');
+        if (colonIndex !== -1) {
+          childId = materialSupplierMaster.substring(colonIndex + 1);
+        }
+      }
+      if (childId && originalData.materialSupplierMasterId !== childId) {
+        this.params.node.setDataValue('materialSupplierMasterId', childId);
+        if (this.params.node.data) {
+          this.params.node.data.materialSupplierMasterId = childId;
+        }
+      }
+
+      // Store colorId from color.iterationId (take value after colon)
+      const colorObj = fullResult.color || {};
+      const colorIterationId = colorObj.iterationId || '';
+      let colorId = '';
+      if (colorIterationId) {
+        // Extract value after first colon (e.g., "OR:com.lcs.wc.color.LCSColor:208864" -> "com.lcs.wc.color.LCSColor:208864")
+        const colonIndex = colorIterationId.indexOf(':');
+        if (colonIndex !== -1) {
+          colorId = colorIterationId.substring(colonIndex + 1);
+        }
+      }
+      if (colorId && originalData.colorId !== colorId) {
+        this.params.node.setDataValue('colorId', colorId);
+        if (this.params.node.data) {
+          this.params.node.data.colorId = colorId;
+        }
       }
 
       if (materialValue) {

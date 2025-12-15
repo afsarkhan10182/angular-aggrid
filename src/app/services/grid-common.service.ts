@@ -496,7 +496,8 @@ export class GridCommonService {
         if (componentInstance.rowManagementService && componentInstance.editedRows) {
           componentInstance.rowManagementService.trackFieldChange(
             params,
-            componentInstance.editedRows
+            componentInstance.editedRows,
+            componentInstance.editedFields
           );
         }
 

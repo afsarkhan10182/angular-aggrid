@@ -76,6 +76,7 @@ export interface ApiData {
   };
   bomPartInfo?: BomPartInfo | BomPartInfo[];
   sectionOrder?: string[];
+  bomType?: string;
 }
 
 @Injectable({
@@ -466,12 +467,12 @@ export class DataService {
 
   /**
    * Update BOM data
-   * Sends the payload in the same format as mock.json (instances array with bom-link objects)
+   * Sends the payload with bomCheckIn, bomType, bomPartInfo, instances, columns, sectionOrder, skuInfo
    */
-  updateBomData(payload: { instances: Array<{ 'bom-link': BomLink }> }): Observable<any> {
+  updateBomData(payload: any): Observable<any> {
     let apiUrl = environment.useMockApi
       ? '/api/updateBom'
-      : `${this.getServiceHostUrl()}/api/updateBom`;
+      : `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/saveBOMLinks`;
 
     return this.http.put<any>(apiUrl, payload, { headers: this.buildHttpHeaders() }).pipe(
       catchError((error: HttpErrorResponse) => {
@@ -483,6 +484,10 @@ export class DataService {
 
   getSkuInfo(): SkuInfo[] {
     return this.apiData!.skuInfo.skus;
+  }
+
+  getBomTypeFromResponse(): string | null {
+    return this.apiData?.bomType || null;
   }
 
   getProductInfo() {
@@ -546,6 +551,11 @@ export class DataService {
   // Get username from JSP data attribute (passed from FlexPLM session)
   getUserNameFromJsp(): string | null {
     return this.getJspDataAttribute('data-username');
+  }
+
+  // Get bomType from JSP data attribute
+  getBomType(): string | null {
+    return this.getJspDataAttribute('data-bomtype');
   }
 
   // Get service host URL from JSP data attribute (passed from Windchill)

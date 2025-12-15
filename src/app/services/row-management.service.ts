@@ -252,7 +252,7 @@ export class RowManagementService {
   /**
    * Track field changes
    */
-  trackFieldChange(params: any, editedRows: Set<string | number>): void {
+  trackFieldChange(params: any, editedRows: Set<string | number>, editedFields?: Map<string | number, Set<string>>): void {
     let valuesAreSame = false;
     if (params.oldValue instanceof Date && params.newValue instanceof Date) {
       valuesAreSame = params.oldValue.getTime() === params.newValue.getTime();
@@ -264,7 +264,7 @@ export class RowManagementService {
       return;
     }
 
-    const partId = params.data.part;
+    const partId = params.data.partNumber || params.data.part || params.data.newRowId;
     const fieldName = params.colDef.field;
 
     if (params.data.isNewRow && fieldName.startsWith('sku')) {
@@ -272,6 +272,14 @@ export class RowManagementService {
     }
 
     editedRows.add(partId);
+
+    // Track which specific field was edited
+    if (editedFields && partId) {
+      if (!editedFields.has(partId)) {
+        editedFields.set(partId, new Set<string>());
+      }
+      editedFields.get(partId)!.add(fieldName);
+    }
 
     params.api.refreshCells({
       rowNodes: [params.node],
@@ -373,7 +381,7 @@ export class RowManagementService {
 
       const changesCount = editedRows.size;
 
-      // Transform grid data to API format (matching mock.json structure)
+      // Transform grid data to API format with mixed edit/create support
       const apiPayload = componentInstance.transformGridDataToApiFormat
         ? componentInstance.transformGridDataToApiFormat(rowData)
         : null;
@@ -381,6 +389,18 @@ export class RowManagementService {
       // Log the payload for debugging (can be removed in production)
       if (apiPayload) {
         console.log('Update API Payload:', JSON.stringify(apiPayload, null, 2));
+        
+        // Call the API if payload exists and has instances
+        if (apiPayload.instances && apiPayload.instances.length > 0 && componentInstance.dataService) {
+          componentInstance.dataService.updateBomData(apiPayload).subscribe({
+            next: (response: any) => {
+              console.log('BOM update successful:', response);
+            },
+            error: (error: any) => {
+              console.error('BOM update failed:', error);
+            },
+          });
+        }
       }
 
       setTimeout(() => {
@@ -397,6 +417,10 @@ export class RowManagementService {
 
         componentInstance.rowData = updatedRowData;
         editedRows.clear();
+        // Clear edited fields tracking
+        if (componentInstance.editedFields) {
+          componentInstance.editedFields.clear();
+        }
 
         this.lastSavedAt = new Date();
         localStorage.setItem('lastSavedAt', this.lastSavedAt.toISOString());
