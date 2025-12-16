@@ -17,6 +17,12 @@ export interface ValidationResult {
   invalidRows?: InvalidRow[];
 }
 
+export interface SkuValidationResult {
+  isValid: boolean;
+  message: string;
+  invalidRows?: InvalidRow[];
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -176,5 +182,199 @@ export class ValidationService {
    */
   createRequiredFields(fields: Array<{ keys: string[]; label: string }>): RequiredField[] {
     return fields.map((f) => ({ keys: f.keys, label: f.label }));
+  }
+
+  /**
+   * Count how many SKUs have values in a row
+   * @param row - The row to check
+   * @param skuInfo - Array of SKU info objects with skuId property
+   * @returns Object with count and array of SKU IDs that have values
+   */
+  private countSkusWithValues(row: any, skuInfo: any[]): { count: number; skuIds: string[] } {
+    let count = 0;
+    const skuIds: string[] = [];
+
+    skuInfo.forEach((sku) => {
+      const skuFieldName = `sku${sku.skuId}`;
+      const skuValue = row[skuFieldName];
+
+      if (skuValue !== undefined && skuValue !== null && skuValue !== '') {
+        const stringValue = String(skuValue).trim();
+        if (stringValue !== '') {
+          count++;
+          skuIds.push(sku.skuId);
+        }
+      }
+    });
+
+    return { count, skuIds };
+  }
+
+  /**
+   * Validate SKU selection for a new row
+   * At least 1 SKU must be selected (have a value) before submit
+   * @param row - The row to validate
+   * @param skuInfo - Array of SKU info objects with skuId property
+   * @returns Validation result
+   */
+  validateRowSkus(
+    row: any,
+    skuInfo: any[]
+  ): {
+    isValid: boolean;
+    message: string;
+    selectedSkuCount: number;
+  } {
+    if (!row.isNewRow) {
+      // Existing rows don't need SKU validation
+      return { isValid: true, message: '', selectedSkuCount: 0 };
+    }
+
+    const { count, skuIds } = this.countSkusWithValues(row, skuInfo);
+
+    if (count === 0) {
+      const rowId = row.newRowId || row.partNumber || row.part || 'Unknown';
+      return {
+        isValid: false,
+        message: `Row ${rowId}: At least 1 SKU must be selected before submit.`,
+        selectedSkuCount: 0,
+      };
+    }
+
+    return { isValid: true, message: '', selectedSkuCount: count };
+  }
+
+  /**
+   * Validate SKU payload for a row
+   * Validates that either only one SKU is passed, or all selected SKUs are correctly passed
+   * @param row - The row to validate
+   * @param skuInfo - Array of SKU info objects with skuId property
+   * @param payloadSkus - Array of SKUs from the payload for this row
+   * @returns Validation result
+   */
+  validateSkuPayload(
+    row: any,
+    skuInfo: any[],
+    payloadSkus: any[]
+  ): {
+    isValid: boolean;
+    message: string;
+  } {
+    if (!row.isNewRow) {
+      // For existing rows, payload validation is less strict
+      return { isValid: true, message: '' };
+    }
+
+    const { count: selectedCount, skuIds: selectedSkuIds } = this.countSkusWithValues(row, skuInfo);
+
+    if (selectedCount === 0) {
+      // This should have been caught by validateRowSkus, but double-check
+      return { isValid: false, message: 'No SKUs selected in row' };
+    }
+
+    // Get SKU IDs from payload
+    const payloadSkuIds = payloadSkus
+      .map((sku) => String(sku.skuId || sku.skuNumber || ''))
+      .filter((id) => id !== '');
+
+    // Check if payload matches selected SKUs
+    if (selectedCount === 1) {
+      // Only one SKU selected - payload should have exactly one matching SKU
+      if (payloadSkuIds.length !== 1) {
+        const rowId = row.newRowId || row.partNumber || row.part || 'Unknown';
+        return {
+          isValid: false,
+          message: `Row ${rowId}: Only 1 SKU is selected, but payload contains ${payloadSkuIds.length} SKU(s).`,
+        };
+      }
+
+      if (!payloadSkuIds.includes(selectedSkuIds[0])) {
+        const rowId = row.newRowId || row.partNumber || row.part || 'Unknown';
+        return {
+          isValid: false,
+          message: `Row ${rowId}: Selected SKU (${selectedSkuIds[0]}) does not match payload SKU (${payloadSkuIds[0]}).`,
+        };
+      }
+    } else {
+      // Multiple SKUs selected - all selected SKUs must be in payload
+      const missingSkus = selectedSkuIds.filter((id) => !payloadSkuIds.includes(id));
+      if (missingSkus.length > 0) {
+        const rowId = row.newRowId || row.partNumber || row.part || 'Unknown';
+        return {
+          isValid: false,
+          message: `Row ${rowId}: Selected SKUs (${selectedSkuIds.join(
+            ', '
+          )}) are not all present in payload. Missing: ${missingSkus.join(', ')}.`,
+        };
+      }
+
+      // Check for extra SKUs in payload that weren't selected
+      const extraSkus = payloadSkuIds.filter((id) => !selectedSkuIds.includes(id));
+      if (extraSkus.length > 0) {
+        const rowId = row.newRowId || row.partNumber || row.part || 'Unknown';
+        return {
+          isValid: false,
+          message: `Row ${rowId}: Payload contains SKUs (${extraSkus.join(
+            ', '
+          )}) that were not selected in the row.`,
+        };
+      }
+    }
+
+    return { isValid: true, message: '' };
+  }
+
+  /**
+   * Validate SKUs for all new rows
+   * @param rowData - Hierarchical row data (with children)
+   * @param displayData - Flat display data (optional, for rows not yet in hierarchy)
+   * @param skuInfo - Array of SKU info objects with skuId property
+   * @returns Validation result with list of invalid rows
+   */
+  validateNewRowsSkus(rowData: any[], skuInfo: any[], displayData?: any[]): SkuValidationResult {
+    const invalidRows: InvalidRow[] = [];
+
+    // Find all new rows from hierarchical data
+    const newRows = this.findNewRows(rowData);
+
+    // Also check displayData for new rows that might not be in hierarchical structure
+    if (displayData && Array.isArray(displayData)) {
+      displayData.forEach((row: any) => {
+        if (row.isNewRow && !row.isSectionHeader && !row.isGroupHeader && !row.isMaterialHeader) {
+          // Check if already in newRows
+          const exists = newRows.some((nr) => nr.newRowId === row.newRowId);
+          if (!exists) {
+            newRows.push(row);
+          }
+        }
+      });
+    }
+
+    // Validate each new row's SKU selection
+    newRows.forEach((row) => {
+      const validation = this.validateRowSkus(row, skuInfo);
+
+      if (!validation.isValid) {
+        invalidRows.push({
+          row,
+          missingFields: ['SKU selection'],
+          rowId: row.newRowId || row.partNumber || row.part || 'Unknown',
+        });
+      }
+    });
+
+    // Build error message if validation failed
+    if (invalidRows.length > 0) {
+      const rowCount = invalidRows.length === 1 ? 'row' : 'rows';
+      const rowIds = invalidRows.map((ir) => ir.rowId).join(', ');
+
+      return {
+        isValid: false,
+        message: `Cannot save: ${invalidRows.length} new ${rowCount} (${rowIds}) have no SKU selected. At least 1 SKU must be selected before submit.`,
+        invalidRows,
+      };
+    }
+
+    return { isValid: true, message: '' };
   }
 }

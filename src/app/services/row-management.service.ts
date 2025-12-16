@@ -409,61 +409,191 @@ export class RowManagementService {
           componentInstance.dataService.updateBomData(apiPayload).subscribe({
             next: (response: any) => {
               console.log('BOM update successful:', response);
+
+              // Update grid with API response if available
+              if (response && (response.instances || response.data)) {
+                // If API returns updated data, use it to refresh the grid
+                const responseData = response.instances ? response : response.data;
+                if (responseData && componentInstance.transformToHierarchicalData) {
+                  try {
+                    const updatedHierarchicalData =
+                      componentInstance.transformToHierarchicalData(responseData);
+                    componentInstance.rowData = updatedHierarchicalData;
+
+                    // Update displayData if available
+                    if (componentInstance.applyHierarchicalSearch) {
+                      componentInstance.applyHierarchicalSearch();
+                    }
+                  } catch (error) {
+                    console.warn('Could not transform API response, using local update:', error);
+                    // Fall back to local update
+                    this.updateLocalRowDataAfterSave(rowData, componentInstance, editedRows);
+                  }
+                } else {
+                  // Fall back to local update
+                  this.updateLocalRowDataAfterSave(rowData, componentInstance, editedRows);
+                }
+              } else {
+                // No response data, use local update
+                this.updateLocalRowDataAfterSave(rowData, componentInstance, editedRows);
+              }
+
               // After successful save, update original values to match current state
               // This ensures subsequent edits use the correct "old" values
               // Note: Backend does NOT return old values in response - frontend must track them
               if (componentInstance.storeOriginalValues) {
                 componentInstance.storeOriginalValues();
               }
+
+              this.lastSavedAt = new Date();
+              localStorage.setItem('lastSavedAt', this.lastSavedAt.toISOString());
+              this.newRows.clear();
+
+              // Refresh grid to show updated icons (change - to + for saved new rows)
+              gridApi.refreshCells({
+                force: true,
+                suppressFlash: false,
+              });
+
+              // Also refresh the entire grid to ensure all changes are reflected
+              setTimeout(() => {
+                if (componentInstance.applyHierarchicalSearch) {
+                  componentInstance.applyHierarchicalSearch();
+                }
+                gridApi.refreshCells({ force: true });
+              }, 100);
+
+              resolve({
+                success: true,
+                message: `Successfully saved ${changesCount} changes!`,
+                payload: apiPayload,
+              });
             },
             error: (error: any) => {
               console.error('BOM update failed:', error);
+
+              // Extract error message based on HTTP status code
+              let errorMessage = 'Failed to save changes.';
+
+              if (error.status) {
+                switch (error.status) {
+                  case 404:
+                    errorMessage =
+                      'Failed to save: Resource not found (404). Please check your connection and try again.';
+                    break;
+                  case 500:
+                    errorMessage =
+                      'Failed to save: Server error (500). Please try again later or contact support.';
+                    break;
+                  case 400:
+                    errorMessage = `Failed to save: Bad request (400). ${
+                      error.error?.message ||
+                      error.message ||
+                      'Please check your data and try again.'
+                    }`;
+                    break;
+                  case 401:
+                    errorMessage =
+                      'Failed to save: Unauthorized (401). Please refresh the page and try again.';
+                    break;
+                  case 403:
+                    errorMessage =
+                      'Failed to save: Forbidden (403). You do not have permission to perform this action.';
+                    break;
+                  default:
+                    errorMessage = `Failed to save: ${error.status} ${
+                      error.statusText || 'Error'
+                    }. ${error.error?.message || error.message || 'Please try again.'}`;
+                }
+              } else if (error.message) {
+                errorMessage = `Failed to save: ${error.message}`;
+              }
+
+              // IMPORTANT: Do NOT update grid, icons, or state on error
+              // Keep UI exactly as it was before clicking save
+              // Only show error message to user
+
+              resolve({
+                success: false,
+                message: errorMessage,
+                payload: apiPayload,
+              });
             },
           });
+        } else {
+          // No API call needed, just update locally
+          setTimeout(() => {
+            this.updateLocalRowDataAfterSave(rowData, componentInstance, editedRows);
+
+            this.lastSavedAt = new Date();
+            localStorage.setItem('lastSavedAt', this.lastSavedAt.toISOString());
+            this.newRows.clear();
+
+            gridApi.refreshCells({
+              force: true,
+              suppressFlash: false,
+            });
+
+            resolve({
+              success: true,
+              message: `Successfully saved ${changesCount} changes!`,
+              payload: apiPayload,
+            });
+          }, 100);
         }
+      } else {
+        resolve({
+          success: false,
+          message: 'No payload to save',
+        });
+      }
+    });
+  }
+
+  /**
+   * Update local row data after save (remove isNewRow flags, etc.)
+   */
+  private updateLocalRowDataAfterSave(
+    rowData: any[],
+    componentInstance: any,
+    editedRows: Set<string | number>
+  ): void {
+    const updatedRowData = this.removeNewRowFlags(rowData);
+    componentInstance.rowData = updatedRowData;
+    editedRows.clear();
+
+    // Clear edited fields tracking
+    if (componentInstance.editedFields) {
+      componentInstance.editedFields.clear();
+    }
+
+    // CRITICAL: After successful save, update original values to match current values
+    // This ensures that if user edits again, we have the correct "old" values
+    // The originalRowValues Map should reflect the current state after save
+    if (componentInstance.storeOriginalValues) {
+      componentInstance.storeOriginalValues();
+    }
+  }
+
+  /**
+   * Recursively remove isNewRow flags from row data
+   */
+  private removeNewRowFlags(rows: any[]): any[] {
+    return rows.map((row) => {
+      const updatedRow = { ...row };
+
+      if (updatedRow.isNewRow) {
+        delete updatedRow.isNewRow;
+        delete updatedRow.newRowId;
+        delete updatedRow.insertAfter;
       }
 
-      setTimeout(() => {
-        const updatedRowData = rowData.map((row) => {
-          if (row.isNewRow) {
-            const updatedRow = { ...row };
-            delete updatedRow.isNewRow;
-            delete updatedRow.newRowId;
-            delete updatedRow.insertAfter;
-            return updatedRow;
-          }
-          return row;
-        });
+      // Recursively process children
+      if (updatedRow.children && Array.isArray(updatedRow.children)) {
+        updatedRow.children = this.removeNewRowFlags(updatedRow.children);
+      }
 
-        componentInstance.rowData = updatedRowData;
-        editedRows.clear();
-        // Clear edited fields tracking
-        if (componentInstance.editedFields) {
-          componentInstance.editedFields.clear();
-        }
-
-        // CRITICAL: After successful save, update original values to match current values
-        // This ensures that if user edits again, we have the correct "old" values
-        // The originalRowValues Map should reflect the current state after save
-        if (componentInstance.storeOriginalValues) {
-          componentInstance.storeOriginalValues();
-        }
-
-        this.lastSavedAt = new Date();
-        localStorage.setItem('lastSavedAt', this.lastSavedAt.toISOString());
-        this.newRows.clear();
-
-        gridApi.refreshCells({
-          force: true,
-          suppressFlash: false,
-        });
-
-        resolve({
-          success: true,
-          message: `Successfully saved ${changesCount} changes!`,
-          payload: apiPayload, // Include payload in response for potential API call
-        });
-      }, 1000);
+      return updatedRow;
     });
   }
 

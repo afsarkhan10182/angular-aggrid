@@ -1055,6 +1055,47 @@ div.ag-header-cell[col-id='actions'] {
   border-radius: 2px !important;
 }
 
+/* Validation error row styling - clear visual indication */
+.ag-row.validation-error-row {
+  background: #fef2f2 !important;
+  border-left: 4px solid #ef4444 !important;
+  border-right: 2px solid #ef4444 !important;
+}
+
+.ag-row.validation-error-row .ag-cell {
+  background: #fef2f2 !important;
+  border-bottom: 1px solid #fecaca !important;
+}
+
+.ag-row.validation-error-row:hover {
+  background: #fee2e2 !important;
+}
+
+.ag-row.validation-error-row:hover .ag-cell {
+  background: #fee2e2 !important;
+}
+
+/* Override other row classes when validation error is present */
+.ag-row.validation-error-row.new-row {
+  background: #fef2f2 !important;
+  border-left: 4px solid #ef4444 !important;
+  border-right: 2px solid #ef4444 !important;
+}
+
+.ag-row.validation-error-row.new-row .ag-cell {
+  background: #fef2f2 !important;
+}
+
+.ag-row.validation-error-row.edited-row {
+  background: #fef2f2 !important;
+  border-left: 4px solid #ef4444 !important;
+  border-right: 2px solid #ef4444 !important;
+}
+
+.ag-row.validation-error-row.edited-row .ag-cell {
+  background: #fef2f2 !important;
+}
+
 /* Sub-row styling - children under material headers */
 .ag-row.subrow {
   background: #f0fdf4 !important;

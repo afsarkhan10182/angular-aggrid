@@ -460,6 +460,14 @@ export class GridCommonService {
           classes.push('subrow');
         }
 
+        // Check for validation errors
+        if (params.data && componentInstance.invalidRowIds) {
+          const rowId = params.data.newRowId || params.data.partNumber || params.data.part;
+          if (rowId && componentInstance.invalidRowIds.has(rowId)) {
+            classes.push('validation-error-row');
+          }
+        }
+
         return classes.join(' ');
       },
       suppressAnimationFrame: true,

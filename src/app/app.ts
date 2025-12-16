@@ -44,8 +44,10 @@ export class App implements OnInit, OnDestroy {
   public currentUser: any = null;
   public bomName: string = '';
   public isLoading: boolean = true;
+  public isSaving: boolean = false; // Track save operation state
   private originalRowValues = new Map<string | number, any>(); // Store original values for existing rows
   private editedFields = new Map<string | number, Set<string>>(); // Track which specific fields were edited per row
+  public invalidRowIds = new Set<string | number>(); // Track rows with validation errors for highlighting
 
   public allColumns = [
     // Core Part Information
@@ -1548,22 +1550,154 @@ export class App implements OnInit, OnDestroy {
   }
 
   saveChanges(): void {
-    // Validate new rows before saving
+    // Clear previous validation errors
+    this.invalidRowIds.clear();
+
+    // Validate new rows before saving (required fields)
     const validationResult = this.validationService.validateNewRows(this.rowData, this.displayData);
     if (!validationResult.isValid) {
+      // Mark invalid rows for highlighting
+      if (validationResult.invalidRows) {
+        validationResult.invalidRows.forEach((invalidRow) => {
+          this.invalidRowIds.add(invalidRow.rowId);
+        });
+      }
+      this.refreshGridForValidationErrors();
       this.showNotification(validationResult.message, 'error');
       return;
     }
 
+    // Validate SKU selection for new rows
+    const skuInfo = this.dataService.getSkuInfo();
+    const skuValidationResult = this.validationService.validateNewRowsSkus(
+      this.rowData,
+      skuInfo,
+      this.displayData
+    );
+    if (!skuValidationResult.isValid) {
+      // Mark invalid rows for highlighting
+      if (skuValidationResult.invalidRows) {
+        skuValidationResult.invalidRows.forEach((invalidRow) => {
+          this.invalidRowIds.add(invalidRow.rowId);
+        });
+      }
+      this.refreshGridForValidationErrors();
+      this.showNotification(skuValidationResult.message, 'error');
+      return;
+    }
+
+    // Validate SKU payload before submitting
+    const apiPayload = this.transformGridDataToApiFormat(this.rowData);
+    if (apiPayload && apiPayload.instances && Array.isArray(apiPayload.instances)) {
+      // Find all new rows from hierarchical and display data
+      const allNewRows = this.findAllNewRows(this.rowData, this.displayData);
+
+      // Find corresponding payload instances for new rows
+      for (const newRow of allNewRows) {
+        const payloadInstance = apiPayload.instances.find((inst: any) => {
+          const bomLink = inst['bom-link'];
+          // Match by section and other identifying fields
+          return (
+            bomLink &&
+            bomLink.section === newRow.section &&
+            bomLink.skus &&
+            Array.isArray(bomLink.skus)
+          );
+        });
+
+        if (payloadInstance && payloadInstance['bom-link'] && payloadInstance['bom-link'].skus) {
+          const payloadValidation = this.validationService.validateSkuPayload(
+            newRow,
+            skuInfo,
+            payloadInstance['bom-link'].skus
+          );
+
+          if (!payloadValidation.isValid) {
+            const rowId = newRow.newRowId || newRow.partNumber || newRow.part || 'Unknown';
+            this.invalidRowIds.add(rowId);
+            this.refreshGridForValidationErrors();
+            this.showNotification(payloadValidation.message, 'error');
+            return;
+          }
+        }
+      }
+    }
+
+    // All validations passed, proceed with save
+    // Set loading state
+    this.isSaving = true;
+
     this.rowManagementService
       .saveChanges(this.rowData, this.editedRows, this.gridApi, this)
       .then((result) => {
+        // Always clear loading state when response is received (success or error)
+        this.isSaving = false;
+
         if (result.success) {
+          // Clear validation errors after successful save
+          this.invalidRowIds.clear();
           this.rowManagementService.showSaveMessage(result.message, 'success', this);
         } else {
-          this.rowManagementService.showSaveMessage(result.message, 'info', this);
+          // Show error message - do NOT update grid or state
+          // UI remains exactly as it was before clicking save
+          this.rowManagementService.showSaveMessage(result.message, 'error', this);
+        }
+      })
+      .catch((error) => {
+        // Handle any unexpected errors
+        this.isSaving = false;
+        console.error('Unexpected error during save:', error);
+        this.rowManagementService.showSaveMessage(
+          'An unexpected error occurred while saving. Please try again.',
+          'error',
+          this
+        );
+      });
+  }
+
+  /**
+   * Refresh grid cells to show validation error highlighting
+   */
+  private refreshGridForValidationErrors(): void {
+    if (this.gridApi) {
+      this.gridApi.refreshCells({ force: true });
+    }
+  }
+
+  /**
+   * Find all new rows from hierarchical and display data
+   */
+  private findAllNewRows(rowData: any[], displayData?: any[]): any[] {
+    const newRows: any[] = [];
+
+    // Recursively find new rows in hierarchical data
+    const findInHierarchy = (rows: any[]) => {
+      rows.forEach((row) => {
+        if (row.isNewRow && !row.isSectionHeader && !row.isGroupHeader && !row.isMaterialHeader) {
+          newRows.push(row);
+        }
+        if (row.children && Array.isArray(row.children)) {
+          findInHierarchy(row.children);
         }
       });
+    };
+
+    findInHierarchy(rowData);
+
+    // Also check displayData for new rows that might not be in hierarchical structure
+    if (displayData && Array.isArray(displayData)) {
+      displayData.forEach((row: any) => {
+        if (row.isNewRow && !row.isSectionHeader && !row.isGroupHeader && !row.isMaterialHeader) {
+          // Check if already in newRows
+          const exists = newRows.some((nr) => nr.newRowId === row.newRowId);
+          if (!exists) {
+            newRows.push(row);
+          }
+        }
+      });
+    }
+
+    return newRows;
   }
 
   addRowAfter(rowIndex: number): void {

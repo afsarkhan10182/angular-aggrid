@@ -80,9 +80,12 @@
           <button
             (click)="saveChanges()"
             class="save-changes-btn"
-            [disabled]="editedRows.size === 0"
+            [disabled]="editedRows.size === 0 || isSaving"
           >
-            <i class="fas fa-save"></i> Save ({{ editedRows.size }})
+            <i *ngIf="!isSaving" class="fas fa-save"></i>
+            <i *ngIf="isSaving" class="fas fa-spinner fa-spin"></i>
+            <span *ngIf="!isSaving">Save</span>
+            <span *ngIf="isSaving">Saving...</span>
           </button>
         </div>
       </div>
