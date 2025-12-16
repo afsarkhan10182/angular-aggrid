@@ -754,6 +754,13 @@ export class AutocompleteCellEditorComponent
           this.params.node.data.material = materialValue;
         }
       }
+      // Also set materialDescription field (used in grid columns)
+      if (materialValue && originalData.materialDescription !== materialValue) {
+        this.params.node.setDataValue('materialDescription', materialValue);
+        if (this.params.node.data) {
+          this.params.node.data.materialDescription = materialValue;
+        }
+      }
 
       const supplierName =
         supplierObj.supplierName ||
@@ -821,6 +828,13 @@ export class AutocompleteCellEditorComponent
           this.params.node.data.material = materialValue;
         }
       }
+      // Also set materialDescription field (used in grid columns)
+      if (materialValue && originalData.materialDescription !== materialValue) {
+        this.params.node.setDataValue('materialDescription', materialValue);
+        if (this.params.node.data) {
+          this.params.node.data.materialDescription = materialValue;
+        }
+      }
 
       const fullResult = material.fullResult || {};
       const materialColor = fullResult['material-color'] || {};
@@ -830,6 +844,11 @@ export class AutocompleteCellEditorComponent
         this.params.node.setDataValue('material', partNumberFromMaterial);
         if (this.params.node.data) {
           this.params.node.data.material = partNumberFromMaterial;
+        }
+        // Also set materialDescription when using partNumber as fallback
+        this.params.node.setDataValue('materialDescription', partNumberFromMaterial);
+        if (this.params.node.data) {
+          this.params.node.data.materialDescription = partNumberFromMaterial;
         }
       }
 
