@@ -38,7 +38,7 @@ export class App implements OnInit, OnDestroy {
   public searchText: string = '';
   public saveMessage: string = '';
   public saveMessageType: string = '';
-  public editedRows = new Set<number>();
+  public editedRows = new Set<string | number>();
   public currentUser: any = null;
   public bomName: string = 'MBOM';
   public isLoading: boolean = true;
@@ -1585,11 +1585,37 @@ export class App implements OnInit, OnDestroy {
   }
 
   addRowAfter(rowIndex: number): void {
+    // Get the row at the current index to inherit section
+    const referenceRow = this.displayData[rowIndex];
+    let section: string | undefined;
+
+    // Try to get section from reference row
+    if (referenceRow) {
+      section = referenceRow.section || referenceRow.parent?.data?.section;
+
+      // If still no section, try to get from grid node
+      if (!section && this.gridApi) {
+        const node = this.gridApi.getDisplayedRowAtIndex(rowIndex);
+        if (node) {
+          // Try to find section from parent nodes
+          let parentNode = node.parent;
+          while (parentNode && !section) {
+            if (parentNode.data && parentNode.data.section) {
+              section = parentNode.data.section;
+              break;
+            }
+            parentNode = parentNode.parent;
+          }
+        }
+      }
+    }
+
     const result = this.rowManagementService.addRowAfter(
       rowIndex,
       this.displayData,
       this.gridApi,
-      this.dataService
+      this.dataService,
+      section // Pass section to be assigned to new row
     );
 
     setTimeout(() => {
@@ -2219,12 +2245,16 @@ export class App implements OnInit, OnDestroy {
       if (!rowId) return;
 
       // Store original values for editable fields
+      // IMPORTANT: Store these values ONCE at load time - they represent the frozen snapshot
+      // These values should NEVER be updated during edits - only when data is reloaded
+      // Store as strings to match API format requirements
       const originalValues: any = {
-        bomLinkStartDate: row.bomLinkStartDate || row.startDate || '',
-        bomLinkEndDate: row.bomLinkEndDate || row.endDate || '',
-        quantity: row.quantity || row.qty || '',
+        bomLinkStartDate: String(row.bomLinkStartDate || row.startDate || ''),
+        bomLinkEndDate: String(row.bomLinkEndDate || row.endDate || ''),
+        quantity: String(row.quantity || row.qty || ''),
       };
 
+      // Store as frozen snapshot - this is the "old" value that will be sent as _old
       this.originalRowValues.set(rowId, originalValues);
 
       // Process children if any
@@ -2253,46 +2283,102 @@ export class App implements OnInit, OnDestroy {
   /**
    * Build skus array from row SKU fields (reusable helper)
    * Converts individual SKU fields (sku100150, sku100152, etc.) back to skus array format
+   * For new rows: Uses skuInfo structure (no isActive, value, dimensionId)
+   * For edited rows: Preserves original SKU structure with value and isActive
    */
   private buildSkusArrayFromRow(row: any, skuInfo: any[]): any[] {
     const skus: any[] = [];
+    const isNewRow = row.isNewRow;
 
-    skuInfo.forEach((sku) => {
-      const skuFieldName = `sku${sku.skuId}`;
-      const skuValue = row[skuFieldName];
+    if (isNewRow) {
+      // For new rows: Use skuInfo from API response (mock.json structure)
+      // Include SKUs that have values, or if no values, include all SKUs from skuInfo
+      let hasAnySkuValue = false;
+      skuInfo.forEach((sku) => {
+        const skuFieldName = `sku${sku.skuId}`;
+        const skuValue = row[skuFieldName];
 
-      // Only include SKU if it has a value
-      if (skuValue !== undefined && skuValue !== null && skuValue !== '') {
-        // Find original SKU data to preserve other properties
-        const originalSku = row.allSkus?.find((s: any) => s.skuId === sku.skuId);
+        // Check if this SKU has a value
+        if (skuValue !== undefined && skuValue !== null && skuValue !== '') {
+          hasAnySkuValue = true;
+        }
+      });
 
-        if (originalSku) {
-          // Preserve original SKU object but update value
+      // If any SKU has a value, only include those with values
+      // Otherwise, include all SKUs from skuInfo (as per user requirement)
+      skuInfo.forEach((sku) => {
+        const skuFieldName = `sku${sku.skuId}`;
+        const skuValue = row[skuFieldName];
+
+        // Include SKU if it has a value, OR if no SKUs have values (include all from skuInfo)
+        if (!hasAnySkuValue || (skuValue !== undefined && skuValue !== null && skuValue !== '')) {
+          // For new rows: Include SKU from skuInfo (matching mock.json format)
+          // Include: product, productId, color, destination, destinationDimensionId, manufacturer, size1, colorDimensionId, sourceDimensionId, skuId
+          // Exclude: isActive, value, dimensionId (these are only for edited rows)
           skus.push({
-            ...originalSku,
-            value: skuValue,
-          });
-        } else {
-          // Create minimal SKU object if original not found
-          skus.push({
-            skuId: sku.skuId,
-            value: skuValue,
             product: sku.product || '',
-            manufacturer: sku.manufacturer || '',
+            productId: sku.productId || '',
             color: sku.color || '',
-            size1: sku.size1 || '',
             destination: sku.destination || '',
+            destinationDimensionId: sku.destinationDimensionId || '',
+            manufacturer: sku.manufacturer || '',
+            size1: sku.size1 || '',
+            colorDimensionId: sku.colorDimensionId || '',
+            sourceDimensionId: sku.sourceDimensionId || '',
+            skuId: sku.skuId || '',
           });
         }
+      });
+    } else {
+      // For existing/edited rows: Use original SKUs from row.allSkus (from API/mock.json)
+      // This preserves all original properties (dimensionId, isActive, etc.)
+      if (row.allSkus && Array.isArray(row.allSkus) && row.allSkus.length > 0) {
+        // Use original SKUs from API response, but update value if it changed
+        row.allSkus.forEach((originalSku: any) => {
+          const skuFieldName = `sku${originalSku.skuId}`;
+          const currentValue = row[skuFieldName];
+
+          // Include the original SKU with updated value if changed
+          skus.push({
+            ...originalSku,
+            value:
+              currentValue !== undefined && currentValue !== null
+                ? String(currentValue)
+                : originalSku.value || '',
+          });
+        });
+      } else {
+        // Fallback: Build from skuInfo if allSkus not available
+        skuInfo.forEach((sku) => {
+          const skuFieldName = `sku${sku.skuId}`;
+          const skuValue = row[skuFieldName];
+
+          if (skuValue !== undefined && skuValue !== null && skuValue !== '') {
+            skus.push({
+              skuId: sku.skuId,
+              value: String(skuValue),
+              product: sku.product || '',
+              productId: sku.productId || '',
+              manufacturer: sku.manufacturer || '',
+              color: sku.color || '',
+              size1: sku.size1 || '',
+              destination: sku.destination || '',
+              destinationDimensionId: sku.destinationDimensionId || '',
+              colorDimensionId: sku.colorDimensionId || '',
+              sourceDimensionId: sku.sourceDimensionId || '',
+              isActive: true,
+            });
+          }
+        });
       }
-    });
+    }
 
     return skus;
   }
 
   /**
    * Transform grid row data back to API format with mixed edit/create support
-   * For existing rows: Uses _current/_new suffixes for edited fields (startDate, endDate, quantity)
+   * For existing rows: Uses _old/_new suffixes for edited fields (startDate, endDate, quantity)
    * For new rows: Uses regular fields and adds childId + colorId
    */
   transformGridDataToApiFormat(rowData: any[]): any {
@@ -2329,103 +2415,209 @@ export class App implements OnInit, OnDestroy {
       'material',
       'part',
       'sectionDisplayName', // UI-only field - payload should use 'section' (internal name)
+      'bomLinkFeatureId', // UI-only field - used to store ID for payload, but bomLinkFeature field contains the actual value
     ]);
 
-    rowData.forEach((row) => {
-      // Skip section headers, group headers, and other UI-only rows
+    // Process hierarchical data structure - need to iterate through children
+    // rowData is hierarchical: [sectionHeader, sectionHeader, ...]
+    // Each sectionHeader has children: [materialHeader/directRow, ...]
+    // Each materialHeader has children: [subRow, ...]
+    const processRow = (row: any) => {
+      // Process children first (recursive)
+      if (row.children && Array.isArray(row.children)) {
+        row.children.forEach((child: any) => processRow(child));
+      }
+
+      // Skip section headers, group headers, material headers, and other UI-only rows
+      // Only process actual data rows: isDirectRow, isSubRow, or isNewRow
+      // Note: isDirectRow and isSubRow are the actual data rows that need to be saved
       if (
         row.isSectionHeader ||
         row.isGroupHeader ||
         row.isBranchHeader ||
         row.isParentRow ||
-        !row.section
+        row.isMaterialHeader
       ) {
         return;
       }
 
-      const rowId = row.partNumber || row.newRowId;
+      // Extract rowId - must match what's stored in editedRows by trackFieldChange
+      // trackFieldChange uses: partNumber || part || newRowId
+      // So we need to use the same logic for consistency
+      const rowId = row.partNumber || row.part || row.newRowId;
+      if (!rowId) {
+        return;
+      }
+
       const isNewRow = row.isNewRow;
+
+      // For new rows, section might not be set yet - try to inherit from parent or find from context
+      // For existing rows, section is required
+      if (!isNewRow && !row.section) {
+        return;
+      }
+
+      // For new rows without section, try to get it from parent or context
+      if (isNewRow && !row.section) {
+        // Try to get section from parent (if row is in hierarchical structure)
+        if (row.parent && row.parent.section) {
+          row.section = row.parent.section;
+        } else {
+          // Try to find section from the grid's rowData structure
+          // This handles cases where new rows are added but not yet in hierarchical structure
+          const node = this.gridApi.getRowNode(rowId.toString());
+          if (node && node.parent && node.parent.data && node.parent.data.section) {
+            row.section = node.parent.data.section;
+          } else {
+            // Last resort: try to find section from displayData
+            const flatRow = this.displayData.find(
+              (r: any) =>
+                (r.newRowId && r.newRowId === row.newRowId) ||
+                (r.partNumber && r.partNumber === row.partNumber) ||
+                (r.part && r.part === row.part)
+            );
+            if (flatRow && flatRow.section) {
+              row.section = flatRow.section;
+            }
+          }
+        }
+      }
+
+      // If still no section, skip this row (but log for debugging)
+      if (!row.section) {
+        console.warn('Skipping row without section:', { rowId, isNewRow, row });
+        return;
+      }
+
+      // Check if row is edited - rowId must match what was stored in editedRows
+      // editedRows contains partNumber (string), part (string), or newRowId (number)
       const isEdited = !isNewRow && this.editedRows.has(rowId);
+
+      // Debug logging (can be removed in production)
+      if (isNewRow || isEdited) {
+        console.log('Processing row for payload:', {
+          rowId,
+          isNewRow,
+          isEdited,
+          partNumber: row.partNumber,
+          part: row.part,
+          newRowId: row.newRowId,
+          section: row.section,
+          isDirectRow: row.isDirectRow,
+          isSubRow: row.isSubRow,
+          editedRowsSize: this.editedRows.size,
+          editedRowsHasRowId: this.editedRows.has(rowId),
+        });
+      }
+
       const bomLink: any = {};
 
       if (isNewRow) {
-        // NEW ROW: Use regular fields and add childId + colorId
-        Object.keys(row).forEach((key) => {
-          if (!uiOnlyFields.has(key) && !key.startsWith('sku')) {
-            bomLink[key] = row[key];
-          }
-        });
+        // NEW ROW: Only include specific fields as per API requirements
+        // Based on curl example: quantity, bomLinkFeature, bomLinkStartDate, bomLinkEndDate, section, childId, colorId, skus
+        // IMPORTANT: All values must be strings as per API requirements
 
-        // Ensure partNumber is set
-        if (!bomLink.partNumber) {
-          bomLink.partNumber = row.partNumber || row.part || row.material || '';
+        // Section is required
+        if (row.section) {
+          bomLink.section = row.section;
         }
 
-        // Add childId from material-supplier.materialSupplierMaster (value after colon)
-        // Example: "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:208845" -> "com.lcs.wc.material.LCSMaterialSupplierMaster:208845"
+        // Quantity (use 'quantity' field, not 'qty')
+        if (row.quantity !== undefined && row.quantity !== null && row.quantity !== '') {
+          bomLink.quantity = String(row.quantity);
+        } else if (row.qty !== undefined && row.qty !== null && row.qty !== '') {
+          bomLink.quantity = String(row.qty);
+        }
+
+        // bomLinkFeature (if present)
+        // Use ID from searchFlexInstances API response (production) or mock (dev)
+        // Priority: bomLinkFeatureId (from API id) > bomLinkFeature (display value)
+        if (
+          row.bomLinkFeatureId !== undefined &&
+          row.bomLinkFeatureId !== null &&
+          row.bomLinkFeatureId !== ''
+        ) {
+          bomLink.bomLinkFeature = String(row.bomLinkFeatureId);
+        } else if (
+          row.bomLinkFeature !== undefined &&
+          row.bomLinkFeature !== null &&
+          row.bomLinkFeature !== ''
+        ) {
+          bomLink.bomLinkFeature = String(row.bomLinkFeature);
+        }
+
+        // Dates (convert to API format YYYY/M/D)
+        if (row.bomLinkStartDate) {
+          bomLink.bomLinkStartDate = this.convertDateToApiFormat(String(row.bomLinkStartDate));
+        } else if (row.startDate) {
+          bomLink.bomLinkStartDate = this.convertDateToApiFormat(String(row.startDate));
+        }
+
+        if (row.bomLinkEndDate) {
+          bomLink.bomLinkEndDate = this.convertDateToApiFormat(String(row.bomLinkEndDate));
+        } else if (row.endDate) {
+          bomLink.bomLinkEndDate = this.convertDateToApiFormat(String(row.endDate));
+        }
+
+        // Add childId from material-supplier.materialSupplierMaster (value after LAST colon)
+        // Example: "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:208845" -> "208845"
+        // Example: "com.lcs.wc.material.LCSMaterialSupplierMaster:208845" -> "208845"
         if (row.materialSupplierMasterId) {
-          bomLink.childId = row.materialSupplierMasterId;
+          const lastColonIndex = row.materialSupplierMasterId.lastIndexOf(':');
+          if (lastColonIndex !== -1) {
+            bomLink.childId = row.materialSupplierMasterId.substring(lastColonIndex + 1);
+          } else {
+            bomLink.childId = row.materialSupplierMasterId;
+          }
         } else if (row.materialSupplierVersionId) {
           // Fallback: extract from versionId if materialSupplierMasterId not available
-          const colonIndex = row.materialSupplierVersionId.indexOf(':');
-          if (colonIndex !== -1) {
-            bomLink.childId = row.materialSupplierVersionId.substring(colonIndex + 1);
+          const lastColonIndex = row.materialSupplierVersionId.lastIndexOf(':');
+          if (lastColonIndex !== -1) {
+            bomLink.childId = row.materialSupplierVersionId.substring(lastColonIndex + 1);
           } else {
             bomLink.childId = row.materialSupplierVersionId;
           }
         }
 
-        // Add colorId from color.iterationId (value after colon)
-        // Example: "OR:com.lcs.wc.color.LCSColor:208864" -> "com.lcs.wc.color.LCSColor:208864"
+        // Add colorId from color.iterationId (value after LAST colon)
+        // Example: "OR:com.lcs.wc.color.LCSColor:208864" -> "208864"
+        // Example: "com.lcs.wc.color.LCSColor:208864" -> "208864"
         if (row.colorId) {
-          bomLink.colorId = row.colorId;
+          const lastColonIndex = row.colorId.lastIndexOf(':');
+          if (lastColonIndex !== -1) {
+            bomLink.colorId = row.colorId.substring(lastColonIndex + 1);
+          } else {
+            bomLink.colorId = row.colorId;
+          }
         }
 
         // Build skus array
         bomLink.skus = this.buildSkusArrayFromRow(row, skuInfo);
       } else if (isEdited) {
-        // EXISTING ROW WITH EDITS: Use _current/_new suffixes for edited fields
+        // EXISTING ROW WITH EDITS: Only include section, skus, and _old/_new fields for edited fields
+        // Based on curl example: section, skus, quantity_old, quantity_new, bomLinkStartDate_old, etc.
         const originalValues = this.originalRowValues.get(rowId) || {};
 
-        // Copy all non-editable fields as-is
-        // Important: Preserve allSkus for SKU data reconstruction
-        Object.keys(row).forEach((key) => {
-          if (!uiOnlyFields.has(key) && !key.startsWith('sku')) {
-            // Skip editable fields - they'll be handled separately
-            if (
-              key !== 'bomLinkStartDate' &&
-              key !== 'bomLinkEndDate' &&
-              key !== 'startDate' &&
-              key !== 'endDate' &&
-              key !== 'quantity' &&
-              key !== 'qty'
-            ) {
-              bomLink[key] = row[key];
-            }
-          }
-        });
-
-        // Ensure allSkus is preserved for SKU data reconstruction
-        if (row.allSkus && Array.isArray(row.allSkus)) {
-          bomLink.allSkus = row.allSkus;
+        // Section is required
+        if (row.section) {
+          bomLink.section = row.section;
         }
 
-        // Ensure partNumber is set
-        if (!bomLink.partNumber) {
-          bomLink.partNumber = row.partNumber || row.part || row.material || '';
-        }
-
-        // Handle editable fields with _current/_new suffixes
+        // Handle editable fields with _old/_new suffixes
         // Only include fields that were actually edited (touched)
         const editedFieldsForRow = this.editedFields.get(rowId) || new Set<string>();
 
         // Only include startDate if it was edited
+        // IMPORTANT: originalValues is the frozen snapshot from load time (never mutated)
+        // row values are the current edited values from the grid
         if (editedFieldsForRow.has('bomLinkStartDate') || editedFieldsForRow.has('startDate')) {
           const currentStartDate =
             originalValues.bomLinkStartDate || originalValues.startDate || '';
           const newStartDate = row.bomLinkStartDate || row.startDate || '';
           if (currentStartDate !== newStartDate) {
-            bomLink.bomLinkStartDate_current = this.convertDateToApiFormat(currentStartDate);
+            // _old = frozen original value (what backend had before)
+            // _new = current edited value (what user changed it to)
+            bomLink.bomLinkStartDate_old = this.convertDateToApiFormat(currentStartDate);
             bomLink.bomLinkStartDate_new = this.convertDateToApiFormat(newStartDate);
           }
         }
@@ -2435,23 +2627,43 @@ export class App implements OnInit, OnDestroy {
           const currentEndDate = originalValues.bomLinkEndDate || originalValues.endDate || '';
           const newEndDate = row.bomLinkEndDate || row.endDate || '';
           if (currentEndDate !== newEndDate) {
-            bomLink.bomLinkEndDate_current = this.convertDateToApiFormat(currentEndDate);
+            bomLink.bomLinkEndDate_old = this.convertDateToApiFormat(currentEndDate);
             bomLink.bomLinkEndDate_new = this.convertDateToApiFormat(newEndDate);
           }
         }
 
         // Only include quantity if it was edited
+        // IMPORTANT: All values must be strings as per API requirements
         if (editedFieldsForRow.has('quantity') || editedFieldsForRow.has('qty')) {
           const currentQuantity = originalValues.quantity || '';
           const newQuantity = row.quantity || row.qty || '';
           if (currentQuantity !== newQuantity) {
-            bomLink.quantity_current = currentQuantity;
-            bomLink.quantity_new = newQuantity;
+            // Convert to string - API expects strings for all values
+            bomLink.quantity_old = String(currentQuantity || '');
+            bomLink.quantity_new = String(newQuantity || '');
           }
         }
 
-        // Build skus array
-        bomLink.skus = this.buildSkusArrayFromRow(row, skuInfo);
+        // Build skus array - for existing rows, use allSkus directly (from API/mock.json)
+        // This preserves all original properties (dimensionId, isActive, etc.)
+        if (row.allSkus && Array.isArray(row.allSkus) && row.allSkus.length > 0) {
+          // Use original SKUs from API response, but update value if it changed
+          bomLink.skus = row.allSkus.map((originalSku: any) => {
+            const skuFieldName = `sku${originalSku.skuId}`;
+            const currentValue = row[skuFieldName];
+
+            return {
+              ...originalSku,
+              value:
+                currentValue !== undefined && currentValue !== null
+                  ? String(currentValue)
+                  : originalSku.value || '',
+            };
+          });
+        } else {
+          // Fallback: Build from skuInfo if allSkus not available
+          bomLink.skus = this.buildSkusArrayFromRow(row, skuInfo);
+        }
       } else {
         // EXISTING ROW WITHOUT EDITS: Skip (don't include unchanged rows)
         return;
@@ -2460,28 +2672,113 @@ export class App implements OnInit, OnDestroy {
       instances.push({
         'bom-link': bomLink,
       });
-    });
+    };
+
+    // Start processing from root rowData (which contains section headers)
+    rowData.forEach((row) => processRow(row));
+
+    // Also process new rows from displayData that might not be in hierarchical structure yet
+    // This handles cases where new rows are added but not yet integrated into the hierarchy
+    if (this.displayData && Array.isArray(this.displayData)) {
+      this.displayData.forEach((flatRow: any) => {
+        // Only process new rows that weren't already processed
+        if (flatRow.isNewRow && flatRow.newRowId) {
+          // Check if this row was already processed in the hierarchical structure
+          let alreadyProcessed = false;
+          const checkProcessed = (node: any) => {
+            if (node.newRowId === flatRow.newRowId) {
+              alreadyProcessed = true;
+              return;
+            }
+            if (node.children && Array.isArray(node.children)) {
+              node.children.forEach((child: any) => checkProcessed(child));
+            }
+          };
+          rowData.forEach((sectionRow: any) => checkProcessed(sectionRow));
+
+          // If not already processed, process it now
+          if (!alreadyProcessed) {
+            processRow(flatRow);
+          }
+        }
+      });
+    }
 
     // Build full payload with bomCheckIn, bomType, bomPartInfo, columns, sectionOrder, skuInfo, skuIds
+    // Use API response (mock.json) as base for bomPartInfo, columns, sectionOrder, and skuInfo
     const apiData = this.dataService.getApiData();
     const bomPartInfo = this.dataService.getBomPartInfo();
-    const columns = this.dataService.getColumnMapping();
+    const columnsRaw = this.dataService.getColumnMapping();
     const sectionOrder = apiData?.sectionOrder || [];
     const skuInfoData = apiData?.skuInfo || { skus: skuInfo };
 
-    // Collect all SKU IDs from instances
-    const skuIdsSet = new Set<string>();
+    // Fix columns mapping: Transform materialColor* to part* keys to match expected payload
+    const columns: { [key: string]: string } = {};
+    if (columnsRaw) {
+      Object.keys(columnsRaw).forEach((key) => {
+        // Transform materialColorThirtyCharacterDescription to partThirtyCharacterDescription
+        if (key === 'materialColorThirtyCharacterDescription') {
+          columns['partThirtyCharacterDescription'] = columnsRaw[key];
+        }
+        // Transform materialColorSixtyCharacterDescription to partSixtyCharacterDescription
+        else if (key === 'materialColorSixtyCharacterDescription') {
+          columns['partSixtyCharacterDescription'] = columnsRaw[key];
+        }
+        // Keep all other columns as-is
+        else {
+          columns[key] = columnsRaw[key];
+        }
+      });
+    }
+
+    // Collect all unique SKUs from instances for skuInfo
+    const uniqueSkusMap = new Map<string, any>();
+
+    // First, add SKUs from original API response (skuInfoData)
+    if (skuInfoData.skus && Array.isArray(skuInfoData.skus)) {
+      skuInfoData.skus.forEach((sku: any) => {
+        if (sku.skuId) {
+          uniqueSkusMap.set(sku.skuId, { ...sku });
+        }
+      });
+    }
+
+    // Then, add/update SKUs from instances
     instances.forEach((instance) => {
       const bomLink = instance['bom-link'];
       if (bomLink.skus && Array.isArray(bomLink.skus)) {
         bomLink.skus.forEach((sku: any) => {
           if (sku.skuId) {
-            skuIdsSet.add(sku.skuId);
+            // For new rows, SKUs don't have isActive/value/dimensionId - use structure from skuInfo
+            // For existing rows, SKUs have full structure - preserve it
+            if (!uniqueSkusMap.has(sku.skuId)) {
+              // Create a clean SKU object matching skuInfo structure (for new rows)
+              uniqueSkusMap.set(sku.skuId, {
+                product: sku.product || '',
+                productId: sku.productId || '',
+                color: sku.color || '',
+                destination: sku.destination || '',
+                destinationDimensionId: sku.destinationDimensionId || '',
+                manufacturer: sku.manufacturer || '',
+                size1: sku.size1 || '',
+                colorDimensionId: sku.colorDimensionId || '',
+                sourceDimensionId: sku.sourceDimensionId || '',
+                skuId: sku.skuId || '',
+              });
+            }
           }
         });
       }
     });
-    const skuIds = Array.from(skuIdsSet).join(',');
+
+    // Build final skuInfo with all unique SKUs
+    const finalSkuInfo = {
+      skus: Array.from(uniqueSkusMap.values()),
+    };
+
+    // Use skuIds from API response (mock.json) - this contains version IDs
+    // Match what is in the JSON response from API/mock.json
+    const skuIds = apiData?.skuIds || '';
 
     return {
       bomCheckIn: 'true',
@@ -2490,8 +2787,8 @@ export class App implements OnInit, OnDestroy {
       instances: instances,
       columns: columns,
       sectionOrder: sectionOrder,
-      skuIds: skuIds || '',
-      skuInfo: skuInfoData,
+      skuIds: skuIds,
+      skuInfo: finalSkuInfo,
     };
   }
 

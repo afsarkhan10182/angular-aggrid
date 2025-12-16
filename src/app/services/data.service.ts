@@ -77,6 +77,7 @@ export interface ApiData {
   bomPartInfo?: BomPartInfo | BomPartInfo[];
   sectionOrder?: string[];
   bomType?: string;
+  skuIds?: string; // Version IDs from API response (e.g., "VR:com.lcs.wc.foundation.LCSRevisableEntity:574978")
 }
 
 @Injectable({

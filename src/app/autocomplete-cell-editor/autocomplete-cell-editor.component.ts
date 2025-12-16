@@ -625,9 +625,42 @@ export class AutocompleteCellEditorComponent
         }
 
         if (fieldName === 'bomLinkFeature') {
+          // Store display value for UI
           this.params.node.setDataValue('feature', option);
           if (this.params.node.data) {
             this.params.node.data.feature = option;
+          }
+
+          // Store ID from API response for payload (production and dev)
+          // Find the selected option object to get its ID
+          let selectedFeatureId: string | null = null;
+          if (this.isBomFeatureSearch && this.genericOptions.length > 0) {
+            // Try to find by optionIndex first (more reliable)
+            if (
+              optionIndex !== undefined &&
+              optionIndex >= 0 &&
+              optionIndex < this.genericOptions.length
+            ) {
+              const selectedFeature = this.genericOptions[optionIndex];
+              selectedFeatureId = selectedFeature.id || selectedFeature.displayValue || option;
+            } else {
+              // Fallback: find by matching displayValue/name
+              const selectedFeature = this.genericOptions.find(
+                (feature: any) => (feature.displayValue || feature.name || '') === option
+              );
+              if (selectedFeature) {
+                // Use id field from API response (production) or mock id (dev)
+                selectedFeatureId = selectedFeature.id || selectedFeature.displayValue || option;
+              }
+            }
+          }
+
+          // Store the ID separately for payload generation
+          if (selectedFeatureId) {
+            this.params.node.setDataValue('bomLinkFeatureId', selectedFeatureId);
+            if (this.params.node.data) {
+              this.params.node.data.bomLinkFeatureId = selectedFeatureId;
+            }
           }
         }
 
@@ -755,10 +788,12 @@ export class AutocompleteCellEditorComponent
       const materialSupplierMaster = materialSupplier.materialSupplierMaster || '';
       let childId = '';
       if (materialSupplierMaster) {
-        // Extract value after first colon (e.g., "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:208845" -> "com.lcs.wc.material.LCSMaterialSupplierMaster:208845")
-        const colonIndex = materialSupplierMaster.indexOf(':');
-        if (colonIndex !== -1) {
-          childId = materialSupplierMaster.substring(colonIndex + 1);
+        // Extract value after last colon (e.g., "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:208845" -> "208845")
+        const lastColonIndex = materialSupplierMaster.lastIndexOf(':');
+        if (lastColonIndex !== -1) {
+          childId = materialSupplierMaster.substring(lastColonIndex + 1);
+        } else {
+          childId = materialSupplierMaster;
         }
       }
       if (childId && originalData.materialSupplierMasterId !== childId) {
@@ -768,14 +803,16 @@ export class AutocompleteCellEditorComponent
         }
       }
 
-      // Store colorId from color.iterationId (take value after colon)
+      // Store colorId from color.iterationId (take value after LAST colon)
       const colorIterationId = colorObj.iterationId || '';
       let colorId = '';
       if (colorIterationId) {
-        // Extract value after first colon (e.g., "OR:com.lcs.wc.color.LCSColor:208864" -> "com.lcs.wc.color.LCSColor:208864")
-        const colonIndex = colorIterationId.indexOf(':');
-        if (colonIndex !== -1) {
-          colorId = colorIterationId.substring(colonIndex + 1);
+        // Extract value after last colon (e.g., "OR:com.lcs.wc.color.LCSColor:208864" -> "208864")
+        const lastColonIndex = colorIterationId.lastIndexOf(':');
+        if (lastColonIndex !== -1) {
+          colorId = colorIterationId.substring(lastColonIndex + 1);
+        } else {
+          colorId = colorIterationId;
         }
       }
       if (colorId && originalData.colorId !== colorId) {
@@ -813,15 +850,17 @@ export class AutocompleteCellEditorComponent
         this.setPartIdentifiers(partNumberFromMaterial);
       }
 
-      // Store childId from material-supplier.materialSupplierMaster (take value after colon)
+      // Store childId from material-supplier.materialSupplierMaster (take value after LAST colon)
       const materialSupplier = fullResult['material-supplier'] || {};
       const materialSupplierMaster = materialSupplier.materialSupplierMaster || '';
       let childId = '';
       if (materialSupplierMaster) {
-        // Extract value after first colon (e.g., "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:208845" -> "com.lcs.wc.material.LCSMaterialSupplierMaster:208845")
-        const colonIndex = materialSupplierMaster.indexOf(':');
-        if (colonIndex !== -1) {
-          childId = materialSupplierMaster.substring(colonIndex + 1);
+        // Extract value after last colon (e.g., "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:208845" -> "208845")
+        const lastColonIndex = materialSupplierMaster.lastIndexOf(':');
+        if (lastColonIndex !== -1) {
+          childId = materialSupplierMaster.substring(lastColonIndex + 1);
+        } else {
+          childId = materialSupplierMaster;
         }
       }
       if (childId && originalData.materialSupplierMasterId !== childId) {
@@ -831,15 +870,17 @@ export class AutocompleteCellEditorComponent
         }
       }
 
-      // Store colorId from color.iterationId (take value after colon)
+      // Store colorId from color.iterationId (take value after LAST colon)
       const colorObj = fullResult.color || {};
       const colorIterationId = colorObj.iterationId || '';
       let colorId = '';
       if (colorIterationId) {
-        // Extract value after first colon (e.g., "OR:com.lcs.wc.color.LCSColor:208864" -> "com.lcs.wc.color.LCSColor:208864")
-        const colonIndex = colorIterationId.indexOf(':');
-        if (colonIndex !== -1) {
-          colorId = colorIterationId.substring(colonIndex + 1);
+        // Extract value after last colon (e.g., "OR:com.lcs.wc.color.LCSColor:208864" -> "208864")
+        const lastColonIndex = colorIterationId.lastIndexOf(':');
+        if (lastColonIndex !== -1) {
+          colorId = colorIterationId.substring(lastColonIndex + 1);
+        } else {
+          colorId = colorIterationId;
         }
       }
       if (colorId && originalData.colorId !== colorId) {

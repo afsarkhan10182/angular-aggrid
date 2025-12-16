@@ -54,10 +54,11 @@ export class RowManagementService {
     rowIndex: number,
     rowData: any[],
     gridApi: GridApi,
-    dataService: DataService
+    dataService: DataService,
+    section?: string // Optional section to inherit from reference row
   ): { newRow: any; newRowId: number } {
     const newRowIdValue = this.nextRowId;
-    const newRow = {
+    const newRow: any = {
       part: '',
       partNumber: '',
       supplier: '',
@@ -75,6 +76,11 @@ export class RowManagementService {
       newRowId: newRowIdValue,
       insertAfter: rowIndex,
     };
+
+    // Assign section if provided (inherited from reference row)
+    if (section) {
+      newRow.section = section;
+    }
 
     const skuInfo = dataService.getSkuInfo();
     skuInfo.forEach((sku) => {
@@ -252,7 +258,11 @@ export class RowManagementService {
   /**
    * Track field changes
    */
-  trackFieldChange(params: any, editedRows: Set<string | number>, editedFields?: Map<string | number, Set<string>>): void {
+  trackFieldChange(
+    params: any,
+    editedRows: Set<string | number>,
+    editedFields?: Map<string | number, Set<string>>
+  ): void {
     let valuesAreSame = false;
     if (params.oldValue instanceof Date && params.newValue instanceof Date) {
       valuesAreSame = params.oldValue.getTime() === params.newValue.getTime();
@@ -389,12 +399,22 @@ export class RowManagementService {
       // Log the payload for debugging (can be removed in production)
       if (apiPayload) {
         console.log('Update API Payload:', JSON.stringify(apiPayload, null, 2));
-        
+
         // Call the API if payload exists and has instances
-        if (apiPayload.instances && apiPayload.instances.length > 0 && componentInstance.dataService) {
+        if (
+          apiPayload.instances &&
+          apiPayload.instances.length > 0 &&
+          componentInstance.dataService
+        ) {
           componentInstance.dataService.updateBomData(apiPayload).subscribe({
             next: (response: any) => {
               console.log('BOM update successful:', response);
+              // After successful save, update original values to match current state
+              // This ensures subsequent edits use the correct "old" values
+              // Note: Backend does NOT return old values in response - frontend must track them
+              if (componentInstance.storeOriginalValues) {
+                componentInstance.storeOriginalValues();
+              }
             },
             error: (error: any) => {
               console.error('BOM update failed:', error);
@@ -420,6 +440,13 @@ export class RowManagementService {
         // Clear edited fields tracking
         if (componentInstance.editedFields) {
           componentInstance.editedFields.clear();
+        }
+
+        // CRITICAL: After successful save, update original values to match current values
+        // This ensures that if user edits again, we have the correct "old" values
+        // The originalRowValues Map should reflect the current state after save
+        if (componentInstance.storeOriginalValues) {
+          componentInstance.storeOriginalValues();
         }
 
         this.lastSavedAt = new Date();
