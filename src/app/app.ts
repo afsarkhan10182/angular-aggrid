@@ -11,6 +11,7 @@ import { GridCommonService } from './services/grid-common.service';
 import { RowManagementService } from './services/row-management.service';
 import { SessionService } from './services/session.service';
 import { GroupByService, GroupConfig } from './services/group-by.service';
+import { ValidationService } from './services/validation.service';
 import { ColumnHeaderPinComponent } from './column-header-pin/column-header-pin.component';
 import { environment } from '../environments/environment';
 
@@ -101,7 +102,8 @@ export class App implements OnInit, OnDestroy {
     private gridCommonService: GridCommonService,
     private rowManagementService: RowManagementService,
     private sessionService: SessionService,
-    private groupByService: GroupByService
+    private groupByService: GroupByService,
+    private validationService: ValidationService
   ) {
     this.gridOptions.context = {
       dataService: this.dataService,
@@ -904,11 +906,15 @@ export class App implements OnInit, OnDestroy {
 
     if (data.isDirectRow) {
       const linkIcon = data.hasLinkedBom ? '🔗' : '';
+      const featureValue = data.bomLinkFeature || '';
       return `
         <div style="
           display: flex;
           align-items: center;
           padding: 4px 6px;
+          width: 100%;
+          min-width: 0;
+          overflow: hidden;
         ">
           ${
             linkIcon
@@ -916,10 +922,18 @@ export class App implements OnInit, OnDestroy {
             margin-right: 6px;
             font-size: 12px;
             color: #0f766e;
+            flex-shrink: 0;
           ">${linkIcon}</span>`
               : ''
           }
-          <span>${this.escapeHtml(data.bomLinkFeature || '')}</span>
+          <span style="
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: block;
+            width: 100%;
+            min-width: 0;
+          ">${this.escapeHtml(featureValue)}</span>
         </div>
       `;
     }
@@ -1573,6 +1587,13 @@ export class App implements OnInit, OnDestroy {
   }
 
   saveChanges(): void {
+    // Validate new rows before saving
+    const validationResult = this.validationService.validateNewRows(this.rowData, this.displayData);
+    if (!validationResult.isValid) {
+      this.showNotification(validationResult.message, 'error');
+      return;
+    }
+
     this.rowManagementService
       .saveChanges(this.rowData, this.editedRows, this.gridApi, this)
       .then((result) => {
