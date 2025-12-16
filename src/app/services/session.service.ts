@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { catchError, tap, map, mergeMap } from 'rxjs/operators';
+import { UtilService } from './util.service';
 
 export interface LoggedInUserModel {
   name: string;
@@ -16,15 +17,9 @@ export interface LoggedInUserModel {
   providedIn: 'root',
 })
 export class SessionService {
-  // Common method to get data attributes from JSP
-  private getJspDataAttribute(attributeName: string): string | null {
-    const angularRoot = document.getElementById('angular-root');
-    return angularRoot?.getAttribute(attributeName) || null;
-  }
-
   // Get service host URL from JSP data attribute (passed from Windchill)
   private getServiceHostUrl(): string {
-    const hostFromJsp = this.getJspDataAttribute('data-host');
+    const hostFromJsp = this.utilService.getJspDataAttribute('data-host');
 
     if (!hostFromJsp) {
       return '';
@@ -60,7 +55,7 @@ export class SessionService {
 
   private csrfToken: string | null = null;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private utilService: UtilService) {}
 
   getCsrfToken(): Observable<string> {
     return this.http.get<any>(this.getAuthUrl()).pipe(

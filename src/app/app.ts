@@ -12,6 +12,7 @@ import { RowManagementService } from './services/row-management.service';
 import { SessionService } from './services/session.service';
 import { GroupByService, GroupConfig } from './services/group-by.service';
 import { ValidationService } from './services/validation.service';
+import { UtilService } from './services/util.service';
 import { ColumnHeaderPinComponent } from './column-header-pin/column-header-pin.component';
 import { environment } from '../environments/environment';
 
@@ -41,7 +42,7 @@ export class App implements OnInit, OnDestroy {
   public saveMessageType: string = '';
   public editedRows = new Set<string | number>();
   public currentUser: any = null;
-  public bomName: string = 'MBOM';
+  public bomName: string = '';
   public isLoading: boolean = true;
   private originalRowValues = new Map<string | number, any>(); // Store original values for existing rows
   private editedFields = new Map<string | number, Set<string>>(); // Track which specific fields were edited per row
@@ -103,7 +104,8 @@ export class App implements OnInit, OnDestroy {
     private rowManagementService: RowManagementService,
     private sessionService: SessionService,
     private groupByService: GroupByService,
-    private validationService: ValidationService
+    private validationService: ValidationService,
+    private utilService: UtilService
   ) {
     this.gridOptions.context = {
       dataService: this.dataService,
@@ -436,7 +438,7 @@ export class App implements OnInit, OnDestroy {
               return '';
             }
             const columnWidth = params.column?.getActualWidth() || 180;
-            return this.createCellContentWithTooltip(params.value, columnWidth);
+            return this.utilService.createCellContentWithTooltip(params.value, columnWidth);
           },
           tooltipValueGetter: (params: any) => {
             if (params.value === null || params.value === undefined) return null;
@@ -474,7 +476,7 @@ export class App implements OnInit, OnDestroy {
             return '';
           }
           const columnWidth = params.column?.getActualWidth() || columnDef.width || 150;
-          return this.createCellContentWithTooltip(params.value, columnWidth);
+          return this.utilService.createCellContentWithTooltip(params.value, columnWidth);
         },
         tooltipValueGetter: (params: any) => {
           if (params.value === null || params.value === undefined) return null;
@@ -606,7 +608,7 @@ export class App implements OnInit, OnDestroy {
             formattedValue = columnDef.valueFormatter(params) || '';
           }
           const columnWidth = params.column?.getActualWidth() || columnDef.width || 150;
-          return this.createCellContentWithTooltip(formattedValue, columnWidth);
+          return this.utilService.createCellContentWithTooltip(formattedValue, columnWidth);
         };
         columnDef.valueGetter = (params: any) => {
           if (!params.data) return undefined;
@@ -663,13 +665,10 @@ export class App implements OnInit, OnDestroy {
       init(params: any) {
         this.params = params;
         const lines = params.lines || [];
-        // Build full tooltip text with all values, each on new line
-        // Using \n for newlines (works in most browsers)
         const fullText = lines.join('\n');
 
         this.eGui = document.createElement('div');
         this.eGui.className = 'sku-header-wrapper';
-        // Set title with full text - shows all lines in tooltip when hovering anywhere on header
         // Displays: SKU, Product, Manufacturer, Color, Size, and Destination (if present)
         this.eGui.setAttribute('title', fullText);
 
@@ -693,8 +692,6 @@ export class App implements OnInit, OnDestroy {
       }
 
       refresh(params: any) {
-        // Return false - CSS handles truncation automatically, no need to recreate
-        // This prevents flickering during resize
         return false;
       }
 
@@ -752,7 +749,7 @@ export class App implements OnInit, OnDestroy {
             // Convert value to string and preserve newlines
             const valueStr = String(value);
             // Replace newlines with <br> tags for HTML rendering
-            const htmlValue = this.escapeHtml(valueStr).replace(/\n/g, '<br>');
+            const htmlValue = this.utilService.escapeHtml(valueStr).replace(/\n/g, '<br>');
 
             return `<div style="white-space: pre-line; line-height: 1.5; padding: 4px 0;">${htmlValue}</div>`;
           }
@@ -820,7 +817,7 @@ export class App implements OnInit, OnDestroy {
           ">${arrowIcon}</span>
           <span style="font-size: 13px; font-weight: 600; color: #1e293b;">${indent}${
         data.groupHeaderName
-      }: ${this.escapeHtml(groupValue)}</span>
+      }: ${this.utilService.escapeHtml(groupValue)}</span>
           <span style="margin-left: 8px; font-size: 11px; color: #64748b; font-weight: 500;">(${groupCount})</span>
         </div>
       `;
@@ -933,21 +930,14 @@ export class App implements OnInit, OnDestroy {
             display: block;
             width: 100%;
             min-width: 0;
-          ">${this.escapeHtml(featureValue)}</span>
+          ">${this.utilService.escapeHtml(featureValue)}</span>
         </div>
       `;
     }
 
     const featureValue = data.bomLinkFeature;
     const columnWidth = 220;
-    return this.createCellContentWithTooltip(featureValue, columnWidth);
-  }
-
-  private escapeHtml(text: string): string {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return this.utilService.createCellContentWithTooltip(featureValue, columnWidth);
   }
 
   private getFeatureValue(row: any): string {
@@ -999,29 +989,10 @@ export class App implements OnInit, OnDestroy {
         ">${arrowIcon}</span>
         <span style="font-size: 13px; font-weight: 600; color: #1e293b;">${
           data.groupHeaderName
-        }: ${this.escapeHtml(groupValue)}</span>
+        }: ${this.utilService.escapeHtml(groupValue)}</span>
         <span style="margin-left: 8px; font-size: 11px; color: #64748b; font-weight: 500;">(${groupCount})</span>
       </div>
     `;
-  }
-
-  private isTextLikelyTruncated(text: string | null | undefined, columnWidth: number): boolean {
-    if (!text) return false;
-    const textStr = String(text);
-    const estimatedPixelsNeeded = textStr.length * 9 + 16;
-    return estimatedPixelsNeeded > columnWidth;
-  }
-
-  private createCellContentWithTooltip(value: any, columnWidth: number): string {
-    if (!value && value !== 0) return '';
-    const textStr = String(value);
-    const escapedText = this.escapeHtml(textStr);
-    const shouldShowTooltip = this.isTextLikelyTruncated(textStr, columnWidth);
-
-    if (shouldShowTooltip) {
-      return `<span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; width: 100%;">${escapedText}</span>`;
-    }
-    return escapedText;
   }
 
   private renderNewRowSkuCell(params: any): string {
@@ -1032,7 +1003,7 @@ export class App implements OnInit, OnDestroy {
     }
 
     const hasValue = params.value !== null && params.value !== undefined && params.value !== '';
-    const partLabel = this.escapeHtml(partNumber);
+    const partLabel = this.utilService.escapeHtml(partNumber);
 
     if (!hasValue) {
       return `
@@ -1044,7 +1015,7 @@ export class App implements OnInit, OnDestroy {
       `;
     }
 
-    const valueText = this.escapeHtml(String(params.value));
+    const valueText = this.utilService.escapeHtml(String(params.value));
     return `
       <div class="sku-cell-action-wrapper filled">
         <span class="sku-cell-value" title="${valueText}">${valueText}</span>
@@ -1554,7 +1525,7 @@ export class App implements OnInit, OnDestroy {
 
         const allRowData =
           keyValuePairs.length > 0
-            ? { ...materialData, ...this.convertKeyValuePairsToObject(keyValuePairs) }
+            ? { ...materialData, ...this.utilService.convertKeyValuePairsToObject(keyValuePairs) }
             : materialData;
 
         this.selectedMaterialData = allRowData;
@@ -1568,16 +1539,6 @@ export class App implements OnInit, OnDestroy {
       },
     });
     this.subscriptions.push(bomSub);
-  }
-
-  private convertKeyValuePairsToObject(keyValuePairs: any[]): any {
-    const obj: any = {};
-    keyValuePairs.forEach((pair) => {
-      if (pair.key && pair.value !== null && pair.value !== undefined) {
-        obj[pair.key] = pair.value;
-      }
-    });
-    return obj;
   }
 
   closeMaterialModal(): void {
@@ -1915,38 +1876,6 @@ export class App implements OnInit, OnDestroy {
     return value;
   }
 
-  private compareValues(a: any, b: any, sortDirection: 'asc' | 'desc'): number {
-    if (a === null || a === undefined) {
-      return b === null || b === undefined ? 0 : 1;
-    }
-    if (b === null || b === undefined) {
-      return -1;
-    }
-
-    let aVal: any = a;
-    let bVal: any = b;
-
-    const aNum = typeof a === 'string' ? parseFloat(a) : a;
-    const bNum = typeof b === 'string' ? parseFloat(b) : b;
-
-    if (!isNaN(aNum) && !isNaN(bNum) && typeof a === 'string' && typeof b === 'string') {
-      aVal = aNum;
-      bVal = bNum;
-    } else {
-      aVal = String(a).toLowerCase();
-      bVal = String(b).toLowerCase();
-    }
-
-    let result = 0;
-    if (aVal < bVal) {
-      result = -1;
-    } else if (aVal > bVal) {
-      result = 1;
-    }
-
-    return sortDirection === 'desc' ? -result : result;
-  }
-
   private sortHierarchicalData(data: any[], sortModel: any[]): any[] {
     if (!sortModel || sortModel.length === 0) {
       return data;
@@ -1976,7 +1905,7 @@ export class App implements OnInit, OnDestroy {
           const aValue = this.getSortValue(a, sortField);
           const bValue = this.getSortValue(b, sortField);
 
-          return this.compareValues(aValue, bValue, sortDirection);
+          return this.utilService.compareValues(aValue, bValue, sortDirection);
         });
 
         sortedChildren.forEach((child: any) => {
@@ -1990,7 +1919,7 @@ export class App implements OnInit, OnDestroy {
               const sortedSubChildren = [...child.children].sort((a: any, b: any) => {
                 const aValue = this.getSortValue(a, sortField);
                 const bValue = this.getSortValue(b, sortField);
-                return this.compareValues(aValue, bValue, sortDirection);
+                return this.utilService.compareValues(aValue, bValue, sortDirection);
               });
               sortedMaterialHeader.children = sortedSubChildren;
             }
@@ -2069,7 +1998,6 @@ export class App implements OnInit, OnDestroy {
     });
 
     // Group items by section (using internal name)
-    // Every instance from the response should be displayed as a separate row
     processedItems.forEach((item: any, index: number) => {
       const sectionInternalName = item.section;
       if (!sections[sectionInternalName]) {
@@ -2120,7 +2048,6 @@ export class App implements OnInit, OnDestroy {
       return partA.localeCompare(partB);
     };
 
-    // Process each section in order - sectionOrder now contains display names
     // Show ALL sections from sectionOrder, even if they have no materials
     for (const sectionDisplayName of sectionOrder) {
       // Find internal name for this display name
@@ -2169,8 +2096,8 @@ export class App implements OnInit, OnDestroy {
 
     sections.forEach((section: any) => {
       const sectionRow: any = {
-        section: section.section, // Internal name (e.g., "enumSection001") - used for payload
-        sectionDisplayName: section.sectionDisplayName, // Display name (e.g., "Fuselage") - always from API
+        section: section.section,
+        sectionDisplayName: section.sectionDisplayName,
         isSectionHeader: true,
         isExpanded: true, // Start expanded to show materials
         children: [],
@@ -2267,8 +2194,6 @@ export class App implements OnInit, OnDestroy {
 
       // Store original values for editable fields
       // IMPORTANT: Store these values ONCE at load time - they represent the frozen snapshot
-      // These values should NEVER be updated during edits - only when data is reloaded
-      // Store as strings to match API format requirements
       const originalValues: any = {
         bomLinkStartDate: String(row.bomLinkStartDate || row.startDate || ''),
         bomLinkEndDate: String(row.bomLinkEndDate || row.endDate || ''),
@@ -2312,8 +2237,6 @@ export class App implements OnInit, OnDestroy {
     const isNewRow = row.isNewRow;
 
     if (isNewRow) {
-      // For new rows: Use skuInfo from API response (mock.json structure)
-      // Include SKUs that have values, or if no values, include all SKUs from skuInfo
       let hasAnySkuValue = false;
       skuInfo.forEach((sku) => {
         const skuFieldName = `sku${sku.skuId}`;
@@ -2325,15 +2248,12 @@ export class App implements OnInit, OnDestroy {
         }
       });
 
-      // If any SKU has a value, only include those with values
-      // Otherwise, include all SKUs from skuInfo (as per user requirement)
       skuInfo.forEach((sku) => {
         const skuFieldName = `sku${sku.skuId}`;
         const skuValue = row[skuFieldName];
 
         // Include SKU if it has a value, OR if no SKUs have values (include all from skuInfo)
         if (!hasAnySkuValue || (skuValue !== undefined && skuValue !== null && skuValue !== '')) {
-          // For new rows: Include SKU from skuInfo (matching mock.json format)
           // Include: product, productId, color, destination, destinationDimensionId, manufacturer, size1, colorDimensionId, sourceDimensionId, skuId
           // Exclude: isActive, value, dimensionId (these are only for edited rows)
           skus.push({
@@ -2535,23 +2455,24 @@ export class App implements OnInit, OnDestroy {
 
       if (isNewRow) {
         // NEW ROW: Only include specific fields as per API requirements
-        // Based on curl example: quantity, bomLinkFeature, bomLinkStartDate, bomLinkEndDate, section, childId, colorId, skus
-        // IMPORTANT: All values must be strings as per API requirements
-
         // Section is required
         if (row.section) {
           bomLink.section = row.section;
         }
 
-        // Quantity (use 'quantity' field, not 'qty')
+        // Format as float with 2 decimal places
         if (row.quantity !== undefined && row.quantity !== null && row.quantity !== '') {
-          bomLink.quantity = String(row.quantity);
+          const formattedQuantity = this.utilService.formatQuantityToFloat(row.quantity);
+          if (formattedQuantity !== null) {
+            bomLink.quantity = formattedQuantity;
+          }
         } else if (row.qty !== undefined && row.qty !== null && row.qty !== '') {
-          bomLink.quantity = String(row.qty);
+          const formattedQuantity = this.utilService.formatQuantityToFloat(row.qty);
+          if (formattedQuantity !== null) {
+            bomLink.quantity = formattedQuantity;
+          }
         }
 
-        // bomLinkFeature (if present)
-        // Use ID from searchFlexInstances API response (production) or mock (dev)
         // Priority: bomLinkFeatureId (from API id) > bomLinkFeature (display value)
         if (
           row.bomLinkFeatureId !== undefined &&
@@ -2569,54 +2490,38 @@ export class App implements OnInit, OnDestroy {
 
         // Dates (convert to API format YYYY/M/D)
         if (row.bomLinkStartDate) {
-          bomLink.bomLinkStartDate = this.convertDateToApiFormat(String(row.bomLinkStartDate));
+          bomLink.bomLinkStartDate = this.utilService.convertDateToApiFormat(
+            String(row.bomLinkStartDate)
+          );
         } else if (row.startDate) {
-          bomLink.bomLinkStartDate = this.convertDateToApiFormat(String(row.startDate));
+          bomLink.bomLinkStartDate = this.utilService.convertDateToApiFormat(String(row.startDate));
         }
 
         if (row.bomLinkEndDate) {
-          bomLink.bomLinkEndDate = this.convertDateToApiFormat(String(row.bomLinkEndDate));
+          bomLink.bomLinkEndDate = this.utilService.convertDateToApiFormat(
+            String(row.bomLinkEndDate)
+          );
         } else if (row.endDate) {
-          bomLink.bomLinkEndDate = this.convertDateToApiFormat(String(row.endDate));
+          bomLink.bomLinkEndDate = this.utilService.convertDateToApiFormat(String(row.endDate));
         }
 
         // Add childId from material-supplier.materialSupplierMaster (value after LAST colon)
-        // Example: "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:208845" -> "208845"
-        // Example: "com.lcs.wc.material.LCSMaterialSupplierMaster:208845" -> "208845"
         if (row.materialSupplierMasterId) {
-          const lastColonIndex = row.materialSupplierMasterId.lastIndexOf(':');
-          if (lastColonIndex !== -1) {
-            bomLink.childId = row.materialSupplierMasterId.substring(lastColonIndex + 1);
-          } else {
-            bomLink.childId = row.materialSupplierMasterId;
-          }
+          bomLink.childId = this.utilService.extractIdAfterLastColon(row.materialSupplierMasterId);
         } else if (row.materialSupplierVersionId) {
           // Fallback: extract from versionId if materialSupplierMasterId not available
-          const lastColonIndex = row.materialSupplierVersionId.lastIndexOf(':');
-          if (lastColonIndex !== -1) {
-            bomLink.childId = row.materialSupplierVersionId.substring(lastColonIndex + 1);
-          } else {
-            bomLink.childId = row.materialSupplierVersionId;
-          }
+          bomLink.childId = this.utilService.extractIdAfterLastColon(row.materialSupplierVersionId);
         }
 
         // Add colorId from color.iterationId (value after LAST colon)
-        // Example: "OR:com.lcs.wc.color.LCSColor:208864" -> "208864"
-        // Example: "com.lcs.wc.color.LCSColor:208864" -> "208864"
         if (row.colorId) {
-          const lastColonIndex = row.colorId.lastIndexOf(':');
-          if (lastColonIndex !== -1) {
-            bomLink.colorId = row.colorId.substring(lastColonIndex + 1);
-          } else {
-            bomLink.colorId = row.colorId;
-          }
+          bomLink.colorId = this.utilService.extractIdAfterLastColon(row.colorId);
         }
 
         // Build skus array
         bomLink.skus = this.buildSkusArrayFromRow(row, skuInfo);
       } else if (isEdited) {
         // EXISTING ROW WITH EDITS: Only include section, skus, and _old/_new fields for edited fields
-        // Based on curl example: section, skus, quantity_old, quantity_new, bomLinkStartDate_old, etc.
         const originalValues = this.originalRowValues.get(rowId) || {};
 
         // Section is required
@@ -2638,8 +2543,9 @@ export class App implements OnInit, OnDestroy {
           if (currentStartDate !== newStartDate) {
             // _old = frozen original value (what backend had before)
             // _new = current edited value (what user changed it to)
-            bomLink.bomLinkStartDate_old = this.convertDateToApiFormat(currentStartDate);
-            bomLink.bomLinkStartDate_new = this.convertDateToApiFormat(newStartDate);
+            bomLink.bomLinkStartDate_old =
+              this.utilService.convertDateToApiFormat(currentStartDate);
+            bomLink.bomLinkStartDate_new = this.utilService.convertDateToApiFormat(newStartDate);
           }
         }
 
@@ -2648,20 +2554,19 @@ export class App implements OnInit, OnDestroy {
           const currentEndDate = originalValues.bomLinkEndDate || originalValues.endDate || '';
           const newEndDate = row.bomLinkEndDate || row.endDate || '';
           if (currentEndDate !== newEndDate) {
-            bomLink.bomLinkEndDate_old = this.convertDateToApiFormat(currentEndDate);
-            bomLink.bomLinkEndDate_new = this.convertDateToApiFormat(newEndDate);
+            bomLink.bomLinkEndDate_old = this.utilService.convertDateToApiFormat(currentEndDate);
+            bomLink.bomLinkEndDate_new = this.utilService.convertDateToApiFormat(newEndDate);
           }
         }
 
-        // Only include quantity if it was edited
-        // IMPORTANT: All values must be strings as per API requirements
         if (editedFieldsForRow.has('quantity') || editedFieldsForRow.has('qty')) {
           const currentQuantity = originalValues.quantity || '';
           const newQuantity = row.quantity || row.qty || '';
           if (currentQuantity !== newQuantity) {
-            // Convert to string - API expects strings for all values
-            bomLink.quantity_old = String(currentQuantity || '');
-            bomLink.quantity_new = String(newQuantity || '');
+            // Format to string with 2 decimal places
+            bomLink.quantity_old = this.utilService.formatQuantityToString(currentQuantity);
+
+            bomLink.quantity_new = this.utilService.formatQuantityToString(newQuantity);
           }
         }
 
@@ -2798,7 +2703,6 @@ export class App implements OnInit, OnDestroy {
     };
 
     // Use skuIds from API response (mock.json) - this contains version IDs
-    // Match what is in the JSON response from API/mock.json
     const skuIds = apiData?.skuIds || '';
 
     return {
@@ -2811,39 +2715,6 @@ export class App implements OnInit, OnDestroy {
       skuIds: skuIds,
       skuInfo: finalSkuInfo,
     };
-  }
-
-  /**
-   * Convert date from MM/DD/YYYY format to API format (YYYY/M/D)
-   * Example: "10/30/2025" -> "2025/10/30"
-   */
-  private convertDateToApiFormat(dateStr: string): string {
-    if (!dateStr) return '';
-
-    // If already in YYYY/M/D format, return as-is
-    if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(dateStr)) {
-      return dateStr;
-    }
-
-    // Try to parse MM/DD/YYYY format
-    const mmddyyyyPattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
-    const match = dateStr.match(mmddyyyyPattern);
-    if (match) {
-      const [, month, day, year] = match;
-      return `${year}/${parseInt(month)}/${parseInt(day)}`;
-    }
-
-    // Try to parse as Date object or ISO string
-    const date = new Date(dateStr);
-    if (!isNaN(date.getTime())) {
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-      return `${year}/${month}/${day}`;
-    }
-
-    // Return as-is if can't parse
-    return dateStr;
   }
 
   private showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {

@@ -3,6 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, map, catchError, throwError, of, switchMap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { SessionService } from './session.service';
+import { UtilService } from './util.service';
 
 export interface BomLinkSku {
   product: string;
@@ -21,7 +22,7 @@ export interface BomLinkSku {
 }
 
 export interface BomLink {
-  quantity: string;
+  quantity: string | number; // Can be string (from API) or number (float, when sending)
   bomLinkFeature: string;
   bomLinkSpecSheetExtra: string;
   skus: BomLinkSku[];
@@ -86,7 +87,11 @@ export interface ApiData {
 export class DataService {
   private apiData: ApiData | null = null;
 
-  constructor(private http: HttpClient, private sessionService: SessionService) {}
+  constructor(
+    private http: HttpClient,
+    private sessionService: SessionService,
+    private utilService: UtilService
+  ) {}
 
   /**
    * Build HTTP headers with CSRF token
@@ -106,20 +111,14 @@ export class DataService {
     return headers;
   }
 
-  // Common method to get data attributes from JSP
-  private getJspDataAttribute(attributeName: string): string | null {
-    const angularRoot = document.getElementById('angular-root');
-    return angularRoot?.getAttribute(attributeName) || null;
-  }
-
   loadData(): Observable<ApiData> {
     let apiUrl = environment.useMockApi
       ? environment.dataApiPath
       : `${this.getServiceHostUrl()}${environment.dataApiPath}`;
 
     if (!environment.useMockApi) {
-      const bomId = this.getJspDataAttribute('data-bomid');
-      const bomType = this.getJspDataAttribute('data-bomtype');
+      const bomId = this.utilService.getJspDataAttribute('data-bomid');
+      const bomType = this.utilService.getJspDataAttribute('data-bomtype');
 
       if (bomId) {
         apiUrl += `/${bomId}`;
@@ -551,17 +550,17 @@ export class DataService {
 
   // Get username from JSP data attribute (passed from FlexPLM session)
   getUserNameFromJsp(): string | null {
-    return this.getJspDataAttribute('data-username');
+    return this.utilService.getJspDataAttribute('data-username');
   }
 
   // Get bomType from JSP data attribute
   getBomType(): string | null {
-    return this.getJspDataAttribute('data-bomtype');
+    return this.utilService.getJspDataAttribute('data-bomtype');
   }
 
   // Get service host URL from JSP data attribute (passed from Windchill)
   getServiceHostUrl(): string {
-    const hostFromJsp = this.getJspDataAttribute('data-host');
+    const hostFromJsp = this.utilService.getJspDataAttribute('data-host');
 
     if (!hostFromJsp) {
       return '';

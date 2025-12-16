@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ICellEditorAngularComp } from 'ag-grid-angular';
 import { DataService } from '../services/data.service';
+import { UtilService } from '../services/util.service';
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 import { of, Subject, Subscription } from 'rxjs';
 
@@ -55,7 +56,7 @@ export class AutocompleteCellEditorComponent
   private toIndex: number = this.PAGE_SIZE;
   private hasMore: boolean = false;
 
-  constructor() {
+  constructor(private utilService: UtilService) {
     this.dataService = null as any;
   }
 
@@ -786,16 +787,9 @@ export class AutocompleteCellEditorComponent
       // Store childId from material-supplier.materialSupplierMaster (take value after colon)
       const materialSupplier = fullResult['material-supplier'] || {};
       const materialSupplierMaster = materialSupplier.materialSupplierMaster || '';
-      let childId = '';
-      if (materialSupplierMaster) {
-        // Extract value after last colon (e.g., "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:208845" -> "208845")
-        const lastColonIndex = materialSupplierMaster.lastIndexOf(':');
-        if (lastColonIndex !== -1) {
-          childId = materialSupplierMaster.substring(lastColonIndex + 1);
-        } else {
-          childId = materialSupplierMaster;
-        }
-      }
+      const childId = materialSupplierMaster
+        ? this.utilService.extractIdAfterLastColon(materialSupplierMaster)
+        : '';
       if (childId && originalData.materialSupplierMasterId !== childId) {
         this.params.node.setDataValue('materialSupplierMasterId', childId);
         if (this.params.node.data) {
@@ -805,16 +799,9 @@ export class AutocompleteCellEditorComponent
 
       // Store colorId from color.iterationId (take value after LAST colon)
       const colorIterationId = colorObj.iterationId || '';
-      let colorId = '';
-      if (colorIterationId) {
-        // Extract value after last colon (e.g., "OR:com.lcs.wc.color.LCSColor:208864" -> "208864")
-        const lastColonIndex = colorIterationId.lastIndexOf(':');
-        if (lastColonIndex !== -1) {
-          colorId = colorIterationId.substring(lastColonIndex + 1);
-        } else {
-          colorId = colorIterationId;
-        }
-      }
+      const colorId = colorIterationId
+        ? this.utilService.extractIdAfterLastColon(colorIterationId)
+        : '';
       if (colorId && originalData.colorId !== colorId) {
         this.params.node.setDataValue('colorId', colorId);
         if (this.params.node.data) {
@@ -853,16 +840,9 @@ export class AutocompleteCellEditorComponent
       // Store childId from material-supplier.materialSupplierMaster (take value after LAST colon)
       const materialSupplier = fullResult['material-supplier'] || {};
       const materialSupplierMaster = materialSupplier.materialSupplierMaster || '';
-      let childId = '';
-      if (materialSupplierMaster) {
-        // Extract value after last colon (e.g., "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:208845" -> "208845")
-        const lastColonIndex = materialSupplierMaster.lastIndexOf(':');
-        if (lastColonIndex !== -1) {
-          childId = materialSupplierMaster.substring(lastColonIndex + 1);
-        } else {
-          childId = materialSupplierMaster;
-        }
-      }
+      const childId = materialSupplierMaster
+        ? this.utilService.extractIdAfterLastColon(materialSupplierMaster)
+        : '';
       if (childId && originalData.materialSupplierMasterId !== childId) {
         this.params.node.setDataValue('materialSupplierMasterId', childId);
         if (this.params.node.data) {
@@ -873,16 +853,9 @@ export class AutocompleteCellEditorComponent
       // Store colorId from color.iterationId (take value after LAST colon)
       const colorObj = fullResult.color || {};
       const colorIterationId = colorObj.iterationId || '';
-      let colorId = '';
-      if (colorIterationId) {
-        // Extract value after last colon (e.g., "OR:com.lcs.wc.color.LCSColor:208864" -> "208864")
-        const lastColonIndex = colorIterationId.lastIndexOf(':');
-        if (lastColonIndex !== -1) {
-          colorId = colorIterationId.substring(lastColonIndex + 1);
-        } else {
-          colorId = colorIterationId;
-        }
-      }
+      const colorId = colorIterationId
+        ? this.utilService.extractIdAfterLastColon(colorIterationId)
+        : '';
       if (colorId && originalData.colorId !== colorId) {
         this.params.node.setDataValue('colorId', colorId);
         if (this.params.node.data) {
