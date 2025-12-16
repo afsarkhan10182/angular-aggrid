@@ -2460,15 +2460,19 @@ export class App implements OnInit, OnDestroy {
           bomLink.section = row.section;
         }
 
-        // Format as float with 2 decimal places
-        if (row.quantity !== undefined && row.quantity !== null && row.quantity !== '') {
-          const formattedQuantity = this.utilService.formatQuantityToFloat(row.quantity);
-          if (formattedQuantity !== null) {
-            bomLink.quantity = formattedQuantity;
-          }
-        } else if (row.qty !== undefined && row.qty !== null && row.qty !== '') {
-          const formattedQuantity = this.utilService.formatQuantityToFloat(row.qty);
-          if (formattedQuantity !== null) {
+        // Format as string with 2 decimal places
+        // Only include quantity if it has been set by user (not default 0 or empty)
+        const quantityValue =
+          row.quantity !== undefined && row.quantity !== null && row.quantity !== ''
+            ? row.quantity
+            : row.qty !== undefined && row.qty !== null && row.qty !== ''
+            ? row.qty
+            : null;
+
+        if (quantityValue !== null && quantityValue !== 0 && quantityValue !== '0') {
+          const formattedQuantity = this.utilService.formatQuantityToString(quantityValue);
+          // Format as string with 2 decimal places (e.g., "12.00")
+          if (formattedQuantity !== '') {
             bomLink.quantity = formattedQuantity;
           }
         }
