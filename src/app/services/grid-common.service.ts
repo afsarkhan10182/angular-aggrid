@@ -391,11 +391,17 @@ export class GridCommonService {
       animateRows: false,
       enableCellTextSelection: true,
       rowSelection: {
-        mode: 'singleRow',
+        mode: 'multiRow',
         enableClickSelection: false,
         checkboxes: false,
         isRowSelectable: (params) => {
-          return !(params.data && params.data.isSectionHeader);
+          return (
+            params.data &&
+            !params.data.isSectionHeader &&
+            !params.data.isGroupHeader &&
+            !params.data.isMaterialHeader &&
+            !params.data.isBranchHeader
+          );
         },
       },
       suppressColumnVirtualisation: false,
@@ -459,6 +465,15 @@ export class GridCommonService {
         if (params.data && params.data.isSubRow) {
           classes.push('subrow');
         }
+        // Highlight edited rows
+        if (
+          componentInstance.editedRows &&
+          params.data &&
+          (componentInstance.editedRows.has(params.data.partNumber) ||
+            componentInstance.editedRows.has(params.data.newRowId))
+        ) {
+          classes.push('row-edited');
+        }
 
         // Check for validation errors
         if (params.data && componentInstance.invalidRowIds) {
@@ -482,23 +497,12 @@ export class GridCommonService {
         this.setupRowHoverSync(params.api);
       },
       onRowSelected: (params) => {
-        if (params.node.isSelected()) {
-          setTimeout(() => {
-            params.api.forEachNode((node) => {
-              if (node.id !== params.node.id && node.isSelected()) {
-                node.setSelected(false);
-              }
-            });
-          }, 0);
-        }
+        // Allow multiple selection - do not enforce single selection here
       },
       onSelectionChanged: (params) => {
-        setTimeout(() => {
-          const selectedNodes = params.api.getSelectedNodes();
-          if (selectedNodes.length > 1) {
-            selectedNodes.slice(1).forEach((node) => node.setSelected(false));
-          }
-        }, 0);
+        if (componentInstance.onSelectionChanged) {
+          componentInstance.onSelectionChanged(params);
+        }
       },
       onCellValueChanged: (params) => {
         if (componentInstance.rowManagementService && componentInstance.editedRows) {
@@ -561,20 +565,24 @@ export class GridCommonService {
         });
       },
       onCellClicked: (params) => {
-        if (params.colDef.field === 'actions') {
+        // Don't interfere with checkbox column, actions column, or button clicks
+        if (params.colDef.field === 'actions' || params.colDef.field === 'checkbox') {
           return;
         }
 
+        // Don't interfere with checkbox clicks anywhere
         if (params.event) {
-          const mouseEvent = params.event as MouseEvent;
-          const selection = window.getSelection();
-          if (selection && selection.toString().trim() === '') {
-            if (!mouseEvent.shiftKey && !mouseEvent.ctrlKey && !mouseEvent.metaKey) {
-              setTimeout(() => {
-                const isSelected = params.node.isSelected();
-                params.node.setSelected(!isSelected);
-              }, 0);
-            }
+          const target = params.event.target as HTMLElement;
+          if (
+            target &&
+            (target.closest('button') ||
+              target.closest('[data-action]') ||
+              target.closest('.ag-selection-checkbox') ||
+              target.closest('input[type="checkbox"]') ||
+              target.tagName === 'INPUT' ||
+              target.closest('.ag-checkbox'))
+          ) {
+            return;
           }
         }
       },

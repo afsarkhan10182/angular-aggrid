@@ -59,7 +59,7 @@
         </div>
       </div>
 
-      <!-- Right Group: Show Expired, Last Saved, and Save -->
+      <!-- Right Group: Show Expired, Last Saved, Export, and Save -->
       <div class="right-controls-group">
         <div class="toggle-switch-container">
           <span class="toggle-text">Show Expired:</span>
@@ -68,6 +68,10 @@
             <span class="toggle-slider"></span>
           </label>
         </div>
+        <!-- Export Button -->
+        <button (click)="exportToExcel()" class="export-btn" title="Export to Excel">
+          <i class="fas fa-file-excel"></i> Export
+        </button>
         <div class="save-section">
           <!-- Last Saved Display -->
           <div class="last-saved-display">
@@ -97,6 +101,54 @@
       <button (click)="clearSaveMessage()" class="save-message-close">
         <i class="fas fa-times"></i>
       </button>
+    </div>
+
+    <!-- Mass Edit Panel -->
+    <div *ngIf="massEditMode" class="mass-edit-panel">
+      <div class="mass-edit-header">
+        <h4>Mass Edit ({{ selectedRows.size }} row(s) selected)</h4>
+        <button (click)="closeMassEditMode()" class="close-mass-edit-btn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="mass-edit-fields">
+        <div class="mass-edit-field">
+          <label>Start Date:</label>
+          <input
+            type="date"
+            [(ngModel)]="massEditStartDate"
+            class="mass-edit-input"
+            placeholder="MM/DD/YYYY"
+          />
+        </div>
+        <div class="mass-edit-field">
+          <label>End Date:</label>
+          <input
+            type="date"
+            [(ngModel)]="massEditEndDate"
+            class="mass-edit-input"
+            placeholder="MM/DD/YYYY"
+          />
+        </div>
+        <div class="mass-edit-field">
+          <label>Quantity:</label>
+          <input
+            type="number"
+            [(ngModel)]="massEditQuantity"
+            class="mass-edit-input"
+            min="0"
+            placeholder="Enter quantity"
+          />
+        </div>
+        <div class="mass-edit-actions">
+          <button (click)="applyMassEdit()" class="apply-mass-edit-btn">
+            <i class="fas fa-check"></i> Apply
+          </button>
+          <button (click)="bulkDisconnectFromSkus()" class="bulk-disconnect-btn">
+            <i class="fas fa-unlink"></i> Disconnect from SKUs
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- AG Grid with Toggle Button Container -->

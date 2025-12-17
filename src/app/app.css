@@ -431,3 +431,240 @@
   gap: 12px;
   white-space: nowrap;
 }
+
+.export-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2);
+}
+
+.export-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.export-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Mass Edit Panel */
+.mass-edit-panel {
+  background: #f8fafc;
+  border: 2px solid #3b82f6;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.mass-edit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.mass-edit-header h4 {
+  margin: 0;
+  color: #1e293b;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.close-mass-edit-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.close-mass-edit-btn:hover {
+  background: #dc2626;
+}
+
+.mass-edit-fields {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.mass-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 150px;
+}
+
+.mass-edit-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.mass-edit-input {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.mass-edit-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.mass-edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.apply-mass-edit-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.2);
+}
+
+.apply-mass-edit-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.bulk-disconnect-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(239, 68, 68, 0.2);
+}
+
+.bulk-disconnect-btn:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+/* Highlight edited rows */
+.ag-row.row-edited {
+  background-color: #fef3c7 !important;
+}
+
+.ag-row.row-edited .ag-cell {
+  background-color: #fef3c7 !important;
+}
+
+.ag-row.row-edited:hover {
+  background-color: #fde68a !important;
+}
+
+.ag-row.row-edited:hover .ag-cell {
+  background-color: #fde68a !important;
+}
+
+/* SKU delete button styling */
+.sku-delete-btn-existing {
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.sku-delete-btn-existing:hover {
+  opacity: 1;
+  background: #dc2626 !important;
+}
+
+/* Hide checkboxes in all columns except the checkbox column */
+.ag-header-cell:not([col-id='checkbox']) .ag-selection-checkbox,
+.ag-header-cell:not([col-id='checkbox']) .ag-checkbox,
+.ag-header-cell:not([col-id='checkbox']) input[type='checkbox'],
+.ag-header-cell:not([col-id='checkbox']) .ag-checkbox-input-wrapper {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+.ag-cell:not([col-id='checkbox']) .ag-selection-checkbox,
+.ag-cell:not([col-id='checkbox']) .ag-checkbox,
+.ag-cell:not([col-id='checkbox']) input[type='checkbox'],
+.ag-cell:not([col-id='checkbox']) .ag-checkbox-input-wrapper {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Ensure checkbox column checkboxes are visible and clickable */
+.ag-header-cell[col-id='checkbox'] .ag-selection-checkbox,
+.ag-header-cell[col-id='checkbox'] .ag-checkbox,
+.ag-header-cell[col-id='checkbox'] input[type='checkbox'],
+.ag-header-cell[col-id='checkbox'] .ag-checkbox-input-wrapper,
+.ag-cell[col-id='checkbox'] .ag-selection-checkbox,
+.ag-cell[col-id='checkbox'] .ag-checkbox,
+.ag-cell[col-id='checkbox'] input[type='checkbox'],
+.ag-cell[col-id='checkbox'] .ag-checkbox-input-wrapper {
+  display: block !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+}
+
+/* Additional fix for AG Grid checkbox rendering */
+.ag-header-cell[col-id='checkbox'],
+.ag-cell[col-id='checkbox'],
+.checkbox-column-header,
+.checkbox-column-cell {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Ensure checkboxes are properly styled and visible in checkbox column */
+.checkbox-column-header .ag-selection-checkbox,
+.checkbox-column-header .ag-checkbox,
+.checkbox-column-cell .ag-selection-checkbox,
+.checkbox-column-cell .ag-checkbox {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 18px !important;
+  height: 18px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}

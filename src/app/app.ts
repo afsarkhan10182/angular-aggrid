@@ -48,6 +48,11 @@ export class App implements OnInit, OnDestroy {
   private originalRowValues = new Map<string | number, any>(); // Store original values for existing rows
   private editedFields = new Map<string | number, Set<string>>(); // Track which specific fields were edited per row
   public invalidRowIds = new Set<string | number>(); // Track rows with validation errors for highlighting
+  public selectedRows = new Set<any>();
+  public massEditMode = false;
+  public massEditStartDate: string = '';
+  public massEditEndDate: string = '';
+  public massEditQuantity: number | null = null;
 
   public allColumns = [
     // Core Part Information
@@ -343,6 +348,41 @@ export class App implements OnInit, OnDestroy {
   createHierarchicalColumns(columnMapping: any): ColDef[] {
     const columns: ColDef[] = [];
 
+    // Checkbox column for row selection - only column with checkboxes
+    columns.push({
+      headerName: '',
+      field: 'checkbox',
+      colId: 'checkbox',
+      width: 50,
+      minWidth: 50,
+      maxWidth: 50,
+      pinned: 'left',
+      resizable: false,
+      sortable: false,
+      filter: false,
+      checkboxSelection: (params: any) => {
+        return (
+          params.data &&
+          !params.data.isSectionHeader &&
+          !params.data.isGroupHeader &&
+          !params.data.isMaterialHeader &&
+          !params.data.isBranchHeader
+        );
+      },
+      headerCheckboxSelection: true,
+      headerCheckboxSelectionFilteredOnly: true,
+      cellStyle: {
+        textAlign: 'center',
+        padding: '4px',
+        borderRight: '1px solid #e2e8f0',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      headerClass: 'checkbox-column-header',
+      cellClass: 'checkbox-column-cell',
+    });
+
     columns.push({
       headerName: '',
       field: 'actions',
@@ -353,6 +393,8 @@ export class App implements OnInit, OnDestroy {
       resizable: false,
       sortable: false,
       filter: true,
+      checkboxSelection: false,
+      headerCheckboxSelection: false,
       cellRenderer: (params: any) => {
         if (params.data.isGroupHeader) {
           return '';
@@ -390,6 +432,8 @@ export class App implements OnInit, OnDestroy {
       pinned: 'left',
       sortable: false,
       filter: true,
+      checkboxSelection: false,
+      headerCheckboxSelection: false,
       tooltipValueGetter: (params: any) => {
         if (!params.data) return null;
         if (params.data.isSectionHeader) {
@@ -431,6 +475,8 @@ export class App implements OnInit, OnDestroy {
           width: 180,
           minWidth: 140,
           sortable: true,
+          checkboxSelection: false,
+          headerCheckboxSelection: false,
           cellRenderer: (params: any) => {
             if (
               params.data.isSectionHeader ||
@@ -469,6 +515,8 @@ export class App implements OnInit, OnDestroy {
         width: 150,
         minWidth: 100,
         sortable: true,
+        checkboxSelection: false,
+        headerCheckboxSelection: false,
         cellRenderer: (params: any) => {
           if (
             params.data.isSectionHeader ||
@@ -518,7 +566,14 @@ export class App implements OnInit, OnDestroy {
           max: 9999,
         };
         columnDef.editable = (params: any) => {
-          if (params.data && (params.data.isExpired || params.data.isSectionHeader)) {
+          if (
+            params.data &&
+            (params.data.isExpired ||
+              params.data.isSectionHeader ||
+              params.data.isGroupHeader ||
+              params.data.isMaterialHeader ||
+              params.data.isBranchHeader)
+          ) {
             return false;
           }
           return true;
@@ -735,6 +790,8 @@ export class App implements OnInit, OnDestroy {
         resizable: true,
         suppressSizeToFit: true,
         suppressAutoSize: true,
+        checkboxSelection: false,
+        headerCheckboxSelection: false,
         headerClass: index === 0 ? 'first-sku-column-header' : '',
         cellClass: index === 0 ? 'first-sku-column-cell' : '',
         cellRenderer: (params: any) => {
@@ -760,7 +817,35 @@ export class App implements OnInit, OnDestroy {
             return this.renderNewRowSkuCell(params);
           }
 
-          return '';
+          // For material headers and direct rows - show value with delete icon if value exists
+          if (data.isMaterialHeader || data.isDirectRow) {
+            const value = params.value;
+            if (!value && value !== 0) return '';
+
+            const valueStr = String(value);
+            const htmlValue = this.utilService.escapeHtml(valueStr).replace(/\n/g, '<br>');
+            const skuField = params.colDef.field;
+            const deleteIcon = `<button type="button" class="sku-delete-btn-existing" data-action="disconnect-sku" data-sku-field="${skuField}" title="Disconnect part from SKU" style="margin-left: 8px; background: #ef4444; color: white; border: none; border-radius: 3px; padding: 2px 6px; cursor: pointer; font-size: 12px; transition: opacity 0.2s;">✕</button>`;
+
+            return `<div style="white-space: pre-line; line-height: 1.5; padding: 4px 0; display: flex; align-items: center;">
+              <span style="flex: 1;">${htmlValue}</span>
+              ${deleteIcon}
+            </div>`;
+          }
+
+          // For other existing rows (sub-rows, etc.) - show value with delete icon if value exists
+          const value = params.value;
+          if (!value && value !== 0) return '';
+
+          const valueStr = String(value);
+          const htmlValue = this.utilService.escapeHtml(valueStr).replace(/\n/g, '<br>');
+          const skuField = params.colDef.field;
+          const deleteIcon = `<button type="button" class="sku-delete-btn-existing" data-action="disconnect-sku" data-sku-field="${skuField}" title="Disconnect part from SKU" style="margin-left: 8px; background: #ef4444; color: white; border: none; border-radius: 3px; padding: 2px 6px; cursor: pointer; font-size: 12px; transition: opacity 0.2s;">✕</button>`;
+
+          return `<div style="white-space: pre-line; line-height: 1.5; padding: 4px 0; display: flex; align-items: center;">
+            <span style="flex: 1;">${htmlValue}</span>
+            ${deleteIcon}
+          </div>`;
         },
         tooltipValueGetter: (params: any) => {
           if (params.value === null || params.value === undefined) return null;
@@ -1380,6 +1465,15 @@ export class App implements OnInit, OnDestroy {
         event.data.isNewRow
       ) {
         this.rowManagementService.clearSkuValue(event, this);
+      }
+      return;
+    }
+
+    const disconnectButton = target?.closest('[data-action="disconnect-sku"]');
+    if (disconnectButton) {
+      const skuField = disconnectButton.getAttribute('data-sku-field');
+      if (skuField && event.data) {
+        this.disconnectPartFromSku(event.data, skuField, event.event);
       }
       return;
     }
@@ -2863,6 +2957,294 @@ export class App implements OnInit, OnDestroy {
       this.saveMessage = '';
       this.saveMessageType = '';
     }, 5000);
+  }
+
+  onSelectionChanged(params: any): void {
+    const selectedNodes = params.api.getSelectedNodes();
+    this.selectedRows.clear();
+    selectedNodes.forEach((node: any) => {
+      if (node.data) {
+        this.selectedRows.add(node.data);
+      }
+    });
+    this.massEditMode = this.selectedRows.size > 0;
+
+    if (this.massEditMode && this.selectedRows.size > 0) {
+      // Populate mass edit fields with common values if all rows have the same value
+      this.populateMassEditFields(Array.from(this.selectedRows));
+    } else {
+      this.massEditStartDate = '';
+      this.massEditEndDate = '';
+      this.massEditQuantity = null;
+    }
+  }
+
+  private populateMassEditFields(selectedRows: any[]): void {
+    if (selectedRows.length === 0) return;
+
+    // Helper to get date field value
+    const getDateValue = (row: any, fields: string[]): string => {
+      for (const field of fields) {
+        if (row[field]) return row[field];
+      }
+      return '';
+    };
+
+    // Helper to get quantity value
+    const getQtyValue = (row: any, fields: string[]): number | null => {
+      for (const field of fields) {
+        if (row[field] !== undefined && row[field] !== null && row[field] !== '') {
+          return Number(row[field]);
+        }
+      }
+      return null;
+    };
+
+    // Check if all rows have the same start date
+    const startDateFields = ['bomLinkStartDate', 'startDate'];
+    const firstStartDate = getDateValue(selectedRows[0], startDateFields);
+    const allSameStartDate = selectedRows.every((row) => {
+      const rowDate = getDateValue(row, startDateFields);
+      return rowDate === firstStartDate;
+    });
+    if (allSameStartDate && firstStartDate) {
+      // Convert MM/DD/YYYY to YYYY-MM-DD for date input
+      const date = this.gridCommonService.parseDateString(firstStartDate);
+      this.massEditStartDate = date ? this.convertToDateInputFormat(date) : '';
+    } else {
+      this.massEditStartDate = '';
+    }
+
+    // Check if all rows have the same end date
+    const endDateFields = ['bomLinkEndDate', 'endDate'];
+    const firstEndDate = getDateValue(selectedRows[0], endDateFields);
+    const allSameEndDate = selectedRows.every((row) => {
+      const rowDate = getDateValue(row, endDateFields);
+      return rowDate === firstEndDate;
+    });
+    if (allSameEndDate && firstEndDate) {
+      const date = this.gridCommonService.parseDateString(firstEndDate);
+      this.massEditEndDate = date ? this.convertToDateInputFormat(date) : '';
+    } else {
+      this.massEditEndDate = '';
+    }
+
+    // Check if all rows have the same quantity
+    const qtyFields = ['qty', 'quantity'];
+    const firstQty = getQtyValue(selectedRows[0], qtyFields);
+    const allSameQty = selectedRows.every((row) => {
+      const rowQty = getQtyValue(row, qtyFields);
+      return rowQty === firstQty;
+    });
+    if (allSameQty && firstQty !== null) {
+      this.massEditQuantity = firstQty;
+    } else {
+      this.massEditQuantity = null;
+    }
+  }
+
+  private convertToDateInputFormat(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  applyMassEdit(): void {
+    if (this.selectedRows.size === 0 || !this.gridApi) {
+      return;
+    }
+
+    const selectedNodes = this.gridApi.getSelectedNodes();
+    const nodesToUpdate: any[] = [];
+    const columnsToUpdate: string[] = [];
+
+    selectedNodes.forEach((node: any) => {
+      if (!node.data) return;
+
+      const rowData = node.data;
+      let hasChanges = false;
+
+      // Update start date
+      if (this.massEditStartDate) {
+        const formattedDate = this.gridCommonService.formatDateToMMDDYYYY(this.massEditStartDate);
+        const startDateFields = ['bomLinkStartDate', 'startDate'];
+        for (const field of startDateFields) {
+          if (rowData.hasOwnProperty(field) || field === 'startDate') {
+            if (rowData[field] !== formattedDate) {
+              rowData[field] = formattedDate;
+              node.setDataValue(field, formattedDate);
+              if (!columnsToUpdate.includes(field)) columnsToUpdate.push(field);
+              hasChanges = true;
+            }
+            break; // Only update one field
+          }
+        }
+      }
+
+      // Update end date
+      if (this.massEditEndDate) {
+        const formattedDate = this.gridCommonService.formatDateToMMDDYYYY(this.massEditEndDate);
+        const endDateFields = ['bomLinkEndDate', 'endDate'];
+        for (const field of endDateFields) {
+          if (rowData.hasOwnProperty(field) || field === 'endDate') {
+            if (rowData[field] !== formattedDate) {
+              rowData[field] = formattedDate;
+              node.setDataValue(field, formattedDate);
+              if (!columnsToUpdate.includes(field)) columnsToUpdate.push(field);
+              hasChanges = true;
+            }
+            break; // Only update one field
+          }
+        }
+      }
+
+      // Update quantity
+      if (this.massEditQuantity !== null && this.massEditQuantity !== undefined) {
+        const qtyFields = ['qty', 'quantity'];
+        for (const field of qtyFields) {
+          if (rowData.hasOwnProperty(field) || field === 'qty') {
+            if (rowData[field] !== this.massEditQuantity) {
+              rowData[field] = this.massEditQuantity;
+              node.setDataValue(field, this.massEditQuantity);
+              if (!columnsToUpdate.includes(field)) columnsToUpdate.push(field);
+              hasChanges = true;
+            }
+            break; // Only update one field
+          }
+        }
+      }
+
+      if (hasChanges) {
+        const rowId = rowData.newRowId || rowData.partNumber;
+        if (rowId) {
+          this.editedRows.add(rowId);
+        }
+        nodesToUpdate.push(node);
+      }
+    });
+
+    // Refresh only affected cells to avoid flicker
+    if (nodesToUpdate.length > 0 && columnsToUpdate.length > 0) {
+      this.gridApi.refreshCells({
+        rowNodes: nodesToUpdate,
+        columns: columnsToUpdate,
+        force: true,
+      });
+    }
+
+    // Clear mass edit fields after applying
+    this.massEditStartDate = '';
+    this.massEditEndDate = '';
+    this.massEditQuantity = null;
+  }
+
+  exportToExcel(): void {
+    if (!this.gridApi) return;
+
+    const params = {
+      fileName: `BOM_Export_${new Date().toISOString().split('T')[0]}.xlsx`,
+      onlySelected: false,
+    };
+
+    // AG Grid Community doesn't have Excel export, so we'll use CSV export
+    // For Excel, we'd need AG Grid Enterprise or a library like xlsx
+    this.gridApi.exportDataAsCsv(params);
+  }
+
+  disconnectPartFromSku(rowData: any, skuField: string, event?: any): void {
+    if (!rowData || !skuField || !this.gridApi) return;
+
+    // Prevent event propagation to avoid flicker
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    const rowId = rowData.newRowId || rowData.partNumber;
+
+    // Find the node and update it without full refresh
+    let targetNode: any = null;
+    this.gridApi.forEachNode((node: any) => {
+      if (node.data === rowData) {
+        targetNode = node;
+      }
+    });
+
+    if (targetNode) {
+      // Clear the SKU value
+      targetNode.setDataValue(skuField, '');
+      rowData[skuField] = '';
+
+      // Mark row as edited
+      if (rowId) {
+        this.editedRows.add(rowId);
+      }
+
+      // Use refreshCells with specific column to avoid flicker
+      const column = this.gridApi.getColumn(skuField);
+      if (column) {
+        this.gridApi.refreshCells({
+          rowNodes: [targetNode],
+          columns: [skuField],
+          force: true,
+        });
+      }
+    }
+  }
+
+  closeMassEditMode(): void {
+    this.massEditMode = false;
+    if (this.gridApi) {
+      this.gridApi.deselectAll();
+    }
+    this.selectedRows.clear();
+    this.massEditStartDate = '';
+    this.massEditEndDate = '';
+    this.massEditQuantity = null;
+  }
+
+  bulkDisconnectFromSkus(): void {
+    if (this.selectedRows.size === 0 || !this.gridApi) {
+      return;
+    }
+
+    const selectedNodes = this.gridApi.getSelectedNodes();
+    const skuInfo = this.dataService.getSkuInfo();
+    const nodesToUpdate: any[] = [];
+    const skuFields: string[] = skuInfo.map((sku) => `sku${sku.skuId}`);
+
+    selectedNodes.forEach((node: any) => {
+      if (!node.data) return;
+
+      const rowData = node.data;
+      let hasChanges = false;
+
+      skuFields.forEach((skuField) => {
+        if (rowData[skuField] && rowData[skuField] !== '') {
+          rowData[skuField] = '';
+          node.setDataValue(skuField, '');
+          hasChanges = true;
+        }
+      });
+
+      if (hasChanges) {
+        const rowId = rowData.newRowId || rowData.partNumber;
+        if (rowId) {
+          this.editedRows.add(rowId);
+        }
+        nodesToUpdate.push(node);
+      }
+    });
+
+    // Refresh only affected cells to avoid flicker
+    if (nodesToUpdate.length > 0 && skuFields.length > 0) {
+      this.gridApi.refreshCells({
+        rowNodes: nodesToUpdate,
+        columns: skuFields,
+        force: true,
+      });
+    }
   }
 
   ngOnDestroy(): void {
