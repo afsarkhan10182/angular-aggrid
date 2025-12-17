@@ -1,4 +1,11 @@
 import { Injectable } from '@angular/core';
+import { GridApi, ColDef } from 'ag-grid-community';
+import * as XLSX from 'xlsx';
+
+// Extended ColDef interface to include custom properties for export
+export interface ExtendedColDef extends ColDef {
+  excludeFromExport?: boolean;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -207,5 +214,146 @@ export class UtilService {
   getJspDataAttribute(attributeName: string): string | null {
     const angularRoot = document.getElementById('angular-root');
     return angularRoot?.getAttribute(attributeName) || null;
+  }
+
+  /**
+   * Export grid data to Excel file
+   * @param gridApi - AG Grid API instance
+   * @param options - Export options
+   * @param options.excludedFields - Array of field names to exclude from export
+   * @param options.fileName - Custom file name (default: BOM_Composer_Export_YYYY-MM-DD.xlsx)
+   * @param options.sheetName - Custom sheet name (default: 'BOM Export')
+   * @param options.excludeHeaderRows - Whether to exclude section/group/material headers (default: true)
+   * @returns Promise that resolves when export is complete, or throws error
+   */
+  exportGridToExcel(
+    gridApi: GridApi,
+    options: {
+      excludedFields?: string[];
+      fileName?: string;
+      sheetName?: string;
+      excludeHeaderRows?: boolean;
+    } = {}
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        const {
+          excludedFields = ['actions'],
+          fileName,
+          sheetName = 'BOM Export',
+          excludeHeaderRows = true,
+        } = options;
+
+        // Get all visible columns (excluding hidden ones)
+        const allColumns = gridApi.getColumns();
+        if (!allColumns || allColumns.length === 0) {
+          console.warn('No columns found for export');
+          reject(new Error('No columns found for export'));
+          return;
+        }
+
+        // Filter out hidden columns and excluded columns
+        const visibleColumns = allColumns
+          .filter((col) => {
+            if (!col.isVisible()) return false;
+
+            const colDef = col.getColDef();
+            const field = col.getColId();
+
+            // Exclude if field is in the excluded list
+            if (excludedFields.includes(field)) return false;
+
+            // Exclude if column definition has excludeFromExport property set to true
+            if ((colDef as ExtendedColDef).excludeFromExport === true) return false;
+
+            return true;
+          })
+          .map((col) => {
+            const colDef = col.getColDef();
+            return {
+              field: col.getColId(),
+              headerName: colDef.headerName || col.getColId(),
+              col: col,
+            };
+          });
+
+        // Get all row data (excluding group headers, section headers, etc.)
+        const rowData: any[] = [];
+        gridApi.forEachNode((node) => {
+          if (!node.data) return;
+
+          // Skip header rows if excludeHeaderRows is true
+          if (excludeHeaderRows) {
+            if (
+              node.data.isSectionHeader ||
+              node.data.isGroupHeader ||
+              node.data.isMaterialHeader ||
+              node.data.isBranchHeader
+            ) {
+              return;
+            }
+          }
+
+          rowData.push(node.data);
+        });
+
+        // Prepare data for Excel export
+        const excelData: any[] = [];
+
+        // Add header row
+        const headers: string[] = visibleColumns.map((col) => col.headerName);
+        excelData.push(headers);
+
+        // Add data rows
+        rowData.forEach((row) => {
+          const rowDataArray: any[] = [];
+          visibleColumns.forEach((col) => {
+            let cellValue: any = '';
+
+            // Get the cell value from the row data
+            if (row && col.field) {
+              cellValue = row[col.field];
+            }
+
+            // Handle null/undefined values
+            if (cellValue === null || cellValue === undefined) {
+              cellValue = '';
+            } else if (typeof cellValue === 'object') {
+              // Convert objects to string
+              cellValue = JSON.stringify(cellValue);
+            } else if (cellValue instanceof Date) {
+              // Format dates properly for Excel
+              cellValue = cellValue.toISOString().split('T')[0];
+            } else {
+              cellValue = String(cellValue);
+            }
+
+            rowDataArray.push(cellValue);
+          });
+          excelData.push(rowDataArray);
+        });
+
+        // Create workbook and worksheet
+        const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+        // Set column widths
+        const colWidths = visibleColumns.map(() => ({ wch: 15 }));
+        worksheet['!cols'] = colWidths;
+
+        // Generate file name
+        const exportFileName =
+          fileName || `BOM_Composer_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+        // Write file
+        XLSX.writeFile(workbook, exportFileName);
+
+        resolve();
+      } catch (error) {
+        console.error('Error exporting to Excel:', error);
+        reject(error);
+      }
+    });
   }
 }

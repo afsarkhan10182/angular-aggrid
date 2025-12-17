@@ -15,6 +15,7 @@ import { ValidationService } from './services/validation.service';
 import { UtilService } from './services/util.service';
 import { ColumnHeaderPinComponent } from './column-header-pin/column-header-pin.component';
 import { environment } from '../environments/environment';
+import { ExtendedColDef } from './services/util.service';
 
 @Component({
   selector: 'app-root',
@@ -346,7 +347,7 @@ export class App implements OnInit, OnDestroy {
   }
 
   createHierarchicalColumns(columnMapping: any): ColDef[] {
-    const columns: ColDef[] = [];
+    const columns: ExtendedColDef[] = [];
 
     // Checkbox column for row selection - only column with checkboxes
     // columns.push({
@@ -395,6 +396,7 @@ export class App implements OnInit, OnDestroy {
       filter: true,
       checkboxSelection: false,
       headerCheckboxSelection: false,
+      excludeFromExport: true, // Exclude this column from Excel export
       cellRenderer: (params: any) => {
         if (params.data.isGroupHeader) {
           return '';
@@ -3274,14 +3276,24 @@ export class App implements OnInit, OnDestroy {
   exportToExcel(): void {
     if (!this.gridApi) return;
 
-    const params = {
-      fileName: `BOM_Export_${new Date().toISOString().split('T')[0]}.xlsx`,
-      onlySelected: false,
-    };
+    // Define columns to exclude from export
+    // You can add field names here or set excludeFromExport: true in column definitions
+    const excludedFields = ['actions']; // Add more field names to exclude here
 
-    // AG Grid Community doesn't have Excel export, so we'll use CSV export
-    // For Excel, we'd need AG Grid Enterprise or a library like xlsx
-    this.gridApi.exportDataAsCsv(params);
+    this.utilService
+      .exportGridToExcel(this.gridApi, {
+        excludedFields,
+        fileName: `BOM_Composer_Export_${new Date().toISOString().split('T')[0]}.xlsx`,
+        sheetName: 'BOM Export',
+        excludeHeaderRows: true,
+      })
+      .then(() => {
+        this.showNotification('Excel file exported successfully', 'success');
+      })
+      .catch((error) => {
+        console.error('Error exporting to Excel:', error);
+        this.showNotification('Error exporting to Excel. Please try again.', 'error');
+      });
   }
 
   disconnectPartFromSku(rowData: any, skuField: string, event?: any): void {
