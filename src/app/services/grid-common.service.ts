@@ -393,7 +393,6 @@ export class GridCommonService {
       theme: 'legacy',
       animateRows: false,
       enableCellTextSelection: true,
-      // TODO: Work on checkbox functionality later
       rowSelection: {
         mode: 'multiRow',
         enableClickSelection: false,
