@@ -24,9 +24,6 @@ export class GridCommonService {
       maxWidth: 300,
       wrapText: false,
       autoHeight: false,
-      // Explicitly disable checkboxes in all columns by default
-      checkboxSelection: false,
-      headerCheckboxSelection: false,
       cellStyle: (params: any) => {
         const baseStyle: any = {
           padding: '8px 12px',

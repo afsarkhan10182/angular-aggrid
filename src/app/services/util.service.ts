@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { GridApi, ColDef } from 'ag-grid-community';
 
-// Extended ColDef interface to include custom properties for export
+// Extended ColDef interface for type safety (custom properties should use context)
 export interface ExtendedColDef extends ColDef {
-  excludeFromExport?: boolean;
+  // Custom properties should be placed in context property
 }
 
 @Injectable({
@@ -263,8 +263,9 @@ export class UtilService {
             // Exclude if field is in the excluded list
             if (excludedFields.includes(field)) return false;
 
-            // Exclude if column definition has excludeFromExport property set to true
-            if ((colDef as ExtendedColDef).excludeFromExport === true) return false;
+            // Exclude if column definition has excludeFromExport in context set to true
+            const colContext = colDef.context as any;
+            if (colContext?.excludeFromExport === true) return false;
 
             return true;
           })

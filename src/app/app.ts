@@ -360,9 +360,9 @@ export class App implements OnInit, OnDestroy {
       resizable: false,
       sortable: false,
       filter: true,
-      checkboxSelection: false,
-      headerCheckboxSelection: false,
-      excludeFromExport: true, // Exclude this column from Excel export
+      context: {
+        excludeFromExport: true, // Exclude this column from Excel export
+      },
       cellRenderer: (params: any) => {
         if (params.data.isGroupHeader) {
           return '';
@@ -401,8 +401,6 @@ export class App implements OnInit, OnDestroy {
       pinned: 'left',
       sortable: false,
       filter: true,
-      checkboxSelection: false,
-      headerCheckboxSelection: false,
       tooltipValueGetter: (params: any) => {
         if (!params.data) return null;
         if (params.data.isSectionHeader) {
@@ -444,8 +442,6 @@ export class App implements OnInit, OnDestroy {
           width: 180,
           minWidth: 140,
           sortable: true,
-          checkboxSelection: false,
-          headerCheckboxSelection: false,
           cellRenderer: (params: any) => {
             if (
               params.data.isSectionHeader ||
@@ -484,8 +480,6 @@ export class App implements OnInit, OnDestroy {
         width: 150,
         minWidth: 100,
         sortable: true,
-        checkboxSelection: false,
-        headerCheckboxSelection: false,
         cellRenderer: (params: any) => {
           if (
             params.data.isSectionHeader ||
@@ -759,8 +753,6 @@ export class App implements OnInit, OnDestroy {
         resizable: true,
         suppressSizeToFit: true,
         suppressAutoSize: true,
-        checkboxSelection: false,
-        headerCheckboxSelection: false,
         headerClass: index === 0 ? 'first-sku-column-header' : '',
         cellClass: index === 0 ? 'first-sku-column-cell' : '',
         cellRenderer: (params: any) => {
