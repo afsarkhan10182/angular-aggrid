@@ -107,8 +107,8 @@
     <div *ngIf="massEditMode" class="mass-edit-panel">
       <div class="mass-edit-header">
         <h4>Mass Edit ({{ selectedRows.size }} row(s) selected)</h4>
-        <button (click)="closeMassEditMode()" class="close-mass-edit-btn">
-          <i class="fas fa-times"></i>
+        <button (click)="closeMassEditMode()" class="close-mass-edit-btn" title="Close">
+          <span class="close-icon">×</span>
         </button>
       </div>
       <div class="mass-edit-fields">
@@ -137,6 +137,7 @@
             [(ngModel)]="massEditQuantity"
             class="mass-edit-input"
             min="0"
+            step="any"
             placeholder="Enter quantity"
           />
         </div>
@@ -173,6 +174,7 @@
             [rowData]="displayData"
             (gridReady)="onGridReady($event)"
             (cellClicked)="onCellClicked($event)"
+            (selectionChanged)="onSelectionChanged($event)"
           >
           </ag-grid-angular>
         </div>

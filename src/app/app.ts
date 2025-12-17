@@ -349,39 +349,39 @@ export class App implements OnInit, OnDestroy {
     const columns: ColDef[] = [];
 
     // Checkbox column for row selection - only column with checkboxes
-    columns.push({
-      headerName: '',
-      field: 'checkbox',
-      colId: 'checkbox',
-      width: 50,
-      minWidth: 50,
-      maxWidth: 50,
-      pinned: 'left',
-      resizable: false,
-      sortable: false,
-      filter: false,
-      checkboxSelection: (params: any) => {
-        return (
-          params.data &&
-          !params.data.isSectionHeader &&
-          !params.data.isGroupHeader &&
-          !params.data.isMaterialHeader &&
-          !params.data.isBranchHeader
-        );
-      },
-      headerCheckboxSelection: true,
-      headerCheckboxSelectionFilteredOnly: true,
-      cellStyle: {
-        textAlign: 'center',
-        padding: '4px',
-        borderRight: '1px solid #e2e8f0',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      },
-      headerClass: 'checkbox-column-header',
-      cellClass: 'checkbox-column-cell',
-    });
+    // columns.push({
+    //   headerName: '',
+    //   field: 'checkbox',
+    //   colId: 'checkbox',
+    //   width: 50,
+    //   minWidth: 50,
+    //   maxWidth: 50,
+    //   pinned: 'left',
+    //   resizable: false,
+    //   sortable: false,
+    //   filter: false,
+    //   checkboxSelection: (params: any) => {
+    //     return (
+    //       params.data &&
+    //       !params.data.isSectionHeader &&
+    //       !params.data.isGroupHeader &&
+    //       !params.data.isMaterialHeader &&
+    //       !params.data.isBranchHeader
+    //     );
+    //   },
+    //   headerCheckboxSelection: true,
+    //   headerCheckboxSelectionFilteredOnly: true,
+    //   cellStyle: {
+    //     textAlign: 'center',
+    //     padding: '4px',
+    //     borderRight: '1px solid #e2e8f0',
+    //     display: 'flex',
+    //     alignItems: 'center',
+    //     justifyContent: 'center',
+    //   },
+    //   headerClass: 'checkbox-column-header',
+    //   cellClass: 'checkbox-column-cell',
+    // });
 
     columns.push({
       headerName: '',
@@ -2967,9 +2967,10 @@ export class App implements OnInit, OnDestroy {
         this.selectedRows.add(node.data);
       }
     });
-    this.massEditMode = this.selectedRows.size > 0;
+    // Show mass edit only when more than 1 checkbox is selected
+    this.massEditMode = this.selectedRows.size > 1;
 
-    if (this.massEditMode && this.selectedRows.size > 0) {
+    if (this.massEditMode && this.selectedRows.size > 1) {
       // Populate mass edit fields with common values if all rows have the same value
       this.populateMassEditFields(Array.from(this.selectedRows));
     } else {
@@ -3057,7 +3058,32 @@ export class App implements OnInit, OnDestroy {
 
     const selectedNodes = this.gridApi.getSelectedNodes();
     const nodesToUpdate: any[] = [];
-    const columnsToUpdate: string[] = [];
+    const columnsToUpdate: Set<string> = new Set();
+
+    // Get all column definitions to find the correct field names
+    const columnFields = new Set<string>();
+
+    // First, try to get from grid API columns
+    const allColumns = this.gridApi.getColumns();
+    if (allColumns) {
+      allColumns.forEach((col: any) => {
+        if (col.getColId && col.getColId() !== 'checkbox' && col.getColId() !== 'actions') {
+          columnFields.add(col.getColId());
+        }
+      });
+    }
+
+    // Also check columnDefs as fallback (includes hidden columns)
+    if (this.columnDefs && this.columnDefs.length > 0) {
+      this.columnDefs.forEach((colDef: any) => {
+        if (colDef.field && colDef.field !== 'checkbox' && colDef.field !== 'actions') {
+          columnFields.add(colDef.field);
+        }
+        if (colDef.colId && colDef.colId !== 'checkbox' && colDef.colId !== 'actions') {
+          columnFields.add(colDef.colId);
+        }
+      });
+    }
 
     selectedNodes.forEach((node: any) => {
       if (!node.data) return;
@@ -3065,70 +3091,176 @@ export class App implements OnInit, OnDestroy {
       const rowData = node.data;
       let hasChanges = false;
 
-      // Update start date
+      // Update start date - check which field exists in the grid
       if (this.massEditStartDate) {
         const formattedDate = this.gridCommonService.formatDateToMMDDYYYY(this.massEditStartDate);
         const startDateFields = ['bomLinkStartDate', 'startDate'];
+
+        // Find which field exists in the column definitions
+        let targetField: string | null = null;
         for (const field of startDateFields) {
-          if (rowData.hasOwnProperty(field) || field === 'startDate') {
-            if (rowData[field] !== formattedDate) {
-              rowData[field] = formattedDate;
-              node.setDataValue(field, formattedDate);
-              if (!columnsToUpdate.includes(field)) columnsToUpdate.push(field);
-              hasChanges = true;
-            }
-            break; // Only update one field
+          if (columnFields.has(field)) {
+            targetField = field;
+            break;
           }
+        }
+
+        // If no column found, try to use the field that exists in rowData
+        if (!targetField) {
+          for (const field of startDateFields) {
+            if (rowData.hasOwnProperty(field)) {
+              targetField = field;
+              break;
+            }
+          }
+        }
+
+        // Default to startDate if nothing found
+        if (!targetField) {
+          targetField = 'startDate';
+        }
+
+        // Update the value
+        const currentValue = rowData[targetField] || '';
+        if (currentValue !== formattedDate) {
+          rowData[targetField] = formattedDate;
+          node.setDataValue(targetField, formattedDate);
+          columnsToUpdate.add(targetField);
+          hasChanges = true;
         }
       }
 
-      // Update end date
+      // Update end date - check which field exists in the grid
       if (this.massEditEndDate) {
         const formattedDate = this.gridCommonService.formatDateToMMDDYYYY(this.massEditEndDate);
         const endDateFields = ['bomLinkEndDate', 'endDate'];
+
+        // Find which field exists in the column definitions
+        let targetField: string | null = null;
         for (const field of endDateFields) {
-          if (rowData.hasOwnProperty(field) || field === 'endDate') {
-            if (rowData[field] !== formattedDate) {
-              rowData[field] = formattedDate;
-              node.setDataValue(field, formattedDate);
-              if (!columnsToUpdate.includes(field)) columnsToUpdate.push(field);
-              hasChanges = true;
-            }
-            break; // Only update one field
+          if (columnFields.has(field)) {
+            targetField = field;
+            break;
           }
+        }
+
+        // If no column found, try to use the field that exists in rowData
+        if (!targetField) {
+          for (const field of endDateFields) {
+            if (rowData.hasOwnProperty(field)) {
+              targetField = field;
+              break;
+            }
+          }
+        }
+
+        // Default to endDate if nothing found
+        if (!targetField) {
+          targetField = 'endDate';
+        }
+
+        // Update the value
+        const currentValue = rowData[targetField] || '';
+        if (currentValue !== formattedDate) {
+          rowData[targetField] = formattedDate;
+          node.setDataValue(targetField, formattedDate);
+          columnsToUpdate.add(targetField);
+          hasChanges = true;
         }
       }
 
-      // Update quantity
+      // Update quantity - check which field exists in the grid
       if (this.massEditQuantity !== null && this.massEditQuantity !== undefined) {
         const qtyFields = ['qty', 'quantity'];
+
+        // Find which field exists in the column definitions
+        let targetField: string | null = null;
         for (const field of qtyFields) {
-          if (rowData.hasOwnProperty(field) || field === 'qty') {
-            if (rowData[field] !== this.massEditQuantity) {
-              rowData[field] = this.massEditQuantity;
-              node.setDataValue(field, this.massEditQuantity);
-              if (!columnsToUpdate.includes(field)) columnsToUpdate.push(field);
-              hasChanges = true;
-            }
-            break; // Only update one field
+          if (columnFields.has(field)) {
+            targetField = field;
+            break;
           }
+        }
+
+        // If no column found, try to use the field that exists in rowData
+        if (!targetField) {
+          for (const field of qtyFields) {
+            if (rowData.hasOwnProperty(field)) {
+              targetField = field;
+              break;
+            }
+          }
+        }
+
+        // Default to qty if nothing found
+        if (!targetField) {
+          targetField = 'qty';
+        }
+
+        // Update the value
+        const currentValue = rowData[targetField];
+        if (currentValue !== this.massEditQuantity) {
+          rowData[targetField] = this.massEditQuantity;
+          node.setDataValue(targetField, this.massEditQuantity);
+          columnsToUpdate.add(targetField);
+          hasChanges = true;
         }
       }
 
       if (hasChanges) {
-        const rowId = rowData.newRowId || rowData.partNumber;
+        // Use consistent rowId matching trackFieldChange logic: partNumber || part || newRowId
+        const rowId = rowData.partNumber || rowData.part || rowData.newRowId;
         if (rowId) {
           this.editedRows.add(rowId);
+
+          // Track which specific fields were edited (required for save payload)
+          if (!this.editedFields.has(rowId)) {
+            this.editedFields.set(rowId, new Set<string>());
+          }
+          const editedFieldsForRow = this.editedFields.get(rowId)!;
+
+          // Track start date field
+          if (this.massEditStartDate) {
+            const startDateFields = ['bomLinkStartDate', 'startDate'];
+            for (const field of startDateFields) {
+              if (columnFields.has(field) || rowData.hasOwnProperty(field)) {
+                editedFieldsForRow.add(field);
+                break;
+              }
+            }
+          }
+
+          // Track end date field
+          if (this.massEditEndDate) {
+            const endDateFields = ['bomLinkEndDate', 'endDate'];
+            for (const field of endDateFields) {
+              if (columnFields.has(field) || rowData.hasOwnProperty(field)) {
+                editedFieldsForRow.add(field);
+                break;
+              }
+            }
+          }
+
+          // Track quantity field
+          if (this.massEditQuantity !== null && this.massEditQuantity !== undefined) {
+            const qtyFields = ['qty', 'quantity'];
+            for (const field of qtyFields) {
+              if (columnFields.has(field) || rowData.hasOwnProperty(field)) {
+                editedFieldsForRow.add(field);
+                break;
+              }
+            }
+          }
         }
         nodesToUpdate.push(node);
       }
     });
 
     // Refresh only affected cells to avoid flicker
-    if (nodesToUpdate.length > 0 && columnsToUpdate.length > 0) {
+    if (nodesToUpdate.length > 0 && columnsToUpdate.size > 0) {
       this.gridApi.refreshCells({
         rowNodes: nodesToUpdate,
-        columns: columnsToUpdate,
+        columns: Array.from(columnsToUpdate),
         force: true,
       });
     }

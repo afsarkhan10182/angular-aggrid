@@ -390,20 +390,21 @@ export class GridCommonService {
       theme: 'legacy',
       animateRows: false,
       enableCellTextSelection: true,
-      rowSelection: {
-        mode: 'multiRow',
-        enableClickSelection: false,
-        checkboxes: false,
-        isRowSelectable: (params) => {
-          return (
-            params.data &&
-            !params.data.isSectionHeader &&
-            !params.data.isGroupHeader &&
-            !params.data.isMaterialHeader &&
-            !params.data.isBranchHeader
-          );
-        },
-      },
+      // TODO: Work on checkbox functionality later
+      // rowSelection: {
+      //   mode: 'multiRow',
+      //   enableClickSelection: false,
+      //   checkboxes: true,
+      //   isRowSelectable: (params) => {
+      //     return (
+      //       params.data &&
+      //       !params.data.isSectionHeader &&
+      //       !params.data.isGroupHeader &&
+      //       !params.data.isMaterialHeader &&
+      //       !params.data.isBranchHeader
+      //     );
+      //   },
+      // },
       suppressColumnVirtualisation: false,
       suppressHorizontalScroll: false,
       enableCharts: false,
