@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { GridApi, ColDef } from 'ag-grid-community';
-import * as XLSX from 'xlsx';
 
 // Extended ColDef interface to include custom properties for export
 export interface ExtendedColDef extends ColDef {
@@ -218,6 +217,7 @@ export class UtilService {
 
   /**
    * Export grid data to Excel file
+   * Uses dynamic import to lazy-load xlsx library, reducing initial bundle size
    * @param gridApi - AG Grid API instance
    * @param options - Export options
    * @param options.excludedFields - Array of field names to exclude from export
@@ -235,7 +235,7 @@ export class UtilService {
       excludeHeaderRows?: boolean;
     } = {}
   ): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       try {
         const {
           excludedFields = ['actions'],
@@ -332,6 +332,9 @@ export class UtilService {
           });
           excelData.push(rowDataArray);
         });
+
+        // Dynamically import xlsx library only when needed (reduces initial bundle size)
+        const XLSX = await import('xlsx');
 
         // Create workbook and worksheet
         const worksheet = XLSX.utils.aoa_to_sheet(excelData);
