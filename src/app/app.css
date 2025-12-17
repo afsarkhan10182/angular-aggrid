@@ -635,37 +635,166 @@
   background: #dc2626 !important;
 }
 
-/* Hide checkboxes in all columns except the checkbox column */
-.ag-header-cell:not([col-id='checkbox']) .ag-selection-checkbox,
-.ag-header-cell:not([col-id='checkbox']) .ag-checkbox,
-.ag-header-cell:not([col-id='checkbox']) input[type='checkbox'],
-.ag-header-cell:not([col-id='checkbox']) .ag-checkbox-input-wrapper {
+/* Hide checkboxes in ALL columns EXCEPT the checkbox column */
+/* Use :not() selector to exclude checkbox column */
+.ag-header-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-header)
+  .ag-selection-checkbox,
+.ag-header-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-header)
+  .ag-checkbox,
+.ag-header-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-header)
+  input[type='checkbox'],
+.ag-header-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-header)
+  .ag-checkbox-input-wrapper,
+.ag-header-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-header)
+  .ag-checkbox-input,
+.ag-header-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-header)
+  .ag-selection-checkbox-input,
+.ag-header-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-header)
+  label[class*='checkbox'],
+.ag-header-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-header)
+  .ag-icon-checkbox-checked,
+.ag-header-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-header)
+  .ag-icon-checkbox-unchecked,
+.ag-header-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-header)
+  .ag-icon-checkbox-indeterminate,
+.ag-header-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-header)
+  [class*='ag-selection-checkbox'],
+.ag-header-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-header)
+  [class*='ag-checkbox']:not(.ag-checkbox-input-wrapper),
+.ag-header-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-header)
+  [class*='checkbox'],
+.ag-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-cell)
+  .ag-selection-checkbox,
+.ag-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-cell)
+  .ag-checkbox,
+.ag-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-cell)
+  input[type='checkbox'],
+.ag-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-cell)
+  .ag-checkbox-input-wrapper,
+.ag-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-cell)
+  .ag-checkbox-input,
+.ag-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-cell)
+  .ag-selection-checkbox-input,
+.ag-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-cell)
+  label[class*='checkbox'],
+.ag-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-cell)
+  .ag-icon-checkbox-checked,
+.ag-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-cell)
+  .ag-icon-checkbox-unchecked,
+.ag-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-cell)
+  .ag-icon-checkbox-indeterminate,
+.ag-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-cell)
+  [class*='ag-selection-checkbox'],
+.ag-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-cell)
+  [class*='ag-checkbox']:not(.ag-checkbox-input-wrapper),
+.ag-cell:not([col-id='checkbox']):not([data-col-id='checkbox']):not(.checkbox-column-cell)
+  [class*='checkbox'] {
   display: none !important;
   visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+  clip: rect(0, 0, 0, 0) !important;
 }
 
-.ag-cell:not([col-id='checkbox']) .ag-selection-checkbox,
-.ag-cell:not([col-id='checkbox']) .ag-checkbox,
-.ag-cell:not([col-id='checkbox']) input[type='checkbox'],
-.ag-cell:not([col-id='checkbox']) .ag-checkbox-input-wrapper {
+/* Specifically hide checkboxes in Feature column - multiple selector approaches */
+.ag-header-cell[col-id='bomLinkFeature'],
+.ag-header-cell[data-col-id='bomLinkFeature'],
+.ag-header-cell[col-id='bomLinkFeature'] *,
+.ag-header-cell[data-col-id='bomLinkFeature'] * {
+  /* Target all checkbox-related elements */
+}
+
+.ag-header-cell[col-id='bomLinkFeature'] .ag-selection-checkbox,
+.ag-header-cell[col-id='bomLinkFeature'] .ag-checkbox,
+.ag-header-cell[col-id='bomLinkFeature'] input[type='checkbox'],
+.ag-header-cell[col-id='bomLinkFeature'] .ag-checkbox-input-wrapper,
+.ag-header-cell[col-id='bomLinkFeature'] .ag-checkbox-input,
+.ag-header-cell[col-id='bomLinkFeature'] .ag-selection-checkbox-input,
+.ag-header-cell[data-col-id='bomLinkFeature'] .ag-selection-checkbox,
+.ag-header-cell[data-col-id='bomLinkFeature'] .ag-checkbox,
+.ag-header-cell[data-col-id='bomLinkFeature'] input[type='checkbox'],
+.ag-header-cell[data-col-id='bomLinkFeature'] .ag-checkbox-input-wrapper,
+.ag-header-cell[data-col-id='bomLinkFeature'] .ag-checkbox-input,
+.ag-header-cell[data-col-id='bomLinkFeature'] .ag-selection-checkbox-input,
+.ag-cell[col-id='bomLinkFeature'] .ag-selection-checkbox,
+.ag-cell[col-id='bomLinkFeature'] .ag-checkbox,
+.ag-cell[col-id='bomLinkFeature'] input[type='checkbox'],
+.ag-cell[col-id='bomLinkFeature'] .ag-checkbox-input-wrapper,
+.ag-cell[col-id='bomLinkFeature'] .ag-checkbox-input,
+.ag-cell[col-id='bomLinkFeature'] .ag-selection-checkbox-input,
+.ag-cell[data-col-id='bomLinkFeature'] .ag-selection-checkbox,
+.ag-cell[data-col-id='bomLinkFeature'] .ag-checkbox,
+.ag-cell[data-col-id='bomLinkFeature'] input[type='checkbox'],
+.ag-cell[data-col-id='bomLinkFeature'] .ag-checkbox-input-wrapper,
+.ag-cell[data-col-id='bomLinkFeature'] .ag-checkbox-input,
+.ag-cell[data-col-id='bomLinkFeature'] .ag-selection-checkbox-input {
   display: none !important;
   visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
 }
 
-/* Ensure checkbox column checkboxes are visible and clickable */
+/* STEP 2: Show checkboxes ONLY in the checkbox column - MUST come after universal hide rule */
+/* Use higher specificity selectors to override the universal hide rule */
 .ag-header-cell[col-id='checkbox'] .ag-selection-checkbox,
 .ag-header-cell[col-id='checkbox'] .ag-checkbox,
 .ag-header-cell[col-id='checkbox'] input[type='checkbox'],
 .ag-header-cell[col-id='checkbox'] .ag-checkbox-input-wrapper,
+.ag-header-cell[col-id='checkbox'] .ag-checkbox-input,
+.ag-header-cell[col-id='checkbox'] .ag-selection-checkbox-input,
+.ag-header-cell[data-col-id='checkbox'] .ag-selection-checkbox,
+.ag-header-cell[data-col-id='checkbox'] .ag-checkbox,
+.ag-header-cell[data-col-id='checkbox'] input[type='checkbox'],
+.ag-header-cell[data-col-id='checkbox'] .ag-checkbox-input-wrapper,
+.ag-header-cell[data-col-id='checkbox'] .ag-checkbox-input,
+.ag-header-cell[data-col-id='checkbox'] .ag-selection-checkbox-input,
+.ag-header-cell.checkbox-column-header .ag-selection-checkbox,
+.ag-header-cell.checkbox-column-header .ag-checkbox,
+.ag-header-cell.checkbox-column-header input[type='checkbox'],
+.ag-header-cell.checkbox-column-header .ag-checkbox-input-wrapper,
+.ag-header-cell.checkbox-column-header .ag-checkbox-input,
+.ag-header-cell.checkbox-column-header .ag-selection-checkbox-input,
 .ag-cell[col-id='checkbox'] .ag-selection-checkbox,
 .ag-cell[col-id='checkbox'] .ag-checkbox,
 .ag-cell[col-id='checkbox'] input[type='checkbox'],
-.ag-cell[col-id='checkbox'] .ag-checkbox-input-wrapper {
+.ag-cell[col-id='checkbox'] .ag-checkbox-input-wrapper,
+.ag-cell[col-id='checkbox'] .ag-checkbox-input,
+.ag-cell[col-id='checkbox'] .ag-selection-checkbox-input,
+.ag-cell[data-col-id='checkbox'] .ag-selection-checkbox,
+.ag-cell[data-col-id='checkbox'] .ag-checkbox,
+.ag-cell[data-col-id='checkbox'] input[type='checkbox'],
+.ag-cell[data-col-id='checkbox'] .ag-checkbox-input-wrapper,
+.ag-cell[data-col-id='checkbox'] .ag-checkbox-input,
+.ag-cell[data-col-id='checkbox'] .ag-selection-checkbox-input,
+.ag-cell.checkbox-column-cell .ag-selection-checkbox,
+.ag-cell.checkbox-column-cell .ag-checkbox,
+.ag-cell.checkbox-column-cell input[type='checkbox'],
+.ag-cell.checkbox-column-cell .ag-checkbox-input-wrapper,
+.ag-cell.checkbox-column-cell .ag-checkbox-input,
+.ag-cell.checkbox-column-cell .ag-selection-checkbox-input {
   display: block !important;
   visibility: visible !important;
   pointer-events: auto !important;
   cursor: pointer !important;
   opacity: 1 !important;
+  width: auto !important;
+  height: auto !important;
+  margin: auto !important;
+  padding: auto !important;
+  position: static !important;
+  left: auto !important;
 }
 
 /* Additional fix for AG Grid checkbox rendering */

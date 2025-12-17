@@ -24,6 +24,9 @@ export class GridCommonService {
       maxWidth: 300,
       wrapText: false,
       autoHeight: false,
+      // Explicitly disable checkboxes in all columns by default
+      checkboxSelection: false,
+      headerCheckboxSelection: false,
       cellStyle: (params: any) => {
         const baseStyle: any = {
           padding: '8px 12px',
@@ -391,20 +394,20 @@ export class GridCommonService {
       animateRows: false,
       enableCellTextSelection: true,
       // TODO: Work on checkbox functionality later
-      // rowSelection: {
-      //   mode: 'multiRow',
-      //   enableClickSelection: false,
-      //   checkboxes: true,
-      //   isRowSelectable: (params) => {
-      //     return (
-      //       params.data &&
-      //       !params.data.isSectionHeader &&
-      //       !params.data.isGroupHeader &&
-      //       !params.data.isMaterialHeader &&
-      //       !params.data.isBranchHeader
-      //     );
-      //   },
-      // },
+      rowSelection: {
+        mode: 'multiRow',
+        enableClickSelection: false,
+        checkboxes: true,
+        isRowSelectable: (params) => {
+          return (
+            params.data &&
+            !params.data.isSectionHeader &&
+            !params.data.isGroupHeader &&
+            !params.data.isMaterialHeader &&
+            !params.data.isBranchHeader
+          );
+        },
+      },
       suppressColumnVirtualisation: false,
       suppressHorizontalScroll: false,
       enableCharts: false,

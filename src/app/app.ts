@@ -350,43 +350,44 @@ export class App implements OnInit, OnDestroy {
     const columns: ExtendedColDef[] = [];
 
     // Checkbox column for row selection - only column with checkboxes
-    // columns.push({
-    //   headerName: '',
-    //   field: 'checkbox',
-    //   colId: 'checkbox',
-    //   width: 50,
-    //   minWidth: 50,
-    //   maxWidth: 50,
-    //   pinned: 'left',
-    //   resizable: false,
-    //   sortable: false,
-    //   filter: false,
-    //   checkboxSelection: (params: any) => {
-    //     return (
-    //       params.data &&
-    //       !params.data.isSectionHeader &&
-    //       !params.data.isGroupHeader &&
-    //       !params.data.isMaterialHeader &&
-    //       !params.data.isBranchHeader
-    //     );
-    //   },
-    //   headerCheckboxSelection: true,
-    //   headerCheckboxSelectionFilteredOnly: true,
-    //   cellStyle: {
-    //     textAlign: 'center',
-    //     padding: '4px',
-    //     borderRight: '1px solid #e2e8f0',
-    //     display: 'flex',
-    //     alignItems: 'center',
-    //     justifyContent: 'center',
-    //   },
-    //   headerClass: 'checkbox-column-header',
-    //   cellClass: 'checkbox-column-cell',
-    // });
+    columns.push({
+      headerName: '',
+      field: 'checkbox',
+      colId: 'checkbox',
+      width: 50,
+      minWidth: 50,
+      maxWidth: 50,
+      pinned: 'left',
+      resizable: false,
+      sortable: false,
+      filter: false,
+      checkboxSelection: (params: any) => {
+        return (
+          params.data &&
+          !params.data.isSectionHeader &&
+          !params.data.isGroupHeader &&
+          !params.data.isMaterialHeader &&
+          !params.data.isBranchHeader
+        );
+      },
+      headerCheckboxSelection: true,
+      headerCheckboxSelectionFilteredOnly: true,
+      cellStyle: {
+        textAlign: 'center',
+        padding: '4px',
+        borderRight: '1px solid #e2e8f0',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      headerClass: 'checkbox-column-header',
+      cellClass: 'checkbox-column-cell',
+    });
 
     columns.push({
       headerName: '',
       field: 'actions',
+      colId: 'actions',
       width: 40,
       minWidth: 40,
       maxWidth: 40,
@@ -429,9 +430,10 @@ export class App implements OnInit, OnDestroy {
     columns.push({
       headerName: 'Feature',
       field: 'bomLinkFeature',
+      colId: 'bomLinkFeature',
       width: 150,
       minWidth: 150,
-      pinned: 'left',
+      // pinned: 'left',
       sortable: false,
       filter: true,
       checkboxSelection: false,
