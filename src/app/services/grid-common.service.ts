@@ -390,47 +390,47 @@ export class GridCommonService {
       theme: 'legacy',
       animateRows: false,
       enableCellTextSelection: true,
-      rowSelection: {
-        mode: 'multiRow',
-        enableClickSelection: false,
-        checkboxes: (params: any) => {
-          const data = params?.data;
-          if (!data) return false;
+      // rowSelection: {
+      //   mode: 'multiRow',
+      //   enableClickSelection: false,
+      //   checkboxes: (params: any) => {
+      //     const data = params?.data;
+      //     if (!data) return false;
 
-          // Never show checkboxes on header/group rows
-          if (
-            data.isSectionHeader ||
-            data.isGroupHeader ||
-            data.isMaterialHeader ||
-            data.isBranchHeader
-          ) {
-            return false;
-          }
+      //     // Never show checkboxes on header/group rows
+      //     if (
+      //       data.isSectionHeader ||
+      //       data.isGroupHeader ||
+      //       data.isMaterialHeader ||
+      //       data.isBranchHeader
+      //     ) {
+      //       return false;
+      //     }
 
-          // Hide checkbox for rows that don't belong to any section / have no content
-          const sectionEmpty =
-            data.section === undefined ||
-            data.section === null ||
-            (typeof data.section === 'string' && data.section.trim() === '');
+      //     // Hide checkbox for rows that don't belong to any section / have no content
+      //     const sectionEmpty =
+      //       data.section === undefined ||
+      //       data.section === null ||
+      //       (typeof data.section === 'string' && data.section.trim() === '');
 
-          const children = (data as any).children;
-          const hasNoChildren = Array.isArray(children) && children.length === 0;
+      //     const children = (data as any).children;
+      //     const hasNoChildren = Array.isArray(children) && children.length === 0;
 
-          // If a row has no section AND no children, treat it as an "empty" row
-          if (sectionEmpty && hasNoChildren) return false;
+      //     // If a row has no section AND no children, treat it as an "empty" row
+      //     if (sectionEmpty && hasNoChildren) return false;
 
-          return true;
-        },
-        isRowSelectable: (params) => {
-          return (
-            params.data &&
-            !params.data.isSectionHeader &&
-            !params.data.isGroupHeader &&
-            !params.data.isMaterialHeader &&
-            !params.data.isBranchHeader
-          );
-        },
-      },
+      //     return true;
+      //   },
+      //   isRowSelectable: (params) => {
+      //     return (
+      //       params.data &&
+      //       !params.data.isSectionHeader &&
+      //       !params.data.isGroupHeader &&
+      //       !params.data.isMaterialHeader &&
+      //       !params.data.isBranchHeader
+      //     );
+      //   },
+      // },
       suppressColumnVirtualisation: false,
       suppressHorizontalScroll: false,
       enableCharts: false,
@@ -492,14 +492,31 @@ export class GridCommonService {
         if (params.data && params.data.isSubRow) {
           classes.push('subrow');
         }
-        // Highlight edited rows
-        if (
-          componentInstance.editedRows &&
-          params.data &&
-          (componentInstance.editedRows.has(params.data.partNumber) ||
-            componentInstance.editedRows.has(params.data.newRowId))
-        ) {
-          classes.push('row-edited');
+        // Highlight edited rows (persist highlight across scroll/re-render)
+        // IMPORTANT: editedRows may store different keys depending on row type:
+        // materialKey (existing), newRowId (new row), partNumber/part (fallback).
+        if (componentInstance.editedRows && params.data) {
+          const candidates: any[] = [
+            params.data.materialKey,
+            params.data.newRowId,
+            params.data.partNumber,
+            params.data.part,
+            params.data.section && (params.data.partNumber || params.data.part)
+              ? `${params.data.section}::${params.data.partNumber || params.data.part}`
+              : null,
+          ].filter((v) => v !== null && v !== undefined && `${v}`.trim() !== '');
+
+          const isEdited = candidates.some((id) => {
+            return (
+              componentInstance.editedRows.has(id) ||
+              componentInstance.editedRows.has(`${id}`) ||
+              componentInstance.editedRows.has(Number(id))
+            );
+          });
+
+          if (isEdited) {
+            classes.push('row-edited');
+          }
         }
 
         // Check for validation errors
@@ -538,6 +555,16 @@ export class GridCommonService {
             componentInstance.editedRows,
             componentInstance.editedFields
           );
+        }
+
+        // Ensure rowClass updates immediately (AG Grid doesn't always recompute getRowClass on refreshCells)
+        if (params.data && params.data.isNewRow) {
+          params.api.redrawRows({ rowNodes: [params.node] });
+        }
+
+        // Live per-row validation for new rows (show row-specific errors before Save)
+        if (componentInstance.validateRowLive && params.data && params.data.isNewRow) {
+          componentInstance.validateRowLive(params.data);
         }
 
         if (params.data && params.data.isNewRow) {

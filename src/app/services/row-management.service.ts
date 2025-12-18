@@ -263,25 +263,36 @@ export class RowManagementService {
     editedRows: Set<string | number>,
     editedFields?: Map<string | number, Set<string>>
   ): void {
-    let valuesAreSame = false;
-    if (params.oldValue instanceof Date && params.newValue instanceof Date) {
-      valuesAreSame = params.oldValue.getTime() === params.newValue.getTime();
-    } else {
-      valuesAreSame = params.oldValue === params.newValue;
-    }
+    const normalize = (v: any) => {
+      // Treat null/undefined/whitespace as the same "empty" value
+      if (v === null || v === undefined) return '';
+      if (typeof v === 'string') return v.trim();
+      if (v instanceof Date) return v.getTime();
+      return v;
+    };
+
+    const valuesAreSame = normalize(params.oldValue) === normalize(params.newValue);
 
     if (valuesAreSame) {
       return;
     }
 
-    const partId = params.data.partNumber || params.data.part || params.data.newRowId;
+    // Use a truly unique row key for edit tracking.
+    // NOTE: partNumber/part can repeat (duplicates). To avoid wrong highlight,
+    // also track a composite key using section when we don't have a unique id.
+    const partId =
+      params.data.materialKey || params.data.newRowId || params.data.partNumber || params.data.part;
     const fieldName = params.colDef.field;
 
-    if (params.data.isNewRow && fieldName.startsWith('sku')) {
-      return;
-    }
-
     editedRows.add(partId);
+
+    // Extra disambiguation key for duplicate part/partNumber across sections
+    // (keeps existing save logic intact because we still store the original partId).
+    const partValue = params.data.partNumber || params.data.part;
+    const sectionValue = params.data.section;
+    if (!params.data.materialKey && !params.data.newRowId && sectionValue && partValue) {
+      editedRows.add(`${sectionValue}::${partValue}`);
+    }
 
     // Track which specific field was edited
     if (editedFields && partId) {

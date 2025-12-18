@@ -761,21 +761,27 @@
   transform: translateY(-1px);
 }
 
-/* Highlight edited rows */
-.ag-row.row-edited {
+/* -----------------------------------------------------------------------------
+ * Visual highlight for row state (UX)
+ * - Edited (touched/changed, not saved yet): light yellow
+ * - Clean / saved: default AG Grid styling (no highlight)
+ *
+ * AG Grid rows/cells are rendered outside Angular's emulated encapsulation
+ * attributes, so we need ::ng-deep for these styles to apply reliably.
+ * -------------------------------------------------------------------------- */
+:host ::ng-deep .ag-row.row-edited,
+:host ::ng-deep .ag-row.row-edited .ag-cell,
+:host ::ng-deep .ag-row.ag-row-inline-editing,
+:host ::ng-deep .ag-row.ag-row-inline-editing .ag-cell {
+  background-color: #fef3c7 !important; /* light yellow */
+}
+
+/* Fallback (in case encapsulation changes) */
+.ag-row.row-edited,
+.ag-row.row-edited .ag-cell,
+.ag-row.ag-row-inline-editing,
+.ag-row.ag-row-inline-editing .ag-cell {
   background-color: #fef3c7 !important;
-}
-
-.ag-row.row-edited .ag-cell {
-  background-color: #fef3c7 !important;
-}
-
-.ag-row.row-edited:hover {
-  background-color: #fde68a !important;
-}
-
-.ag-row.row-edited:hover .ag-cell {
-  background-color: #fde68a !important;
 }
 
 /* SKU delete button styling */
