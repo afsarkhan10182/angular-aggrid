@@ -138,6 +138,8 @@
   font-size: 12px;
   color: #0f766e;
   flex: 0 0 auto;
+  cursor: pointer;
+  user-select: none;
 }
 
 /* SKU disconnect button in rendered cell HTML */

@@ -1290,6 +1290,17 @@ export class App implements OnInit, OnDestroy {
   }
 
   onCellClicked(event: any): void {
+    // Open Material modal ONLY via the link icon (🔗)
+    // This is the single source of truth for modal opening behavior.
+    const iconTarget = event.event?.target as HTMLElement | undefined;
+    const linkIconEl = iconTarget?.closest?.('.material-link-icon, .direct-link-icon');
+    if (linkIconEl && event.data && !event.data.isNewRow) {
+      event.event?.preventDefault?.();
+      event.event?.stopPropagation?.();
+      this.openMaterialModal(event.data);
+      return;
+    }
+
     if (event.colDef.field === 'bomLinkPart' || event.colDef.field === 'partNumber') {
       event.api.startEditingCell({
         rowIndex: event.rowIndex,
@@ -1419,39 +1430,6 @@ export class App implements OnInit, OnDestroy {
         }
       }
     } else if (event.colDef.field === 'material' || event.colDef.field === 'materialDescription') {
-      // Check if this is a material header or direct row - open modal instead of editing
-      if (
-        event.data &&
-        (event.data.isMaterialHeader || event.data.isDirectRow) &&
-        !event.data.isNewRow
-      ) {
-        // Check for material value in all possible field names
-        // part is the primary field name in the grid
-        const materialValue =
-          event.data?.part ||
-          event.data?.bomLinkPart ||
-          event.data?.partNumber ||
-          event.data?.material ||
-          event.data?.materialKey ||
-          event.data?.materialDescription;
-
-        // Check if we have a part identifier to open modal
-        const hasPartIdentifier =
-          event.data?.part ||
-          event.data?.bomLinkPart ||
-          event.data?.partNumber ||
-          event.data?.material ||
-          event.data?.materialKey;
-
-        if (materialValue && hasPartIdentifier) {
-          // Prevent default editing and open modal instead
-          event.event?.preventDefault?.();
-          event.event?.stopPropagation?.();
-          this.openMaterialModal(event.data);
-          return;
-        }
-      }
-
       // For new rows or when material is empty, allow editing
       if (event.data && event.data.isNewRow) {
         event.api.startEditingCell({

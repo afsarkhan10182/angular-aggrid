@@ -1,100 +1,1226 @@
 {
   "bomPartInfo": [
     {
-      "versionId": "VR:com.lcs.wc.flexbom.FlexBOMPart:573170",
-      "bomMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:573169",
-      "bomName": "MBOM SKU Testing 004",
-      "bomOwnerId": "VR:com.lcs.wc.product.LCSProduct:572161",
-      "bomOwner": "SKU Testing 004",
-      "modifyTimestamp": "2025-12-11 11:06:18.0"
+      "versionId": "VR:com.lcs.wc.flexbom.FlexBOMPart:350063",
+      "bomMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:350062",
+      "bomName": "003 : MBOM",
+      "bomOwnerId": "VR:com.lcs.wc.product.LCSProduct:157232",
+      "bomOwner": "MF3",
+      "modifyTimestamp": "2025-12-18 05:27:00.0"
     }
   ],
   "instances": [
     {
       "bom-link": {
         "quantity": "",
-        "bomLinkFeature": "1400 | Fuselage : Sag Gauge Front",
+        "bomLinkFeature": "234 | Fuselage : 3 Speed Hardware Kit",
         "bomLinkSpecSheetExtra": "No",
         "skus": [
           {
-            "product": "SKU Testing 004",
-            "productId": "VR:com.lcs.wc.product.LCSProduct:572161",
-            "color": "A - BK - Black(TK-0101) (SKU Testing 004)",
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:39-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10034",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
             "destination": "CA",
             "isActive": true,
-            "destinationDimensionId": "573384",
-            "manufacturer": "Diamant Grad GC",
-            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:573169-REV:A-BRANCH:15-SKU:com.lcs.wc.part.LCSPartMaster:573855",
-            "size1": "10",
-            "colorDimensionId": "573855",
-            "sourceDimensionId": "573127",
-            "value": "4243455",
-            "skuId": "10135"
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:39-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10034",
+            "skuId": "100167"
           }
         ],
+        "color": "GY-Brown(9080)",
         "bomLinkEndDate": "",
-        "section": "enumSection001",
-        "materialDescription": "2020RIM",
-        "bomLinkStartDate": "12/12/2025",
-        "supplier": "Diamant Grad GC",
+        "section": "enumSection004",
+        "material": "TIR KND BRE PRO XR 27.5X2.5 BK",
+        "bomLinkStartDate": "",
+        "supplier": "Glory Wheel Enterprise Co. LTD",
         "bomLinkNotes": "",
-        "partNumber": "4243455",
-        "materialColorThirtyCharacterDescription": "",
-        "sectionDisplayName": "Fuselage",
-        "supplierDescription": "",
+        "partNumber": "10034",
+        "sectionDisplayName": "Wheel",
         "bomLinkIncludeInSpecSheet": "",
-        "colorDescription": "Baja Smoke",
         "bomLinkCountryOfOrigin": ""
       }
     },
     {
       "bom-link": {
-        "quantity": "10.0",
-        "bomLinkFeature": "150 | Fuselage : Compliance Label 1",
+        "quantity": "",
+        "bomLinkFeature": "Compliance Label 3",
         "bomLinkSpecSheetExtra": "No",
         "skus": [
           {
-            "product": "SKU Testing 004",
-            "productId": "VR:com.lcs.wc.product.LCSProduct:572161",
-            "color": "A - BK - Black(TK-0101) (SKU Testing 004)",
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:38-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10035",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
             "destination": "CA",
             "isActive": true,
-            "destinationDimensionId": "573384",
-            "manufacturer": "Diamant Grad GC",
-            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:573169-REV:A-BRANCH:7-SKU:com.lcs.wc.part.LCSPartMaster:573855-DESTINATION:com.lcs.wc.product.ProductDestination:573384",
-            "size1": "10",
-            "colorDimensionId": "573855",
-            "sourceDimensionId": "573127",
-            "value": "2020WHEELFT",
-            "skuId": "10135"
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:38-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10035",
+            "skuId": "100167"
           }
         ],
+        "color": "NA-Gold Yellow(990)",
+        "bomLinkEndDate": "",
+        "section": "enumSection004",
+        "material": "TIR KND BRE PRO XR 29X2.50 BK",
+        "bomLinkStartDate": "",
+        "supplier": "Glory Wheel Enterprise Co. LTD",
+        "bomLinkNotes": "",
+        "partNumber": "10035",
+        "sectionDisplayName": "Wheel",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "",
+        "bomLinkFeature": "Derailleur Hanger",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:37-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10036",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:37-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10036",
+            "skuId": "100167"
+          }
+        ],
+        "color": "NA-pink(3234)",
+        "bomLinkEndDate": "",
+        "section": "enumSection004",
+        "material": "TIR KND(I) H2 HCL 700X40C RFL",
+        "bomLinkStartDate": "",
+        "supplier": "Glory Wheel Enterprise Co. LTD",
+        "bomLinkNotes": "",
+        "partNumber": "10036",
+        "sectionDisplayName": "Wheel",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "",
+        "bomLinkFeature": "Storage Door Hardware (Expanding)",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:36-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10028",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:36-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10028",
+            "skuId": "100167"
+          }
+        ],
+        "color": "GY-Brown(9080)",
+        "bomLinkEndDate": "",
+        "section": "enumSection004",
+        "material": "TEST DISC 2025 SAMP",
+        "bomLinkStartDate": "",
+        "supplier": "Hartex Rubber Private Limited",
+        "bomLinkNotes": "",
+        "partNumber": "10028",
+        "sectionDisplayName": "Wheel",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "",
+        "bomLinkFeature": "Framekit Hardware 1",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:35-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10022",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:35-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10022",
+            "skuId": "100167"
+          }
+        ],
+        "color": "NA-Gold Yellow(990)",
+        "bomLinkEndDate": "",
+        "section": "enumSection003",
+        "material": "PEDAL COMBO SPORT XTR",
+        "bomLinkStartDate": "",
+        "supplier": "Glory Wheel Enterprise Co. LTD",
+        "bomLinkNotes": "",
+        "partNumber": "10022",
+        "sectionDisplayName": "Drivetrain",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "",
+        "bomLinkFeature": "Storage Bag 1",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:34-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10052",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:34-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10052",
+            "skuId": "100167"
+          }
+        ],
+        "color": "NA-Gold Yellow(990)",
+        "bomLinkEndDate": "",
+        "section": "enumSection003",
+        "material": "PEDAL COMBO SPORT XTR",
+        "bomLinkStartDate": "",
+        "supplier": "GNC - Giant China-GC",
+        "bomLinkNotes": "",
+        "partNumber": "10052",
+        "sectionDisplayName": "Drivetrain",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "",
+        "bomLinkFeature": "Storage Bag 2",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:33-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10058",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:33-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10058",
+            "skuId": "100167"
+          }
+        ],
+        "color": "NA-Light blue(3244)",
+        "bomLinkEndDate": "",
+        "section": "enumSection003",
+        "material": "PEDAL COMBO SPORT XTR",
+        "bomLinkStartDate": "",
+        "supplier": "Hartex Rubber Private Limited",
+        "bomLinkNotes": "",
+        "partNumber": "10058",
+        "sectionDisplayName": "Drivetrain",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "",
+        "bomLinkFeature": "Frame Hardware 2",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:32-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10021",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:32-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10021",
+            "skuId": "100167"
+          }
+        ],
+        "color": "NA-Gold Yellow(990)",
+        "bomLinkEndDate": "",
+        "section": "enumSection003",
+        "material": "KIT STARTER WRENCH SET",
+        "bomLinkStartDate": "",
+        "supplier": "GNC - Giant China-GC",
+        "bomLinkNotes": "",
+        "partNumber": "10021",
+        "sectionDisplayName": "Drivetrain",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "11",
+        "bomLinkFeature": "Derailleur Hanger Nut",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:31-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677-SIZE1:l-DESTINATION:com.lcs.wc.product.ProductDestination:313799",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10012",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:31-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677-SIZE1:l-DESTINATION:com.lcs.wc.product.ProductDestination:256445",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10012",
+            "skuId": "100167"
+          }
+        ],
+        "color": "MU-LF Green(2324)",
+        "bomLinkEndDate": "",
+        "section": "enumSection002",
+        "material": "KIT STARTER WRENCH SET",
+        "bomLinkStartDate": "12/19/2025",
+        "supplier": "GNC - Giant China-GC",
+        "bomLinkNotes": "",
+        "partNumber": "10012",
+        "sectionDisplayName": "Cockpit",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "",
+        "bomLinkFeature": "Storage Door Hardware (Expanding)",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:9",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10054",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:9",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10054",
+            "skuId": "100167"
+          }
+        ],
+        "color": "NA-pink(3234)",
+        "bomLinkEndDate": "12/11/2025",
+        "section": "enumSection009",
+        "material": "PEDAL COMBO SPORT XTR",
+        "bomLinkStartDate": "11/13/2025",
+        "supplier": "GNC - Giant China-GC",
+        "bomLinkNotes": "",
+        "partNumber": "10054",
+        "sectionDisplayName": "Lighting",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "20",
+        "bomLinkFeature": "Storage Bag 1",
+        "bomLinkSpecSheetExtra": "Yes",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:7-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10027",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:7-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10027",
+            "skuId": "100167"
+          }
+        ],
+        "color": "NA-Gold Yellow(990)",
+        "bomLinkEndDate": "12/18/2025",
+        "section": "enumSection007",
+        "material": "SPOKE SAPIM RACE 14G",
+        "bomLinkStartDate": "11/06/2025",
+        "supplier": "GNC - Giant China-GC",
+        "bomLinkNotes": "",
+        "partNumber": "10027",
+        "sectionDisplayName": "Rack",
+        "bomLinkIncludeInSpecSheet": "Y",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "",
+        "bomLinkFeature": "Frame Hardware",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:29-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677-SIZE1:l-DESTINATION:com.lcs.wc.product.ProductDestination:313799",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10020",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:29-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677-SIZE1:l-DESTINATION:com.lcs.wc.product.ProductDestination:256445",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10020",
+            "skuId": "100167"
+          }
+        ],
+        "color": "NA-Gold Yellow(990)",
+        "bomLinkEndDate": "",
+        "section": "enumSection002",
+        "material": "HANDLEBAR GRIP RACING",
+        "bomLinkStartDate": "12/19/2025",
+        "supplier": "Formula - Hubtec International Limited",
+        "bomLinkNotes": "",
+        "partNumber": "10020",
+        "sectionDisplayName": "Cockpit",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "10",
+        "bomLinkFeature": "Derailleur Hanger Bolt",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:28-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677-SIZE1:l-DESTINATION:com.lcs.wc.product.ProductDestination:313799",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10045",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:28-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677-SIZE1:l-DESTINATION:com.lcs.wc.product.ProductDestination:256445",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10045",
+            "skuId": "100167"
+          }
+        ],
+        "color": "NA-pink(3234)",
+        "bomLinkEndDate": "",
+        "section": "enumSection002",
+        "material": "HANDLEBAR GRIP RACING",
+        "bomLinkStartDate": "12/19/2025",
+        "supplier": "Formula - Hubtec International Limited",
+        "bomLinkNotes": "",
+        "partNumber": "10045",
+        "sectionDisplayName": "Cockpit",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "",
+        "bomLinkFeature": "234 | Fuselage : 3 Speed Hardware Kit",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:24-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "100011",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:24-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "100011",
+            "skuId": "100167"
+          }
+        ],
+        "color": "TL-yellow(yellow)",
+        "bomLinkEndDate": "10/29/2025",
+        "section": "enumSection001",
+        "material": "BEARING SEALED 608Z",
+        "bomLinkStartDate": "10/30/2025",
+        "supplier": "A&J (VIETNAM) CO.LTD",
+        "bomLinkNotes": "",
+        "partNumber": "100011",
+        "sectionDisplayName": "Fuselage",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "2",
+        "bomLinkFeature": "Bom Feature_1",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:55-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677-SIZE1:l-DESTINATION:com.lcs.wc.product.ProductDestination:313799",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "100011",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:55-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677-SIZE1:l-DESTINATION:com.lcs.wc.product.ProductDestination:256445",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "100011",
+            "skuId": "100167"
+          }
+        ],
+        "color": "TL-yellow(yellow)",
+        "bomLinkEndDate": "12/26/2025",
+        "section": "enumSection002",
+        "material": "BEARING SEALED 608Z",
+        "bomLinkStartDate": "12/26/2025",
+        "supplier": "A&J (VIETNAM) CO.LTD",
+        "bomLinkNotes": "",
+        "partNumber": "100011",
+        "sectionDisplayName": "Cockpit",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "11",
+        "bomLinkFeature": "Compliance Label 2 | Fuselage : Accessories",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:54-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677-SIZE1:l-DESTINATION:com.lcs.wc.product.ProductDestination:313799",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10001",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:54-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677-SIZE1:l-DESTINATION:com.lcs.wc.product.ProductDestination:256445",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10001",
+            "skuId": "100167"
+          }
+        ],
+        "color": "RD-red(red)",
+        "bomLinkEndDate": "12/25/2025",
+        "section": "enumSection002",
+        "material": "BEARING SEALED 608Z",
+        "bomLinkStartDate": "12/26/2025",
+        "supplier": "A&J (VIETNAM) CO.LTD",
+        "bomLinkNotes": "",
+        "partNumber": "10001",
+        "sectionDisplayName": "Cockpit",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "11",
+        "bomLinkFeature": "Storage Bag 2",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:49-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677-SIZE1:l-DESTINATION:com.lcs.wc.product.ProductDestination:313799",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10001",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:49-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677-SIZE1:l-DESTINATION:com.lcs.wc.product.ProductDestination:256445",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10001",
+            "skuId": "100167"
+          }
+        ],
+        "color": "RD-red(red)",
         "bomLinkEndDate": "",
         "section": "enumSection001",
-        "materialDescription": "2020WHEELFT",
-        "bomLinkStartDate": "12/18/2025",
-        "supplier": "Diamant Grad GC",
+        "material": "BEARING SEALED 608Z",
+        "bomLinkStartDate": "12/31/2025",
+        "supplier": "A&J (VIETNAM) CO.LTD",
         "bomLinkNotes": "",
-        "partNumber": "2020WHEELFT",
-        "materialColorThirtyCharacterDescription": "",
+        "partNumber": "10001",
         "sectionDisplayName": "Fuselage",
-        "supplierDescription": "",
         "bomLinkIncludeInSpecSheet": "",
-        "colorDescription": "Blue",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "",
+        "bomLinkFeature": "Compliance Label 3",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:46",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10033",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:46",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10033",
+            "skuId": "100167"
+          }
+        ],
+        "color": "TL-yellow(yellow)",
+        "bomLinkEndDate": "",
+        "section": "enumSection014",
+        "material": "TIR ADV PRO 29X2.40",
+        "bomLinkStartDate": "",
+        "supplier": "Hartex Rubber Private Limited",
+        "bomLinkNotes": "",
+        "partNumber": "10033",
+        "sectionDisplayName": "Packaging",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "",
+        "bomLinkFeature": "Bom Feature_1",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:45",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10013",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:45",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10013",
+            "skuId": "100167"
+          }
+        ],
+        "color": "MU-LF Green(2324)",
+        "bomLinkEndDate": "12/19/2025",
+        "section": "enumSection012",
+        "material": "TIR ADV PRO 29X2.40",
+        "bomLinkStartDate": "11/06/2025",
+        "supplier": "Glory Wheel Enterprise Co. LTD",
+        "bomLinkNotes": "",
+        "partNumber": "10013",
+        "sectionDisplayName": "Reflector",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "20",
+        "bomLinkFeature": "Storage Bag 2",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:44-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10024",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:44-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10024",
+            "skuId": "100167"
+          }
+        ],
+        "color": "NA-Light blue(3244)",
+        "bomLinkEndDate": "",
+        "section": "enumSection008",
+        "material": "SPOKE SAPIM RACE 14G",
+        "bomLinkStartDate": "",
+        "supplier": "Glory Wheel Enterprise Co. LTD",
+        "bomLinkNotes": "",
+        "partNumber": "10024",
+        "sectionDisplayName": "Fender",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "",
+        "bomLinkFeature": "Storage Bag 2",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:43",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10061",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:43",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10061",
+            "skuId": "100167"
+          }
+        ],
+        "color": "NA-Gold Yellow(990)",
+        "bomLinkEndDate": "",
+        "section": "enumSection006",
+        "material": "SADDLE COMFORT GEL",
+        "bomLinkStartDate": "",
+        "supplier": "CW Bearing Taiwan Co Limited",
+        "bomLinkNotes": "",
+        "partNumber": "10061",
+        "linkedBom": "1",
+        "sectionDisplayName": "E-System",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "",
+        "bomLinkFeature": "Derailleur Hanger",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:10",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10025",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:10",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10025",
+            "skuId": "100167"
+          }
+        ],
+        "color": "NA-pink(3234)",
+        "bomLinkEndDate": "",
+        "section": "enumSection010",
+        "material": "SPOKE SAPIM RACE 14G",
+        "bomLinkStartDate": "",
+        "supplier": "Glory Wheel Enterprise Co. LTD",
+        "bomLinkNotes": "",
+        "partNumber": "10025",
+        "sectionDisplayName": "Accessory",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "",
+        "bomLinkFeature": "Frame",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:42",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10017",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:42",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10017",
+            "skuId": "100167"
+          }
+        ],
+        "color": "MU-LF Green(2324)",
+        "bomLinkEndDate": "",
+        "section": "enumSection005",
+        "material": "WLR TMC ARSL51 70D 142 CND/LG",
+        "bomLinkStartDate": "",
+        "supplier": "CW Bearing Taiwan Co Limited",
+        "bomLinkNotes": "",
+        "partNumber": "10017",
+        "linkedBom": "1",
+        "sectionDisplayName": "Brake",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": "US"
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "",
+        "bomLinkFeature": "Derailleur Hanger",
+        "bomLinkSpecSheetExtra": "No",
+        "skus": [
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "AU",
+            "isActive": true,
+            "destinationDimensionId": "313799",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:41-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10031",
+            "skuId": "100166"
+          },
+          {
+            "product": "MF3",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+            "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+            "destination": "CA",
+            "isActive": true,
+            "destinationDimensionId": "256445",
+            "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:350062-REV:A-BRANCH:41-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:189931-SKU:com.lcs.wc.part.LCSPartMaster:186677",
+            "size1": "l",
+            "colorDimensionId": "186677",
+            "sourceDimensionId": "189931",
+            "value": "10031",
+            "skuId": "100167"
+          }
+        ],
+        "color": "TL-yellow(yellow)",
+        "bomLinkEndDate": "",
+        "section": "enumSection001",
+        "material": "TIR ADV PRO 29X2.40",
+        "bomLinkStartDate": "",
+        "supplier": "GNC - Giant China-GC",
+        "bomLinkNotes": "",
+        "partNumber": "10031",
+        "sectionDisplayName": "Fuselage",
+        "bomLinkIncludeInSpecSheet": "",
         "bomLinkCountryOfOrigin": ""
       }
     }
   ],
   "columns": {
     "bomLinkFeature": "Feature",
-    "materialDescription": "Material",
+    "material": "Material",
     "supplier": "Supplier",
-    "colorDescription": "Color",
+    "color": "Color",
     "partNumber": "Part #",
     "bomLinkStartDate": "Start Date",
     "bomLinkEndDate": "End Date",
-    "bomLinkSpecSheetExtra": "SpecSheet Extra",
-    "bomLinkIncludeInSpecSheet": "IncludeIn SpecSheet",
     "quantity": "Quantity",
     "bomLinkNotes": "Notes",
     "bomLinkCountryOfOrigin": "Country Of Origin",
@@ -118,22 +1244,34 @@
     "Packaging",
     "NA"
   ],
-  "skuIds": "VR:com.lcs.wc.foundation.LCSRevisableEntity:574978",
+  "skuIds": "VR:com.lcs.wc.foundation.LCSRevisableEntity:292626,VR:com.lcs.wc.foundation.LCSRevisableEntity:292646",
   "skuInfo": {
     "skus": [
       {
-        "product": "SKU Testing 004",
-        "productId": "VR:com.lcs.wc.product.LCSProduct:572161",
-        "color": "A - BK - Black(TK-0101) (SKU Testing 004)",
-        "size1": "10",
+        "product": "MF3",
+        "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size1": "l",
+        "destination": "AU",
+        "colorDimensionId": "186677",
+        "sourceDimensionId": "189931",
+        "skuId": "100166",
+        "destinationDimensionId": "313799",
+        "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC"
+      },
+      {
+        "product": "MF3",
+        "productId": "VR:com.lcs.wc.product.LCSProduct:157232",
+        "color": "TL-yellow(yellow) TL-yellow(yellow) (MF3)",
+        "size1": "l",
         "destination": "CA",
-        "colorDimensionId": "573855",
-        "sourceDimensionId": "573127",
-        "skuId": "10135",
-        "destinationDimensionId": "573384",
-        "manufacturer": "Diamant Grad GC"
+        "colorDimensionId": "186677",
+        "sourceDimensionId": "189931",
+        "skuId": "100167",
+        "destinationDimensionId": "256445",
+        "manufacturer": "XC-XDS Cambodia (Bike Assembly)- XC"
       }
     ]
   },
-  "bomType": "SBOM"
+  "bomType": "MBOM"
 }
