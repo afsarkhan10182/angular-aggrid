@@ -46,6 +46,7 @@ export class App implements OnInit, OnDestroy {
   public bomName: string = '';
   public isLoading: boolean = true;
   public isSaving: boolean = false; // Track save operation state
+  public isMassEditing: boolean = false; // Track mass edit operation state
   private originalRowValues = new Map<string | number, any>(); // Store original values for existing rows
   private editedFields = new Map<string | number, Set<string>>(); // Track which specific fields were edited per row
   public invalidRowIds = new Set<string | number>(); // Track rows with validation errors for highlighting
@@ -2964,9 +2965,22 @@ export class App implements OnInit, OnDestroy {
   }
 
   applyMassEdit(): void {
-    if (this.selectedRows.size === 0 || !this.gridApi) {
-      return;
-    }
+    if (this.selectedRows.size === 0 || !this.gridApi) return;
+    if (this.isMassEditing) return;
+
+    // Let the UI paint "Applying..." state before heavy grid updates
+    this.isMassEditing = true;
+    setTimeout(() => {
+      try {
+        this.applyMassEditInternal();
+      } finally {
+        this.isMassEditing = false;
+      }
+    }, 0);
+  }
+
+  private applyMassEditInternal(): void {
+    if (this.selectedRows.size === 0 || !this.gridApi) return;
 
     const selectedNodes = this.gridApi.getSelectedNodes();
     const nodesToUpdate: any[] = [];
@@ -3120,16 +3134,24 @@ export class App implements OnInit, OnDestroy {
       }
 
       if (hasChanges) {
-        // Use consistent rowId matching trackFieldChange logic: partNumber || part || newRowId
-        const rowId = rowData.partNumber || rowData.part || rowData.newRowId;
-        if (rowId) {
-          this.editedRows.add(rowId);
+        // Mark row as edited (use stable keys to avoid misses/duplicates)
+        const primaryKey =
+          rowData.materialKey || rowData.newRowId || rowData.partNumber || rowData.part;
+        const compositeKey =
+          rowData.section && (rowData.partNumber || rowData.part)
+            ? `${rowData.section}::${rowData.partNumber || rowData.part}`
+            : null;
+        const editKey = primaryKey || compositeKey;
+
+        if (editKey) {
+          this.editedRows.add(editKey);
+          if (compositeKey) this.editedRows.add(compositeKey);
 
           // Track which specific fields were edited (required for save payload)
-          if (!this.editedFields.has(rowId)) {
-            this.editedFields.set(rowId, new Set<string>());
+          if (!this.editedFields.has(editKey)) {
+            this.editedFields.set(editKey, new Set<string>());
           }
-          const editedFieldsForRow = this.editedFields.get(rowId)!;
+          const editedFieldsForRow = this.editedFields.get(editKey)!;
 
           // Track start date field
           if (this.massEditStartDate) {
@@ -3175,6 +3197,8 @@ export class App implements OnInit, OnDestroy {
         columns: Array.from(columnsToUpdate),
         force: true,
       });
+      // Force row re-render so getRowClass runs and yellow highlight appears for all updated rows
+      this.gridApi.redrawRows({ rowNodes: nodesToUpdate });
     }
 
     // Clear mass edit fields after applying

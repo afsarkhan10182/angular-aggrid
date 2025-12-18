@@ -790,6 +790,13 @@
   transition: opacity 0.2s ease;
 }
 
+/* Checkbox column: prevent cropping + keep spacing tight */
+:host ::ng-deep .ag-cell[col-id='checkbox'],
+:host ::ng-deep .ag-header-cell[col-id='checkbox'] {
+  padding-left: 15px !important;
+  padding-right: 15px !important;
+}
+
 .sku-delete-btn-existing:hover {
   opacity: 1;
   background: #dc2626 !important;

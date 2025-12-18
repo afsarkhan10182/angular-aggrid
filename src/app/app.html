@@ -106,7 +106,7 @@
     <!-- Mass Edit Panel -->
     <div *ngIf="massEditMode" class="mass-edit-panel">
       <div class="mass-edit-header">
-        <h4>Mass Edit ({{ selectedRows.size }} row(s) selected)</h4>
+        <h4>Mass Edit ({{ selectedRows.size }} rows selected)</h4>
         <button (click)="closeMassEditMode()" class="close-mass-edit-btn" title="Close">
           <span class="close-icon">×</span>
         </button>
@@ -142,8 +142,11 @@
           />
         </div>
         <div class="mass-edit-actions">
-          <button (click)="applyMassEdit()" class="apply-mass-edit-btn">
-            <i class="fas fa-check"></i> Apply
+          <button (click)="applyMassEdit()" class="apply-mass-edit-btn" [disabled]="isMassEditing">
+            <i *ngIf="!isMassEditing" class="fas fa-check"></i>
+            <i *ngIf="isMassEditing" class="fas fa-spinner fa-spin"></i>
+            <span *ngIf="!isMassEditing">Apply</span>
+            <span *ngIf="isMassEditing">Applying...</span>
           </button>
           <!--
           <button (click)="bulkDisconnectFromSkus()" class="bulk-disconnect-btn">
