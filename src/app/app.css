@@ -6,6 +6,158 @@
   position: relative;
 }
 
+/* -----------------------------------------------------------------------------
+ * Reusable hierarchy header styles (rendered inside AG Grid cellRenderer HTML)
+ *
+ * NOTE: AG Grid cell renderers produce DOM that is not stamped with this
+ * component's emulated encapsulation attributes. Use ::ng-deep so these class
+ * styles actually apply inside the grid.
+ * -------------------------------------------------------------------------- */
+:host ::ng-deep .hier-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+:host ::ng-deep .hier-clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+:host ::ng-deep .hier-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  font-weight: 600;
+  background: var(--bg, transparent);
+  border-left: 4px solid var(--border, transparent);
+  transition: background-color 0.15s ease, border-left-color 0.15s ease;
+}
+
+:host ::ng-deep .hier-header:hover {
+  background: var(--bg-hover, var(--bg, transparent));
+  border-left-color: var(--border-hover, var(--border, transparent));
+}
+
+:host ::ng-deep .hier-arrow {
+  margin-right: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  width: 16px;
+  text-align: center;
+  display: inline-block;
+  color: var(--arrow-color, #1e40af);
+  flex: 0 0 auto;
+}
+
+:host ::ng-deep .hier-title {
+  font-size: var(--title-size, 13px);
+  font-weight: 600;
+  color: var(--title-color, #1e293b);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+:host ::ng-deep .hier-count {
+  margin-left: 8px;
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+  flex: 0 0 auto;
+}
+
+:host ::ng-deep .hier-indent {
+  display: inline-block;
+  width: var(--indent, 0px);
+}
+
+:host ::ng-deep .section-header {
+  --bg: transparent;
+  --bg-hover: #e0f2fe;
+  --title-size: 13px;
+  --title-color: #0f172a;
+  --arrow-color: #1e40af;
+  border-left-width: 0;
+  padding: 4px 6px;
+  column-gap: 2px;
+}
+
+:host ::ng-deep .section-header .hier-arrow {
+  margin-right: 4px;
+  width: 14px;
+}
+
+:host ::ng-deep .material-header {
+  --bg: #f0fdf4;
+  --bg-hover: #dcfce7;
+  --border: #10b981;
+  --border-hover: #059669;
+  --title-size: 13px;
+  --title-color: #065f46;
+  --arrow-color: #065f46;
+}
+
+:host ::ng-deep .parent-row-header {
+  --bg: #eff6ff;
+  --bg-hover: #dbeafe;
+  --border: #3b82f6;
+  --border-hover: #1d4ed8;
+  --title-size: 12px;
+  --title-color: #1e40af;
+  --arrow-color: #1e40af;
+  padding: 4px 6px;
+  border-radius: 2px;
+  margin: 1px 0;
+  border-left-width: 3px;
+  font-weight: 500;
+}
+
+:host ::ng-deep .direct-row {
+  padding: 4px 6px;
+  overflow: hidden;
+  width: 100%;
+}
+
+:host ::ng-deep .direct-row .direct-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+:host ::ng-deep .direct-row .direct-link-icon,
+:host ::ng-deep .material-header .material-link-icon {
+  margin-right: 6px;
+  font-size: 12px;
+  color: #0f766e;
+  flex: 0 0 auto;
+}
+
+/* SKU disconnect button in rendered cell HTML */
+:host ::ng-deep .sku-delete-btn-existing {
+  margin-left: 8px;
+  background: #ef4444;
+  color: #ffffff;
+  border: none;
+  border-radius: 3px;
+  padding: 2px 6px;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  transition: opacity 0.2s ease;
+}
+
+:host ::ng-deep .sku-delete-btn-existing:hover {
+  opacity: 0.9;
+}
+
 .loading-spinner-container {
   position: absolute;
   top: 0;

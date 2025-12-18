@@ -786,7 +786,7 @@ export class App implements OnInit, OnDestroy {
             const valueStr = String(value);
             const htmlValue = this.utilService.escapeHtml(valueStr).replace(/\n/g, '<br>');
             const skuField = params.colDef.field;
-            const deleteIcon = `<button type="button" class="sku-delete-btn-existing" data-action="disconnect-sku" data-sku-field="${skuField}" title="Disconnect part from SKU" style="margin-left: 8px; background: #ef4444; color: white; border: none; border-radius: 3px; padding: 2px 6px; cursor: pointer; font-size: 12px; transition: opacity 0.2s;">✕</button>`;
+            const deleteIcon = `<button type="button" class="sku-delete-btn-existing" data-action="disconnect-sku" data-sku-field="${skuField}" title="Disconnect part from SKU">✕</button>`;
 
             return `<div style="white-space: pre-line; line-height: 1.5; padding: 4px 0; display: flex; align-items: center;">
               <span style="flex: 1;">${htmlValue}</span>
@@ -801,7 +801,7 @@ export class App implements OnInit, OnDestroy {
           const valueStr = String(value);
           const htmlValue = this.utilService.escapeHtml(valueStr).replace(/\n/g, '<br>');
           const skuField = params.colDef.field;
-          const deleteIcon = `<button type="button" class="sku-delete-btn-existing" data-action="disconnect-sku" data-sku-field="${skuField}" title="Disconnect part from SKU" style="margin-left: 8px; background: #ef4444; color: white; border: none; border-radius: 3px; padding: 2px 6px; cursor: pointer; font-size: 12px; transition: opacity 0.2s;">✕</button>`;
+          const deleteIcon = `<button type="button" class="sku-delete-btn-existing" data-action="disconnect-sku" data-sku-field="${skuField}" title="Disconnect part from SKU">✕</button>`;
 
           return `<div style="white-space: pre-line; line-height: 1.5; padding: 4px 0; display: flex; align-items: center;">
             <span style="flex: 1;">${htmlValue}</span>
@@ -833,40 +833,28 @@ export class App implements OnInit, OnDestroy {
         data.groupValue !== null && data.groupValue !== undefined
           ? String(data.groupValue)
           : '(Empty)';
-      const indent = '&nbsp;'.repeat(data.groupLevel * 16);
       const groupCount = this.groupByService.getGroupCount(data);
       const bgColor =
         data.groupLevel === 0 ? '#f0f9ff' : data.groupLevel === 1 ? '#f0fdf4' : '#fef3c7';
       const borderColor =
         data.groupLevel === 0 ? '#3b82f6' : data.groupLevel === 1 ? '#10b981' : '#f59e0b';
+      const hoverBg =
+        data.groupLevel === 0 ? '#e0f2fe' : data.groupLevel === 1 ? '#dcfce7' : '#fde68a';
+      const indentPx = (data.groupLevel || 0) * 16;
 
       return `
-        <div style="
-          cursor: pointer;
-          padding: 6px 8px;
-          background: ${bgColor};
-          border-left: 4px solid ${borderColor};
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-        " 
-             onclick="window.toggleGroup('${data.groupKey}')"
-             onmouseover="this.style.background='${
-               data.groupLevel === 0 ? '#e0f2fe' : data.groupLevel === 1 ? '#dcfce7' : '#fde68a'
-             }'"
-             onmouseout="this.style.background='${bgColor}'">
-          <span style="
-            margin-right: 6px;
-            font-size: 12px;
-            color: ${borderColor};
-            font-weight: 700;
-            width: 16px;
-            text-align: center;
-          ">${arrowIcon}</span>
-          <span style="font-size: 13px; font-weight: 600; color: #1e293b;">${indent}${
-        data.groupHeaderName
-      }: ${this.utilService.escapeHtml(groupValue)}</span>
-          <span style="margin-left: 8px; font-size: 11px; color: #64748b; font-weight: 500;">(${groupCount})</span>
+        <div
+          class="hier-header hier-clickable"
+          style="--bg:${bgColor};--bg-hover:${hoverBg};--border:${borderColor};--arrow-color:${borderColor};--indent:${indentPx}px;"
+          onclick="window.toggleGroup('${data.groupKey}')"
+        >
+          <span class="hier-arrow">${arrowIcon}</span>
+          <span class="hier-title">
+            <span class="hier-indent"></span>${this.utilService.escapeHtml(
+              data.groupHeaderName
+            )}: ${this.utilService.escapeHtml(groupValue)}
+          </span>
+          <span class="hier-count">(${groupCount})</span>
         </div>
       `;
     }
@@ -877,22 +865,13 @@ export class App implements OnInit, OnDestroy {
       const displayName = data.sectionDisplayName; // Always from API response
       const internalName = data.section; // Keep internal name for toggle function
       return `
-        <div style="
-          cursor: pointer; 
-        " 
-             onclick="window.toggleSection('${internalName}')"
-             onmouseover="this.style.background='#e0f2fe'; this.style.borderLeftColor='#1d4ed8'"
-             onmouseout="this.style.background='#f8fafc'; this.style.borderLeftColor='#3b82f6'">
-          <span style="
-            margin-right: 4px; 
-            font-size: 12px; 
-            transition: transform 0.2s ease; 
-            color: #1e40af;
-            font-weight: 700;
-            width: 16px;
-            text-align: center;
-          ">${arrowIcon}</span>
-          <span style="font-size: 14px; font-weight: 600;">${displayName}</span>
+        <div
+          class="hier-header hier-clickable section-header"
+          title="${this.utilService.escapeHtml(displayName)}"
+          onclick="window.toggleSection('${internalName}')"
+        >
+          <span class="hier-arrow">${arrowIcon}</span>
+          <span class="hier-title">${this.utilService.escapeHtml(displayName)}</span>
         </div>
       `;
     }
@@ -902,49 +881,23 @@ export class App implements OnInit, OnDestroy {
       const linkIcon = data.hasLinkedBom ? '🔗' : '';
       const materialIdentifier = data.materialKey;
       return `
-        <div style="
-          cursor: pointer; 
-        " 
-             onclick="window.toggleMaterial('${
-               data.section
-             }', '${materialIdentifier}', ${materialIndex})"
-             onmouseover="this.style.background='#dcfce7'; this.style.borderLeftColor='#059669'"
-             onmouseout="this.style.background='#f0fdf4'; this.style.borderLeftColor='#10b981'">
-          ${
-            linkIcon
-              ? `<span style="
-              margin-right: 6px;
-              font-size: 12px;
-              color: #0f766e;
-            ">${linkIcon}</span>`
-              : ''
-          }
+        <div class="hier-header hier-clickable material-header" onclick="window.toggleMaterial('${
+          data.section
+        }', '${materialIdentifier}', ${materialIndex})">
+          ${linkIcon ? `<span class="material-link-icon">${linkIcon}</span>` : ''}
+          <span class="hier-title">${this.utilService.escapeHtml(
+            String(data.material || data.part || data.partNumber || '')
+          )}</span>
         </div>
       `;
     }
 
     if (data.isParentRow) {
-      const parentIndent = '&nbsp;'.repeat(16);
       return `
-        <div style="
-          display: flex; 
-          align-items: center; 
-          color: #1e40af; 
-          padding: 4px 6px; 
-          background: #eff6ff;
-          border-radius: 2px;
-          margin: 1px 0;
-          border-left: 3px solid #3b82f6;
-          transition: all 0.2s ease;
-          font-weight: 500;
-        " 
-             onmouseover="this.style.background='#dbeafe'; this.style.borderLeftColor='#1d4ed8'"
-             onmouseout="this.style.background='#eff6ff'; this.style.borderLeftColor='#3b82f6'">
-          <span style="
-            font-size: 12px; 
-            color: #1e40af;
-            font-weight: 500;
-          ">${parentIndent}${data.part}</span>
+        <div class="hier-header parent-row-header">
+          <span class="hier-title"><span class="hier-indent" style="--indent:16px;"></span>${this.utilService.escapeHtml(
+            String(data.part || '')
+          )}</span>
         </div>
       `;
     }
@@ -953,32 +906,9 @@ export class App implements OnInit, OnDestroy {
       const linkIcon = data.hasLinkedBom ? '🔗' : '';
       const featureValue = data.bomLinkFeature || '';
       return `
-        <div style="
-          display: flex;
-          align-items: center;
-          padding: 4px 6px;
-          width: 100%;
-          min-width: 0;
-          overflow: hidden;
-        ">
-          ${
-            linkIcon
-              ? `<span style="
-            margin-right: 6px;
-            font-size: 12px;
-            color: #0f766e;
-            flex-shrink: 0;
-          ">${linkIcon}</span>`
-              : ''
-          }
-          <span style="
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            display: block;
-            width: 100%;
-            min-width: 0;
-          ">${this.utilService.escapeHtml(featureValue)}</span>
+        <div class="hier-row direct-row">
+          ${linkIcon ? `<span class="direct-link-icon">${linkIcon}</span>` : ''}
+          <span class="direct-text">${this.utilService.escapeHtml(featureValue)}</span>
         </div>
       `;
     }
@@ -1006,39 +936,22 @@ export class App implements OnInit, OnDestroy {
       data.groupLevel === 0 ? '#f0f9ff' : data.groupLevel === 1 ? '#f0fdf4' : '#fef3c7';
     const borderColor =
       data.groupLevel === 0 ? '#3b82f6' : data.groupLevel === 1 ? '#10b981' : '#f59e0b';
+    const hoverBg =
+      data.groupLevel === 0 ? '#e0f2fe' : data.groupLevel === 1 ? '#dcfce7' : '#fde68a';
 
     return `
-      <div style="
-        cursor: pointer;
-        padding: 0 8px;
-        padding-left: ${indentPixels + 8}px;
-        background: ${bgColor};
-        border-left: 4px solid ${borderColor};
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        height: 100%;
-        width: 100%;
-        box-sizing: border-box;
-      " 
-           onclick="window.toggleGroup('${data.groupKey}')"
-           onmouseover="this.style.background='${
-             data.groupLevel === 0 ? '#e0f2fe' : data.groupLevel === 1 ? '#dcfce7' : '#fde68a'
-           }'"
-           onmouseout="this.style.background='${bgColor}'">
-        <span style="
-          margin-right: 6px;
-          font-size: 12px;
-          color: ${borderColor};
-          font-weight: 700;
-          width: 16px;
-          text-align: center;
-          display: inline-block;
-        ">${arrowIcon}</span>
-        <span style="font-size: 13px; font-weight: 600; color: #1e293b;">${
-          data.groupHeaderName
-        }: ${this.utilService.escapeHtml(groupValue)}</span>
-        <span style="margin-left: 8px; font-size: 11px; color: #64748b; font-weight: 500;">(${groupCount})</span>
+      <div
+        class="hier-header hier-clickable"
+        style="height:100%;padding:0 8px;--bg:${bgColor};--bg-hover:${hoverBg};--border:${borderColor};--arrow-color:${borderColor};--indent:${indentPixels}px;"
+        onclick="window.toggleGroup('${data.groupKey}')"
+      >
+        <span class="hier-arrow">${arrowIcon}</span>
+        <span class="hier-title">
+          <span class="hier-indent"></span>${this.utilService.escapeHtml(
+            data.groupHeaderName
+          )}: ${this.utilService.escapeHtml(groupValue)}
+        </span>
+        <span class="hier-count">(${groupCount})</span>
       </div>
     `;
   }
@@ -2167,7 +2080,9 @@ export class App implements OnInit, OnDestroy {
     // Extract bom-link data from instances
     const processedItems = data.instances.map((item: any) => {
       const bomLink = item['bom-link'];
-      const sectionInternalName = bomLink.section; // e.g., "enumSection001"
+      // Prefer the true internal name if provided by API. Using display text as a key
+      // can cause non-unique matches and "wrong section toggles".
+      const sectionInternalName = bomLink.sectionInternalName || bomLink.section; // e.g., "enumSection001"
       const sectionDisplayName = bomLink.sectionDisplayName; // e.g., "Fuselage"
 
       // Build mapping of internal name to display name
@@ -2181,7 +2096,7 @@ export class App implements OnInit, OnDestroy {
         partNumber: bomLink.partNumber,
         skus: bomLink.skus,
         linkedBom: bomLink.linkedBom,
-        section: sectionInternalName, // Keep internal name for payload
+        section: sectionInternalName, // Keep internal name for payload + toggling
         sectionDisplayName: sectionDisplayName, // Store display name for UI
       };
     });
@@ -2208,13 +2123,17 @@ export class App implements OnInit, OnDestroy {
     });
 
     const result: Array<{ section: string; sectionDisplayName: string; materials: any[] }> = [];
-    const sectionOrder = data.sectionOrder; // Now contains display names like "Fuselage"
+    const sectionOrder: string[] = Array.isArray(data.sectionOrder) ? data.sectionOrder : [];
 
-    // Create reverse mapping: display name -> internal name
-    const displayToInternalMap: Record<string, string> = {};
+    const displayToInternalMap = new Map<string, string[]>();
     Object.keys(sectionDisplayNameMap).forEach((internalName) => {
       const displayName = sectionDisplayNameMap[internalName];
-      displayToInternalMap[displayName] = internalName;
+      if (!displayName) return;
+      const current = displayToInternalMap.get(displayName) ?? [];
+      if (!current.includes(internalName)) {
+        current.push(internalName);
+      }
+      displayToInternalMap.set(displayName, current);
     });
 
     /**
@@ -2238,28 +2157,28 @@ export class App implements OnInit, OnDestroy {
     };
 
     // Show ALL sections from sectionOrder, even if they have no materials
-    for (const sectionDisplayName of sectionOrder) {
-      // Find internal name for this display name
-      const sectionInternalName = displayToInternalMap[sectionDisplayName];
+    sectionOrder.forEach((sectionDisplayName, idx) => {
+      const internalNames = displayToInternalMap.get(sectionDisplayName) ?? [];
 
-      // Get section items (empty array if section doesn't exist in data)
-      const sectionItems = sectionInternalName ? sections[sectionInternalName] || [] : [];
+      // If mapping is missing, create a stable synthetic key so we don't end up with
+      // multiple sections using '' and toggling the "wrong" one.
+      const resolvedInternalNames =
+        internalNames.length > 0 ? internalNames : [`__missing_section__${idx}`];
 
-      // Sort materials within section by Feature, then by Part#
-      const sortedMaterials = [...sectionItems].sort(sortMaterials);
-
-      // Create section object - API always provides sectionDisplayName
-      const sectionObj = {
-        section: sectionInternalName || '', // Internal name for payload (empty if not found)
-        sectionDisplayName: sectionDisplayName, // Display name for UI (always from sectionOrder)
-        materials: sortedMaterials,
-      };
-      result.push(sectionObj);
-    }
+      resolvedInternalNames.forEach((sectionInternalName) => {
+        const sectionItems = sections[sectionInternalName] || [];
+        const sortedMaterials = [...sectionItems].sort(sortMaterials);
+        result.push({
+          section: sectionInternalName,
+          sectionDisplayName: sectionDisplayName,
+          materials: sortedMaterials,
+        });
+      });
+    });
 
     // Also include sections that are not in sectionOrder but exist in data
     Object.keys(sections).forEach((sectionInternalName) => {
-      const sectionDisplayName = sectionDisplayNameMap[sectionInternalName];
+      const sectionDisplayName = sectionDisplayNameMap[sectionInternalName] || sectionInternalName;
       // Check if this section's display name is not in sectionOrder
       if (!sectionOrder.includes(sectionDisplayName)) {
         const sectionItems = sections[sectionInternalName];
