@@ -349,6 +349,41 @@ export class App implements OnInit, OnDestroy {
   createHierarchicalColumns(columnMapping: any): ColDef[] {
     const columns: ExtendedColDef[] = [];
 
+    // Dedicated checkbox selection column (fixed width, pinned left)
+    columns.push({
+      headerName: '',
+      field: 'checkbox',
+      colId: 'checkbox',
+      width: 40,
+      minWidth: 40,
+      maxWidth: 40,
+      pinned: 'left',
+      resizable: false,
+      sortable: false,
+      filter: false,
+      suppressHeaderMenuButton: true,
+      context: {
+        excludeFromExport: true,
+      },
+      headerCheckboxSelection: true,
+      headerCheckboxSelectionFilteredOnly: true,
+      checkboxSelection: (params: any) => {
+        const data = params?.data;
+        if (!data) return false;
+        return !(
+          data.isSectionHeader ||
+          data.isGroupHeader ||
+          data.isMaterialHeader ||
+          data.isBranchHeader
+        );
+      },
+      cellStyle: {
+        textAlign: 'center',
+        padding: '4px',
+        borderRight: '1px solid #e2e8f0',
+      },
+    });
+
     columns.push({
       headerName: '',
       field: 'actions',

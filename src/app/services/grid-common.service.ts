@@ -390,6 +390,18 @@ export class GridCommonService {
       theme: 'legacy',
       animateRows: false,
       enableCellTextSelection: true,
+      rowSelection: 'multiple',
+      suppressRowClickSelection: true,
+      isRowSelectable: (rowNode: IRowNode) => {
+        const data: any = rowNode?.data;
+        return !!(
+          data &&
+          !data.isSectionHeader &&
+          !data.isGroupHeader &&
+          !data.isMaterialHeader &&
+          !data.isBranchHeader
+        );
+      },
       // rowSelection: {
       //   mode: 'multiRow',
       //   enableClickSelection: false,
