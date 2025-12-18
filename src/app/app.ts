@@ -1532,40 +1532,21 @@ export class App implements OnInit, OnDestroy {
       return;
     }
 
-    // Validate SKU payload before submitting
-    const apiPayload = this.transformGridDataToApiFormat(this.rowData);
-    if (apiPayload && apiPayload.instances && Array.isArray(apiPayload.instances)) {
-      // Find all new rows from hierarchical and display data
-      const allNewRows = this.findAllNewRows(this.rowData, this.displayData);
-
-      // Find corresponding payload instances for new rows
-      for (const newRow of allNewRows) {
-        const payloadInstance = apiPayload.instances.find((inst: any) => {
-          const bomLink = inst['bom-link'];
-          // Match by section and other identifying fields
-          return (
-            bomLink &&
-            bomLink.section === newRow.section &&
-            bomLink.skus &&
-            Array.isArray(bomLink.skus)
-          );
-        });
-
-        if (payloadInstance && payloadInstance['bom-link'] && payloadInstance['bom-link'].skus) {
-          const payloadValidation = this.validationService.validateSkuPayload(
-            newRow,
-            skuInfo,
-            payloadInstance['bom-link'].skus
-          );
-
-          if (!payloadValidation.isValid) {
-            const rowId = newRow.newRowId || newRow.partNumber || newRow.part || 'Unknown';
-            this.invalidRowIds.add(rowId);
-            this.refreshGridForValidationErrors();
-            this.showNotification(payloadValidation.message, 'error');
-            return;
-          }
-        }
+    // Validate SKU payload (use the exact same SKU builder used for save payload)
+    const allNewRows = this.findAllNewRows(this.rowData, this.displayData);
+    for (const newRow of allNewRows) {
+      const payloadSkus = this.buildSkusArrayFromRow(newRow, skuInfo);
+      const payloadValidation = this.validationService.validateSkuPayload(
+        newRow,
+        skuInfo,
+        payloadSkus
+      );
+      if (!payloadValidation.isValid) {
+        const rowId = newRow.newRowId || newRow.partNumber || newRow.part || 'Unknown';
+        this.invalidRowIds.add(rowId);
+        this.refreshGridForValidationErrors();
+        this.showNotification(payloadValidation.message, 'error');
+        return;
       }
     }
 
@@ -2275,7 +2256,8 @@ export class App implements OnInit, OnDestroy {
         return;
       }
 
-      const rowId = row.partNumber || row.newRowId;
+      // IMPORTANT: use a stable key for original snapshot lookup (duplicates can exist)
+      const rowId = row.materialKey || row.partNumber || row.part || row.newRowId;
       if (!rowId) return;
 
       // Store original values for editable fields
@@ -2288,6 +2270,10 @@ export class App implements OnInit, OnDestroy {
 
       // Store as frozen snapshot - this is the "old" value that will be sent as _old
       this.originalRowValues.set(rowId, originalValues);
+      // Also store a composite fallback for duplicate part/partNumber across sections
+      if (row.section && (row.partNumber || row.part)) {
+        this.originalRowValues.set(`${row.section}::${row.partNumber || row.part}`, originalValues);
+      }
 
       // Process children if any
       if (row.children && Array.isArray(row.children)) {
@@ -2323,13 +2309,19 @@ export class App implements OnInit, OnDestroy {
     const isNewRow = row.isNewRow;
 
     if (isNewRow) {
+      const hasSkuValue = (v: any) => {
+        if (v === undefined || v === null) return false;
+        const s = String(v).trim();
+        return s !== '';
+      };
+
       let hasAnySkuValue = false;
       skuInfo.forEach((sku) => {
         const skuFieldName = `sku${sku.skuId}`;
         const skuValue = row[skuFieldName];
 
         // Check if this SKU has a value
-        if (skuValue !== undefined && skuValue !== null && skuValue !== '') {
+        if (hasSkuValue(skuValue)) {
           hasAnySkuValue = true;
         }
       });
@@ -2339,7 +2331,7 @@ export class App implements OnInit, OnDestroy {
         const skuValue = row[skuFieldName];
 
         // Include SKU if it has a value, OR if no SKUs have values (include all from skuInfo)
-        if (!hasAnySkuValue || (skuValue !== undefined && skuValue !== null && skuValue !== '')) {
+        if (!hasAnySkuValue || hasSkuValue(skuValue)) {
           // Include: product, productId, color, destination, destinationDimensionId, manufacturer, size1, colorDimensionId, sourceDimensionId, skuId
           // Exclude: isActive, value, dimensionId (these are only for edited rows)
           skus.push({
@@ -2409,7 +2401,8 @@ export class App implements OnInit, OnDestroy {
    * For new rows: Uses regular fields and adds childId + colorId
    */
   transformGridDataToApiFormat(rowData: any[]): any {
-    const instances: Array<{ 'bom-link': any }> = [];
+    // instances are extended with client-only metadata for validation (stripped before API call)
+    const instances: any[] = [];
     const skuInfo = this.dataService.getSkuInfo();
     // Get bomType from API response, fallback to JSP data attribute if not available
     const bomType =
@@ -2468,13 +2461,15 @@ export class App implements OnInit, OnDestroy {
         return;
       }
 
-      // Extract rowId - must match what's stored in editedRows by trackFieldChange
-      // trackFieldChange uses: partNumber || part || newRowId
-      // So we need to use the same logic for consistency
-      const rowId = row.partNumber || row.part || row.newRowId;
-      if (!rowId) {
-        return;
-      }
+      // Extract a stable row key. Avoid using part/partNumber alone because duplicates can exist.
+      // Priority: materialKey (existing rows) > newRowId (new rows) > section::partNumber/part (fallback)
+      const primaryId = row.materialKey || row.newRowId || row.partNumber || row.part;
+      const compositeId =
+        row.section && (row.partNumber || row.part)
+          ? `${row.section}::${row.partNumber || row.part}`
+          : null;
+      const rowId = primaryId || compositeId;
+      if (!rowId) return;
 
       const isNewRow = row.isNewRow;
 
@@ -2516,9 +2511,23 @@ export class App implements OnInit, OnDestroy {
         return;
       }
 
-      // Check if row is edited - rowId must match what was stored in editedRows
-      // editedRows contains partNumber (string), part (string), or newRowId (number)
-      const isEdited = !isNewRow && this.editedRows.has(rowId);
+      // Check if row is edited - accept any of the possible keys stored in editedRows
+      const editCandidates: any[] = [
+        row.materialKey,
+        row.newRowId,
+        row.partNumber,
+        row.part,
+        compositeId,
+      ].filter((v) => v !== null && v !== undefined && `${v}`.trim() !== '');
+
+      const isEdited =
+        !isNewRow &&
+        editCandidates.some(
+          (id) =>
+            this.editedRows.has(id) ||
+            this.editedRows.has(`${id}`) ||
+            this.editedRows.has(Number(id))
+        );
 
       // Debug logging (can be removed in production)
       if (isNewRow || isEdited) {
@@ -2612,7 +2621,17 @@ export class App implements OnInit, OnDestroy {
         bomLink.skus = this.buildSkusArrayFromRow(row, skuInfo);
       } else if (isEdited) {
         // EXISTING ROW WITH EDITS: Only include section, skus, and _old/_new fields for edited fields
-        const originalValues = this.originalRowValues.get(rowId) || {};
+        const compositeId =
+          row.section && (row.partNumber || row.part)
+            ? `${row.section}::${row.partNumber || row.part}`
+            : null;
+        const originalValues =
+          this.originalRowValues.get(row.materialKey) ||
+          this.originalRowValues.get(rowId) ||
+          (compositeId ? this.originalRowValues.get(compositeId) : null) ||
+          this.originalRowValues.get(row.partNumber) ||
+          this.originalRowValues.get(row.part) ||
+          {};
 
         // Section is required
         if (row.section) {

@@ -449,6 +449,13 @@ export class RowManagementService {
                 this.updateLocalRowDataAfterSave(rowData, componentInstance, editedRows);
               }
 
+              // CRITICAL: Always clear edited state on success so the next payload is fresh.
+              // Some success paths replace rowData from API and skip updateLocalRowDataAfterSave().
+              editedRows.clear();
+              if (componentInstance.editedFields) {
+                componentInstance.editedFields.clear();
+              }
+
               // After successful save, update original values to match current state
               // This ensures subsequent edits use the correct "old" values
               // Note: Backend does NOT return old values in response - frontend must track them
