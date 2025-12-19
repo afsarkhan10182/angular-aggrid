@@ -280,6 +280,7 @@ export class UtilService {
 
         // Get all row data (excluding group headers, section headers, etc.)
         const rowData: any[] = [];
+        const rowNodes: any[] = [];
         gridApi.forEachNode((node) => {
           if (!node.data) return;
 
@@ -296,18 +297,51 @@ export class UtilService {
           }
 
           rowData.push(node.data);
+          rowNodes.push(node); // Store node reference to access parent section info if needed
         });
 
         // Prepare data for Excel export
         const excelData: any[] = [];
 
-        // Add header row
-        const headers: string[] = visibleColumns.map((col) => col.headerName);
+        // Add header row with Section column as first column
+        const headers: string[] = ['Section', ...visibleColumns.map((col) => col.headerName)];
         excelData.push(headers);
 
         // Add data rows
-        rowData.forEach((row) => {
+        rowData.forEach((row, index) => {
           const rowDataArray: any[] = [];
+
+          // Add section information as first column
+          // Prefer sectionDisplayName (user-friendly name) over section (internal name)
+          let sectionValue = '';
+          if (row) {
+            sectionValue = row.sectionDisplayName || row.section || '';
+
+            // If section is not in row data, try to get it from parent node
+            if (!sectionValue && rowNodes[index]) {
+              const node = rowNodes[index];
+              // Check parent node for section information
+              if (node.parent && node.parent.data) {
+                const parentData = node.parent.data;
+                sectionValue = parentData.sectionDisplayName || parentData.section || '';
+              }
+              // If still not found, traverse up the parent chain
+              if (!sectionValue && node.parent) {
+                let currentParent = node.parent.parent;
+                while (currentParent && currentParent.data && !sectionValue) {
+                  const parentData = currentParent.data;
+                  if (parentData.sectionDisplayName || parentData.section) {
+                    sectionValue = parentData.sectionDisplayName || parentData.section;
+                    break;
+                  }
+                  currentParent = currentParent.parent;
+                }
+              }
+            }
+          }
+          rowDataArray.push(sectionValue);
+
+          // Add other column values
           visibleColumns.forEach((col) => {
             let cellValue: any = '';
 
@@ -342,8 +376,8 @@ export class UtilService {
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
 
-        // Set column widths
-        const colWidths = visibleColumns.map(() => ({ wch: 15 }));
+        // Set column widths (include Section column)
+        const colWidths = [{ wch: 20 }, ...visibleColumns.map(() => ({ wch: 15 }))];
         worksheet['!cols'] = colWidths;
 
         // Generate file name

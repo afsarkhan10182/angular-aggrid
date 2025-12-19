@@ -378,11 +378,6 @@ export class App implements OnInit, OnDestroy {
           data.isBranchHeader
         );
       },
-      cellStyle: {
-        textAlign: 'center',
-        padding: '4px',
-        borderRight: '1px solid #e2e8f0',
-      },
     });
 
     columns.push({
