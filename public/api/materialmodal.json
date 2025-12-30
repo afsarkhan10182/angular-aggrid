@@ -1,0 +1,89 @@
+{
+  "materialMasterId": "776055",
+  "instances": [
+    {
+      "bom-link": {
+        "quantity": "",
+        "bomLinkFeature": "Frame",
+        "bomLinkSpecSheetExtra": "No",
+        "color": "",
+        "bomLinkEndDate": "",
+        "materialColorSixtyCharacterDescription": "",
+        "section": "enumSection001",
+        "childId": "296178",
+        "masterBranchId": "0",
+        "material": "WLF TMC ARSL51 70D 12T CND",
+        "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:305489-REV:A-BRANCH:1",
+        "bomLinkStartDate": "",
+        "supplier": "",
+        "bomLinkNotes": "",
+        "partNumber": "",
+        "flexBomLinkId": "305517",
+        "materialColorThirtyCharacterDescription": "",
+        "sectionDisplayName": "Fuselage",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "",
+        "bomLinkFeature": "Frame Hardware 2",
+        "bomLinkSpecSheetExtra": "No",
+        "color": "",
+        "bomLinkEndDate": "",
+        "materialColorSixtyCharacterDescription": "",
+        "section": "enumSection001",
+        "childId": "296280",
+        "masterBranchId": "0",
+        "material": "WLR DTA ARSL51 70D 142 CND/LG",
+        "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:305489-REV:A-BRANCH:18",
+        "bomLinkStartDate": "",
+        "supplier": "",
+        "bomLinkNotes": "",
+        "partNumber": "",
+        "flexBomLinkId": "305518",
+        "materialColorThirtyCharacterDescription": "",
+        "sectionDisplayName": "Fuselage",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    },
+    {
+      "bom-link": {
+        "quantity": "",
+        "bomLinkFeature": "Frame Hardware",
+        "bomLinkSpecSheetExtra": "No",
+        "color": "",
+        "bomLinkEndDate": "",
+        "materialColorSixtyCharacterDescription": "",
+        "section": "enumSection001",
+        "childId": "296229",
+        "masterBranchId": "0",
+        "material": "WLF TMC ARSL51 70D 12T CND/LG",
+        "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:305489-REV:A-BRANCH:16",
+        "bomLinkStartDate": "",
+        "supplier": "",
+        "bomLinkNotes": "",
+        "partNumber": "",
+        "flexBomLinkId": "305519",
+        "materialColorThirtyCharacterDescription": "",
+        "sectionDisplayName": "Fuselage",
+        "bomLinkIncludeInSpecSheet": "",
+        "bomLinkCountryOfOrigin": ""
+      }
+    }
+  ],
+  "columns": {
+    "bomLinkFeature": "Feature",
+    "material": "Material",
+    "supplier": "Supplier",
+    "color": "Color",
+    "partNumber": "Part #",
+    "bomLinkStartDate": "Start Date",
+    "bomLinkEndDate": "End Date",
+    "quantity": "Quantity",
+    "materialColorThirtyCharacterDescription": "30 Character Description",
+    "materialColorSixtyCharacterDescription": "60 Character Description"
+  }
+}

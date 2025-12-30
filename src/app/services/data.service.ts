@@ -142,13 +142,24 @@ export class DataService {
    * @param materialId Material ID or part number
    * @returns Observable of material details in key-value format
    */
+  /**
+   * Get Complex BOM data for a specific material
+   * @param materialId Material ID or part number
+   * @returns Observable of material details in key-value format
+   */
   getComplexBOM(materialId: string): Observable<any> {
-    let apiUrl = environment.useMockApi
-      ? `/api/complexBOM/${materialId}`
-      : `${this.getServiceHostUrl()}/api/complexBOM/${materialId}`;
+    const apiUrl = environment.useMockApi
+      ? `/api/materialmodal.json`
+      : `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/getMaterialBOM?materialMasterId=${materialId}`;
 
     return this.http.get<any>(apiUrl).pipe(
       map((data) => {
+        // If data has instances/columns structure (new API or mock), return as is
+        if (data && data.instances && Array.isArray(data.instances)) {
+          return data;
+        }
+
+        // Legacy/Fallback handling for key-value pairs
         if (data && typeof data === 'object' && !Array.isArray(data)) {
           return data;
         }

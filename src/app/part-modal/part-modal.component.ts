@@ -206,4 +206,39 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
       .replace(/^./, (str) => str.toUpperCase())
       .trim();
   }
+
+  hasInstances(): boolean {
+    return (
+      this.partData &&
+      Array.isArray(this.partData.instances) &&
+      this.partData.instances.length > 0
+    );
+  }
+
+  getInstances(): any[] {
+    return this.hasInstances() ? this.partData.instances : [];
+  }
+
+  getColumns(): { [key: string]: string } {
+    return this.partData && this.partData.columns ? this.partData.columns : {};
+  }
+
+  getColumnKeys(): string[] {
+    const cols = this.getColumns();
+    const orderedKeys = [
+      'bomLinkFeature',
+      'material',
+      'supplier',
+      'color',
+      'partNumber',
+      'bomLinkStartDate',
+      'bomLinkEndDate',
+      'quantity',
+      'materialColorThirtyCharacterDescription',
+      'materialColorSixtyCharacterDescription',
+    ];
+
+    // Return keys present in the columns object, respecting the preferred order
+    return orderedKeys.filter((key) => key in cols);
+  }
 }

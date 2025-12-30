@@ -38,7 +38,7 @@
     <!-- Modal Content -->
     <div class="modal-content">
       <!-- Material Details Table - Shows all data except SKUs -->
-      <div class="key-value-table-card" *ngIf="getAllRowData().length > 0">
+      <div class="key-value-table-card" *ngIf="getAllRowData().length > 0 && !hasInstances()">
         <div class="card-header">
           <h3>Material Details</h3>
         </div>
@@ -54,6 +54,29 @@
               <tr *ngFor="let pair of getAllRowData()">
                 <td class="key-cell">{{ formatKeyName(pair.key) }}</td>
                 <td class="value-cell">{{ pair.value }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- BOM Instances Table -->
+      <div class="key-value-table-card" *ngIf="hasInstances()">
+        <div class="card-header">
+          <h3>Material BOM Instances</h3>
+        </div>
+        <div class="table-container">
+          <table class="key-value-table">
+            <thead>
+              <tr>
+                <th *ngFor="let key of getColumnKeys()">{{ getColumns()[key] }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let instance of getInstances()">
+                <td *ngFor="let key of getColumnKeys()" class="value-cell">
+                  {{ instance['bom-link'][key] }}
+                </td>
               </tr>
             </tbody>
           </table>

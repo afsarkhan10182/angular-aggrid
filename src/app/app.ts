@@ -1477,41 +1477,36 @@ export class App implements OnInit, OnDestroy {
   openMaterialModal(materialData: any): void {
     if (!materialData) return;
 
-    // Extract partNumber from material data
-    const partNumber = materialData.partNumber;
-    const materialIdString = partNumber.trim();
+    // Only open modal if linkedBom is "1"
+    if (materialData.linkedBom !== "1" && materialData.linkedBom !== 1) {
+      console.log('Material does not have linkedBom="1", skipping modal');
+      return;
+    }
 
-    const bomSub = this.dataService.getComplexBOM(materialIdString).subscribe({
-      next: (complexBOMData: any) => {
-        const keyValuePairs: any[] = [];
+    // Use childId for the API call (this is the material master ID)
+    const childId = materialData.childId;
+    
+    if (!childId) {
+        console.warn('No childId found in material data');
+        return;
+    }
 
-        if (
-          complexBOMData &&
-          typeof complexBOMData === 'object' &&
-          !Array.isArray(complexBOMData)
-        ) {
-          Object.keys(complexBOMData).forEach((key) => {
-            if (complexBOMData[key] !== null && complexBOMData[key] !== undefined) {
-              keyValuePairs.push({
-                key: key,
-                value: complexBOMData[key],
-              });
-            }
-          });
-        } else if (Array.isArray(complexBOMData)) {
-          keyValuePairs.push(...complexBOMData);
-        }
-
-        const allRowData =
-          keyValuePairs.length > 0
-            ? { ...materialData, ...this.utilService.convertKeyValuePairsToObject(keyValuePairs) }
-            : materialData;
-
-        this.selectedMaterialData = allRowData;
+    const bomSub = this.dataService.getComplexBOM(childId).subscribe({
+      next: (bomData: any) => {
+        // bomData should have format: { materialMasterId: "...", instances: [...], columns: {...} }
+        
+        this.selectedMaterialData = {
+            ...materialData,
+            ...bomData // Merge API response including instances and columns
+        };
+        
+        // Keep existing logic for SKU data if needed, or maybe the new response handles everything
         this.selectedMaterialSkuData = this.dataService.getSkuDataForPart(materialData);
         this.showMaterialModal = true;
       },
-      error: (error) => {
+      error: (error: any) => {
+        console.error('Failed to fetch material BOM', error);
+        // Fallback or just show what we have
         this.selectedMaterialData = materialData;
         this.selectedMaterialSkuData = this.dataService.getSkuDataForPart(materialData);
         this.showMaterialModal = true;
