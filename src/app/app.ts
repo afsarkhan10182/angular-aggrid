@@ -238,7 +238,17 @@ export class App implements OnInit, OnDestroy {
     const result: any[] = [];
 
     const processNode = (node: any) => {
-      result.push(node);
+      // Filter out rows with empty partNumber (only for data rows, not headers)
+      const isDataRow = node.isDirectRow || node.isSubRow;
+      const partNumber = node.partNumber || node.part || '';
+      const hasPartNumber = partNumber && String(partNumber).trim() !== '';
+      
+      // Only add the node if:
+      // 1. It's a header (section, group, material, branch), OR
+      // 2. It's a data row WITH a valid partNumber
+      if (!isDataRow || hasPartNumber) {
+        result.push(node);
+      }
 
       // If expanded and has children, process them
       if (node.isExpanded && node.children && Array.isArray(node.children)) {
