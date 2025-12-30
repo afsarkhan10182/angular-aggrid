@@ -377,4 +377,181 @@ export class ValidationService {
 
     return { isValid: true, message: '' };
   }
+
+  /**
+   * Validate that there are no duplicate Feature+Part+SKU combinations
+   * Checks ONLY: section, bomLinkFeature, partNumber, and SKU IDs
+   * @param rowData - Hierarchical row data (with children)
+   * @param displayData - Flat display data (optional, for rows not yet in hierarchy)
+   * @param skuInfo - Array of SKU info objects with skuId property
+   * @returns Validation result with duplicate information
+   */
+  validateDuplicateFeatureSkuCombination(
+    rowData: any[],
+    displayData: any[] = [],
+    skuInfo: any[]
+  ): ValidationResult {
+    console.log('🔍 [DUPLICATE CHECK] Starting validation...');
+    
+    // Separate new rows from existing rows
+    // New rows are in displayData with isNewRow=true or newRowId
+    const newRows: any[] = [];
+    const existingRows: any[] = [];
+    
+    // First, check displayData for new rows (they have isNewRow or newRowId)
+    if (displayData && displayData.length > 0) {
+      for (const row of displayData) {
+        if (row.isNewRow || row.newRowId !== undefined) {
+          newRows.push(row);
+          console.log(`🆕 [NEW ROW FOUND] Part: ${row.partNumber}, Feature: ${row.bomLinkFeature}, isNewRow: ${row.isNewRow}, newRowId: ${row.newRowId}`);
+        }
+      }
+    }
+    
+    // Collect existing rows from hierarchical rowData
+    const collectRows = (rows: any[]) => {
+      for (const row of rows) {
+        if (row.isDirectRow || row.isSubRow) {
+          // Skip if it's a new row (has newRowId)
+          // Also ensure it's not already added from displayData if it somehow got there
+          const isAlreadyNew = newRows.some(nr => nr.newRowId === row.newRowId && row.newRowId !== undefined);
+          if (!row.newRowId && !row.isNewRow && !isAlreadyNew) {
+            existingRows.push(row);
+          }
+        }
+        if (row.children && row.children.length > 0) {
+          collectRows(row.children);
+        }
+      }
+    };
+
+    collectRows(rowData);
+    
+    console.log(`🔍 [DUPLICATE CHECK] NEW rows: ${newRows.length}, EXISTING rows: ${existingRows.length}`);
+    newRows.forEach((row, idx) => {
+      console.log(`   NEW ${idx + 1}: section=${row.section}, part=${row.partNumber}, feature=${row.bomLinkFeature}`);
+    });
+    existingRows.forEach((row, idx) => {
+      console.log(`   EXISTING ${idx + 1}: section=${row.section}, part=${row.partNumber}, feature=${row.bomLinkFeature}`);
+    });
+
+    // Build map: section -> part -> feature -> Set<skuId>
+    const existingCombinations = new Map<string, Map<string, Map<string, Set<string>>>>();
+    
+    // Store EXISTING rows
+    for (const row of existingRows) {
+      
+      const section = row.section || '';
+      const partNumber = row.partNumber || '';
+      const bomLinkFeature = row.bomLinkFeature || '';
+      
+      if (!section || !partNumber || !bomLinkFeature) continue;
+      
+      const rowSkus = this.countSkusWithValues(row, skuInfo);
+      if (rowSkus.count === 0) continue;
+      
+      console.log(`✅ [EXISTING] Section: ${section}, Part: ${partNumber}, Feature: ${bomLinkFeature}, SKUs: [${Array.from(rowSkus.skuIds).join(', ')}]`);
+      
+      // Store combination
+      if (!existingCombinations.has(section)) {
+        existingCombinations.set(section, new Map());
+      }
+      const sectionMap = existingCombinations.get(section)!;
+      
+      if (!sectionMap.has(partNumber)) {
+        sectionMap.set(partNumber, new Map());
+      }
+      const partMap = sectionMap.get(partNumber)!;
+      
+      if (!partMap.has(bomLinkFeature)) {
+        partMap.set(bomLinkFeature, new Set());
+      }
+      const skuSet = partMap.get(bomLinkFeature)!;
+      
+      rowSkus.skuIds.forEach(skuId => skuSet.add(skuId));
+    }
+
+    console.log('📋 [DUPLICATE CHECK] Existing combinations:', existingCombinations);
+
+    // Check NEW rows for duplicates
+    const invalidRows: InvalidRow[] = [];
+    
+    for (const row of newRows) {
+      
+      const section = row.section || '';
+      const partNumber = row.partNumber || '';
+      const bomLinkFeature = row.bomLinkFeature || '';
+      
+      console.log(`🔎 [NEW ROW] Section: ${section}, Part: ${partNumber}, Feature: ${bomLinkFeature}`);
+      
+      if (!section || !partNumber || !bomLinkFeature) {
+        console.log('⚠️  [SKIP] Missing required field');
+        continue;
+      }
+      
+      const rowSkus = this.countSkusWithValues(row, skuInfo);
+      if (rowSkus.count === 0) {
+        console.log('⚠️  [SKIP] No SKUs');
+        continue;
+      }
+      
+      console.log(`🔎 [NEW ROW] SKUs: [${Array.from(rowSkus.skuIds).join(', ')}]`);
+      
+      // Check if combination exists in same section
+      const sectionMap = existingCombinations.get(section);
+      if (!sectionMap) {
+        console.log('✅ [UNIQUE] No existing rows in this section');
+        continue;
+      }
+      
+      const partMap = sectionMap.get(partNumber);
+      if (!partMap) {
+        console.log('✅ [UNIQUE] No existing rows with this part');
+        continue;
+      }
+      
+      const existingSkuSet = partMap.get(bomLinkFeature);
+      if (!existingSkuSet) {
+        console.log('✅ [UNIQUE] No existing rows with this feature');
+        continue;
+      }
+      
+      console.log(`🔎 [COMPARE] Existing SKUs in same Section+Part+Feature: [${Array.from(existingSkuSet).join(', ')}]`);
+      
+      // Check if ANY SKU matches
+      const duplicateSkus: string[] = [];
+      for (const skuId of rowSkus.skuIds) {
+        if (existingSkuSet.has(skuId)) {
+          console.log(`❌ [DUPLICATE!] SKU ${skuId} already exists!`);
+          duplicateSkus.push(skuId);
+        }
+      }
+      
+      if (duplicateSkus.length > 0) {
+        console.log(`❌ [DUPLICATE ROW!] Same Section+Part+Feature+SKU found!`);
+        const rowId = row.newRowId || row.partNumber || 'Unknown';
+        invalidRows.push({
+          row,
+          missingFields: [],
+          rowId,
+        });
+      } else {
+        console.log('✅ [UNIQUE] Different SKUs');
+      }
+    }
+
+    const result = {
+      isValid: invalidRows.length === 0,
+      message:
+        invalidRows.length > 0
+          ? 'Duplicate Part for the chosen Feature and SKU'
+          : 'No duplicate Feature+Part+SKU combinations found.',
+      invalidRows: invalidRows.length > 0 ? invalidRows : undefined,
+    };
+
+    console.log('🏁 [RESULT]', result.isValid ? 'VALID ✅' : 'INVALID ❌');
+    console.log(`🏁 [RESULT] ${invalidRows.length} duplicate row(s) found`);
+    
+    return result;
+  }
 }

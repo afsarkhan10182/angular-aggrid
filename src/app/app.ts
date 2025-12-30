@@ -1586,6 +1586,24 @@ export class App implements OnInit, OnDestroy {
       }
     }
 
+    // Validate for duplicate Feature+Part+SKU combinations
+    const duplicateValidation = this.validationService.validateDuplicateFeatureSkuCombination(
+      this.rowData,
+      this.displayData,
+      skuInfo
+    );
+    if (!duplicateValidation.isValid) {
+      // Mark invalid rows for highlighting
+      if (duplicateValidation.invalidRows) {
+        duplicateValidation.invalidRows.forEach((invalidRow) => {
+          this.invalidRowIds.add(invalidRow.rowId);
+        });
+      }
+      this.refreshGridForValidationErrors();
+      this.showNotification(duplicateValidation.message, 'error');
+      return;
+    }
+
     // All validations passed, proceed with save
     // Set loading state
     this.isSaving = true;
