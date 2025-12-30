@@ -69,12 +69,12 @@
           <table class="key-value-table">
             <thead>
               <tr>
-                <th *ngFor="let key of getColumnKeys()">{{ getColumns()[key] }}</th>
+                <th *ngFor="let key of getColumnKeys()" [attr.data-column]="key">{{ getColumns()[key] }}</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let instance of getInstances()">
-                <td *ngFor="let key of getColumnKeys()" class="value-cell">
+                <td *ngFor="let key of getColumnKeys()" class="value-cell" [attr.data-column]="key">
                   {{ instance['bom-link'][key] }}
                 </td>
               </tr>

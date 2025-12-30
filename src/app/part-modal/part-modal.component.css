@@ -125,6 +125,26 @@
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   background: #ffffff;
+  max-width: 100%;
+}
+
+/* Scrollbar styling for table */
+.table-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .key-value-table {
@@ -201,6 +221,61 @@
   border-right: none !important;
   border-left: none !important;
 }
+
+/* Smart column widths for BOM instances table */
+.key-value-table th[data-column="bomLinkFeature"],
+.key-value-table td[data-column="bomLinkFeature"] {
+  min-width: 180px;
+  max-width: 250px;
+}
+
+.key-value-table th[data-column="material"],
+.key-value-table td[data-column="material"] {
+  min-width: 200px;
+  max-width: 300px;
+}
+
+.key-value-table th[data-column="supplier"],
+.key-value-table td[data-column="supplier"] {
+  min-width: 120px;
+  max-width: 180px;
+}
+
+.key-value-table th[data-column="color"],
+.key-value-table td[data-column="color"] {
+  min-width: 100px;
+  max-width: 150px;
+}
+
+.key-value-table th[data-column="partNumber"],
+.key-value-table td[data-column="partNumber"] {
+  min-width: 100px;
+  max-width: 150px;
+}
+
+.key-value-table th[data-column="bomLinkStartDate"],
+.key-value-table th[data-column="bomLinkEndDate"],
+.key-value-table td[data-column="bomLinkStartDate"],
+.key-value-table td[data-column="bomLinkEndDate"] {
+  min-width: 100px;
+  max-width: 120px;
+}
+
+.key-value-table th[data-column="quantity"],
+.key-value-table td[data-column="quantity"] {
+  min-width: 80px;
+  max-width: 100px;
+  text-align: center;
+}
+
+.key-value-table th[data-column="materialColorThirtyCharacterDescription"],
+.key-value-table th[data-column="materialColorSixtyCharacterDescription"],
+.key-value-table td[data-column="materialColorThirtyCharacterDescription"],
+.key-value-table td[data-column="materialColorSixtyCharacterDescription"] {
+  min-width: 150px;
+  max-width: 250px;
+}
+
 
 /* SKU Row Styling - Better visual grouping */
 .key-value-table tbody tr.sku-row {

@@ -216,7 +216,20 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   getInstances(): any[] {
-    return this.hasInstances() ? this.partData.instances : [];
+    if (!this.hasInstances()) return [];
+    
+    // Filter out instances with empty partNumber AND empty material
+    // Show row if either partNumber OR material has a value
+    return this.partData.instances.filter((instance: any) => {
+      const partNumber = instance['bom-link']?.partNumber || '';
+      const material = instance['bom-link']?.material || '';
+      
+      const hasPartNumber = partNumber && String(partNumber).trim() !== '';
+      const hasMaterial = material && String(material).trim() !== '';
+      
+      // Show row if it has either partNumber or material
+      return hasPartNumber || hasMaterial;
+    });
   }
 
   getColumns(): { [key: string]: string } {
