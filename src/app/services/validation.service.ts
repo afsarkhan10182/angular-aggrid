@@ -60,8 +60,22 @@ export class ValidationService {
   private hasFieldValue(row: any, field: RequiredField): boolean {
     for (const key of field.keys) {
       const value = row[key];
-      if (!this.isEmpty(value)) {
-        return true;
+      
+      // Special handling for Quantity field: treat 0 as empty
+      if (field.label === 'Quantity') {
+        if (value === undefined || value === null || value === '' || value === 0 || value === '0') {
+          continue; // This key doesn't have a valid value, try next key
+        }
+        // If not empty/zero, check if it's a valid non-zero number or string
+        const numValue = typeof value === 'string' ? parseFloat(value.trim()) : value;
+        if (!isNaN(numValue) && numValue !== 0) {
+          return true; // Found a valid non-zero quantity
+        }
+      } else {
+        // Standard validation for other fields
+        if (!this.isEmpty(value)) {
+          return true;
+        }
       }
     }
     return false;
