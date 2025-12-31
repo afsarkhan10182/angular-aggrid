@@ -391,7 +391,7 @@ export class ValidationService {
     displayData: any[] = [],
     skuInfo: any[]
   ): ValidationResult {
-    console.log('🔍 [DUPLICATE CHECK] Starting validation...');
+    console.log('[DUPLICATE CHECK] Starting validation...');
     
     // Separate new rows from existing rows
     // New rows are in displayData with isNewRow=true or newRowId
@@ -403,8 +403,7 @@ export class ValidationService {
       for (const row of displayData) {
         if (row.isNewRow || row.newRowId !== undefined) {
           newRows.push(row);
-          console.log(`🆕 [NEW ROW FOUND] Part: ${row.partNumber}, Feature: ${row.bomLinkFeature}, isNewRow: ${row.isNewRow}, newRowId: ${row.newRowId}`);
-        }
+          }
       }
     }
     
@@ -427,12 +426,10 @@ export class ValidationService {
 
     collectRows(rowData);
     
-    console.log(`🔍 [DUPLICATE CHECK] NEW rows: ${newRows.length}, EXISTING rows: ${existingRows.length}`);
+    console.log(`[DUPLICATE CHECK] NEW rows: ${newRows.length}, EXISTING rows: ${existingRows.length}`);
     newRows.forEach((row, idx) => {
-      console.log(`   NEW ${idx + 1}: section=${row.section}, part=${row.partNumber}, feature=${row.bomLinkFeature}`);
     });
     existingRows.forEach((row, idx) => {
-      console.log(`   EXISTING ${idx + 1}: section=${row.section}, part=${row.partNumber}, feature=${row.bomLinkFeature}`);
     });
 
     // Build map: section -> part -> feature -> Set<skuId>
@@ -450,7 +447,7 @@ export class ValidationService {
       const rowSkus = this.countSkusWithValues(row, skuInfo);
       if (rowSkus.count === 0) continue;
       
-      console.log(`✅ [EXISTING] Section: ${section}, Part: ${partNumber}, Feature: ${bomLinkFeature}, SKUs: [${Array.from(rowSkus.skuIds).join(', ')}]`);
+      // console.log(`[EXISTING] Section: ${section}, Part: ${partNumber}, Feature: ${bomLinkFeature}, SKUs: [${Array.from(rowSkus.skuIds).join(', ')}]`);
       
       // Store combination
       if (!existingCombinations.has(section)) {
@@ -471,7 +468,7 @@ export class ValidationService {
       rowSkus.skuIds.forEach(skuId => skuSet.add(skuId));
     }
 
-    console.log('📋 [DUPLICATE CHECK] Existing combinations:', existingCombinations);
+    console.log('[DUPLICATE CHECK] Existing combinations:', existingCombinations);
 
     // Check NEW rows for duplicates
     const invalidRows: InvalidRow[] = [];
@@ -482,53 +479,53 @@ export class ValidationService {
       const partNumber = row.partNumber || '';
       const bomLinkFeature = row.bomLinkFeature || '';
       
-      console.log(`🔎 [NEW ROW] Section: ${section}, Part: ${partNumber}, Feature: ${bomLinkFeature}`);
+      console.log(`[NEW ROW] Section: ${section}, Part: ${partNumber}, Feature: ${bomLinkFeature}`);
       
       if (!section || !partNumber || !bomLinkFeature) {
-        console.log('⚠️  [SKIP] Missing required field');
+        console.log('[SKIP] Missing required field');
         continue;
       }
       
       const rowSkus = this.countSkusWithValues(row, skuInfo);
       if (rowSkus.count === 0) {
-        console.log('⚠️  [SKIP] No SKUs');
+        console.log('[SKIP] No SKUs');
         continue;
       }
       
-      console.log(`🔎 [NEW ROW] SKUs: [${Array.from(rowSkus.skuIds).join(', ')}]`);
+      console.log(`[NEW ROW] SKUs: [${Array.from(rowSkus.skuIds).join(', ')}]`);
       
       // Check if combination exists in same section
       const sectionMap = existingCombinations.get(section);
       if (!sectionMap) {
-        console.log('✅ [UNIQUE] No existing rows in this section');
+        console.log('[UNIQUE] No existing rows in this section');
         continue;
       }
       
       const partMap = sectionMap.get(partNumber);
       if (!partMap) {
-        console.log('✅ [UNIQUE] No existing rows with this part');
+        console.log('[UNIQUE] No existing rows with this part');
         continue;
       }
       
       const existingSkuSet = partMap.get(bomLinkFeature);
       if (!existingSkuSet) {
-        console.log('✅ [UNIQUE] No existing rows with this feature');
+        console.log('[UNIQUE] No existing rows with this feature');
         continue;
       }
       
-      console.log(`🔎 [COMPARE] Existing SKUs in same Section+Part+Feature: [${Array.from(existingSkuSet).join(', ')}]`);
+      console.log(`[COMPARE] Existing SKUs in same Section+Part+Feature: [${Array.from(existingSkuSet).join(', ')}]`);
       
       // Check if ANY SKU matches
       const duplicateSkus: string[] = [];
       for (const skuId of rowSkus.skuIds) {
         if (existingSkuSet.has(skuId)) {
-          console.log(`❌ [DUPLICATE!] SKU ${skuId} already exists!`);
+          console.log(`[DUPLICATE!] SKU ${skuId} already exists!`);
           duplicateSkus.push(skuId);
         }
       }
       
       if (duplicateSkus.length > 0) {
-        console.log(`❌ [DUPLICATE ROW!] Same Section+Part+Feature+SKU found!`);
+        console.log(`[DUPLICATE ROW!] Same Section+Part+Feature+SKU found!`);
         const rowId = row.newRowId || row.partNumber || 'Unknown';
         invalidRows.push({
           row,
@@ -536,7 +533,7 @@ export class ValidationService {
           rowId,
         });
       } else {
-        console.log('✅ [UNIQUE] Different SKUs');
+        console.log('[UNIQUE] Different SKUs');
       }
     }
 
@@ -549,8 +546,8 @@ export class ValidationService {
       invalidRows: invalidRows.length > 0 ? invalidRows : undefined,
     };
 
-    console.log('🏁 [RESULT]', result.isValid ? 'VALID ✅' : 'INVALID ❌');
-    console.log(`🏁 [RESULT] ${invalidRows.length} duplicate row(s) found`);
+    console.log('[RESULT]', result.isValid ? 'VALID' : 'INVALID');
+    console.log(`[RESULT] ${invalidRows.length} duplicate row(s) found`);
     
     return result;
   }

@@ -2372,8 +2372,9 @@ export class App implements OnInit, OnDestroy {
 
   /**
    * Build skus array from row SKU fields (reusable helper)
-   * Converts individual SKU fields (sku100150, sku100152, etc.) back to skus array format
-   * For new rows: Uses skuInfo structure (no isActive, value, dimensionId)
+   * Converts individual SKU fields (sku100150, sku100152 etc.) back to skus array format
+   * For new rows: Checks if same bomLinkFeature exists in same section, and reuses full SKU from that row
+   * Otherwise: Uses skuInfo structure (no isActive, value, dimensionId)
    * For edited rows: Preserves original SKU structure with value and isActive
    */
   private buildSkusArrayFromRow(row: any, skuInfo: any[]): any[] {
@@ -2387,37 +2388,104 @@ export class App implements OnInit, OnDestroy {
         return s !== '';
       };
 
+      // NEW LOGIC: Check if same bomLinkFeature exists in same section
+      let matchingRows: any[] = [];
+      if (row.section && row.bomLinkFeature) {
+        
+        // Search through rowData hierarchy for ALL matching rows
+        const findAllMatchingRows = (rows: any[]): any[] => {
+          let matches: any[] = [];
+          for (const r of rows) {
+            // OPTIMIZATION: Prune search if this branch belongs to a different section
+            // If the row (or group) has a section ID that doesn't match, we can safely skip it and its children.
+            // This prevents iterating through unrelated sections (e.g., checking "Wings" when row is "Fuselage").
+            if (r.section && r.section !== row.section) {
+              continue;
+            }
+
+            // Check data rows (not headers)
+            if ((r.isDirectRow || r.isSubRow) && !r.isNewRow) {
+              // Condition 1: Section Match (Strict Internal Name)
+              // Note: The optimization above already handles r.section !== row.section, 
+              // but we keep strict equality here for clarity/completeness of the matching conditions.
+              const isSectionMatch = r.section === row.section;
+              // Condition 2: Feature Match
+              const isFeatureMatch = r.bomLinkFeature === row.bomLinkFeature;
+              // Condition 3: Empty Part Number (on existing row)
+              const isPartMatch = !r.partNumber || String(r.partNumber).trim() === '';
+
+              if (isSectionMatch && isFeatureMatch && isPartMatch) {
+                matches.push(r);
+              }
+            }
+            // Recursively check children
+            if (r.children && r.children.length > 0) {
+              const childMatches = findAllMatchingRows(r.children);
+              matches = matches.concat(childMatches);
+            }
+          }
+          return matches;
+        };
+
+        matchingRows = findAllMatchingRows(this.rowData);
+      }
+
+      const hasMatchingRows = matchingRows.length > 0;
+      if (hasMatchingRows) {
+        console.log(`[SKU BUILDER] Found ${matchingRows.length} matching rows for new row.`);
+      }
+
+      // Check if any entered SKU value exists unconditionally
       let hasAnySkuValue = false;
       skuInfo.forEach((sku) => {
         const skuFieldName = `sku${sku.skuId}`;
         const skuValue = row[skuFieldName];
-
-        // Check if this SKU has a value
         if (hasSkuValue(skuValue)) {
           hasAnySkuValue = true;
         }
       });
 
+      // Process SKUs from the skuInfo list based on input values
+      // If matching rows exist, try to find the specific SKU ID in ANY of them.
+      // If not found (or no matching rows), fall back to defaults.
       skuInfo.forEach((sku) => {
         const skuFieldName = `sku${sku.skuId}`;
         const skuValue = row[skuFieldName];
 
-        // Include SKU if it has a value, OR if no SKUs have values (include all from skuInfo)
+        // Apply standard logic: Include matches only if they have a value, OR if no values were entered at all
         if (!hasAnySkuValue || hasSkuValue(skuValue)) {
-          // Include: product, productId, color, destination, destinationDimensionId, manufacturer, size1, colorDimensionId, sourceDimensionId, skuId
-          // Exclude: isActive, value, dimensionId (these are only for edited rows)
-          skus.push({
-            product: sku.product || '',
-            productId: sku.productId || '',
-            color: sku.color || '',
-            destination: sku.destination || '',
-            destinationDimensionId: sku.destinationDimensionId || '',
-            manufacturer: sku.manufacturer || '',
-            size1: sku.size1 || '',
-            colorDimensionId: sku.colorDimensionId || '',
-            sourceDimensionId: sku.sourceDimensionId || '',
-            skuId: sku.skuId || '',
-          });
+          
+          let existingSku: any = null;
+
+          // Condition 4: SKU ID Match (Search in ALL matching rows)
+          if (hasMatchingRows) {
+            for (const matchRow of matchingRows) {
+              if (matchRow.allSkus && Array.isArray(matchRow.allSkus)) {
+                existingSku = matchRow.allSkus.find((s: any) => s.skuId === sku.skuId);
+                if (existingSku) {
+                   break; 
+                }
+              }
+            }
+          }
+
+          if (existingSku) {
+            // Found matching SKU ID in existing rows
+            console.log(`   SKU ${sku.skuId}: Reusing attributes from matching row.`);
+            skus.push({
+              ...existingSku,
+              value: String(skuValue || '')
+            });
+          } else {
+            // No match found, use defaults
+             if (hasSkuValue(skuValue)) {
+                 console.log(`   SKU ${sku.skuId}: No matching existing SKU found. Using default attributes.`);
+             }
+            skus.push({
+              ...sku,
+              value: String(skuValue || ''),
+            });
+          }
         }
       });
     } else {
@@ -2466,7 +2534,6 @@ export class App implements OnInit, OnDestroy {
 
     return skus;
   }
-
   /**
    * Transform grid row data back to API format with mixed edit/create support
    * For existing rows: Uses _old/_new suffixes for edited fields (startDate, endDate, quantity)

@@ -402,47 +402,6 @@ export class GridCommonService {
           !data.isBranchHeader
         );
       },
-      // rowSelection: {
-      //   mode: 'multiRow',
-      //   enableClickSelection: false,
-      //   checkboxes: (params: any) => {
-      //     const data = params?.data;
-      //     if (!data) return false;
-
-      //     // Never show checkboxes on header/group rows
-      //     if (
-      //       data.isSectionHeader ||
-      //       data.isGroupHeader ||
-      //       data.isMaterialHeader ||
-      //       data.isBranchHeader
-      //     ) {
-      //       return false;
-      //     }
-
-      //     // Hide checkbox for rows that don't belong to any section / have no content
-      //     const sectionEmpty =
-      //       data.section === undefined ||
-      //       data.section === null ||
-      //       (typeof data.section === 'string' && data.section.trim() === '');
-
-      //     const children = (data as any).children;
-      //     const hasNoChildren = Array.isArray(children) && children.length === 0;
-
-      //     // If a row has no section AND no children, treat it as an "empty" row
-      //     if (sectionEmpty && hasNoChildren) return false;
-
-      //     return true;
-      //   },
-      //   isRowSelectable: (params) => {
-      //     return (
-      //       params.data &&
-      //       !params.data.isSectionHeader &&
-      //       !params.data.isGroupHeader &&
-      //       !params.data.isMaterialHeader &&
-      //       !params.data.isBranchHeader
-      //     );
-      //   },
-      // },
       suppressColumnVirtualisation: false,
       suppressHorizontalScroll: false,
       enableCharts: false,
