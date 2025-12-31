@@ -1279,6 +1279,16 @@ export class App implements OnInit, OnDestroy {
   }
 
   private applyGrouping(): void {
+    // Preserve new rows before rebuilding
+    const newRows: any[] = [];
+    if (this.displayData && Array.isArray(this.displayData)) {
+      this.displayData.forEach((row) => {
+        if (row.isNewRow && !row.isSectionHeader && !row.isGroupHeader && !row.isMaterialHeader) {
+          newRows.push(row);
+        }
+      });
+    }
+
     // Start with the base hierarchical data (filtered if search is active)
     let hierarchicalData = this.rowData;
     if (this.searchText && this.searchText.trim() !== '') {
@@ -1322,6 +1332,14 @@ export class App implements OnInit, OnDestroy {
       // Clear group state when no grouping
       this.groupExpandedState.clear();
     }
+
+    // Add new rows back
+    newRows.forEach((newRow) => {
+      const insertAfter = newRow.insertAfter;
+      if (insertAfter !== undefined && insertAfter >= 0 && insertAfter < this.displayData.length) {
+        this.displayData.splice(insertAfter + 1, 0, newRow);
+      }
+    });
 
     // Update grid if available
     if (this.gridApi) {
