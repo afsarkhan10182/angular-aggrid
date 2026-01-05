@@ -431,6 +431,10 @@ export class RowManagementService {
                       componentInstance.transformToHierarchicalData(responseData);
                     componentInstance.rowData = updatedHierarchicalData;
 
+                    // FIX: Clear displayData to prevent applyGrouping from preserving the old local "new rows"
+                    // giving us duplicates (one real from API, one ghost from local state)
+                    componentInstance.displayData = [];
+
                     // Update displayData if available
                     if (componentInstance.applyHierarchicalSearch) {
                       componentInstance.applyHierarchicalSearch();
@@ -578,6 +582,11 @@ export class RowManagementService {
   ): void {
     const updatedRowData = this.removeNewRowFlags(rowData);
     componentInstance.rowData = updatedRowData;
+    
+    // FIX: Clear displayData here too, to prevent applyGrouping from preserving ghost new rows
+    // when we refresh the grid later
+    componentInstance.displayData = [];
+
     editedRows.clear();
 
     // Clear edited fields tracking
