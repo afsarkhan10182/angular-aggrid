@@ -422,7 +422,24 @@ export class App implements OnInit, OnDestroy {
           return `<span class="delete-row-btn" data-new-row-id="${newRowId}" title="Delete">−</span>`;
         }
 
-        if ((params.data.isMaterialHeader && params.data.hasLinkedBom) || params.data.isDirectRow) {
+        // Check if section has any VISIBLE children (MaterialHeaders or DirectRows with content)
+        const hasVisibleChildren = () => {
+          if (!params.data.children || !Array.isArray(params.data.children) || params.data.children.length === 0) {
+            return false;
+          }
+          return params.data.children.some((child: any) => {
+            if (child.isMaterialHeader) return true;
+            // Direct rows are only visible if they have a part number/part
+            const val = child.partNumber || child.part;
+            return val && String(val).trim() !== '';
+          });
+        };
+
+        if (
+          (params.data.isMaterialHeader && params.data.hasLinkedBom) ||
+          params.data.isDirectRow ||
+          (params.data.isSectionHeader && !hasVisibleChildren())
+        ) {
           return `<span class="add-row-btn" data-part-id="${partId}" title="Add">+</span>`;
         }
 
@@ -1727,8 +1744,17 @@ export class App implements OnInit, OnDestroy {
       }
     }
 
+    // Calculate actual insert index (skipping existing new rows)
+    let insertIndex = rowIndex;
+    while (
+      insertIndex + 1 < this.displayData.length &&
+      this.displayData[insertIndex + 1].isNewRow
+    ) {
+      insertIndex++;
+    }
+
     const result = this.rowManagementService.addRowAfter(
-      rowIndex,
+      insertIndex,
       this.displayData,
       this.gridApi,
       this.dataService,
