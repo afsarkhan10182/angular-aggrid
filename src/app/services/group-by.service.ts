@@ -62,6 +62,16 @@ export class GroupByService {
     const groups = new Map<string | null, any[]>();
 
     data.forEach((row) => {
+      // Skip rows that are empty/invalid (no part number), similar to flattenHierarchicalData logic
+      // Exception: Keep headers if they ended up here (unlikely for leaf nodes but safe to check)
+      const isHeader = row.isMaterialHeader || row.isSectionHeader || row.isGroupHeader;
+      if (!isHeader) {
+         const partNumber = row.partNumber || row.part;
+         if (!partNumber || String(partNumber).trim() === '') {
+           return;
+         }
+      }
+
       const groupValue = row[groupField.field];
       const key = groupValue !== null && groupValue !== undefined ? String(groupValue) : '__null__';
       

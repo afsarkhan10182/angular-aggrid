@@ -583,10 +583,10 @@ export class App implements OnInit, OnDestroy {
           },
         });
       } else if (field === 'qty' || field === 'quantity') {
-        columnDef.cellEditor = 'agNumberCellEditor';
+        // Use Text Editor to allow easy decimal typing without browser <input type="number"> restrictions
+        columnDef.cellEditor = 'agTextCellEditor';
         columnDef.cellEditorParams = {
-          min: 0,
-          max: 9999,
+          // No min/max needed for text editor here, handled by logic/parser if needed
         };
         columnDef.editable = (params: any) => {
           if (
@@ -601,6 +601,8 @@ export class App implements OnInit, OnDestroy {
           }
           return true;
         };
+        // Removed valueFormatter and valueParser to respect user input exactly as typed
+        // API data is already formatted to X.0 in buildMbomHierarchy
       } else if (
         field === 'supplier' ||
         field === 'color' ||
@@ -2155,6 +2157,8 @@ export class App implements OnInit, OnDestroy {
         partNumber: bomLink.partNumber,
         skus: bomLink.skus,
         linkedBom: bomLink.linkedBom,
+        quantity: bomLink.quantity ? Number(bomLink.quantity).toFixed(1) : bomLink.quantity, // Format quantity
+        qty: bomLink.qty ? Number(bomLink.qty).toFixed(1) : bomLink.qty, // Format qty
         section: sectionInternalName, // Keep internal name for payload + toggling
         sectionDisplayName: sectionDisplayName, // Store display name for UI
       };
