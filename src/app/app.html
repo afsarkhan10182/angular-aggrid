@@ -3,7 +3,7 @@
   <div class="app-header">
     <div class="header-left"></div>
     <h2>
-      BOM COMPOSER<span *ngIf="bomName"> - {{ bomName }}</span>
+      <span *ngIf="bomType">{{ bomType }} </span>BOM COMPOSER<span *ngIf="bomName"> - {{ bomName }}</span>
     </h2>
     <div class="header-right">
       <!-- User info display -->

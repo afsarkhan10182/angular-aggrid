@@ -45,6 +45,7 @@ export class App implements OnInit, OnDestroy {
   public editedRows = new Set<string | number>();
   public currentUser: any = null;
   public bomName: string = '';
+  public bomType: string = '';
   public isLoading: boolean = true;
   public isSaving: boolean = false; // Track save operation state
   public isMassEditing: boolean = false; // Track mass edit operation state
@@ -281,6 +282,11 @@ export class App implements OnInit, OnDestroy {
         fullName: userName,
         userName: userName,
       };
+    }
+
+    const bomType = this.dataService.getBomType();
+    if (bomType) {
+      this.bomType = bomType;
     }
 
     const csrfSub = this.sessionService.getCsrfToken().subscribe({

@@ -586,4 +586,15 @@ export class DataService {
     const protocol = window.location.protocol; // Returns "http:" or "https:"
     return `${protocol}//${hostFromJsp}`;
   }
+
+  // Get refSKUId from JSP data attribute
+  getRefSkuId(): string | null {
+    return this.utilService.getJspDataAttribute('data-refskuid');
+  }
+
+  // Get isServiceTeamMember from JSP data attribute
+  isServiceTeamMember(): boolean {
+    const value = this.utilService.getJspDataAttribute('data-isserviceteammember');
+    return value === 'true';
+  }
 }
