@@ -58,45 +58,6 @@ export class App implements OnInit, OnDestroy {
   public massEditEndDate: string = '';
   public massEditQuantity: number | null = null;
 
-  public allColumns = [
-    // Core Part Information
-    { field: 'actions', headerName: '', hide: false, isVirtual: false },
-    { field: 'part', headerName: 'Part Number', hide: false, isVirtual: false },
-    { field: 'type', headerName: 'Type', hide: true, isVirtual: true },
-    {
-      field: 'manufacturerPartNumber',
-      headerName: 'Manufacturer Part Number',
-      hide: true,
-      isVirtual: true,
-    },
-
-    // Descriptions
-    { field: 'shortDesc', headerName: 'Short Description', hide: false, isVirtual: false },
-    { field: 'longDesc', headerName: 'Long Description', hide: false, isVirtual: false },
-    { field: 'serviceDescription', headerName: 'Service Description', hide: true, isVirtual: true },
-
-    // Service Information
-    { field: 'tcgEquivalent', headerName: 'TCG Equivalent', hide: true, isVirtual: true },
-    { field: 'serviceSub1', headerName: 'Service Sub1', hide: true, isVirtual: true },
-    { field: 'serviceSub2', headerName: 'Service Sub2', hide: true, isVirtual: true },
-    { field: 'colorFinish', headerName: 'Color Finish', hide: true, isVirtual: true },
-
-    // Supplier and Origin
-    { field: 'supplier', headerName: 'Supplier', hide: false, isVirtual: false },
-    { field: 'countryOfOrigin', headerName: 'Country Of Origin', hide: true, isVirtual: true },
-
-    // Physical Properties
-    { field: 'color', headerName: 'Color', hide: false, isVirtual: false },
-
-    // Quantity and Units
-    { field: 'qty', headerName: 'Qty', hide: false, isVirtual: false },
-    { field: 'uom', headerName: 'UoM', hide: true, isVirtual: true },
-
-    // Dates
-    { field: 'startDate', headerName: 'Start Date', hide: false, isVirtual: false },
-    { field: 'endDate', headerName: 'End Date', hide: false, isVirtual: false },
-  ];
-
   public gridOptions: GridOptions = {} as GridOptions;
 
   public defaultColDef: any;
@@ -365,6 +326,16 @@ export class App implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Get all columns for visibility panel - dynamically from columnDefs
+   */
+  get allColumns(): any[] {
+    return this.columnDefs.filter(col => {
+      const field = col.field || (col as any).colId;
+      return field !== 'checkbox';
+    });
+  }
+
   createHierarchicalColumns(columnMapping: any): ColDef[] {
     const columns: ExtendedColDef[] = [];
 
@@ -384,9 +355,17 @@ export class App implements OnInit, OnDestroy {
       context: {
         excludeFromExport: true,
       },
-      headerCheckboxSelection: true,
+      headerCheckboxSelection: () => {
+        // Hide header checkbox in SBOM read-only mode
+        return this.isAddRowEnabled();
+      },
       headerCheckboxSelectionFilteredOnly: true,
       checkboxSelection: (params: any) => {
+        // Hide all checkboxes in SBOM read-only mode
+        if (!this.isAddRowEnabled()) {
+          return false;
+        }
+        
         const data = params?.data;
         if (!data) return false;
         return !(
@@ -446,7 +425,11 @@ export class App implements OnInit, OnDestroy {
           params.data.isDirectRow ||
           (params.data.isSectionHeader && !hasVisibleChildren())
         ) {
-          return `<span class="add-row-btn" data-part-id="${partId}" title="Add">+</span>`;
+          // Check if add row is enabled for this BOM type
+          if (this.isAddRowEnabled()) {
+            return `<span class="add-row-btn" data-part-id="${partId}" title="Add">+</span>`;
+          }
+          return ''; // Add button hidden for SBOM non-service-team members
         }
 
         return '';
@@ -483,7 +466,17 @@ export class App implements OnInit, OnDestroy {
         return this.getHierarchicalCellStyle(params);
       },
       editable: (params: any) => {
-        return params.data && params.data.isNewRow && !params.data.isSectionHeader;
+        if (!params.data || params.data.isSectionHeader) {
+          return false;
+        }
+        
+        // New rows - always editable
+        if (params.data.isNewRow) {
+          return true;
+        }
+        
+        // Existing rows - check SBOM restrictions
+        return this.isFieldEditableInSbom('bomLinkFeature');
       },
       cellEditor: AutocompleteCellEditorComponent,
       cellEditorParams: () => ({
@@ -527,7 +520,17 @@ export class App implements OnInit, OnDestroy {
           },
           cellStyle: (params: any) => this.getDataCellStyle(params),
           editable: (params: any) => {
-            return params.data && params.data.isNewRow && !params.data.isSectionHeader;
+            if (!params.data || params.data.isSectionHeader) {
+              return false;
+            }
+            
+            // New rows - always editable
+            if (params.data.isNewRow) {
+              return true;
+            }
+            
+            // Existing rows - check SBOM restrictions
+            return this.isFieldEditableInSbom('bomLinkCountryOfOrigin');
           },
           cellEditor: AutocompleteCellEditorComponent,
           cellEditorParams: () => ({
@@ -572,7 +575,17 @@ export class App implements OnInit, OnDestroy {
           return this.getDataCellStyle(params);
         },
         editable: (params: any) => {
-          return params.data && params.data.isNewRow && !params.data.isSectionHeader;
+          if (!params.data || params.data.isSectionHeader) {
+            return false;
+          }
+          
+          // New rows - always editable (if add row is enabled for this BOM type)
+          if (params.data.isNewRow) {
+            return true;
+          }
+          
+          // Existing rows - check SBOM restrictions
+          return this.isFieldEditableInSbom(field);
         },
       };
 
@@ -612,7 +625,14 @@ export class App implements OnInit, OnDestroy {
           ) {
             return false;
           }
-          return true;
+          
+          // New rows - always editable
+          if (params.data && params.data.isNewRow) {
+            return true;
+          }
+          
+          // Existing rows - check SBOM restrictions
+          return this.isFieldEditableInSbom(field);
         };
         // Removed valueFormatter and valueParser to respect user input exactly as typed
         // API data is already formatted to X.0 in buildMbomHierarchy
@@ -688,7 +708,14 @@ export class App implements OnInit, OnDestroy {
           ) {
             return false;
           }
-          return true;
+          
+          // New rows - always editable
+          if (params.data && params.data.isNewRow) {
+            return true;
+          }
+          
+          // Existing rows - check SBOM restrictions
+          return this.isFieldEditableInSbom(field);
         };
         columnDef.cellRenderer = (params: any) => {
           if (
@@ -1070,6 +1097,50 @@ export class App implements OnInit, OnDestroy {
         <span class="hier-count">(${groupCount})</span>
       </div>
     `;
+  }
+
+  /**
+   * Check if we're in SBOM mode
+   */
+  private isSbomMode(): boolean {
+    const bomType = this.dataService.getBomType();
+    return bomType === 'SBOM';
+  }
+
+  /**
+   * Check if current user is a service team member
+   */
+  private isUserServiceTeamMember(): boolean {
+    return this.dataService.isServiceTeamMember();
+  }
+
+  /**
+   * Check if field is editable in SBOM mode (only SpecSheet fields for service team)
+   */
+  private isFieldEditableInSbom(field: string): boolean {
+    if (!this.isSbomMode()) {
+      return true; // Not SBOM, normal editing rules apply
+    }
+
+    if (!this.isUserServiceTeamMember()) {
+      return false; // SBOM + not service team = no editing
+    }
+
+    // SBOM + service team = only SpecSheet fields editable
+    const isEditable = field === 'bomLinkSpecSheetExtra' || field === 'bomLinkIncludeInSpecSheet';
+    return isEditable;
+  }
+
+  /**
+   * Check if add row functionality should be enabled
+   */
+  private isAddRowEnabled(): boolean {
+    if (!this.isSbomMode()) {
+      return true; // MBOM - add row enabled
+    }
+
+    // SBOM - only enabled for service team members
+    return this.isUserServiceTeamMember();
   }
 
   private renderNewRowSkuCell(params: any): string {
