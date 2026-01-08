@@ -569,6 +569,17 @@ export class DataService {
     return this.utilService.getJspDataAttribute('data-bomtype');
   }
 
+  // Get refSKUId from JSP data attribute
+  getRefSkuId(): string | null {
+    return this.utilService.getJspDataAttribute('data-refskuid');
+  }
+
+  // Get isServiceTeamMember from JSP data attribute
+  isServiceTeamMember(): boolean {
+    const value = this.utilService.getJspDataAttribute('data-isserviceteammember');
+    return value === 'true';
+  }
+
   // Get service host URL from JSP data attribute (passed from Windchill)
   getServiceHostUrl(): string {
     const hostFromJsp = this.utilService.getJspDataAttribute('data-host');
@@ -585,16 +596,5 @@ export class DataService {
     // Otherwise, use the current page's protocol (http or https)
     const protocol = window.location.protocol; // Returns "http:" or "https:"
     return `${protocol}//${hostFromJsp}`;
-  }
-
-  // Get refSKUId from JSP data attribute
-  getRefSkuId(): string | null {
-    return this.utilService.getJspDataAttribute('data-refskuid');
-  }
-
-  // Get isServiceTeamMember from JSP data attribute
-  isServiceTeamMember(): boolean {
-    const value = this.utilService.getJspDataAttribute('data-isserviceteammember');
-    return value === 'true';
   }
 }

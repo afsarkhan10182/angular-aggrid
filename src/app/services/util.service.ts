@@ -136,16 +136,22 @@ export class UtilService {
    * Create cell content with tooltip if text is likely truncated
    * @param value - Cell value
    * @param columnWidth - Width of the column in pixels
+   * @param color - Optional text color to apply
    * @returns HTML string with tooltip if needed
    */
-  createCellContentWithTooltip(value: any, columnWidth: number): string {
+  createCellContentWithTooltip(value: any, columnWidth: number, color?: string): string {
     if (!value && value !== 0) return '';
     const textStr = String(value);
     const escapedText = this.escapeHtml(textStr);
     const shouldShowTooltip = this.isTextLikelyTruncated(textStr, columnWidth);
 
+    const colorStyle = color ? `color: ${color};` : '';
+    
     if (shouldShowTooltip) {
-      return `<span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; width: 100%;">${escapedText}</span>`;
+      return `<span style="${colorStyle}overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; width: 100%;">${escapedText}</span>`;
+    }
+    if (color) {
+      return `<span style="${colorStyle}">${escapedText}</span>`;
     }
     return escapedText;
   }

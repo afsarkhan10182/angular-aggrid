@@ -517,7 +517,9 @@ export class App implements OnInit, OnDestroy {
               return '';
             }
             const columnWidth = params.column?.getActualWidth() || 180;
-            return this.utilService.createCellContentWithTooltip(params.value, columnWidth);
+            const cellStyle = this.getDataCellStyle(params);
+            const textColor = cellStyle?.color || undefined;
+            return this.utilService.createCellContentWithTooltip(params.value, columnWidth, textColor);
           },
           tooltipValueGetter: (params: any) => {
             if (params.value === null || params.value === undefined) return null;
@@ -555,7 +557,12 @@ export class App implements OnInit, OnDestroy {
             return '';
           }
           const columnWidth = params.column?.getActualWidth() || columnDef.width || 150;
-          return this.utilService.createCellContentWithTooltip(params.value, columnWidth);
+          
+          // Get the computed cell style to extract color
+          const cellStyle = this.getDataCellStyle(params);
+          const textColor = cellStyle?.color || undefined;
+          
+          return this.utilService.createCellContentWithTooltip(params.value, columnWidth, textColor);
         },
         tooltipValueGetter: (params: any) => {
           if (params.value === null || params.value === undefined) return null;
@@ -696,7 +703,9 @@ export class App implements OnInit, OnDestroy {
             formattedValue = columnDef.valueFormatter(params) || '';
           }
           const columnWidth = params.column?.getActualWidth() || columnDef.width || 150;
-          return this.utilService.createCellContentWithTooltip(formattedValue, columnWidth);
+          const cellStyle = this.getDataCellStyle(params);
+          const textColor = cellStyle?.color || undefined;
+          return this.utilService.createCellContentWithTooltip(formattedValue, columnWidth, textColor);
         };
         columnDef.valueGetter = (params: any) => {
           if (!params.data) return undefined;
@@ -821,14 +830,20 @@ export class App implements OnInit, OnDestroy {
         resizable: true,
         suppressSizeToFit: true,
         suppressAutoSize: true,
+        // Add skuId to column definition for validation highlighting
+        skuId: sku.skuId,
         headerClass: index === 0 ? 'first-sku-column-header' : '',
         cellClass: index === 0 ? 'first-sku-column-cell' : '',
+
         cellRenderer: (params: any) => {
           const data = params.data || {};
 
           if (data.isSectionHeader || data.isBranchHeader || data.isGroupHeader) {
             return '';
           }
+
+          // Check if this row has a part for the reference SKU
+          const textColor = this.shouldHighlightRow(data) ? 'color: #ff0000;' : '';
 
           if (data.isMaterialHeader || data.isDirectRow) {
             const value = params.value;
@@ -839,7 +854,7 @@ export class App implements OnInit, OnDestroy {
             // Replace newlines with <br> tags for HTML rendering
             const htmlValue = this.utilService.escapeHtml(valueStr).replace(/\n/g, '<br>');
 
-            return `<div style="white-space: pre-line; line-height: 1.5; padding: 4px 0;">${htmlValue}</div>`;
+            return `<div style="${textColor}white-space: pre-line; line-height: 1.5; padding: 4px 0;">${htmlValue}</div>`;
           }
 
           if (data.isNewRow) {
@@ -857,7 +872,7 @@ export class App implements OnInit, OnDestroy {
             const deleteIcon = `<button type="button" class="sku-delete-btn-existing" data-action="disconnect-sku" data-sku-field="${skuField}" title="Disconnect part from SKU">✕</button>`;
 
             return `<div style="white-space: pre-line; line-height: 1.5; padding: 4px 0; display: flex; align-items: center;">
-              <span style="flex: 1;">${htmlValue}</span>
+              <span style="${textColor}flex: 1;">${htmlValue}</span>
               ${deleteIcon}
             </div>`;
           }
@@ -872,7 +887,7 @@ export class App implements OnInit, OnDestroy {
           const deleteIcon = `<button type="button" class="sku-delete-btn-existing" data-action="disconnect-sku" data-sku-field="${skuField}" title="Disconnect part from SKU">✕</button>`;
 
           return `<div style="white-space: pre-line; line-height: 1.5; padding: 4px 0; display: flex; align-items: center;">
-            <span style="flex: 1;">${htmlValue}</span>
+            <span style="${textColor}flex: 1;">${htmlValue}</span>
             ${deleteIcon}
           </div>`;
         },
@@ -945,15 +960,20 @@ export class App implements OnInit, OnDestroy {
     }
 
     if (data.isMaterialHeader) {
-      const materialIndex = data.materialIndex;
+      const arrowIcon = data.isExpanded ? '▼' : '▶';
+      const materialIdentifier = data.materialKey || '';
+      const materialIndex = data.materialIndex !== undefined ? data.materialIndex : '';
       const linkIcon = data.hasLinkedBom ? '🔗' : '';
-      const materialIdentifier = data.materialKey;
+      
+      // Check if this row has a part for the reference SKU
+      const textColor = this.shouldHighlightRow(data) ? 'color: #ff0000;' : '';
+
       return `
         <div class="hier-header hier-clickable material-header" onclick="window.toggleMaterial('${
           data.section
         }', '${materialIdentifier}', ${materialIndex})">
           ${linkIcon ? `<span class="material-link-icon">${linkIcon}</span>` : ''}
-          <span class="hier-title">${this.utilService.escapeHtml(
+          <span class="hier-title" style="${textColor}">${this.utilService.escapeHtml(
             String(data.material || data.part || data.partNumber || '')
           )}</span>
         </div>
@@ -961,9 +981,12 @@ export class App implements OnInit, OnDestroy {
     }
 
     if (data.isParentRow) {
+      // Check if this row has a part for the reference SKU
+      const textColor = this.shouldHighlightRow(data) ? 'color: #ff0000;' : '';
+      
       return `
         <div class="hier-header parent-row-header">
-          <span class="hier-title"><span class="hier-indent" style="--indent:16px;"></span>${this.utilService.escapeHtml(
+          <span class="hier-title" style="${textColor}"><span class="hier-indent" style="--indent:16px;"></span>${this.utilService.escapeHtml(
             String(data.part || '')
           )}</span>
         </div>
@@ -973,17 +996,42 @@ export class App implements OnInit, OnDestroy {
     if (data.isDirectRow) {
       const linkIcon = data.hasLinkedBom ? '🔗' : '';
       const featureValue = data.bomLinkFeature || '';
+      
+      // Check if this row has a part for the reference SKU
+      const textColor = this.shouldHighlightRow(data) ? 'color: #ff0000;' : '';
+      
       return `
         <div class="hier-row direct-row">
           ${linkIcon ? `<span class="direct-link-icon">${linkIcon}</span>` : ''}
-          <span class="direct-text">${this.utilService.escapeHtml(featureValue)}</span>
+          <span class="direct-text" style="${textColor}">${this.utilService.escapeHtml(featureValue)}</span>
         </div>
       `;
     }
 
     const featureValue = data.bomLinkFeature;
     const columnWidth = 220;
-    return this.utilService.createCellContentWithTooltip(featureValue, columnWidth);
+    
+    // Check if this row has a part for the reference SKU - for red highlighting
+    const textColor = this.getHighlightColor(data);
+    
+    return this.utilService.createCellContentWithTooltip(featureValue, columnWidth, textColor);
+  }
+
+  /**
+   * Check if a row should be highlighted (has part for reference SKU)
+   */
+  private shouldHighlightRow(data: any): boolean {
+    if (!data) return false;
+    const refSkuId = this.dataService.getRefSkuId();
+    const refSkuFieldName = `sku${refSkuId}`;
+    return !!(data[refSkuFieldName] && String(data[refSkuFieldName]).trim() !== '');
+  }
+
+  /**
+   * Get text color for highlighted rows
+   */
+  private getHighlightColor(data: any): string | undefined {
+    return this.shouldHighlightRow(data) ? '#ff0000' : undefined;
   }
 
   private getFeatureValue(row: any): string {
@@ -1065,6 +1113,9 @@ export class App implements OnInit, OnDestroy {
     const isGroupHeader = data?.isGroupHeader;
     const isActionsColumn = this.isActionsColumn(params);
 
+    // Check if this row has a part for the reference SKU
+    const hasPartForRefSku = this.shouldHighlightRow(data);
+
     if (isGroupHeader) {
       const bgColor =
         data.groupLevel === 0 ? '#f0f9ff' : data.groupLevel === 1 ? '#f0fdf4' : '#fef3c7';
@@ -1094,6 +1145,7 @@ export class App implements OnInit, OnDestroy {
         backgroundColor: '#e5e7eb',
         borderLeft: '4px solid #10b981',
         fontWeight: '600',
+        color: hasPartForRefSku ? '#ff0000' : 'inherit'
       };
     }
 
@@ -1102,6 +1154,7 @@ export class App implements OnInit, OnDestroy {
         backgroundColor: '#eff6ff',
         borderLeft: '3px solid #3b82f6',
         fontWeight: '500',
+        color: hasPartForRefSku ? '#ff0000' : '#1e40af'
       };
     }
 
@@ -1110,22 +1163,28 @@ export class App implements OnInit, OnDestroy {
         backgroundColor: '#ffffff',
         borderLeft: '2px solid #d1d5db',
         fontWeight: '400',
+        color: hasPartForRefSku ? '#ff0000' : '#374151'
       };
     }
 
     return {
       backgroundColor: '#ffffff',
       borderLeft: '2px solid #d1d5db',
+      color: hasPartForRefSku ? '#ff0000' : '#374151'
     };
   }
 
   getDataCellStyle(params: any): any {
     const data = params.data;
-    const isSectionHeader = data?.isSectionHeader;
-    const isGroupHeader = data?.isGroupHeader;
-    const isActionsColumn = this.isActionsColumn(params);
+    const style: any = { borderRight: '1px solid #e2e8f0' };
 
-    if (isGroupHeader) {
+    if (!data) return style;
+
+    const hasPartForRefSku = this.shouldHighlightRow(data);
+    
+    const isActionsColumn = params.colDef.field === 'actions';
+
+    if (data.isGroupHeader) {
       const bgColor =
         data.groupLevel === 0 ? '#f0f9ff' : data.groupLevel === 1 ? '#f0fdf4' : '#fef3c7';
       return {
@@ -1138,41 +1197,52 @@ export class App implements OnInit, OnDestroy {
       };
     }
 
-    if (isSectionHeader) {
+    if (data.isSectionHeader) {
       return {
-        backgroundColor: '#eff6ff',
-        color: 'transparent',
+        backgroundColor: '#fef3c7',
         borderTop: 'none',
         borderBottom: 'none',
         borderRight: isActionsColumn ? '1px solid #e2e8f0' : 'none',
         borderLeft: 'none',
+        fontWeight: 'bold',
+        color: '#92400e'
       };
     }
 
     if (data.isMaterialHeader) {
       return {
         backgroundColor: 'transparent',
-        color: 'transparent',
+        borderLeft: '4px solid #10b981',
+        fontWeight: '600',
+        color: hasPartForRefSku ? '#ff0000' : 'inherit'
       };
     }
 
     if (data.isParentRow) {
       return {
-        backgroundColor: '#ffffff',
-        color: '#1e40af',
+        backgroundColor: '#eff6ff',
+        borderLeft: '3px solid #3b82f6',
+        fontWeight: '500',
+        color: hasPartForRefSku ? '#ff0000' : '#1e40af'
       };
     }
 
     if (data.isDirectRow) {
       return {
+        ...style,
         backgroundColor: '#ffffff',
-        color: '#374151',
+        borderLeft: '2px solid #d1d5db',
+        fontWeight: '400',
+        color: hasPartForRefSku ? '#ff0000' : '#374151'
       };
     }
 
+    // Default return
     return {
+      ...style,
       backgroundColor: '#ffffff',
-      color: '#374151',
+      borderLeft: '2px solid #d1d5db',
+      color: hasPartForRefSku ? '#ff0000' : '#374151',
     };
   }
 
