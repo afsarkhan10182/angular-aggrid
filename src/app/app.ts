@@ -755,7 +755,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             dataService: this.dataService,
           },
         });
-      } else if (field === 'qty' || field === 'quantity') {
+      } else if (field === 'quantity') {
         // Use Text Editor to allow easy decimal typing without browser <input type="number"> restrictions
         columnDef.cellEditor = 'agTextCellEditor';
         columnDef.cellEditorParams = {
@@ -839,9 +839,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         }
       } else if (
         field === 'bomLinkStartDate' ||
-        field === 'bomLinkEndDate' ||
-        field === 'startDate' ||
-        field === 'endDate'
+        field === 'bomLinkEndDate'
       ) {
         columnDef.filter = false;
         columnDef.cellEditor = 'agDateCellEditor';
@@ -1262,13 +1260,22 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
-   * Check if field is editable in SBOM mode (only SpecSheet fields for service team)
+   * Check if field is editable for existing rows based on BOM type
+   * MBOM: Only bomLinkStartDate, bomLinkEndDate, and quantity are editable
+   * SBOM: Only SpecSheet fields are editable (and only for service team members)
    */
   private isFieldEditableInSbom(field: string): boolean {
     if (!this.isSbomMode()) {
-      return true; // Not SBOM, normal editing rules apply
+      // MBOM mode - only date and quantity fields are editable for existing rows
+      const mbomEditableFields = [
+        'bomLinkStartDate',
+        'bomLinkEndDate',
+        'quantity'
+      ];
+      return mbomEditableFields.includes(field);
     }
 
+    // SBOM mode
     if (!this.isUserServiceTeamMember()) {
       return false; // SBOM + not service team = no editing
     }
@@ -1737,16 +1744,19 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    if (event.data && event.data.isNewRow && !event.data.isSectionHeader) {
+    // Handle cell clicks for editable cells (both new rows and existing rows)
+    if (event.data && !event.data.isSectionHeader) {
       const field = event.colDef.field;
       if (field && field !== 'actions' && !field.startsWith('sku')) {
         const isDateColumn =
           field === 'bomLinkStartDate' ||
-          field === 'bomLinkEndDate' ||
-          field === 'startDate' ||
-          field === 'endDate';
+          field === 'bomLinkEndDate';
 
-        if (isDateColumn) {
+        // Check if this field is editable for this row
+        const isEditable = event.data.isNewRow || this.isFieldEditableInSbom(field);
+
+        if (isDateColumn && isEditable) {
+          // Auto-open date picker for date columns
           event.api.startEditingCell({
             rowIndex: event.rowIndex,
             colKey: event.column.getId(),
@@ -1770,7 +1780,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               }
             }
           }, 150);
-        } else {
+        } else if (event.data.isNewRow && isEditable) {
+          // For new rows, start editing other fields normally
           event.api.startEditingCell({
             rowIndex: event.rowIndex,
             colKey: event.column.getId(),
@@ -2774,7 +2785,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     };
 
     // Check if all rows have the same start date
-    const startDateFields = ['bomLinkStartDate', 'startDate'];
+    const startDateFields = ['bomLinkStartDate'];
     const firstStartDate = getDateValue(selectedRows[0], startDateFields);
     const allSameStartDate = selectedRows.every((row) => {
       const rowDate = getDateValue(row, startDateFields);
@@ -2789,7 +2800,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
 
     // Check if all rows have the same end date
-    const endDateFields = ['bomLinkEndDate', 'endDate'];
+    const endDateFields = ['bomLinkEndDate'];
     const firstEndDate = getDateValue(selectedRows[0], endDateFields);
     const allSameEndDate = selectedRows.every((row) => {
       const rowDate = getDateValue(row, endDateFields);
@@ -2803,7 +2814,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
 
     // Check if all rows have the same quantity
-    const qtyFields = ['qty', 'quantity'];
+    const qtyFields = ['quantity'];
     const firstQty = getQtyValue(selectedRows[0], qtyFields);
     const allSameQty = selectedRows.every((row) => {
       const rowQty = getQtyValue(row, qtyFields);
@@ -2879,7 +2890,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       // Update start date - check which field exists in the grid
       if (this.massEditStartDate) {
         const formattedDate = this.gridCommonService.formatDateToMMDDYYYY(this.massEditStartDate);
-        const startDateFields = ['bomLinkStartDate', 'startDate'];
+        const startDateFields = ['bomLinkStartDate'];
 
         // Find which field exists in the column definitions
         let targetField: string | null = null;
@@ -2902,7 +2913,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
         // Default to startDate if nothing found
         if (!targetField) {
-          targetField = 'startDate';
+          targetField = 'bomLinkStartDate';
         }
 
         // Update the value
@@ -2918,7 +2929,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       // Update end date - check which field exists in the grid
       if (this.massEditEndDate) {
         const formattedDate = this.gridCommonService.formatDateToMMDDYYYY(this.massEditEndDate);
-        const endDateFields = ['bomLinkEndDate', 'endDate'];
+        const endDateFields = ['bomLinkEndDate'];
 
         // Find which field exists in the column definitions
         let targetField: string | null = null;
@@ -2941,7 +2952,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
         // Default to endDate if nothing found
         if (!targetField) {
-          targetField = 'endDate';
+          targetField = 'bomLinkEndDate';
         }
 
         // Update the value
@@ -2956,7 +2967,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
       // Update quantity - check which field exists in the grid
       if (this.massEditQuantity !== null && this.massEditQuantity !== undefined) {
-        const qtyFields = ['qty', 'quantity'];
+        const qtyFields = ['quantity'];
 
         // Find which field exists in the column definitions
         let targetField: string | null = null;
@@ -2979,7 +2990,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
         // Default to qty if nothing found
         if (!targetField) {
-          targetField = 'qty';
+          targetField = 'quantity';
         }
 
         // Update the value
@@ -3014,7 +3025,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
           // Track start date field
           if (this.massEditStartDate) {
-            const startDateFields = ['bomLinkStartDate', 'startDate'];
+            const startDateFields = ['bomLinkStartDate'];
             for (const field of startDateFields) {
               if (columnFields.has(field) || rowData.hasOwnProperty(field)) {
                 editedFieldsForRow.add(field);
@@ -3025,7 +3036,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
           // Track end date field
           if (this.massEditEndDate) {
-            const endDateFields = ['bomLinkEndDate', 'endDate'];
+            const endDateFields = ['bomLinkEndDate'];
             for (const field of endDateFields) {
               if (columnFields.has(field) || rowData.hasOwnProperty(field)) {
                 editedFieldsForRow.add(field);
@@ -3036,7 +3047,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
           // Track quantity field
           if (this.massEditQuantity !== null && this.massEditQuantity !== undefined) {
-            const qtyFields = ['qty', 'quantity'];
+            const qtyFields = ['quantity'];
             for (const field of qtyFields) {
               if (columnFields.has(field) || rowData.hasOwnProperty(field)) {
                 editedFieldsForRow.add(field);
