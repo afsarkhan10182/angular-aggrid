@@ -238,20 +238,6 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
 
   getColumnKeys(): string[] {
     const cols = this.getColumns();
-    const orderedKeys = [
-      'bomLinkFeature',
-      'material',
-      'supplier',
-      'color',
-      'partNumber',
-      'bomLinkStartDate',
-      'bomLinkEndDate',
-      'quantity',
-      'materialColorThirtyCharacterDescription',
-      'materialColorSixtyCharacterDescription',
-    ];
-
-    // Return keys present in the columns object, respecting the preferred order
-    return orderedKeys.filter((key) => key in cols);
+    return Object.keys(cols);
   }
 }

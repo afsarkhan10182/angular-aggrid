@@ -45,6 +45,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public editedRows = new Set<string | number>();
   public currentUser: any = null;
   public bomName: string = '';
+  public bomNamesDisplay: string = '';
+  public bomNamesFull: string = '';
   public bomType: string = '';
   public isLoading: boolean = true;
   public constraintsData: any = null;
@@ -273,8 +275,20 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         const bomPartInfo = this.dataService.getBomPartInfo();
         if (bomPartInfo) {
           const bomPartInfoArray = Array.isArray(bomPartInfo) ? bomPartInfo : [bomPartInfo];
-          if (bomPartInfoArray.length > 0 && bomPartInfoArray[0]?.bomName) {
-            this.bomName = bomPartInfoArray[0].bomName;
+          if (bomPartInfoArray.length > 0) {
+            const names = bomPartInfoArray
+              .map((info: any) => info.bomName)
+              .filter((name: string) => name);
+
+            this.bomNamesFull = names.join(', ');
+
+            if (names.length > 3) {
+              this.bomNamesDisplay = names.slice(0, 3).join(', ') + '...';
+            } else {
+              this.bomNamesDisplay = this.bomNamesFull;
+            }
+            // For backward compatibility if needed, though view uses new props
+            this.bomName = this.bomNamesDisplay;
           }
           if (bomPartInfoArray.length > 0 && bomPartInfoArray[0]?.modifyTimestamp) {
             this.rowManagementService.setLastSavedAt(new Date(bomPartInfoArray[0].modifyTimestamp));

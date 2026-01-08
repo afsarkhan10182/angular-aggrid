@@ -3,7 +3,7 @@
   <div class="app-header">
     <div class="header-left"></div>
     <h2>
-      <span *ngIf="bomType">{{ bomType }} </span>BOM COMPOSER<span *ngIf="bomName"> - {{ bomName }}</span>
+      <span *ngIf="bomType">{{ bomType }} </span>BOM COMPOSER
     </h2>
     <div class="header-right">
       <!-- User info display -->
@@ -21,8 +21,8 @@
       <!-- Left Group: Criteria and Search -->
       <div class="left-controls-group">
         <div class="criteria-display">
-          <strong>Criteria:</strong> Parts of SKUs chosen -
-          {{ dataService.getBomOwners() }}
+          <strong>Parts of SKUs chosen - </strong> 
+          <span [title]="bomNamesFull">{{ bomNamesDisplay }}</span>
         </div>
         <div class="search-filter-section">
           <div class="search-filter-container">

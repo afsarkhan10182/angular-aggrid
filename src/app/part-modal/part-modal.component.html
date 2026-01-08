@@ -17,8 +17,7 @@
         </div>
         <div class="header-info">
           <h1>{{ partData.material || partData.materialId || partData.part || partData.materialDescription || partData.partNumber || 'N/A' }}</h1>
-          <p>Material Details & Specifications</p>
-        </div>
+          </div>
       </div>
       <button class="close-button" (click)="closeModal()" aria-label="Close">
         <svg
@@ -63,7 +62,7 @@
       <!-- BOM Instances Table -->
       <div class="key-value-table-card" *ngIf="hasInstances()">
         <div class="card-header">
-          <h3>Material BOM Instances</h3>
+          <h3>Material Details</h3>
         </div>
         <div class="table-container">
           <table class="key-value-table">
@@ -83,38 +82,7 @@
         </div>
       </div>
 
-      <!-- SKU Portfolio - Widget-wise display -->
-      <div class="sku-portfolio" *ngIf="hasSkus()">
-        <div
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-          "
-        >
-          <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b">
-            SKU Portfolio
-          </h3>
-          <span class="sku-count"
-            >{{ getSkuData().length }} SKU{{ getSkuData().length !== 1 ? 's' : '' }}</span
-          >
-        </div>
-        <div class="sku-list">
-          <div class="sku-card" *ngFor="let sku of getSkuData()">
-            <div class="sku-header">
-              <div class="sku-id">SKU {{ sku.id }}</div>
-              <span class="sku-badge">Active</span>
-            </div>
-            <div class="sku-details">
-              <div class="sku-detail">
-                <span class="detail-label">Material</span>
-                <span class="detail-value">{{ sku.value }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- SKU Portfolio section removed as per requirement to follow API columns -->
 
       <!-- Empty State -->
       <div *ngIf="getAllRowData().length === 0 && !hasSkus()" class="empty-state">
