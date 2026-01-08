@@ -597,4 +597,69 @@ export class DataService {
     const protocol = window.location.protocol; // Returns "http:" or "https:"
     return `${protocol}//${hostFromJsp}`;
   }
+  /**
+   * Fetch bomLinkIncludeInSpecSheet constraints from API/Mock
+   */
+  fetchIncludeInSpecSheetConstraints(): Observable<any> {
+    const url = environment.useMockApi
+      ? 'api/IncludeInSpecSheet.json'
+      : `${this.getServiceHostUrl()}/Windchill/servlet/rest/tm/types/com.lcs.wc.flexbom.FlexBOMLink/attributes/bomLinkIncludeInSpecSheet`;
+      
+    return this.http.get<any>(url).pipe(
+      catchError((error) => {
+        console.error('Error loading IncludeInSpecSheet constraints', error);
+        return of({});
+      })
+    );
+  }
+
+  /**
+   * Parse the IncludeInSpecSheet options from the constraint data
+   * Returns an array of display names sorted by sort_order
+   */
+  getIncludeInSpecSheetOptions(constraints: any): string[] {
+    if (!constraints || !constraints.constraints) return [];
+
+    // Find the constraint that contains the enumeration definition (members)
+    const constraintWithMembers = constraints.constraints.find(
+      (c: any) => c.ruleData?.enumerationDefinition?.members
+    );
+
+    if (!constraintWithMembers) return [];
+
+    const members = constraintWithMembers.ruleData.enumerationDefinition.members;
+
+    // Filter by selectable and sort by sort_order
+    const sortedMembers = members
+      .filter((m: any) => m.entry?.properties?.selectable === true)
+      .sort((a: any, b: any) => a.properties.sort_order - b.properties.sort_order);
+
+    return sortedMembers.map((m: any) => m.entry.properties.displayName);
+  }
+
+  /**
+   * Get the mapping from Display Name (Y, N, C) to Internal Key (enum...)
+   * Used for payload construction
+   */
+  getIncludeInSpecSheetMapping(constraints: any): { [key: string]: string } {
+    if (!constraints || !constraints.constraints) return {};
+
+    // Find the constraint that contains the enumeration definition (members)
+    const constraintWithMembers = constraints.constraints.find(
+      (c: any) => c.ruleData?.enumerationDefinition?.members
+    );
+
+    if (!constraintWithMembers) return {};
+
+    const members = constraintWithMembers.ruleData.enumerationDefinition.members;
+    const mapping: { [key: string]: string } = {};
+
+    members.forEach((m: any) => {
+      const displayName = m.entry.properties.displayName;
+      const internalName = m.entry.name;
+      mapping[displayName] = internalName;
+    });
+
+    return mapping;
+  }
 }

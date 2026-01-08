@@ -1,0 +1,164 @@
+{
+  "id": "WCTYPE|com.lcs.wc.flexbom.FlexBOMLink~MBA|typeInfoFlexBOMLink.ptc_str_19",
+  "name": "bomLinkIncludeInSpecSheet",
+  "datatype": {
+    "datatypeClass": "java.lang.String",
+    "properties": {
+      "tooltip": "String",
+      "icon": "netmarkets/images/dtype_String.png",
+      "description": "String",
+      "guiHandlerClass": "com.ptc.core.lwc.client.rendering.guiHandlers.StringDatatypeGuiHandler",
+      "displayName": "String"
+    }
+  },
+  "properties": {
+    "flexAttQuickInfo": false,
+    "flexVariableType": "choice",
+    "flexAttInSearchResults": true,
+    "flexAttUpdateable": true,
+    "flexAttMassChangable": true,
+    "displayName": "Include In Spec Sheet",
+    "synchronized_attribute": false,
+    "flexAttSearchable": true,
+    "flexAttTableEditable": true,
+    "flexAttTableWrapable": true,
+    "flexAttSettable": true,
+    "flexAttEnabled": true
+  },
+  "constraints": [
+    {
+      "rule": {
+        "ruleClassname": "com.ptc.core.meta.container.common.impl.StringByteLengthConstraint",
+        "defClassname": "com.ptc.core.lwc.server.LWCBasicConstraint",
+        "dataType": {
+          "datatypeClass": "java.lang.String",
+          "properties": {
+            "tooltip": "String",
+            "icon": "netmarkets/images/dtype_String.png",
+            "description": "String",
+            "guiHandlerClass": "com.ptc.core.lwc.client.rendering.guiHandlers.StringDatatypeGuiHandler",
+            "displayName": "String"
+          }
+        },
+        "disableable": false
+      },
+      "ruleData": {
+        "ruleData": "[0,2000]"
+      }
+    },
+    {
+      "rule": {
+        "ruleClassname": "com.ptc.core.meta.container.common.impl.SingleValuedConstraint",
+        "defClassname": "com.ptc.core.lwc.server.LWCBasicConstraint",
+        "dataType": {
+          "datatypeClass": "java.lang.String",
+          "properties": {
+            "tooltip": "String",
+            "icon": "netmarkets/images/dtype_String.png",
+            "description": "String",
+            "guiHandlerClass": "com.ptc.core.lwc.client.rendering.guiHandlers.StringDatatypeGuiHandler",
+            "displayName": "String"
+          }
+        },
+        "disableable": false
+      },
+      "ruleData": {
+        "ruleData": "-[ ]"
+      }
+    },
+    {
+      "id": 266880,
+      "properties": {
+        "disabled": false
+      },
+      "rule": {
+        "ruleClassname": "com.ptc.core.meta.container.common.impl.DiscreteSetConstraint",
+        "defClassname": "com.ptc.core.lwc.server.LWCEnumerationBasedConstraint",
+        "dataType": {
+          "datatypeClass": "java.lang.String",
+          "properties": {
+            "tooltip": "String",
+            "icon": "netmarkets/images/dtype_String.png",
+            "description": "String",
+            "guiHandlerClass": "com.ptc.core.lwc.client.rendering.guiHandlers.StringDatatypeGuiHandler",
+            "displayName": "String"
+          }
+        },
+        "disableable": true,
+        "properties": {
+          "tooltip": "Enumerated Value List",
+          "description": "Enumerated Value List",
+          "sort_order": 1,
+          "displayName": "Enumerated Value List"
+        }
+      },
+      "ruleData": {
+        "enumerationDefinition": {
+          "name": "includeInSpecSheetbom",
+          "properties": {
+            "autoSort": false,
+            "displayName": "Include In Spec Sheet"
+          },
+          "members": [
+            {
+              "properties": {
+                "sort_order": 0
+              },
+              "entry": {
+                "name": "enumIncludeInSpecSheet001",
+                "properties": {
+                  "displayName": "Y",
+                  "selectable": true
+                }
+              }
+            },
+            {
+              "properties": {
+                "sort_order": 2
+              },
+              "entry": {
+                "name": "enumIncludeInSpecSheet003",
+                "properties": {
+                  "displayName": "C",
+                  "selectable": true
+                }
+              }
+            },
+            {
+              "properties": {
+                "sort_order": 1
+              },
+              "entry": {
+                "name": "enumIncludeInSpecSheet002",
+                "properties": {
+                  "displayName": "N",
+                  "selectable": true
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "rule": {
+        "ruleClassname": "com.ptc.core.meta.container.common.impl.StringLengthConstraint",
+        "defClassname": "com.ptc.core.lwc.server.LWCBasicConstraint",
+        "dataType": {
+          "datatypeClass": "java.lang.String",
+          "properties": {
+            "tooltip": "String",
+            "icon": "netmarkets/images/dtype_String.png",
+            "description": "String",
+            "guiHandlerClass": "com.ptc.core.lwc.client.rendering.guiHandlers.StringDatatypeGuiHandler",
+            "displayName": "String"
+          }
+        },
+        "disableable": false
+      },
+      "ruleData": {
+        "ruleData": "[0,2000]"
+      }
+    }
+  ]
+}

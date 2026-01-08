@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
@@ -25,7 +25,7 @@ import { ExtendedColDef } from './services/util.service';
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
 })
-export class App implements OnInit, OnDestroy {
+export class App implements OnInit, OnDestroy, AfterViewInit {
   private gridApi!: GridApi;
   private subscriptions: Subscription[] = [];
   public showColumnVisibilityPanel = false;
@@ -47,6 +47,7 @@ export class App implements OnInit, OnDestroy {
   public bomName: string = '';
   public bomType: string = '';
   public isLoading: boolean = true;
+  public constraintsData: any = null;
   public isSaving: boolean = false; // Track save operation state
   public isMassEditing: boolean = false; // Track mass edit operation state
   private originalRowValues = new Map<string | number, any>(); // Store original values for existing rows
@@ -305,6 +306,62 @@ export class App implements OnInit, OnDestroy {
     this.subscriptions.push(loadSub);
   }
 
+  ngAfterViewInit(): void {
+    // Only fetch constraints if we are in SBOM mode
+    if (this.dataService.getBomType() !== 'SBOM') {
+      return;
+    }
+
+    // Fetch constraints after view initialization
+    this.dataService.fetchIncludeInSpecSheetConstraints().subscribe({
+      next: (constraints) => {
+        this.constraintsData = constraints;
+        
+        // Set default values for empty cells if data is already loaded
+        if (this.rowData && this.rowData.length > 0) {
+          const options = this.dataService.getIncludeInSpecSheetOptions(constraints);
+          if (options && options.length > 0) {
+            this.setDefaultValuesForEmptyCells('bomLinkIncludeInSpecSheet', options[0]);
+            this.initializeColumns();
+          }
+        }
+      },
+      error: (err) => console.error('Error fetching IncludeInSpecSheet constraints', err)
+    });
+  }
+
+  /**
+   * Set default values for empty cells in a specific field
+   * Recursively processes hierarchical data structure
+   */
+  private setDefaultValuesForEmptyCells(field: string, defaultValue: any): void {
+    const setDefaultForRow = (row: any) => {
+      // Skip header rows
+      if (row.isSectionHeader || row.isGroupHeader || row.isMaterialHeader) {
+        // Process children if they exist
+        if (row.children && Array.isArray(row.children)) {
+          row.children.forEach(setDefaultForRow);
+        }
+        return;
+      }
+
+      // Set default value if field is empty/null/undefined
+      if (!row[field] || row[field] === '') {
+        row[field] = defaultValue;
+      }
+
+      // Process children if they exist
+      if (row.children && Array.isArray(row.children)) {
+        row.children.forEach(setDefaultForRow);
+      }
+    };
+
+    // Process all rows in rowData
+    if (this.rowData && Array.isArray(this.rowData)) {
+      this.rowData.forEach(setDefaultForRow);
+    }
+  }
+
   initializeColumns(): void {
     const columnMapping = this.dataService.getColumnMapping();
     this.columnDefs = this.createHierarchicalColumns(columnMapping);
@@ -540,6 +597,96 @@ export class App implements OnInit, OnDestroy {
               dataService: this.dataService,
             },
           }),
+        });
+        return;
+      }
+
+      if (field === 'bomLinkSpecSheetExtra') {
+        const headerName = columnMapping[field];
+        columns.push({
+          headerName,
+          field,
+          width: 150,
+          minWidth: 100,
+          sortable: true,
+          cellRenderer: (params: any) => {
+            if (
+              params.data.isSectionHeader ||
+              params.data.isBranchHeader ||
+              params.data.isGroupHeader
+            ) {
+              return '';
+            }
+            const columnWidth = params.column?.getActualWidth() || 150;
+            const cellStyle = this.getDataCellStyle(params);
+            const textColor = cellStyle?.color || undefined;
+            return this.utilService.createCellContentWithTooltip(params.value, columnWidth, textColor);
+          },
+          tooltipValueGetter: (params: any) => {
+            if (params.value === null || params.value === undefined) return null;
+            return String(params.value);
+          },
+          cellStyle: (params: any) => this.getDataCellStyle(params),
+          editable: (params: any) => {
+            if (!params.data || params.data.isSectionHeader) {
+              return false;
+            }
+            // New rows - always editable
+            if (params.data.isNewRow) {
+              return true;
+            }
+            // Existing rows - check SBOM restrictions
+            return this.isFieldEditableInSbom('bomLinkSpecSheetExtra');
+          },
+          cellEditor: 'agSelectCellEditor',
+          cellEditorParams: {
+            values: ['Yes', 'No'],
+          },
+        });
+        return;
+      }
+
+      if (field === 'bomLinkIncludeInSpecSheet') {
+        const headerName = columnMapping[field];
+        columns.push({
+          headerName,
+          field,
+          width: 150,
+          minWidth: 100,
+          sortable: true,
+          cellRenderer: (params: any) => {
+            if (
+              params.data.isSectionHeader ||
+              params.data.isBranchHeader ||
+              params.data.isGroupHeader
+            ) {
+              return '';
+            }
+            const columnWidth = params.column?.getActualWidth() || 150;
+            const cellStyle = this.getDataCellStyle(params);
+            const textColor = cellStyle?.color || undefined;
+            return this.utilService.createCellContentWithTooltip(params.value, columnWidth, textColor);
+          },
+          tooltipValueGetter: (params: any) => {
+            if (params.value === null || params.value === undefined) return null;
+            return String(params.value);
+          },
+          cellStyle: (params: any) => this.getDataCellStyle(params),
+          editable: (params: any) => {
+            if (!params.data || params.data.isSectionHeader) {
+              return false;
+            }
+            // New rows - always editable
+            if (params.data.isNewRow) {
+              return true;
+            }
+            // Existing rows - check SBOM restrictions
+            return this.isFieldEditableInSbom('bomLinkIncludeInSpecSheet');
+          },
+          cellEditor: 'agSelectCellEditor',
+          cellEditorParams: {
+            values: this.dataService.getIncludeInSpecSheetOptions(this.constraintsData),
+          },
         });
         return;
       }
