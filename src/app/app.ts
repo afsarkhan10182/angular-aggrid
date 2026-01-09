@@ -615,10 +615,16 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             // Existing rows - check SBOM restrictions
             return this.isFieldEditableInSbom('bomLinkSpecSheetExtra');
           },
-          cellEditor: 'agSelectCellEditor',
-          cellEditorParams: (params: any) => ({
+          cellEditor: AutocompleteCellEditorComponent,
+          cellEditorParams: {
             values: ['', 'Yes', 'No'],
-          }),
+            placeholder: 'Select...',
+            filterFunction: (searchValue: string, options: string[]) => {
+               if (!searchValue) return options;
+               const lower = searchValue.toLowerCase();
+               return options.filter(opt => opt.toLowerCase().includes(lower));
+            }
+          },
         });
         return;
       }
@@ -660,9 +666,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             // Existing rows - check SBOM restrictions
             return this.isFieldEditableInSbom('bomLinkIncludeInSpecSheet');
           },
-          cellEditor: 'agSelectCellEditor',
+          cellEditor: AutocompleteCellEditorComponent,
           cellEditorParams: (params: any) => ({
             values: ['', ...this.dataService.getIncludeInSpecSheetOptions(this.constraintsData)],
+            placeholder: 'Select...',
+            filterFunction: (searchValue: string, options: string[]) => {
+               if (!searchValue) return options;
+               const lower = searchValue.toLowerCase();
+               return options.filter(opt => opt.toLowerCase().includes(lower));
+            }
           }),
         });
         return;

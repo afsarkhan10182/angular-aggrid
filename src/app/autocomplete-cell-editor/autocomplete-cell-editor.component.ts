@@ -208,26 +208,20 @@ export class AutocompleteCellEditorComponent
       this.input.nativeElement.focus();
       this.input.nativeElement.select();
 
-      const fieldName = this.getFieldName();
-      const isColorOrSupplier = fieldName === 'color' || fieldName === 'supplier';
+      const usesApiSearch =
+        this.isMaterialSearch ||
+        this.isPartNumberSearch ||
+        this.isBomFeatureSearch ||
+        this.isCountrySearch;
 
-      if (this.isMaterialSearch || this.isPartNumberSearch) {
-        if (this.dataService && this.value && this.value.length >= 1) {
-          this.searchSubject.next(this.value);
-        }
-      } else if (this.isBomFeatureSearch || this.isCountrySearch) {
+      if (usesApiSearch) {
         if (this.dataService && this.value && this.value.length >= 1) {
           this.searchSubject.next(this.value);
         }
       } else if (this.options.length > 0) {
-        // For color and supplier fields, show all options when initialized
-        if (isColorOrSupplier) {
-          this.filteredOptions = this.options.slice(0, 50); // Show up to 50 options
-          this.showDropdown = this.filteredOptions.length > 0;
-        } else {
-          this.filterOptions();
-          this.showDropdown = this.filteredOptions.length > 0;
-        }
+        // For ALL fields with static options, show all options when initialized
+        this.filteredOptions = this.options.slice(0, 50);
+        this.showDropdown = this.filteredOptions.length > 0;
       }
 
       if (this.showDropdown) {
@@ -345,7 +339,6 @@ export class AutocompleteCellEditorComponent
   }
 
   getValue(): any {
-    // valueSetter in app.ts handles colorDescription mapping, so just return the value
     return this.value;
   }
 
@@ -364,18 +357,19 @@ export class AutocompleteCellEditorComponent
       this.refreshOptionsFromNodeData();
     }
 
-    if (
+    const usesApiSearch =
       this.isMaterialSearch ||
       this.isPartNumberSearch ||
       this.isBomFeatureSearch ||
-      this.isCountrySearch
-    ) {
+      this.isCountrySearch;
+
+    if (usesApiSearch) {
       if (this.dataService) {
         this.searchSubject.next(this.value);
       }
     } else {
-      // For color and supplier fields, when value is cleared, show all options
-      if (isColorOrSupplier && !this.value && this.options.length > 0) {
+      // If value is cleared, or if it's a static list, optimize UX by showing all
+      if (!this.value && this.options.length > 0) {
         this.filteredOptions = this.options.slice(0, 50);
         this.showDropdown = this.filteredOptions.length > 0;
       } else {
@@ -435,25 +429,20 @@ export class AutocompleteCellEditorComponent
   onInputClick(): void {
     this.refreshOptionsFromNodeData();
 
-    const fieldName = this.getFieldName();
-    const isColorOrSupplier = fieldName === 'color' || fieldName === 'supplier';
+    const usesApiSearch =
+      this.isMaterialSearch ||
+      this.isPartNumberSearch ||
+      this.isBomFeatureSearch ||
+      this.isCountrySearch;
 
-    if (this.isPartNumberSearch || this.isMaterialSearch) {
-      if (this.dataService && this.value && this.value.length >= 1) {
-        this.searchSubject.next(this.value);
-      }
-    } else if (this.isBomFeatureSearch || this.isCountrySearch) {
+    if (usesApiSearch) {
       if (this.dataService && this.value && this.value.length >= 1) {
         this.searchSubject.next(this.value);
       }
     } else {
-      // For color and supplier fields, show all options when clicking (not filtered by current value)
-      if (isColorOrSupplier && this.options.length > 0) {
-        // Show all options, not filtered by current value
-        this.filteredOptions = this.options.slice(0, 50); // Show up to 50 options
-        this.showDropdown = this.filteredOptions.length > 0;
-      } else {
-        this.filterOptions();
+      // For ALL fields with static options, show all items when clicking
+      if (this.options.length > 0) {
+        this.filteredOptions = this.options.slice(0, 50);
         this.showDropdown = this.filteredOptions.length > 0;
       }
     }
@@ -466,25 +455,20 @@ export class AutocompleteCellEditorComponent
   onInputFocus(): void {
     this.refreshOptionsFromNodeData();
 
-    const fieldName = this.getFieldName();
-    const isColorOrSupplier = fieldName === 'color' || fieldName === 'supplier';
+    const usesApiSearch =
+      this.isMaterialSearch ||
+      this.isPartNumberSearch ||
+      this.isBomFeatureSearch ||
+      this.isCountrySearch;
 
-    if (this.isPartNumberSearch || this.isMaterialSearch) {
-      if (this.dataService && this.value && this.value.length >= 1) {
-        this.searchSubject.next(this.value);
-      }
-    } else if (this.isBomFeatureSearch || this.isCountrySearch) {
+    if (usesApiSearch) {
       if (this.dataService && this.value && this.value.length >= 1) {
         this.searchSubject.next(this.value);
       }
     } else {
-      // For color and supplier fields, show all options when focusing (not filtered by current value)
-      if (isColorOrSupplier && this.options.length > 0) {
-        // Show all options, not filtered by current value
-        this.filteredOptions = this.options.slice(0, 50); // Show up to 50 options
-        this.showDropdown = this.filteredOptions.length > 0;
-      } else {
-        this.filterOptions();
+      // For ALL fields with static options, show all items when focusing
+      if (this.options.length > 0) {
+        this.filteredOptions = this.options.slice(0, 50);
         this.showDropdown = this.filteredOptions.length > 0;
       }
     }
