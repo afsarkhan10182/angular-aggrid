@@ -331,50 +331,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       next: (constraints) => {
         this.constraintsData = constraints;
         
-        // Set default values for empty cells if data is already loaded
-        if (this.rowData && this.rowData.length > 0) {
-          const options = this.dataService.getIncludeInSpecSheetOptions(constraints);
-          if (options && options.length > 0) {
-            this.setDefaultValuesForEmptyCells('bomLinkIncludeInSpecSheet', options[0]);
-            this.initializeColumns();
-          }
-        }
+
       },
       error: (err) => console.error('Error fetching IncludeInSpecSheet constraints', err)
     });
   }
 
-  /**
-   * Set default values for empty cells in a specific field
-   * Recursively processes hierarchical data structure
-   */
-  private setDefaultValuesForEmptyCells(field: string, defaultValue: any): void {
-    const setDefaultForRow = (row: any) => {
-      // Skip header rows
-      if (row.isSectionHeader || row.isGroupHeader || row.isMaterialHeader) {
-        // Process children if they exist
-        if (row.children && Array.isArray(row.children)) {
-          row.children.forEach(setDefaultForRow);
-        }
-        return;
-      }
 
-      // Set default value if field is empty/null/undefined
-      if (!row[field] || row[field] === '') {
-        row[field] = defaultValue;
-      }
-
-      // Process children if they exist
-      if (row.children && Array.isArray(row.children)) {
-        row.children.forEach(setDefaultForRow);
-      }
-    };
-
-    // Process all rows in rowData
-    if (this.rowData && Array.isArray(this.rowData)) {
-      this.rowData.forEach(setDefaultForRow);
-    }
-  }
 
   initializeColumns(): void {
     const columnMapping = this.dataService.getColumnMapping();
@@ -653,9 +616,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             return this.isFieldEditableInSbom('bomLinkSpecSheetExtra');
           },
           cellEditor: 'agSelectCellEditor',
-          cellEditorParams: {
-            values: ['Yes', 'No'],
-          },
+          cellEditorParams: (params: any) => ({
+            values: ['', 'Yes', 'No'],
+          }),
         });
         return;
       }
@@ -698,9 +661,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             return this.isFieldEditableInSbom('bomLinkIncludeInSpecSheet');
           },
           cellEditor: 'agSelectCellEditor',
-          cellEditorParams: {
-            values: this.dataService.getIncludeInSpecSheetOptions(this.constraintsData),
-          },
+          cellEditorParams: (params: any) => ({
+            values: ['', ...this.dataService.getIncludeInSpecSheetOptions(this.constraintsData)],
+          }),
         });
         return;
       }
@@ -1794,7 +1757,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               }
             }
           }, 150);
-        } else if (event.data.isNewRow && isEditable) {
+        } else if (isEditable) {
           // For new rows, start editing other fields normally
           event.api.startEditingCell({
             rowIndex: event.rowIndex,
