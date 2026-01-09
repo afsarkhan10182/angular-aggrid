@@ -687,6 +687,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         width: 150,
         minWidth: 100,
         sortable: true,
+        resizable: true, // Added resizable property
+        hide: field === 'ptcbomPartMarkUp', // Hide this column by default
         cellRenderer: (params: any) => {
           if (
             params.data.isSectionHeader ||
@@ -2469,7 +2471,22 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const sectionDisplayNameMap: Record<string, string> = {};
 
     // Extract bom-link data from instances
-    const processedItems = data.instances.map((item: any) => {
+    const processedItems = data.instances
+      .filter((item: any) => {
+        const bomLink = item['bom-link'];
+        if (!bomLink) return false;
+
+        const hasPartNumber = bomLink.partNumber && String(bomLink.partNumber).trim() !== '';
+
+        // Markup check only applies to MBOM
+        let isCorrectMarkup = true;
+        if (this.dataService.getBomType() === 'MBOM') {
+          isCorrectMarkup = bomLink.ptcbomPartMarkUp === 'enumMBOM001';
+        }
+
+        return hasPartNumber && isCorrectMarkup;
+      })
+      .map((item: any) => {
       const bomLink = item['bom-link'];
       // Prefer the true internal name if provided by API. Using display text as a key
       // can cause non-unique matches and "wrong section toggles".
