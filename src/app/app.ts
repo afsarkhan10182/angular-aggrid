@@ -1890,7 +1890,22 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.invalidRowIds.clear();
 
     // Validate new rows before saving (required fields)
-    const validationResult = this.validationService.validateNewRows(this.rowData, this.displayData);
+    let requiredFields = this.validationService.getDefaultRequiredFields();
+
+    // Only require SBOM-specific fields if we are in SBOM mode
+    if (this.bomType !== 'SBOM') {
+      requiredFields = requiredFields.filter(
+        (field) =>
+          !field.keys.includes('bomLinkSpecSheetExtra') &&
+          !field.keys.includes('bomLinkIncludeInSpecSheet')
+      );
+    }
+
+    const validationResult = this.validationService.validateNewRows(
+      this.rowData,
+      this.displayData,
+      requiredFields
+    );
     if (!validationResult.isValid) {
       // Mark invalid rows for highlighting
       if (validationResult.invalidRows) {
