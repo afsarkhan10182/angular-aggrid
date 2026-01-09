@@ -1,136 +1,100 @@
 {
   "bomPartInfo": [
     {
-      "versionId": "VR:com.lcs.wc.flexbom.FlexBOMPart:638780",
-      "bomMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:638779",
-      "bomName": "MBOM SKU Testing 005",
-      "bomOwnerId": "VR:com.lcs.wc.product.LCSProduct:637382",
-      "bomOwner": "SKU Testing 005",
-      "modifyTimestamp": "2025-12-29 14:56:08.0"
+      "versionId": "VR:com.lcs.wc.flexbom.FlexBOMPart:573170",
+      "bomMasterId": "OR:com.lcs.wc.flexbom.FlexBOMPartMaster:573169",
+      "bomName": "MBOM SKU Testing 004",
+      "bomOwnerId": "VR:com.lcs.wc.product.LCSProduct:572161",
+      "bomOwner": "SKU Testing 004",
+      "modifyTimestamp": "2025-12-11 11:06:18.0"
     }
   ],
   "instances": [
     {
       "bom-link": {
-        "quantity": "9.0",
+        "quantity": "",
         "bomLinkFeature": "1400 | Fuselage : Sag Gauge Front",
-        "bomLinkSpecSheetExtra": "No",
+        "bomLinkSpecSheetExtra": "",
         "skus": [
           {
-            "product": "SKU Testing 005",
-            "productId": "VR:com.lcs.wc.product.LCSProduct:637382",
-            "color": "A - TL - TestColor12(11133) (SKU Testing 005)",
-            "destination": "AU",
+            "product": "SKU Testing 004",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:572161",
+            "color": "A - BK - Black(TK-0101) (SKU Testing 004)",
+            "destination": "CA",
             "isActive": true,
-            "destinationDimensionId": "638233",
+            "destinationDimensionId": "573384",
             "manufacturer": "Diamant Grad GC",
-            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:638779-REV:A-BRANCH:15-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:637648-SKU:com.lcs.wc.part.LCSPartMaster:638270-SIZE1:10-DESTINATION:com.lcs.wc.product.ProductDestination:638233",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:573169-REV:A-BRANCH:15-SKU:com.lcs.wc.part.LCSPartMaster:573855",
             "size1": "10",
-            "colorDimensionId": "638270",
-            "sourceDimensionId": "637648",
+            "colorDimensionId": "573855",
+            "sourceDimensionId": "573127",
             "value": "4243455",
-            "skuId": "10253"
+            "skuId": "10135"
           }
         ],
-        "color": "Baja Smoke",
         "bomLinkEndDate": "",
         "section": "enumSection001",
-        "childId": "243710",
-        "material": "2020RIM",
+        "materialDescription": "2020RIM",
         "bomLinkStartDate": "12/12/2025",
         "supplier": "Diamant Grad GC",
         "bomLinkNotes": "",
         "partNumber": "4243455",
         "materialColorThirtyCharacterDescription": "",
         "sectionDisplayName": "Fuselage",
+        "supplierDescription": "",
         "bomLinkIncludeInSpecSheet": "",
+        "colorDescription": "Baja Smoke",
         "bomLinkCountryOfOrigin": ""
       }
     },
     {
       "bom-link": {
-        "quantity": "12.0",
+        "quantity": "10.0",
         "bomLinkFeature": "150 | Fuselage : Compliance Label 1",
         "bomLinkSpecSheetExtra": "No",
         "skus": [
           {
-            "product": "SKU Testing 005",
-            "productId": "VR:com.lcs.wc.product.LCSProduct:637382",
-            "color": "A - TL - TestColor12(11133) (SKU Testing 005)",
-            "destination": "AU",
+            "product": "SKU Testing 004",
+            "productId": "VR:com.lcs.wc.product.LCSProduct:572161",
+            "color": "A - BK - Black(TK-0101) (SKU Testing 004)",
+            "destination": "CA",
             "isActive": true,
-            "destinationDimensionId": "638233",
+            "destinationDimensionId": "573384",
             "manufacturer": "Diamant Grad GC",
-            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:638779-REV:A-BRANCH:7-SC:com.lcs.wc.sourcing.LCSSourcingConfigMaster:637648-SKU:com.lcs.wc.part.LCSPartMaster:638270-SIZE1:10-DESTINATION:com.lcs.wc.product.ProductDestination:638233",
+            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:573169-REV:A-BRANCH:7-SKU:com.lcs.wc.part.LCSPartMaster:573855-DESTINATION:com.lcs.wc.product.ProductDestination:573384",
             "size1": "10",
-            "colorDimensionId": "638270",
-            "sourceDimensionId": "637648",
+            "colorDimensionId": "573855",
+            "sourceDimensionId": "573127",
             "value": "2020WHEELFT",
-            "skuId": "10253"
+            "skuId": "10135"
           }
         ],
-        "color": "Blue",
         "bomLinkEndDate": "",
         "section": "enumSection001",
-        "childId": "244819",
-        "material": "2020WHEELFT",
-        "bomLinkStartDate": "12/23/2025",
+        "materialDescription": "2020WHEELFT",
+        "bomLinkStartDate": "12/18/2025",
         "supplier": "Diamant Grad GC",
         "bomLinkNotes": "",
         "partNumber": "2020WHEELFT",
-        "materialColorThirtyCharacterDescription": "Deccription11",
-        "sectionDisplayName": "Fuselage",
-        "bomLinkIncludeInSpecSheet": "",
-        "bomLinkCountryOfOrigin": ""
-      }
-    },
-    {
-      "bom-link": {
-        "quantity": "2.0",
-        "bomLinkFeature": "12200 | Accessory : Kickstand",
-        "bomLinkSpecSheetExtra": "No",
-        "skus": [
-          {
-            "product": "SKU Testing 005",
-            "productId": "VR:com.lcs.wc.product.LCSProduct:637382",
-            "color": "A - TL - TestColor12(11133) (SKU Testing 005)",
-            "destination": "AU",
-            "isActive": true,
-            "destinationDimensionId": "638233",
-            "manufacturer": "Diamant Grad GC",
-            "dimensionId": "-PARENT:com.lcs.wc.flexbom.FlexBOMPartMaster:638779-REV:A-BRANCH:6",
-            "size1": "10",
-            "colorDimensionId": "638270",
-            "sourceDimensionId": "637648",
-            "value": "2030WHEELFT",
-            "skuId": "10253"
-          }
-        ],
-        "color": "Baja Smoke",
-        "bomLinkEndDate": "12/30/2025",
-        "section": "enumSection002",
-        "childId": "776055",
-        "material": "2030WHEELFT",
-        "bomLinkStartDate": "12/14/2025",
-        "supplier": "GC",
-        "bomLinkNotes": "",
-        "partNumber": "2030WHEELFT",
         "materialColorThirtyCharacterDescription": "",
-        "linkedBom": "1",
-        "sectionDisplayName": "Cockpit",
-        "bomLinkIncludeInSpecSheet": "",
+        "sectionDisplayName": "Fuselage",
+        "supplierDescription": "",
+        "bomLinkIncludeInSpecSheet": "C",
+        "colorDescription": "Blue",
         "bomLinkCountryOfOrigin": ""
       }
     }
   ],
   "columns": {
     "bomLinkFeature": "Feature",
-    "material": "Material",
+    "materialDescription": "Material",
     "supplier": "Supplier",
-    "color": "Color",
+    "colorDescription": "Color",
     "partNumber": "Part #",
     "bomLinkStartDate": "Start Date",
     "bomLinkEndDate": "End Date",
+    "bomLinkSpecSheetExtra": "SpecSheet Extra",
+    "bomLinkIncludeInSpecSheet": "IncludeIn SpecSheet",
     "quantity": "Quantity",
     "bomLinkNotes": "Notes",
     "bomLinkCountryOfOrigin": "Country Of Origin",
@@ -154,22 +118,22 @@
     "Packaging",
     "NA"
   ],
-  "skuIds": "VR:com.lcs.wc.foundation.LCSRevisableEntity:639843",
+  "skuIds": "VR:com.lcs.wc.foundation.LCSRevisableEntity:574978",
   "skuInfo": {
     "skus": [
       {
-        "product": "SKU Testing 005",
-        "productId": "VR:com.lcs.wc.product.LCSProduct:637382",
-        "color": "A - TL - TestColor12(11133) (SKU Testing 005)",
+        "product": "SKU Testing 004",
+        "productId": "VR:com.lcs.wc.product.LCSProduct:572161",
+        "color": "A - BK - Black(TK-0101) (SKU Testing 004)",
         "size1": "10",
-        "destination": "AU",
-        "colorDimensionId": "638270",
-        "sourceDimensionId": "637648",
-        "skuId": "10253",
-        "destinationDimensionId": "638233",
+        "destination": "CA",
+        "colorDimensionId": "573855",
+        "sourceDimensionId": "573127",
+        "skuId": "10135",
+        "destinationDimensionId": "573384",
         "manufacturer": "Diamant Grad GC"
       }
     ]
   },
-  "bomType": "MBOM"
+  "bomType": "SBOM"
 }

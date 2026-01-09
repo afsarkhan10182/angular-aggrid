@@ -504,9 +504,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           return false;
         }
         
-        // New rows - always editable
+        // New rows - check restriction
         if (params.data.isNewRow) {
-          return true;
+          return this.isFieldEditableForNewRow('bomLinkFeature');
         }
         
         // Existing rows - check SBOM restrictions
@@ -558,9 +558,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               return false;
             }
             
-            // New rows - always editable
+            // New rows - check restriction
             if (params.data.isNewRow) {
-              return true;
+              return this.isFieldEditableForNewRow(field);
             }
             
             // Existing rows - check SBOM restrictions
@@ -608,9 +608,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             if (!params.data || params.data.isSectionHeader) {
               return false;
             }
-            // New rows - always editable
+            // New rows - check restriction
             if (params.data.isNewRow) {
-              return true;
+              return this.isFieldEditableForNewRow(field);
             }
             // Existing rows - check SBOM restrictions
             return this.isFieldEditableInSbom('bomLinkSpecSheetExtra');
@@ -659,9 +659,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             if (!params.data || params.data.isSectionHeader) {
               return false;
             }
-            // New rows - always editable
+            // New rows - check restriction
             if (params.data.isNewRow) {
-              return true;
+              return this.isFieldEditableForNewRow(field);
             }
             // Existing rows - check SBOM restrictions
             return this.isFieldEditableInSbom('bomLinkIncludeInSpecSheet');
@@ -715,9 +715,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             return false;
           }
           
-          // New rows - always editable (if add row is enabled for this BOM type)
+          // New rows - check restriction
           if (params.data.isNewRow) {
-            return true;
+            return this.isFieldEditableForNewRow(field);
           }
           
           // Existing rows - check SBOM restrictions
@@ -762,9 +762,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             return false;
           }
           
-          // New rows - always editable
+          // New rows - check restriction
           if (params.data && params.data.isNewRow) {
-            return true;
+            return this.isFieldEditableForNewRow(field);
           }
           
           // Existing rows - check SBOM restrictions
@@ -843,9 +843,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             return false;
           }
           
-          // New rows - always editable
+          // New rows - check restriction
           if (params.data && params.data.isNewRow) {
-            return true;
+            return this.isFieldEditableForNewRow(field);
           }
           
           // Existing rows - check SBOM restrictions
@@ -1272,6 +1272,27 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     // SBOM + service team = only SpecSheet fields editable
     const isEditable = field === 'bomLinkSpecSheetExtra' || field === 'bomLinkIncludeInSpecSheet';
     return isEditable;
+  }
+
+  /**
+   * Check if field is editable for NEW rows
+   * Explicitly allows only specified fields
+   */
+  private isFieldEditableForNewRow(field: string): boolean {
+    const editableFields = [
+      'bomLinkFeature',
+      'materialDescription',
+      'supplier',
+      'colorDescription',
+      'partNumber',
+      'bomLinkStartDate',
+      'bomLinkEndDate',
+      'quantity',
+      'bomLinkSpecSheetExtra',
+      'bomLinkIncludeInSpecSheet',
+      'bomLinkCountryOfOrigin'
+    ];
+    return editableFields.includes(field);
   }
 
   /**
@@ -2664,6 +2685,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         bomLinkStartDate: String(row.bomLinkStartDate || row.startDate || ''),
         bomLinkEndDate: String(row.bomLinkEndDate || row.endDate || ''),
         quantity: String(row.quantity || row.qty || ''),
+        bomLinkSpecSheetExtra: String(row.bomLinkSpecSheetExtra || ''),
+        bomLinkIncludeInSpecSheet: String(row.bomLinkIncludeInSpecSheet || ''),
       };
 
       // Store as frozen snapshot - this is the "old" value that will be sent as _old
@@ -2717,7 +2740,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       this.displayData,
       this.editedRows,
       this.editedFields,
-      this.originalRowValues
+      this.originalRowValues,
+      this.constraintsData
     );
   }
 

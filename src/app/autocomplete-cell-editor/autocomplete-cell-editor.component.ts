@@ -222,6 +222,7 @@ export class AutocompleteCellEditorComponent
         // For ALL fields with static options, show all options when initialized
         this.filteredOptions = this.options.slice(0, 50);
         this.showDropdown = this.filteredOptions.length > 0;
+        this.setInitialSelectedIndex();
       }
 
       if (this.showDropdown) {
@@ -444,6 +445,7 @@ export class AutocompleteCellEditorComponent
       if (this.options.length > 0) {
         this.filteredOptions = this.options.slice(0, 50);
         this.showDropdown = this.filteredOptions.length > 0;
+        this.setInitialSelectedIndex();
       }
     }
 
@@ -470,6 +472,7 @@ export class AutocompleteCellEditorComponent
       if (this.options.length > 0) {
         this.filteredOptions = this.options.slice(0, 50);
         this.showDropdown = this.filteredOptions.length > 0;
+        this.setInitialSelectedIndex();
       }
     }
 
@@ -1016,7 +1019,27 @@ export class AutocompleteCellEditorComponent
     }
 
     this.showDropdown = this.filteredOptions.length > 0;
-    this.selectedIndex = this.filteredOptions.length > 0 ? 0 : -1;
+    this.setInitialSelectedIndex();
+  }
+
+  private setInitialSelectedIndex(): void {
+    if (this.filteredOptions.length === 0) {
+      this.selectedIndex = -1;
+      return;
+    }
+
+    // Try to find exact match first
+    const currentValue = String(this.value || '');
+    let index = this.filteredOptions.findIndex(opt => opt === currentValue);
+
+    // If no exact match (and not empty), try case-insensitive
+    if (index === -1 && currentValue) {
+      const lowerValue = currentValue.toLowerCase();
+      index = this.filteredOptions.findIndex(opt => String(opt).toLowerCase() === lowerValue);
+    }
+
+    // If still not found, default to 0
+    this.selectedIndex = index >= 0 ? index : 0;
   }
 
   private buildFilteredOptionsFromMaterials(): void {

@@ -181,21 +181,16 @@ export class PayloadTransformService {
     displayData: any[],
     editedRows: Set<string | number>,
     editedFields: Map<string | number, Set<string>>,
-    originalRowValues: Map<string | number, any>
+    originalRowValues: Map<string | number, any>,
+    constraintsData: any
   ): any {
     const instances: any[] = [];
     const skuInfo = this.dataService.getSkuInfo();
     const bomType =
       this.dataService.getBomTypeFromResponse() || this.dataService.getBomType() || 'MBOM';
-
-    const uiOnlyFields = new Set([
-      'isSectionHeader', 'isMaterialHeader', 'isDirectRow', 'isSubRow',
-      'isParentRow', 'isNewRow', 'isExpanded', 'isGroupHeader', 'isBranchHeader',
-      'level', 'parent', 'children', 'materialIndex', 'materialKey',
-      'allSkus', 'hasLinkedBom', 'newRowId', 'insertAfter',
-      'groupKey', 'groupValue', 'groupLevel', 'groupHeaderName',
-      'material', 'part', 'sectionDisplayName', 'bomLinkFeatureId',
-    ]);
+    
+    // Get mapping for IncludeInSpecSheet (Display -> Internal)
+    const includeInSpecSheetMap = this.dataService.getIncludeInSpecSheetMapping(constraintsData);
 
     const processRow = (row: any): void => {
       if (row.isSectionHeader || row.isMaterialHeader || row.isGroupHeader) {
@@ -263,6 +258,16 @@ export class PayloadTransformService {
           bomLink.colorId = this.utilService.extractIdAfterLastColon(row.colorId);
         }
 
+        if (row.bomLinkSpecSheetExtra) {
+          const val = String(row.bomLinkSpecSheetExtra);
+          bomLink.bomLinkSpecSheetExtra = val === 'Yes' ? 'true' : val === 'No' ? 'false' : val;
+        }
+
+        if (row.bomLinkIncludeInSpecSheet) {
+          const val = String(row.bomLinkIncludeInSpecSheet);
+          bomLink.bomLinkIncludeInSpecSheet = includeInSpecSheetMap[val] || val;
+        }
+
         bomLink.skus = this.buildSkusArrayFromRow(row, skuInfo, rowData);
       } else if (isEdited) {
         // EXISTING ROW WITH EDITS
@@ -283,6 +288,26 @@ export class PayloadTransformService {
         }
 
         const editedFieldsForRow = editedFields.get(rowId) || new Set<string>();
+
+        if (editedFieldsForRow.has('bomLinkSpecSheetExtra')) {
+          const currentVal = String(originalValues.bomLinkSpecSheetExtra || '');
+          const newVal = String(row.bomLinkSpecSheetExtra || '');
+          
+          if (currentVal !== newVal) {
+            bomLink.bomLinkSpecSheetExtra_old = currentVal === 'Yes' ? 'true' : currentVal === 'No' ? 'false' : currentVal;
+            bomLink.bomLinkSpecSheetExtra_new = newVal === 'Yes' ? 'true' : newVal === 'No' ? 'false' : newVal;
+          }
+        }
+
+        if (editedFieldsForRow.has('bomLinkIncludeInSpecSheet')) {
+          const currentVal = String(originalValues.bomLinkIncludeInSpecSheet || '');
+          const newVal = String(row.bomLinkIncludeInSpecSheet || '');
+          
+          if (currentVal !== newVal) {
+            bomLink.bomLinkIncludeInSpecSheet_old = includeInSpecSheetMap[currentVal] || currentVal;
+            bomLink.bomLinkIncludeInSpecSheet_new = includeInSpecSheetMap[newVal] || newVal;
+          }
+        }
 
         if (editedFieldsForRow.has('bomLinkStartDate') || editedFieldsForRow.has('startDate')) {
           const currentStartDate = originalValues.bomLinkStartDate || originalValues.startDate || '';

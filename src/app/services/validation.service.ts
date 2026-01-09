@@ -31,14 +31,16 @@ export class ValidationService {
    * Default required fields for new BOM rows
    */
   private readonly defaultRequiredFields: RequiredField[] = [
-    { keys: ['bomLinkFeature', 'feature'], label: 'Feature' },
-    { keys: ['materialDescription', 'material'], label: 'Material' },
+    { keys: ['bomLinkFeature'], label: 'Feature' },
+    { keys: ['materialDescription'], label: 'Material' },
     { keys: ['supplier'], label: 'Supplier' },
-    { keys: ['colorDescription', 'color'], label: 'Color' },
-    { keys: ['partNumber', 'part'], label: 'Part' },
-    { keys: ['bomLinkStartDate', 'startDate'], label: 'Start Date' },
-    { keys: ['bomLinkEndDate', 'endDate'], label: 'End Date' },
-    { keys: ['quantity', 'qty'], label: 'Quantity' },
+    { keys: ['colorDescription'], label: 'Color' },
+    { keys: ['partNumber'], label: 'Part' },
+    { keys: ['bomLinkStartDate'], label: 'Start Date' },
+    { keys: ['bomLinkEndDate'], label: 'End Date' },
+    { keys: ['quantity'], label: 'Quantity' },
+    { keys: ['bomLinkSpecSheetExtra'], label: 'Spec Sheet Extra' },
+    { keys: ['bomLinkIncludeInSpecSheet'], label: 'Include In Spec Sheet' },
   ];
 
   /**
