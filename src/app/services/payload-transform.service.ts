@@ -144,17 +144,8 @@ export class PayloadTransformService {
 
           if (skuValue !== undefined && skuValue !== null && skuValue !== '') {
             skus.push({
-              skuId: sku.skuId,
+              ...sku,
               value: String(skuValue),
-              product: sku.product || '',
-              productId: sku.productId || '',
-              manufacturer: sku.manufacturer || '',
-              color: sku.color || '',
-              size1: sku.size1 || '',
-              destination: sku.destination || '',
-              destinationDimensionId: sku.destinationDimensionId || '',
-              colorDimensionId: sku.colorDimensionId || '',
-              sourceDimensionId: sku.sourceDimensionId || '',
               isActive: true,
             });
           }
@@ -391,7 +382,7 @@ export class PayloadTransformService {
     const bomPartInfo = this.dataService.getBomPartInfo();
     const columnsRaw = this.dataService.getColumnMapping();
     const sectionOrder = apiData?.sectionOrder || [];
-    const skuInfoData = apiData?.skuInfo || { skus: skuInfo };
+    const skuInfoData = Array.isArray(apiData?.skuInfo) ? apiData!.skuInfo : [];
 
     const columns: { [key: string]: string } = {};
     if (columnsRaw) {
@@ -408,13 +399,11 @@ export class PayloadTransformService {
 
     const uniqueSkusMap = new Map<string, any>();
 
-    if (skuInfoData.skus && Array.isArray(skuInfoData.skus)) {
-      skuInfoData.skus.forEach((sku: any) => {
-        if (sku.skuId) {
-          uniqueSkusMap.set(sku.skuId, { ...sku });
-        }
-      });
-    }
+    skuInfoData.forEach((sku: any) => {
+      if (sku.skuId) {
+        uniqueSkusMap.set(sku.skuId, { ...sku });
+      }
+    });
 
     instances.forEach((instance) => {
       const bomLink = instance['bom-link'];
@@ -422,27 +411,14 @@ export class PayloadTransformService {
         bomLink.skus.forEach((sku: any) => {
           if (sku.skuId) {
             if (!uniqueSkusMap.has(sku.skuId)) {
-              uniqueSkusMap.set(sku.skuId, {
-                product: sku.product || '',
-                productId: sku.productId || '',
-                color: sku.color || '',
-                destination: sku.destination || '',
-                destinationDimensionId: sku.destinationDimensionId || '',
-                manufacturer: sku.manufacturer || '',
-                size1: sku.size1 || '',
-                colorDimensionId: sku.colorDimensionId || '',
-                sourceDimensionId: sku.sourceDimensionId || '',
-                skuId: sku.skuId || '',
-              });
+              uniqueSkusMap.set(sku.skuId, { ...sku });
             }
           }
         });
       }
     });
 
-    const finalSkuInfo = {
-      skus: Array.from(uniqueSkusMap.values()),
-    };
+    const finalSkuInfo = Array.from(uniqueSkusMap.values());
 
     const skuIds = apiData?.skuIds || '';
 

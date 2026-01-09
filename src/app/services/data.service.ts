@@ -19,6 +19,8 @@ export interface BomLinkSku {
   sourceDimensionId: string;
   value: string;
   skuId: string;
+  bomId?: string;
+  bomName?: string;
 }
 
 export interface BomLink {
@@ -55,6 +57,8 @@ export interface SkuInfo {
   colorDimensionId?: string;
   sourceDimensionId?: string;
   destinationDimensionId?: string;
+  bomId?: string;
+  bomName?: string;
 }
 
 export interface BomPartInfo {
@@ -72,9 +76,7 @@ export interface BomInstance {
 export interface ApiData {
   instances: BomInstance[];
   columns: { [key: string]: string };
-  skuInfo: {
-    skus: SkuInfo[];
-  };
+  skuInfo: SkuInfo[];
   bomPartInfo?: BomPartInfo | BomPartInfo[];
   sectionOrder?: string[];
   bomType?: string;
@@ -494,7 +496,8 @@ export class DataService {
   }
 
   getSkuInfo(): SkuInfo[] {
-    return this.apiData!.skuInfo.skus;
+    const info = this.apiData?.skuInfo;
+    return Array.isArray(info) ? info : [];
   }
 
   getBomTypeFromResponse(): string | null {
@@ -504,7 +507,7 @@ export class DataService {
   getProductInfo() {
     const skuInfo = this.apiData?.skuInfo;
     const bomPartInfo = this.apiData?.bomPartInfo;
-    const firstSku = skuInfo?.skus?.[0];
+    const firstSku = Array.isArray(skuInfo) ? skuInfo[0] : null;
 
     if (!skuInfo || !firstSku) {
       return null;

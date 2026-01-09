@@ -1281,9 +1281,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   private isFieldEditableForNewRow(field: string): boolean {
     const editableFields = [
       'bomLinkFeature',
-      'materialDescription',
+      'materialDescription', 'material',
       'supplier',
-      'colorDescription',
+      'colorDescription','color',
       'partNumber',
       'bomLinkStartDate',
       'bomLinkEndDate',

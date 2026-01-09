@@ -550,8 +550,11 @@
 }
 
 .criteria-display {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   min-width: 200px;
+  max-width: 500px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
   font-weight: 500;
   color: #374151;
