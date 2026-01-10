@@ -188,8 +188,10 @@ body {
   font-size: 13px;
   color: #64748b;
   font-weight: 500;
-  min-width: 280px;
-  max-width: 400px;
+  min-width: 180px;
+  max-width: 350px;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .last-saved-display i {
@@ -224,6 +226,8 @@ body {
   font-size: 12px;
   font-weight: 500;
   height: 32px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .save-changes-btn:disabled {
@@ -1929,6 +1933,40 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
 
 .available-fields-section {
   margin-top: 12px;
+}
+
+/* Responsive improvements for medium screens */
+@media (max-width: 1200px) and (min-width: 769px) {
+  .controls-row {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .left-controls-group {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .right-controls-group {
+    flex: 0 1 auto;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .criteria-display {
+    min-width: 150px;
+    max-width: 400px;
+  }
+
+  .last-saved-display {
+    min-width: 200px;
+    max-width: 300px;
+  }
+
+  .save-section {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
 }
 
 /* Responsive improvements */

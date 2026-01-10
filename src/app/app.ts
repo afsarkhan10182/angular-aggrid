@@ -1,4 +1,12 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, HostListener } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  AfterViewInit,
+  ViewChild,
+  ElementRef,
+  HostListener,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
@@ -209,7 +217,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       const isDataRow = node.isDirectRow || node.isSubRow;
       const partNumber = node.partNumber || node.part || '';
       const hasPartNumber = partNumber && String(partNumber).trim() !== '';
-      
+
       // Only add the node if:
       // 1. It's a header (section, group, material, branch), OR
       // 2. It's a data row WITH a valid partNumber
@@ -330,14 +338,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.dataService.fetchIncludeInSpecSheetConstraints().subscribe({
       next: (constraints) => {
         this.constraintsData = constraints;
-        
-
       },
-      error: (err) => console.error('Error fetching IncludeInSpecSheet constraints', err)
+      error: (err) => console.error('Error fetching IncludeInSpecSheet constraints', err),
     });
   }
-
-
 
   initializeColumns(): void {
     const columnMapping = this.dataService.getColumnMapping();
@@ -364,7 +368,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
    * Get all columns for visibility panel - dynamically from columnDefs
    */
   get allColumns(): any[] {
-    return this.columnDefs.filter(col => {
+    return this.columnDefs.filter((col) => {
       const field = col.field || (col as any).colId;
       return field !== 'checkbox';
     });
@@ -399,7 +403,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         if (!this.isAddRowEnabled()) {
           return false;
         }
-        
+
         const data = params?.data;
         if (!data) return false;
         return !(
@@ -443,7 +447,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
         // Check if section has any VISIBLE children (MaterialHeaders or DirectRows with content)
         const hasVisibleChildren = () => {
-          if (!params.data.children || !Array.isArray(params.data.children) || params.data.children.length === 0) {
+          if (
+            !params.data.children ||
+            !Array.isArray(params.data.children) ||
+            params.data.children.length === 0
+          ) {
             return false;
           }
           return params.data.children.some((child: any) => {
@@ -503,12 +511,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         if (!params.data || params.data.isSectionHeader) {
           return false;
         }
-        
+
         // New rows - check restriction
         if (params.data.isNewRow) {
           return this.isFieldEditableForNewRow('bomLinkFeature');
         }
-        
+
         // Existing rows - check SBOM restrictions
         return this.isFieldEditableInSbom('bomLinkFeature');
       },
@@ -546,7 +554,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             const columnWidth = params.column?.getActualWidth() || 180;
             const cellStyle = this.getDataCellStyle(params);
             const textColor = cellStyle?.color || undefined;
-            return this.utilService.createCellContentWithTooltip(params.value, columnWidth, textColor);
+            return this.utilService.createCellContentWithTooltip(
+              params.value,
+              columnWidth,
+              textColor
+            );
           },
           tooltipValueGetter: (params: any) => {
             if (params.value === null || params.value === undefined) return null;
@@ -557,12 +569,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             if (!params.data || params.data.isSectionHeader) {
               return false;
             }
-            
+
             // New rows - check restriction
             if (params.data.isNewRow) {
               return this.isFieldEditableForNewRow(field);
             }
-            
+
             // Existing rows - check SBOM restrictions
             return this.isFieldEditableInSbom('bomLinkCountryOfOrigin');
           },
@@ -597,7 +609,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             const columnWidth = params.column?.getActualWidth() || 150;
             const cellStyle = this.getDataCellStyle(params);
             const textColor = cellStyle?.color || undefined;
-            return this.utilService.createCellContentWithTooltip(params.value, columnWidth, textColor);
+            return this.utilService.createCellContentWithTooltip(
+              params.value,
+              columnWidth,
+              textColor
+            );
           },
           tooltipValueGetter: (params: any) => {
             if (params.value === null || params.value === undefined) return null;
@@ -620,10 +636,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             values: ['', 'Yes', 'No'],
             placeholder: 'Select...',
             filterFunction: (searchValue: string, options: string[]) => {
-               if (!searchValue) return options;
-               const lower = searchValue.toLowerCase();
-               return options.filter(opt => opt.toLowerCase().includes(lower));
-            }
+              if (!searchValue) return options;
+              const lower = searchValue.toLowerCase();
+              return options.filter((opt) => opt.toLowerCase().includes(lower));
+            },
           },
         });
         return;
@@ -648,7 +664,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             const columnWidth = params.column?.getActualWidth() || 150;
             const cellStyle = this.getDataCellStyle(params);
             const textColor = cellStyle?.color || undefined;
-            return this.utilService.createCellContentWithTooltip(params.value, columnWidth, textColor);
+            return this.utilService.createCellContentWithTooltip(
+              params.value,
+              columnWidth,
+              textColor
+            );
           },
           tooltipValueGetter: (params: any) => {
             if (params.value === null || params.value === undefined) return null;
@@ -671,10 +691,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             values: ['', ...this.dataService.getIncludeInSpecSheetOptions(this.constraintsData)],
             placeholder: 'Select...',
             filterFunction: (searchValue: string, options: string[]) => {
-               if (!searchValue) return options;
-               const lower = searchValue.toLowerCase();
-               return options.filter(opt => opt.toLowerCase().includes(lower));
-            }
+              if (!searchValue) return options;
+              const lower = searchValue.toLowerCase();
+              return options.filter((opt) => opt.toLowerCase().includes(lower));
+            },
           }),
         });
         return;
@@ -698,12 +718,16 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             return '';
           }
           const columnWidth = params.column?.getActualWidth() || columnDef.width || 150;
-          
+
           // Get the computed cell style to extract color
           const cellStyle = this.getDataCellStyle(params);
           const textColor = cellStyle?.color || undefined;
-          
-          return this.utilService.createCellContentWithTooltip(params.value, columnWidth, textColor);
+
+          return this.utilService.createCellContentWithTooltip(
+            params.value,
+            columnWidth,
+            textColor
+          );
         },
         tooltipValueGetter: (params: any) => {
           if (params.value === null || params.value === undefined) return null;
@@ -716,12 +740,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           if (!params.data || params.data.isSectionHeader) {
             return false;
           }
-          
+
           // New rows - check restriction
           if (params.data.isNewRow) {
             return this.isFieldEditableForNewRow(field);
           }
-          
+
           // Existing rows - check SBOM restrictions
           return this.isFieldEditableInSbom(field);
         },
@@ -763,12 +787,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           ) {
             return false;
           }
-          
+
           // New rows - check restriction
           if (params.data && params.data.isNewRow) {
             return this.isFieldEditableForNewRow(field);
           }
-          
+
           // Existing rows - check SBOM restrictions
           return this.isFieldEditableInSbom(field);
         };
@@ -828,10 +852,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             };
           };
         }
-      } else if (
-        field === 'bomLinkStartDate' ||
-        field === 'bomLinkEndDate'
-      ) {
+      } else if (field === 'bomLinkStartDate' || field === 'bomLinkEndDate') {
         columnDef.filter = false;
         columnDef.cellEditor = 'agDateCellEditor';
         columnDef.editable = (params: any) => {
@@ -844,12 +865,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           ) {
             return false;
           }
-          
+
           // New rows - check restriction
           if (params.data && params.data.isNewRow) {
             return this.isFieldEditableForNewRow(field);
           }
-          
+
           // Existing rows - check SBOM restrictions
           return this.isFieldEditableInSbom(field);
         };
@@ -868,7 +889,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           const columnWidth = params.column?.getActualWidth() || columnDef.width || 150;
           const cellStyle = this.getDataCellStyle(params);
           const textColor = cellStyle?.color || undefined;
-          return this.utilService.createCellContentWithTooltip(formattedValue, columnWidth, textColor);
+          return this.utilService.createCellContentWithTooltip(
+            formattedValue,
+            columnWidth,
+            textColor
+          );
         };
         columnDef.valueGetter = (params: any) => {
           if (!params.data) return undefined;
@@ -1127,7 +1152,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       const materialIdentifier = data.materialKey || '';
       const materialIndex = data.materialIndex !== undefined ? data.materialIndex : '';
       const linkIcon = data.hasLinkedBom ? '🔗' : '';
-      
+
       // Check if this row has a part for the reference SKU
       const textColor = this.shouldHighlightRow(data) ? 'color: #ff0000;' : '';
 
@@ -1137,8 +1162,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         }', '${materialIdentifier}', ${materialIndex})">
           ${linkIcon ? `<span class="material-link-icon">${linkIcon}</span>` : ''}
           <span class="hier-title" style="${textColor}">${this.utilService.escapeHtml(
-            String(data.material || data.part || data.partNumber || '')
-          )}</span>
+        String(data.material || data.part || data.partNumber || '')
+      )}</span>
         </div>
       `;
     }
@@ -1146,12 +1171,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (data.isParentRow) {
       // Check if this row has a part for the reference SKU
       const textColor = this.shouldHighlightRow(data) ? 'color: #ff0000;' : '';
-      
+
       return `
         <div class="hier-header parent-row-header">
           <span class="hier-title" style="${textColor}"><span class="hier-indent" style="--indent:16px;"></span>${this.utilService.escapeHtml(
-            String(data.part || '')
-          )}</span>
+        String(data.part || '')
+      )}</span>
         </div>
       `;
     }
@@ -1159,24 +1184,26 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (data.isDirectRow) {
       const linkIcon = data.hasLinkedBom ? '🔗' : '';
       const featureValue = data.bomLinkFeature || '';
-      
+
       // Check if this row has a part for the reference SKU
       const textColor = this.shouldHighlightRow(data) ? 'color: #ff0000;' : '';
-      
+
       return `
         <div class="hier-row direct-row">
           ${linkIcon ? `<span class="direct-link-icon">${linkIcon}</span>` : ''}
-          <span class="direct-text" style="${textColor}">${this.utilService.escapeHtml(featureValue)}</span>
+          <span class="direct-text" style="${textColor}">${this.utilService.escapeHtml(
+        featureValue
+      )}</span>
         </div>
       `;
     }
 
     const featureValue = data.bomLinkFeature;
     const columnWidth = 220;
-    
+
     // Check if this row has a part for the reference SKU - for red highlighting
     const textColor = this.getHighlightColor(data);
-    
+
     return this.utilService.createCellContentWithTooltip(featureValue, columnWidth, textColor);
   }
 
@@ -1258,11 +1285,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   private isFieldEditableInSbom(field: string): boolean {
     if (!this.isSbomMode()) {
       // MBOM mode - only date and quantity fields are editable for existing rows
-      const mbomEditableFields = [
-        'bomLinkStartDate',
-        'bomLinkEndDate',
-        'quantity'
-      ];
+      const mbomEditableFields = ['bomLinkStartDate', 'bomLinkEndDate', 'quantity'];
       return mbomEditableFields.includes(field);
     }
 
@@ -1283,16 +1306,18 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   private isFieldEditableForNewRow(field: string): boolean {
     const editableFields = [
       'bomLinkFeature',
-      'materialDescription', 'material',
+      'materialDescription',
+      'material',
       'supplier',
-      'colorDescription','color',
+      'colorDescription',
+      'color',
       'partNumber',
       'bomLinkStartDate',
       'bomLinkEndDate',
       'quantity',
       'bomLinkSpecSheetExtra',
       'bomLinkIncludeInSpecSheet',
-      'bomLinkCountryOfOrigin'
+      'bomLinkCountryOfOrigin',
     ];
     return editableFields.includes(field);
   }
@@ -1382,7 +1407,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         backgroundColor: '#e5e7eb',
         borderLeft: '4px solid #10b981',
         fontWeight: '600',
-        color: hasPartForRefSku ? '#ff0000' : 'inherit'
+        color: hasPartForRefSku ? '#ff0000' : 'inherit',
       };
     }
 
@@ -1391,7 +1416,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         backgroundColor: '#eff6ff',
         borderLeft: '3px solid #3b82f6',
         fontWeight: '500',
-        color: hasPartForRefSku ? '#ff0000' : '#1e40af'
+        color: hasPartForRefSku ? '#ff0000' : '#1e40af',
       };
     }
 
@@ -1400,14 +1425,14 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         backgroundColor: '#ffffff',
         borderLeft: '2px solid #d1d5db',
         fontWeight: '400',
-        color: hasPartForRefSku ? '#ff0000' : '#374151'
+        color: hasPartForRefSku ? '#ff0000' : '#374151',
       };
     }
 
     return {
       backgroundColor: '#ffffff',
       borderLeft: '2px solid #d1d5db',
-      color: hasPartForRefSku ? '#ff0000' : '#374151'
+      color: hasPartForRefSku ? '#ff0000' : '#374151',
     };
   }
 
@@ -1418,7 +1443,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (!data) return style;
 
     const hasPartForRefSku = this.shouldHighlightRow(data);
-    
+
     const isActionsColumn = params.colDef.field === 'actions';
 
     if (data.isGroupHeader) {
@@ -1442,7 +1467,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         borderRight: isActionsColumn ? '1px solid #e2e8f0' : 'none',
         borderLeft: 'none',
         fontWeight: 'bold',
-        color: '#92400e'
+        color: '#92400e',
       };
     }
 
@@ -1451,7 +1476,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         backgroundColor: 'transparent',
         borderLeft: '4px solid #10b981',
         fontWeight: '600',
-        color: hasPartForRefSku ? '#ff0000' : 'inherit'
+        color: hasPartForRefSku ? '#ff0000' : 'inherit',
       };
     }
 
@@ -1460,7 +1485,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         backgroundColor: '#eff6ff',
         borderLeft: '3px solid #3b82f6',
         fontWeight: '500',
-        color: hasPartForRefSku ? '#ff0000' : '#1e40af'
+        color: hasPartForRefSku ? '#ff0000' : '#1e40af',
       };
     }
 
@@ -1470,7 +1495,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         backgroundColor: '#ffffff',
         borderLeft: '2px solid #d1d5db',
         fontWeight: '400',
-        color: hasPartForRefSku ? '#ff0000' : '#374151'
+        color: hasPartForRefSku ? '#ff0000' : '#374151',
       };
     }
 
@@ -1760,9 +1785,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (event.data && !event.data.isSectionHeader) {
       const field = event.colDef.field;
       if (field && field !== 'actions' && !field.startsWith('sku')) {
-        const isDateColumn =
-          field === 'bomLinkStartDate' ||
-          field === 'bomLinkEndDate';
+        const isDateColumn = field === 'bomLinkStartDate' || field === 'bomLinkEndDate';
 
         // Check if this field is editable for this row
         const isEditable = event.data.isNewRow || this.isFieldEditableInSbom(field);
@@ -1844,28 +1867,28 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (!materialData) return;
 
     // Only open modal if linkedBom is "1"
-    if (materialData.linkedBom !== "1" && materialData.linkedBom !== 1) {
+    if (materialData.linkedBom !== '1' && materialData.linkedBom !== 1) {
       console.log('Material does not have linkedBom="1", skipping modal');
       return;
     }
 
     // Use childId for the API call (this is the material master ID)
     const childId = materialData.childId;
-    
+
     if (!childId) {
-        console.warn('No childId found in material data');
-        return;
+      console.warn('No childId found in material data');
+      return;
     }
 
     const bomSub = this.dataService.getComplexBOM(childId).subscribe({
       next: (bomData: any) => {
         // bomData should have format: { materialMasterId: "...", instances: [...], columns: {...} }
-        
+
         this.selectedMaterialData = {
-            ...materialData,
-            ...bomData // Merge API response including instances and columns
+          ...materialData,
+          ...bomData, // Merge API response including instances and columns
         };
-        
+
         // Keep existing logic for SKU data if needed, or maybe the new response handles everything
         this.selectedMaterialSkuData = this.dataService.getSkuDataForPart(materialData);
         this.showMaterialModal = true;
@@ -2487,29 +2510,29 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         return hasPartNumber && isCorrectMarkup;
       })
       .map((item: any) => {
-      const bomLink = item['bom-link'];
-      // Prefer the true internal name if provided by API. Using display text as a key
-      // can cause non-unique matches and "wrong section toggles".
-      const sectionInternalName = bomLink.sectionInternalName || bomLink.section; // e.g., "enumSection001"
-      const sectionDisplayName = bomLink.sectionDisplayName; // e.g., "Fuselage"
+        const bomLink = item['bom-link'];
+        // Prefer the true internal name if provided by API. Using display text as a key
+        // can cause non-unique matches and "wrong section toggles".
+        const sectionInternalName = bomLink.sectionInternalName || bomLink.section; // e.g., "enumSection001"
+        const sectionDisplayName = bomLink.sectionDisplayName; // e.g., "Fuselage"
 
-      // Build mapping of internal name to display name
-      if (sectionInternalName && sectionDisplayName) {
-        sectionDisplayNameMap[sectionInternalName] = sectionDisplayName;
-      }
+        // Build mapping of internal name to display name
+        if (sectionInternalName && sectionDisplayName) {
+          sectionDisplayNameMap[sectionInternalName] = sectionDisplayName;
+        }
 
-      return {
-        ...bomLink,
-        part: bomLink.partNumber,
-        partNumber: bomLink.partNumber,
-        skus: bomLink.skus,
-        linkedBom: bomLink.linkedBom,
-        quantity: bomLink.quantity ? Number(bomLink.quantity).toFixed(1) : bomLink.quantity, // Format quantity
-        qty: bomLink.qty ? Number(bomLink.qty).toFixed(1) : bomLink.qty, // Format qty
-        section: sectionInternalName, // Keep internal name for payload + toggling
-        sectionDisplayName: sectionDisplayName, // Store display name for UI
-      };
-    });
+        return {
+          ...bomLink,
+          part: bomLink.partNumber,
+          partNumber: bomLink.partNumber,
+          skus: bomLink.skus,
+          linkedBom: bomLink.linkedBom,
+          quantity: bomLink.quantity ? Number(bomLink.quantity).toFixed(1) : bomLink.quantity, // Format quantity
+          qty: bomLink.qty ? Number(bomLink.qty).toFixed(1) : bomLink.qty, // Format qty
+          section: sectionInternalName, // Keep internal name for payload + toggling
+          sectionDisplayName: sectionDisplayName, // Store display name for UI
+        };
+      });
 
     // Group items by section (using internal name)
     processedItems.forEach((item: any, index: number) => {

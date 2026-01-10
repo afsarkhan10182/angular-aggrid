@@ -532,7 +532,7 @@
   justify-content: space-between;
   align-items: center;
   flex-wrap: nowrap;
-  gap: 32px;
+  gap: 30px;
   margin-bottom: 16px;
   padding: 12px 16px;
   background: #fafbfc;
@@ -547,6 +547,8 @@
   align-items: center;
   gap: 16px;
   flex: 1 1 auto;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .criteria-display {
@@ -564,8 +566,9 @@
 .right-controls-group {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   flex: 0 0 auto;
+  flex-wrap: nowrap;
   white-space: nowrap;
 }
 
@@ -579,6 +582,7 @@
   display: flex;
   justify-content: flex-start;
   max-width: 350px;
+  min-width: 0;
 }
 
 .save-section {
@@ -586,6 +590,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: nowrap;
   white-space: nowrap;
 }
 
@@ -603,6 +608,8 @@
   gap: 6px;
   transition: all 0.2s ease;
   box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .export-btn:hover {
