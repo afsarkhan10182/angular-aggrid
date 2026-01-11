@@ -1786,35 +1786,269 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       const field = event.colDef.field;
       if (field && field !== 'actions' && !field.startsWith('sku')) {
         const isDateColumn = field === 'bomLinkStartDate' || field === 'bomLinkEndDate';
+        const isSpecSheetField =
+          field === 'bomLinkSpecSheetExtra' || field === 'bomLinkIncludeInSpecSheet';
+        const isAutocompleteField =
+          isSpecSheetField || field === 'materialDescription' || field === 'material';
 
         // Check if this field is editable for this row
         const isEditable = event.data.isNewRow || this.isFieldEditableInSbom(field);
 
         if (isDateColumn && isEditable) {
+          // Store current cell info to ensure we target the correct one
+          const targetRowIndex = event.rowIndex;
+          const targetColKey = event.column.getId();
+          const gridContainer = event.api.getGridElement() as HTMLElement;
+
+          // Validate grid container exists
+          if (!gridContainer) {
+            // Fallback to normal editing if grid container not found
+            event.api.startEditingCell({
+              rowIndex: targetRowIndex,
+              colKey: targetColKey,
+              rowPinned: event.rowPinned,
+            });
+            return;
+          }
+
           // Auto-open date picker for date columns
           event.api.startEditingCell({
-            rowIndex: event.rowIndex,
-            colKey: event.column.getId(),
+            rowIndex: targetRowIndex,
+            colKey: targetColKey,
             rowPinned: event.rowPinned,
           });
-          setTimeout(() => {
-            const editingCell = document.querySelector('.ag-cell-inline-editing') as HTMLElement;
+
+          // Use MutationObserver to wait for the input to appear, then open picker
+          let observer: MutationObserver | null = null;
+          const timeouts: ReturnType<typeof setTimeout>[] = [];
+          let isCleanedUp = false; // Prevent multiple cleanup calls
+
+          const openDatePicker = (): boolean => {
+            // Prevent execution if already cleaned up
+            if (isCleanedUp) return false;
+
+            // Only look for editing cell within the grid container
+            const editingCell = gridContainer.querySelector(
+              '.ag-cell-inline-editing'
+            ) as HTMLElement;
             if (editingCell) {
               const dateInput =
                 (editingCell.querySelector('input[type="date"]') as HTMLInputElement) ||
                 (editingCell.querySelector('input.ag-date-input') as HTMLInputElement) ||
                 (editingCell.querySelector('input') as HTMLInputElement);
 
-              if (dateInput) {
-                dateInput.focus();
-                if (typeof dateInput.showPicker === 'function') {
-                  dateInput.showPicker();
-                } else {
-                  dateInput.click();
+              if (dateInput && dateInput.type === 'date') {
+                try {
+                  dateInput.focus();
+                  // Use requestAnimationFrame to ensure DOM is ready
+                  requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                      if (!isCleanedUp && dateInput.type === 'date') {
+                        if (typeof dateInput.showPicker === 'function') {
+                          try {
+                            dateInput.showPicker();
+                          } catch (e) {
+                            dateInput.click();
+                          }
+                        } else {
+                          dateInput.click();
+                        }
+                      }
+                    });
+                  });
+                  return true;
+                } catch (e) {
+                  console.warn('Error opening date picker:', e);
+                  return false;
                 }
               }
             }
-          }, 150);
+            return false;
+          };
+
+          // Cleanup function - idempotent, safe to call multiple times
+          const cleanup = () => {
+            if (isCleanedUp) return; // Already cleaned up
+            isCleanedUp = true;
+
+            if (observer) {
+              try {
+                observer.disconnect();
+              } catch (e) {
+                console.warn('Error disconnecting observer:', e);
+              }
+              observer = null;
+            }
+
+            timeouts.forEach((t) => {
+              try {
+                clearTimeout(t);
+              } catch (e) {
+                console.warn('Error clearing timeout:', e);
+              }
+            });
+            timeouts.length = 0;
+          };
+
+          // Try immediately
+          if (openDatePicker()) {
+            cleanup();
+            return;
+          }
+
+          // Use MutationObserver to watch for the input to appear - only observe grid container
+          try {
+            observer = new MutationObserver(() => {
+              if (!isCleanedUp && openDatePicker()) {
+                cleanup();
+              }
+            });
+
+            observer.observe(gridContainer, {
+              childList: true,
+              subtree: true,
+            });
+          } catch (e) {
+            console.warn('Error setting up MutationObserver:', e);
+            cleanup();
+          }
+
+          // Also try with progressive timeouts as fallback
+          [100, 200, 300].forEach((delay) => {
+            const timeout = setTimeout(() => {
+              if (!isCleanedUp && openDatePicker()) {
+                cleanup();
+              }
+            }, delay);
+            timeouts.push(timeout);
+          });
+
+          // Final cleanup timeout - ensure cleanup always happens
+          const cleanupTimeout = setTimeout(() => {
+            cleanup();
+          }, 1000);
+          timeouts.push(cleanupTimeout);
+        } else if (isAutocompleteField && isEditable && event.data.isNewRow) {
+          // Handle specsheet fields in new rows - wait for autocomplete editor to be ready
+          const targetRowIndex = event.rowIndex;
+          const targetColKey = event.column.getId();
+          const gridContainer = event.api.getGridElement() as HTMLElement;
+
+          // Validate grid container exists
+          if (!gridContainer) {
+            // Fallback to normal editing if grid container not found
+            event.api.startEditingCell({
+              rowIndex: targetRowIndex,
+              colKey: targetColKey,
+              rowPinned: event.rowPinned,
+            });
+            return;
+          }
+
+          event.api.startEditingCell({
+            rowIndex: targetRowIndex,
+            colKey: targetColKey,
+            rowPinned: event.rowPinned,
+          });
+
+          // Wait for autocomplete editor to be ready and focus it
+          let observer: MutationObserver | null = null;
+          const timeouts: ReturnType<typeof setTimeout>[] = [];
+          let isCleanedUp = false; // Prevent multiple cleanup calls
+
+          const focusAutocompleteEditor = (): boolean => {
+            // Prevent execution if already cleaned up
+            if (isCleanedUp) return false;
+
+            const editingCell = gridContainer.querySelector(
+              '.ag-cell-inline-editing'
+            ) as HTMLElement;
+            if (editingCell) {
+              // Find the autocomplete input
+              const autocompleteInput = editingCell.querySelector('input') as HTMLInputElement;
+              if (autocompleteInput) {
+                try {
+                  autocompleteInput.focus();
+                  // Trigger click to open dropdown if it's an autocomplete
+                  requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                      if (!isCleanedUp && autocompleteInput) {
+                        autocompleteInput.click();
+                      }
+                    });
+                  });
+                  return true;
+                } catch (e) {
+                  console.warn('Error focusing autocomplete editor:', e);
+                  return false;
+                }
+              }
+            }
+            return false;
+          };
+
+          // Cleanup function - idempotent, safe to call multiple times
+          const cleanup = () => {
+            if (isCleanedUp) return; // Already cleaned up
+            isCleanedUp = true;
+
+            if (observer) {
+              try {
+                observer.disconnect();
+              } catch (e) {
+                console.warn('Error disconnecting observer:', e);
+              }
+              observer = null;
+            }
+
+            timeouts.forEach((t) => {
+              try {
+                clearTimeout(t);
+              } catch (e) {
+                console.warn('Error clearing timeout:', e);
+              }
+            });
+            timeouts.length = 0;
+          };
+
+          // Try immediately
+          if (focusAutocompleteEditor()) {
+            cleanup();
+            return;
+          }
+
+          // Use MutationObserver to watch for the editor to appear
+          try {
+            observer = new MutationObserver(() => {
+              if (!isCleanedUp && focusAutocompleteEditor()) {
+                cleanup();
+              }
+            });
+
+            observer.observe(gridContainer, {
+              childList: true,
+              subtree: true,
+            });
+          } catch (e) {
+            console.warn('Error setting up MutationObserver:', e);
+            cleanup();
+          }
+
+          // Also try with progressive timeouts as fallback
+          [100, 200, 300].forEach((delay) => {
+            const timeout = setTimeout(() => {
+              if (!isCleanedUp && focusAutocompleteEditor()) {
+                cleanup();
+              }
+            }, delay);
+            timeouts.push(timeout);
+          });
+
+          // Final cleanup timeout - ensure cleanup always happens
+          const cleanupTimeout = setTimeout(() => {
+            cleanup();
+          }, 1000);
+          timeouts.push(cleanupTimeout);
         } else if (isEditable) {
           // For new rows, start editing other fields normally
           event.api.startEditingCell({
