@@ -708,7 +708,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         minWidth: 100,
         sortable: true,
         resizable: true, // Added resizable property
-        hide: field === 'ptcbomPartMarkUp', // Hide this column by default
+        hide: field === 'ptcbomPartMarkUpDisplayName', // Hide this column by default
         cellRenderer: (params: any) => {
           if (
             params.data.isSectionHeader ||
@@ -2215,10 +2215,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
 
     // Validate for duplicate Feature+Part+SKU combinations
+    // Pass original API data to check ALL rows including hidden ones (filtered out from UI)
+    const apiData = this.dataService.getApiData();
     const duplicateValidation = this.validationService.validateDuplicateFeatureSkuCombination(
       this.rowData,
       this.displayData,
-      skuInfo
+      skuInfo,
+      apiData || undefined
     );
     if (!duplicateValidation.isValid) {
       // Mark invalid rows for highlighting
@@ -2313,10 +2316,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     // Get the row at the current index to inherit section
     const referenceRow = this.displayData[rowIndex];
     let section: string | undefined;
+    let sectionDisplayName: string | undefined;
 
-    // Try to get section from reference row
+    // Try to get section and sectionDisplayName from reference row
     if (referenceRow) {
       section = referenceRow.section || referenceRow.parent?.data?.section;
+      sectionDisplayName =
+        referenceRow.sectionDisplayName || referenceRow.parent?.data?.sectionDisplayName;
 
       // If still no section, try to get from grid node
       if (!section && this.gridApi) {
@@ -2324,10 +2330,17 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         if (node) {
           // Try to find section from parent nodes
           let parentNode = node.parent;
-          while (parentNode && !section) {
-            if (parentNode.data && parentNode.data.section) {
-              section = parentNode.data.section;
-              break;
+          while (parentNode && (!section || !sectionDisplayName)) {
+            if (parentNode.data) {
+              if (!section && parentNode.data.section) {
+                section = parentNode.data.section;
+              }
+              if (!sectionDisplayName && parentNode.data.sectionDisplayName) {
+                sectionDisplayName = parentNode.data.sectionDisplayName;
+              }
+              if (section && sectionDisplayName) {
+                break;
+              }
             }
             parentNode = parentNode.parent;
           }
@@ -2349,7 +2362,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       this.displayData,
       this.gridApi,
       this.dataService,
-      section // Pass section to be assigned to new row
+      section, // Pass section to be assigned to new row
+      sectionDisplayName // Pass sectionDisplayName to be assigned to new row
     );
 
     setTimeout(() => {

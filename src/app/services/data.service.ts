@@ -79,6 +79,7 @@ export interface ApiData {
   skuInfo: SkuInfo[];
   bomPartInfo?: BomPartInfo | BomPartInfo[];
   sectionOrder?: string[];
+  sectionDetails?: { [key: string]: string }; // Maps internal section ID to display name (e.g., "enumSection001": "Fuselage")
   bomType?: string;
   skuIds?: string; // Version IDs from API response (e.g., "VR:com.lcs.wc.foundation.LCSRevisableEntity:574978")
 }
@@ -607,7 +608,7 @@ export class DataService {
     const url = environment.useMockApi
       ? 'api/IncludeInSpecSheet.json'
       : `${this.getServiceHostUrl()}/Windchill/servlet/rest/tm/types/com.lcs.wc.flexbom.FlexBOMLink/attributes/bomLinkIncludeInSpecSheet`;
-      
+
     return this.http.get<any>(url).pipe(
       catchError((error) => {
         console.error('Error loading IncludeInSpecSheet constraints', error);

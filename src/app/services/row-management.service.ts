@@ -55,7 +55,8 @@ export class RowManagementService {
     rowData: any[],
     gridApi: GridApi,
     dataService: DataService,
-    section?: string // Optional section to inherit from reference row
+    section?: string, // Optional section to inherit from reference row
+    sectionDisplayName?: string // Optional sectionDisplayName to inherit from reference row
   ): { newRow: any; newRowId: number } {
     const newRowIdValue = this.nextRowId;
     const newRow: any = {
@@ -80,6 +81,11 @@ export class RowManagementService {
     // Assign section if provided (inherited from reference row)
     if (section) {
       newRow.section = section;
+    }
+    
+    // Assign sectionDisplayName if provided (inherited from reference row)
+    if (sectionDisplayName) {
+      newRow.sectionDisplayName = sectionDisplayName;
     }
 
     const skuInfo = dataService.getSkuInfo();
