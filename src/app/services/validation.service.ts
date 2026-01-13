@@ -638,6 +638,100 @@ export class ValidationService {
     newRows.forEach((row, idx) => {});
     existingRows.forEach((row, idx) => {});
 
+    // ============================================
+    // CHECK FOR DUPLICATE FEATURES AMONG NEW ROWS
+    // ============================================
+    // Rule: For ONE SKU + ONE SECTION → ONE UNIQUE FEATURE ONLY
+    // If multiple new rows have the same feature + section + SKU ID, throw duplicate error
+    if (newRows.length > 1) {
+      const newRowDetails = new Map<string, any[]>(); // "section|feature|skuId" -> [rows]
+
+      for (const row of newRows) {
+        const section = row.section || '';
+        const bomLinkFeature = String(row.bomLinkFeature || '').trim();
+        const partNumber = String(row.partNumber || '').trim();
+
+        // Skip if missing required fields
+        if (!section || !bomLinkFeature) {
+          continue;
+        }
+
+        // Skip if partNumber is empty (hidden rows)
+        if (!partNumber || partNumber === '') {
+          continue;
+        }
+
+        // Get SKU IDs from the row
+        const rowSkus = this.countSkusWithValues(row, skuInfo);
+        if (rowSkus.count === 0 || rowSkus.skuIds.length === 0) {
+          continue;
+        }
+
+        // Check each SKU ID for duplicates
+        for (const skuId of rowSkus.skuIds) {
+          const combinationKey = `${section}|${bomLinkFeature}|${skuId}`;
+
+          if (!newRowDetails.has(combinationKey)) {
+            newRowDetails.set(combinationKey, []);
+          }
+          newRowDetails.get(combinationKey)!.push({ ...row, _checkSkuId: skuId });
+        }
+      }
+
+      // Check for duplicate feature + section + SKU ID combinations in new rows
+      for (const [combinationKey, rows] of newRowDetails.entries()) {
+        if (rows.length > 1) {
+          const [section, feature, skuId] = combinationKey.split('|');
+
+          // Resolve section display name from section ID using sectionDetails
+          const sectionDetails = apiData?.sectionDetails || {};
+          let sectionDisplayName = section;
+
+          // Try to get display name from sectionDetails mapping
+          if (sectionDetails[section]) {
+            sectionDisplayName = sectionDetails[section];
+          } else {
+            // Fallback: try to get from first row's sectionDisplayName
+            const firstRow = rows[0];
+            if (firstRow && firstRow.sectionDisplayName) {
+              sectionDisplayName = firstRow.sectionDisplayName;
+            } else if (firstRow && firstRow.parent) {
+              // Check parent chain
+              let currentParent: any = firstRow.parent;
+              while (currentParent && sectionDisplayName === section) {
+                if (currentParent.sectionDisplayName) {
+                  sectionDisplayName = currentParent.sectionDisplayName;
+                  break;
+                }
+                currentParent = currentParent.parent;
+              }
+            }
+          }
+
+          console.log(
+            `[NEW ROW DUPLICATE] ❌ Found ${rows.length} new rows with same Feature="${feature}", Section="${sectionDisplayName}" (${section}), and SKU="${skuId}". This violates the rule: ONE SKU + ONE SECTION → ONE UNIQUE FEATURE ONLY.`
+          );
+
+          // Mark all duplicate new rows as invalid
+          const invalidRows: InvalidRow[] = [];
+          for (const duplicateRow of rows) {
+            invalidRows.push({
+              row: duplicateRow,
+              missingFields: [],
+              rowId: duplicateRow.newRowId || duplicateRow.id || 0,
+              duplicateType: 'duplicate-feature' as const,
+            });
+          }
+
+          return {
+            isValid: false,
+            message: `Duplicate feature "${feature}" for the same SKU "${skuId}" and section "${sectionDisplayName}". Multiple new rows cannot have the same feature for the same SKU in the same section.`,
+            invalidRows: invalidRows,
+          };
+        }
+      }
+    }
+
     // Build map structure based on ptcbomPartMarkUp:
     // MBOM with ptcbomPartMarkUp === 'enumMBOM001': section -> part -> feature -> Set<skuId> (includes partNumber)
     // MBOM with ptcbomPartMarkUp !== 'enumMBOM001': section -> feature -> Set<skuId> (no partNumber)
