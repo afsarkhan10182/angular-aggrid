@@ -61,19 +61,45 @@ export class GroupByService {
     const groupField = groupFields[level];
     const groups = new Map<string | null, any[]>();
 
+    // First, flatten material headers - extract their children for grouping
+    // Material headers don't have group field values, so we need to group their children directly
+    const rowsToGroup: any[] = [];
+    
     data.forEach((row) => {
-      // Skip rows that are empty/invalid (no part number), similar to flattenHierarchicalData logic
-      // Exception: Keep headers if they ended up here (unlikely for leaf nodes but safe to check)
-      const isHeader = row.isMaterialHeader || row.isSectionHeader || row.isGroupHeader;
-      if (!isHeader) {
-         const partNumber = row.partNumber || row.part;
-         if (!partNumber || String(partNumber).trim() === '') {
-           return;
-         }
+      // Preserve section headers - they should never be grouped (handled at higher level)
+      if (row.isSectionHeader) {
+        return;
       }
 
-      const groupValue = row[groupField.field];
-      const key = groupValue !== null && groupValue !== undefined ? String(groupValue) : '__null__';
+      // Flatten material headers: extract their children for grouping
+      // This ensures material headers don't interfere with grouping by Feature or other fields
+      if (row.isMaterialHeader && row.children && Array.isArray(row.children)) {
+        row.children.forEach((child: any) => {
+          rowsToGroup.push(child);
+        });
+      } else {
+        // Keep other rows as-is
+        rowsToGroup.push(row);
+      }
+    });
+
+    // Now group the flattened rows
+    rowsToGroup.forEach((row) => {
+      // Skip rows that are empty/invalid (no part number)
+      const isHeader = row.isGroupHeader;
+      if (!isHeader) {
+        const partNumber = row.partNumber || row.part;
+        if (!partNumber || String(partNumber).trim() === '') {
+          return;
+        }
+      }
+
+      // Get group value - for bomLinkFeature, use display value
+      let groupValue = row[groupField.field];
+      if (groupField.field === 'bomLinkFeature' && !groupValue && row.feature) {
+        groupValue = row.feature;
+      }
+      const key = groupValue !== null && groupValue !== undefined ? String(groupValue).trim() : '__null__';
       
       if (!groups.has(key)) {
         groups.set(key, []);
@@ -224,20 +250,36 @@ export class GroupByService {
       return sections;
     }
 
-    // Clone sections to avoid mutating original data structure too much
-    // (though we are creating new arrays for children)
+    // IMPORTANT: Always preserve sections, even if they have no children after grouping
+    // This ensures sections are always shown at the top level, with Feature groups nested inside
     return sections.map(section => {
-      if (!section.isSectionHeader || !section.children) {
+      // Always preserve section headers
+      if (!section.isSectionHeader) {
         return section;
       }
 
+      // Ensure section is expanded by default
+      const sectionWithExpanded = {
+        ...section,
+        isExpanded: section.isExpanded !== undefined ? section.isExpanded : true
+      };
+
+      // If section has no children, preserve it with empty children array
+      if (!section.children || !Array.isArray(section.children) || section.children.length === 0) {
+        return {
+          ...sectionWithExpanded,
+          children: []
+        };
+      }
+
       // Group the children of the section
-      // This creates a new structure where children are GroupHeaders
+      // This creates a new structure where children are GroupHeaders (Feature groups)
       const groupedChildren = this.createNestedGroups(section.children, groupFields, 0);
       
+      // Always preserve section, even if grouping resulted in empty children
       return {
-        ...section,
-        children: groupedChildren
+        ...sectionWithExpanded,
+        children: groupedChildren || []
       };
     });
   }

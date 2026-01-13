@@ -405,8 +405,7 @@ export class PayloadTransformService {
   ): any {
     const instances: any[] = [];
     const skuInfo = this.dataService.getSkuInfo();
-    const bomType =
-      this.dataService.getBomTypeFromResponse() || this.dataService.getBomType() || 'MBOM';
+    const bomType = this.dataService.getBomTypeFromResponse() || this.dataService.getBomType();
 
     // Get original API data to check ALL rows including hidden ones for SKU matching
     const originalApiData = this.dataService.getApiData();

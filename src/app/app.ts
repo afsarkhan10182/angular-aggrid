@@ -213,13 +213,26 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const result: any[] = [];
 
     const processNode = (node: any) => {
+      // Always preserve section headers - they must always be shown
+      if (node.isSectionHeader) {
+        result.push(node);
+        // Process children if section is expanded (default to expanded)
+        const isExpanded = node.isExpanded !== undefined ? node.isExpanded : true;
+        if (isExpanded && node.children && Array.isArray(node.children)) {
+          node.children.forEach((child: any) => {
+            processNode(child);
+          });
+        }
+        return;
+      }
+
       // Filter out rows with empty partNumber (only for data rows, not headers)
       const isDataRow = node.isDirectRow || node.isSubRow;
       const partNumber = node.partNumber || node.part || '';
       const hasPartNumber = partNumber && String(partNumber).trim() !== '';
 
       // Only add the node if:
-      // 1. It's a header (section, group, material, branch), OR
+      // 1. It's a header (group, material, branch), OR
       // 2. It's a data row WITH a valid partNumber
       if (!isDataRow || hasPartNumber) {
         result.push(node);
@@ -348,7 +361,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.columnDefs = this.createHierarchicalColumns(columnMapping);
 
     this.availableGroupFields = this.columnDefs
-      .filter((col) => col.field && col.field !== 'actions' && col.sortable !== false)
+      .filter((col) => {
+        // Include columns that have a field, exclude actions column
+        // Allow bomLinkFeature for grouping even if sortable is false
+        return (
+          col.field &&
+          col.field !== 'actions' &&
+          (col.sortable !== false || col.field === 'bomLinkFeature')
+        );
+      })
       .map((col) => ({
         field: col.field!,
         headerName: col.headerName || col.field!,
@@ -359,7 +380,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         .map((g) => g.field)
         .filter((f): f is string => !!f);
       groupedFields.forEach((field) => {
-        this.gridApi.setColumnsVisible([field], false);
+        // See `addGroupField()`: don't hide the hierarchy column.
+        if (field !== 'bomLinkFeature') {
+          this.gridApi.setColumnsVisible([field], false);
+        }
       });
     }
   }
@@ -1586,7 +1610,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     this.activeGroupFields.push(field);
 
-    if (this.gridApi && field.field) {
+    // IMPORTANT:
+    // The `bomLinkFeature` column is the hierarchical "tree" column in this app.
+    // It renders Section / Material / Group header labels via `renderHierarchicalCell`.
+    // If we auto-hide it when grouping by Feature, Section headers appear to "disappear".
+    if (this.gridApi && field.field && field.field !== 'bomLinkFeature') {
       this.gridApi.setColumnsVisible([field.field], false);
     }
 
@@ -1598,7 +1626,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     if (this.gridApi && field.field) {
       const colDef = this.columnDefs.find((col) => col.field === field.field);
-      if (colDef && !colDef.hide) {
+      // Only re-show columns we auto-hid (never auto-hide `bomLinkFeature`)
+      if (field.field !== 'bomLinkFeature' && colDef && !colDef.hide) {
         this.gridApi.setColumnsVisible([field.field], true);
       }
     }
@@ -1615,7 +1644,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (this.gridApi && groupedFields.length > 0) {
       groupedFields.forEach((field) => {
         const colDef = this.columnDefs.find((col) => col.field === field);
-        if (colDef && !colDef.hide) {
+        // Never auto-hide `bomLinkFeature`, so never force-show it here either.
+        if (field !== 'bomLinkFeature' && colDef && !colDef.hide) {
           this.gridApi.setColumnsVisible([field], true);
         }
       });
@@ -1662,10 +1692,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         this.activeGroupFields
       );
 
-      // Apply saved expand/collapse state to group headers
+      // Apply saved expand/collapse state to group headers and ensure sections are expanded
       const applyGroupState = (items: any[]): any[] => {
         return items.map((item) => {
           const newItem = { ...item };
+
+          // Ensure section headers are expanded by default
+          if (newItem.isSectionHeader) {
+            newItem.isExpanded = newItem.isExpanded !== undefined ? newItem.isExpanded : true;
+          }
 
           if (newItem.isGroupHeader && newItem.groupKey) {
             const savedState = this.groupExpandedState.get(newItem.groupKey);
@@ -2102,7 +2137,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     // Only open modal if linkedBom is "1"
     if (materialData.linkedBom !== '1' && materialData.linkedBom !== 1) {
-      console.log('Material does not have linkedBom="1", skipping modal');
+      // no-op: material has no linked BOM, modal should not open
       return;
     }
 
