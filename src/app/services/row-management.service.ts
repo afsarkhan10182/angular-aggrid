@@ -82,7 +82,7 @@ export class RowManagementService {
     if (section) {
       newRow.section = section;
     }
-    
+
     // Assign sectionDisplayName if provided (inherited from reference row)
     if (sectionDisplayName) {
       newRow.sectionDisplayName = sectionDisplayName;
@@ -267,45 +267,116 @@ export class RowManagementService {
   trackFieldChange(
     params: any,
     editedRows: Set<string | number>,
-    editedFields?: Map<string | number, Set<string>>
+    editedFields?: Map<string | number, Set<string>>,
+    originalRowValues?: Map<string | number, any>
   ): void {
-    const normalize = (v: any) => {
-      // Treat null/undefined/whitespace as the same "empty" value
-      if (v === null || v === undefined) return '';
-      if (typeof v === 'string') return v.trim();
-      if (v instanceof Date) return v.getTime();
-      return v;
-    };
-
-    const valuesAreSame = normalize(params.oldValue) === normalize(params.newValue);
-
-    if (valuesAreSame) {
-      return;
-    }
+    const fieldName: string | undefined = params?.colDef?.field;
 
     // Use a truly unique row key for edit tracking.
     // NOTE: partNumber/part can repeat (duplicates). To avoid wrong highlight,
     // also track a composite key using section when we don't have a unique id.
     const partId =
       params.data.materialKey || params.data.newRowId || params.data.partNumber || params.data.part;
-    const fieldName = params.colDef.field;
-
-    editedRows.add(partId);
+    if (!partId || !fieldName) return;
 
     // Extra disambiguation key for duplicate part/partNumber across sections
     // (keeps existing save logic intact because we still store the original partId).
     const partValue = params.data.partNumber || params.data.part;
     const sectionValue = params.data.section;
-    if (!params.data.materialKey && !params.data.newRowId && sectionValue && partValue) {
-      editedRows.add(`${sectionValue}::${partValue}`);
-    }
+    const compositeId =
+      !params.data.materialKey && !params.data.newRowId && sectionValue && partValue
+        ? `${sectionValue}::${partValue}`
+        : null;
 
-    // Track which specific field was edited
-    if (editedFields && partId) {
+    const normalizeForField = (f: string, v: any): any => {
+      // Treat null/undefined/whitespace as the same "empty" value
+      if (v === null || v === undefined) return '';
+      if (typeof v === 'string') {
+        const s = v.trim();
+        if (s === '') return '';
+        if (f === 'quantity' || f === 'qty') {
+          const n = parseFloat(s);
+          return isNaN(n) ? s : n;
+        }
+        if (
+          f === 'bomLinkStartDate' ||
+          f === 'bomLinkEndDate' ||
+          f === 'startDate' ||
+          f === 'endDate'
+        ) {
+          const d = this.gridCommonService.parseDateString(s);
+          return d ? d.getTime() : s;
+        }
+        return s;
+      }
+      if (v instanceof Date) return v.getTime();
+      if (typeof v === 'number' && (f === 'quantity' || f === 'qty')) return v;
+      return v;
+    };
+
+    const getOriginalForField = (): any => {
+      if (!originalRowValues) return undefined;
+      const original =
+        originalRowValues.get(params.data.materialKey) ||
+        originalRowValues.get(partId) ||
+        (compositeId ? originalRowValues.get(compositeId) : null) ||
+        originalRowValues.get(params.data.partNumber) ||
+        originalRowValues.get(params.data.part) ||
+        null;
+      if (!original) return undefined;
+
+      // Map grid field -> stored snapshot field
+      if (fieldName === 'bomLinkStartDate' || fieldName === 'startDate')
+        return original.bomLinkStartDate;
+      if (fieldName === 'bomLinkEndDate' || fieldName === 'endDate') return original.bomLinkEndDate;
+      if (fieldName === 'quantity' || fieldName === 'qty') return original.quantity;
+      if (fieldName === 'bomLinkSpecSheetExtra') return original.bomLinkSpecSheetExtra;
+      if (fieldName === 'bomLinkIncludeInSpecSheet') return original.bomLinkIncludeInSpecSheet;
+
+      return undefined;
+    };
+
+    // New rows: keep the old behavior (any net change marks edited)
+    // Existing rows: only mark edited if value differs from the original snapshot.
+    const isNewRow = !!params?.data?.isNewRow;
+    const changed = isNewRow
+      ? normalizeForField(fieldName, params.oldValue) !==
+        normalizeForField(fieldName, params.newValue)
+      : normalizeForField(fieldName, getOriginalForField()) !==
+        normalizeForField(fieldName, params.newValue);
+
+    // Track which specific field is currently edited (relative to original)
+    if (editedFields) {
       if (!editedFields.has(partId)) {
         editedFields.set(partId, new Set<string>());
       }
-      editedFields.get(partId)!.add(fieldName);
+      const set = editedFields.get(partId)!;
+      if (changed) {
+        set.add(fieldName);
+      } else {
+        set.delete(fieldName);
+      }
+      if (set.size === 0) {
+        editedFields.delete(partId);
+      }
+    }
+
+    // Update editedRows set based on whether the row has any edited fields.
+    // If editedFields isn't provided, fall back to simple add-on-change behavior.
+    if (!editedFields) {
+      if (changed) {
+        editedRows.add(partId);
+        if (compositeId) editedRows.add(compositeId);
+      }
+    } else {
+      const hasAnyEdits = editedFields.has(partId) && (editedFields.get(partId)?.size || 0) > 0;
+      if (hasAnyEdits) {
+        editedRows.add(partId);
+        if (compositeId) editedRows.add(compositeId);
+      } else {
+        editedRows.delete(partId);
+        if (compositeId) editedRows.delete(compositeId);
+      }
     }
 
     params.api.refreshCells({
@@ -431,13 +502,17 @@ export class RowManagementService {
               if (response && (response.instances || response.data)) {
                 // If API returns updated data, use it to refresh the grid
                 const responseData = response.instances ? response : response.data;
-                
+
                 // CRITICAL: Update dataService.apiData with the save response
                 // This ensures validation and SKU matching use the latest data including newly saved rows
-                if (responseData && componentInstance.dataService && componentInstance.dataService.updateApiData) {
+                if (
+                  responseData &&
+                  componentInstance.dataService &&
+                  componentInstance.dataService.updateApiData
+                ) {
                   componentInstance.dataService.updateApiData(responseData);
                 }
-                
+
                 if (responseData && componentInstance.transformToHierarchicalData) {
                   try {
                     const updatedHierarchicalData =
@@ -595,7 +670,7 @@ export class RowManagementService {
   ): void {
     const updatedRowData = this.removeNewRowFlags(rowData);
     componentInstance.rowData = updatedRowData;
-    
+
     // FIX: Clear displayData here too, to prevent applyGrouping from preserving ghost new rows
     // when we refresh the grid later
     componentInstance.displayData = [];

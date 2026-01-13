@@ -78,10 +78,22 @@ export class ValidationService {
         if (value === undefined || value === null || value === '' || value === 0 || value === '0') {
           continue; // This key doesn't have a valid value, try next key
         }
-        // If not empty/zero, check if it's a valid non-zero number or string
-        const numValue = typeof value === 'string' ? parseFloat(value.trim()) : value;
-        if (!isNaN(numValue) && numValue !== 0) {
-          return true; // Found a valid non-zero quantity
+        // If not empty/zero, ensure it's numeric (no alphabets like "12abc")
+        if (typeof value === 'string') {
+          const s = value.trim();
+          const isNumericLike = /^\d*\.?\d*$/.test(s) && /\d/.test(s);
+          if (!isNumericLike) {
+            continue;
+          }
+          const numValue = parseFloat(s);
+          if (!isNaN(numValue) && numValue !== 0) {
+            return true; // Found a valid non-zero quantity
+          }
+          continue;
+        }
+
+        if (typeof value === 'number' && !isNaN(value) && value !== 0) {
+          return true;
         }
       } else {
         // Standard validation for other fields

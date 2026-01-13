@@ -524,7 +524,8 @@ export class GridCommonService {
           componentInstance.rowManagementService.trackFieldChange(
             params,
             componentInstance.editedRows,
-            componentInstance.editedFields
+            componentInstance.editedFields,
+            componentInstance.originalRowValues
           );
         }
 

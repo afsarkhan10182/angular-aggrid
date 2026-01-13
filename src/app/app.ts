@@ -60,7 +60,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public constraintsData: any = null;
   public isSaving: boolean = false; // Track save operation state
   public isMassEditing: boolean = false; // Track mass edit operation state
-  private originalRowValues = new Map<string | number, any>(); // Store original values for existing rows
+  public originalRowValues = new Map<string | number, any>(); // Store original values for existing rows
   private editedFields = new Map<string | number, Set<string>>(); // Track which specific fields were edited per row
   public invalidRowIds = new Set<string | number>(); // Track rows with validation errors for highlighting
   public selectedRows = new Set<any>();
@@ -801,10 +801,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           },
         });
       } else if (field === 'quantity') {
-        // Use Text Editor to allow easy decimal typing without browser <input type="number"> restrictions
-        columnDef.cellEditor = 'agTextCellEditor';
+        // Simple & strict numeric editor (blocks alphabets automatically)
+        // Allow decimals via step:'any'
+        columnDef.cellEditor = 'agNumberCellEditor';
         columnDef.cellEditorParams = {
-          // No min/max needed for text editor here, handled by logic/parser if needed
+          min: 0,
+          step: 'any',
+          // max: 100, // add if you want a hard upper bound
         };
         columnDef.editable = (params: any) => {
           if (
@@ -826,8 +829,14 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           // Existing rows - check SBOM restrictions
           return this.isFieldEditableInSbom(field);
         };
-        // Removed valueFormatter and valueParser to respect user input exactly as typed
-        // API data is already formatted to X.0 in buildMbomHierarchy
+        columnDef.valueSetter = (params: any) => {
+          if (!params.data || !params.colDef?.field) return false;
+          // Keep stored value consistent with existing code paths (string in data)
+          const v = params.newValue;
+          params.data[params.colDef.field] =
+            v === null || v === undefined || v === '' ? '' : String(v);
+          return true;
+        };
       } else if (
         field === 'supplier' ||
         field === 'color' ||
@@ -2415,11 +2424,48 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   deleteRowById(newRowId: number): void {
+    // Ensure we don't keep "ghost" edited state for deleted new rows
+    this.editedRows.delete(newRowId);
+    if (this.editedFields) {
+      this.editedFields.delete(newRowId);
+    }
+
+    // Stop editing to avoid AG Grid keeping stale editor state
+    try {
+      this.gridApi?.stopEditing?.();
+    } catch {
+      // ignore
+    }
+
     this.rowManagementService.deleteRowById(newRowId, this.displayData, this.gridApi);
+
+    // Refresh Save button state & row classes immediately
+    if (this.gridApi) {
+      this.gridApi.refreshCells({ force: true });
+    }
   }
 
   deleteRow(partId: string): void {
+    // Best-effort cleanup if this delete path is used for a new row id stored as string
+    const maybeId = Number(partId);
+    if (!isNaN(maybeId)) {
+      this.editedRows.delete(maybeId);
+      if (this.editedFields) {
+        this.editedFields.delete(maybeId);
+      }
+    }
+
+    try {
+      this.gridApi?.stopEditing?.();
+    } catch {
+      // ignore
+    }
+
     this.rowManagementService.deleteRow(partId, this.displayData, this.gridApi);
+
+    if (this.gridApi) {
+      this.gridApi.refreshCells({ force: true });
+    }
   }
 
   getLastSavedText(): string {
