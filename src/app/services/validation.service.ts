@@ -457,8 +457,6 @@ export class ValidationService {
     skuInfo: any[],
     apiData?: any // Optional: Original API data to check ALL rows including hidden ones
   ): ValidationResult {
-    console.log('[DUPLICATE CHECK] Starting validation...');
-
     // Separate new rows from existing rows
     // RULE: New rows are always visible (user-created), so we only validate visible new rows
     // New rows are in displayData with isNewRow=true or newRowId
@@ -484,7 +482,6 @@ export class ValidationService {
     // IMPORTANT: Check against ALL API instances (including hidden rows) if provided
     // This ensures we catch duplicates even if rows are filtered out from UI
     if (apiData && apiData.instances && Array.isArray(apiData.instances)) {
-      console.log(`[DUPLICATE CHECK] Checking against ALL API instances (BOM Type: ${bomType})`);
       for (const instance of apiData.instances) {
         const bomLink = instance['bom-link'];
         if (!bomLink) continue;
@@ -632,9 +629,6 @@ export class ValidationService {
       collectRows(rowData);
     }
 
-    console.log(
-      `[DUPLICATE CHECK] NEW rows: ${newRows.length}, EXISTING rows: ${existingRows.length}`
-    );
     newRows.forEach((row, idx) => {});
     existingRows.forEach((row, idx) => {});
 
@@ -708,10 +702,6 @@ export class ValidationService {
             }
           }
 
-          console.log(
-            `[NEW ROW DUPLICATE] ❌ Found ${rows.length} new rows with same Feature="${feature}", Section="${sectionDisplayName}" (${section}), and SKU="${skuId}". This violates the rule: ONE SKU + ONE SECTION → ONE UNIQUE FEATURE ONLY.`
-          );
-
           // Mark all duplicate new rows as invalid
           const invalidRows: InvalidRow[] = [];
           for (const duplicateRow of rows) {
@@ -753,9 +743,6 @@ export class ValidationService {
 
       // Require section and feature
       if (!section || !bomLinkFeature) {
-        console.log(
-          `[EXISTING SKIP] Missing field - Section: ${section}, Part: ${partNumber}, Feature: "${bomLinkFeature}"`
-        );
         continue;
       }
 
@@ -765,17 +752,8 @@ export class ValidationService {
       const skuIdsToUse = allSkuIds.length > 0 ? allSkuIds : rowSkus.skuIds;
 
       if (skuIdsToUse.length === 0) {
-        console.log(
-          `[EXISTING SKIP] No SKUs found - Section: ${section}, Part: ${partNumber}, Feature: "${bomLinkFeature}"`
-        );
         continue;
       }
-
-      console.log(
-        `[EXISTING] Section: ${section}, Part: ${partNumber}, Feature: "${bomLinkFeature}", ptcbomPartMarkUp: ${ptcbomPartMarkUp}, SKUs: [${skuIdsToUse.join(
-          ', '
-        )}]`
-      );
 
       const isEmptyPartNumber = !partNumber || partNumber === '';
 
@@ -784,9 +762,6 @@ export class ValidationService {
         // MBOM with ptcbomPartMarkUp === 'enumMBOM001': Only store rows with partNumber NOT empty
         // Skip rows with empty partNumber for this case (requires partNumber in duplicate check)
         if (isEmptyPartNumber) {
-          console.log(
-            `[SKIP EMPTY PART] Section="${section}", Part="${partNumber}", Feature="${bomLinkFeature}", ptcbomPartMarkUp=enumMBOM001`
-          );
           continue;
         }
         // MBOM with ptcbomPartMarkUp === 'enumMBOM001': Store as Section+Part+Feature (includes partNumber)
@@ -805,21 +780,11 @@ export class ValidationService {
         }
         const skuSet = partMap.get(bomLinkFeature)!;
         skuIdsToUse.forEach((skuId: string) => skuSet.add(skuId));
-
-        console.log(
-          `[MERGE MBOM ptcbomPartMarkUp=enumMBOM001] Section="${section}", Part="${partNumber}", Feature="${bomLinkFeature}", SKUs: [${Array.from(
-            skuSet
-          ).join(', ')}]`
-        );
       } else if (isMbom && ptcbomPartMarkUp !== 'enumMBOM001') {
         // MBOM with ptcbomPartMarkUp !== 'enumMBOM001': Store in multiple maps
         // This includes rows with ptcbomPartMarkUp === "" (empty string) or any other value != 'enumMBOM001'
         // 1. Store in existingCombinationsNoPartWithPart (with partNumber) if partNumber is NOT empty - for Case B validation
         // 2. Store in existingCombinationsNoPart (without partNumber) - for feature-only duplicate check
-
-        console.log(
-          `[STORE MBOM ptcbomPartMarkUp!=enumMBOM001] Section="${section}", Part="${partNumber}", Feature="${bomLinkFeature}", ptcbomPartMarkUp="${ptcbomPartMarkUp}", isEmptyPartNumber=${isEmptyPartNumber}`
-        );
 
         // Store in existingCombinationsNoPartWithPart (with partNumber) if partNumber is NOT empty
         if (!isEmptyPartNumber) {
@@ -838,12 +803,6 @@ export class ValidationService {
           }
           const skuSet = partMap.get(bomLinkFeature)!;
           skuIdsToUse.forEach((skuId: string) => skuSet.add(skuId));
-
-          console.log(
-            `[MERGE MBOM ptcbomPartMarkUp!=enumMBOM001 WITH PART] Section="${section}", Part="${partNumber}", Feature="${bomLinkFeature}", SKUs: [${Array.from(
-              skuSet
-            ).join(', ')}]`
-          );
         }
 
         // Also store in existingCombinationsNoPart (without partNumber) for feature-only checks
@@ -860,18 +819,7 @@ export class ValidationService {
           }
           const skuSetNoPart = sectionMapNoPart.get(bomLinkFeature)!;
           skuIdsToUse.forEach((skuId: string) => skuSetNoPart.add(skuId));
-
-          console.log(
-            `[MERGE MBOM ptcbomPartMarkUp!=enumMBOM001 NO PART] Section="${section}", Feature="${bomLinkFeature}", Part="${partNumber}", SKUs: [${Array.from(
-              skuSetNoPart
-            ).join(', ')}]`
-          );
         } else {
-          console.log(
-            `[SKIP EMPTY PART FOR DUPLICATE CHECK] Section="${section}", Feature="${bomLinkFeature}", Part="${
-              partNumber || '(empty)'
-            }" - Will skip duplicate check when new row has partNumber`
-          );
         }
       } else {
         // SBOM: Store as Section+Part+Feature (includes partNumber)
@@ -890,16 +838,8 @@ export class ValidationService {
         }
         const skuSet = partMap.get(bomLinkFeature)!;
         skuIdsToUse.forEach((skuId: string) => skuSet.add(skuId));
-
-        console.log(
-          `[MERGE SBOM] Section="${section}", Part="${partNumber}", Feature="${bomLinkFeature}", SKUs: [${Array.from(
-            skuSet
-          ).join(', ')}]`
-        );
       }
     }
-
-    console.log('[DUPLICATE CHECK] Existing combinations:', existingCombinations);
 
     // 🔴 PRIMARY VALIDATION RULE: For ONE SKU + ONE SECTION → ONE UNIQUE FEATURE ONLY
     // Part number is IRRELEVANT for this check
@@ -982,9 +922,6 @@ export class ValidationService {
         );
         if (foundInternalId) {
           section = foundInternalId;
-          console.log(
-            `[VALIDATION] Resolved section "${row.section}" -> "${foundInternalId}" using sectionDisplayName "${sectionDisplayName}"`
-          );
         }
       }
 
@@ -992,31 +929,20 @@ export class ValidationService {
       const bomLinkFeature = String(row.bomLinkFeature || '').trim();
       const isEmptyPartNumber = !partNumber || partNumber === '';
 
-      console.log(
-        `[NEW ROW] Section: "${section}", Part: "${partNumber}", Feature: "${bomLinkFeature}", EmptyPart: ${isEmptyPartNumber}, BOMType: ${bomType}`
-      );
-
       // Require section and feature
       if (!section || !bomLinkFeature) {
-        console.log(
-          `[SKIP] Missing required field - Section: ${section}, Part: ${partNumber}, Feature: ${bomLinkFeature}`
-        );
         continue;
       }
 
       // CASE 1: partNumber is empty → NO duplicate check (skip validation)
       if (isEmptyPartNumber) {
-        console.log(`[SKIP] Empty partNumber - no duplicate check (Case 1)`);
         continue;
       }
 
       const rowSkus = this.countSkusWithValues(row, skuInfo);
       if (rowSkus.count === 0) {
-        console.log(`[SKIP] No SKUs with values`);
         continue;
       }
-
-      console.log(`[NEW ROW] SKUs with values: [${rowSkus.skuIds.join(', ')}]`);
 
       // ============================================
       // STEP-BY-STEP VALIDATION APPROACH
@@ -1038,10 +964,6 @@ export class ValidationService {
 
       // Validate each SKU in the new row
       for (const skuId of rowSkus.skuIds) {
-        console.log(
-          `\n[STEP 1] Checking SKU ${skuId} for Feature="${bomLinkFeature}", Section="${section}", Part="${partNumber}"`
-        );
-
         // STEP 1: Count how many records exist for the same feature + section + skuId
         // Check in apiData.instances (all backend data including hidden rows)
         const matchingRecords: any[] = [];
@@ -1076,28 +998,17 @@ export class ValidationService {
                   ptcbomPartMarkUp: instancePtcbomPartMarkUp,
                   isEmptyPartNumber: !instancePartNumber || instancePartNumber === '',
                 });
-                console.log(
-                  `[STEP 1] Found matching record: Section="${instanceSection}", Feature="${instanceFeature}", Part="${instancePartNumber}", ptcbomPartMarkUp="${instancePtcbomPartMarkUp}", isEmptyPart=${
-                    !instancePartNumber || instancePartNumber === ''
-                  }`
-                );
               }
             }
           }
         }
 
         const recordCount = matchingRecords.length;
-        console.log(
-          `[STEP 1 RESULT] Found ${recordCount} record(s) matching Feature="${bomLinkFeature}" + Section="${section}" + SKU=${skuId}`
-        );
 
         // STEP 1 DECISION: Result handling
         if (recordCount > 1) {
           // ❌ Throw error: "Duplicate feature for the same SKU and section"
           // Stop processing
-          console.log(
-            `[STEP 1 ERROR] ❌ More than one record found (${recordCount}). One SKU should not have more than one feature for the same section.`
-          );
           duplicateSkus.push(skuId);
           foundDuplicate = true;
           duplicateType = 'feature-uniqueness';
@@ -1106,9 +1017,6 @@ export class ValidationService {
         } else if (recordCount === 0) {
           // ✅ Safe → this is a brand-new feature
           // Allow save (no further duplicate checks needed)
-          console.log(
-            `[STEP 1 RESULT] ✅ No matching records found. This is a brand-new feature - safe to save.`
-          );
           // Continue to next SKU - this is valid
         } else if (recordCount === 1) {
           // ✅ Continue to Step 2
@@ -1117,10 +1025,6 @@ export class ValidationService {
           const existingPtcbomPartMarkUp = matchingRecord.ptcbomPartMarkUp;
           const isMbomRecord = existingPtcbomPartMarkUp === 'enumMBOM001';
           const isEmptyExistingPart = matchingRecord.isEmptyPartNumber;
-
-          console.log(
-            `[STEP 2] One record found. Identifying matched record. Existing Part="${existingPartNumber}", isEmpty=${isEmptyExistingPart}, isMBOM=${isMbomRecord} (ptcbomPartMarkUp="${existingPtcbomPartMarkUp}")`
-          );
 
           // STEP 3: Check MBOM vs NON-MBOM (conceptual only - rules are IDENTICAL)
           // STEP 4: Part number validation (CORE LOGIC)
@@ -1131,18 +1035,12 @@ export class ValidationService {
           if (isEmptyExistingPart) {
             // ✅ NO error - This is a hidden/update row
             // Use this existing row to inject enteredPart into payload and send update to backend
-            console.log(
-              `[STEP 4 CASE 1] ✅ Existing partNumber is empty. No error - can use hidden row for payload update.`
-            );
             // Continue to next SKU - this is valid
           } else {
             // existingPart is NOT EMPTY
             // Case 2: existingPart NOT EMPTY AND different from enteredPart
             if (existingPartNumber !== partNumber) {
               // ❌ Error: Duplicate feature for the same SKU and section
-              console.log(
-                `[STEP 4 CASE 2 ERROR] ❌ Existing partNumber="${existingPartNumber}" is different from entered partNumber="${partNumber}". Duplicate feature error.`
-              );
               duplicateSkus.push(skuId);
               foundDuplicate = true;
               duplicateType = 'duplicate-feature';
@@ -1151,9 +1049,6 @@ export class ValidationService {
             } else {
               // Case 3: existingPart NOT EMPTY AND same as enteredPart
               // ❌ Error: Duplicate part for the same SKU and section
-              console.log(
-                `[STEP 4 CASE 3 ERROR] ❌ Existing partNumber="${existingPartNumber}" matches entered partNumber="${partNumber}". Duplicate part error.`
-              );
               duplicateSkus.push(skuId);
               foundDuplicate = true;
               duplicateType = 'duplicate-part';
@@ -1165,11 +1060,6 @@ export class ValidationService {
       }
 
       if (foundDuplicate) {
-        console.log(
-          `[VALIDATION RESULT] ❌ DUPLICATE FOUND! SKUs: [${duplicateSkus.join(
-            ', '
-          )}], Type: ${duplicateType}, Message: ${errorMessage}`
-        );
         const rowId = row.newRowId || row.partNumber || 'Unknown';
         invalidRows.push({
           row,
@@ -1177,8 +1067,6 @@ export class ValidationService {
           rowId,
           duplicateType, // Store duplicate type for error message
         });
-      } else {
-        console.log(`[VALIDATION RESULT] ✅ NO DUPLICATE - Row is valid`);
       }
     }
 
@@ -1210,9 +1098,6 @@ export class ValidationService {
           : 'No duplicate Feature+Part+SKU combinations found.',
       invalidRows: invalidRows.length > 0 ? invalidRows : undefined,
     };
-
-    console.log('[RESULT]', result.isValid ? 'VALID' : 'INVALID');
-    console.log(`[RESULT] ${invalidRows.length} duplicate row(s) found`);
 
     return result;
   }
