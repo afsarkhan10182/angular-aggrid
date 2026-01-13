@@ -437,6 +437,14 @@ body {
   overflow: hidden;
 }
 
+/* Only when Mass Edit panel is shown*/
+.mass-edit-active .ag-grid-container ag-grid-angular {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+}
+
 /* AG Grid theme - CLEAN & ADJUSTABLE with VISIBLE GRID LINES */
 .ag-theme-alpine {
   /* 🎯 IMPROVED ROW HEIGHT - Better readability while staying compact */

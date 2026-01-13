@@ -1,4 +1,4 @@
-<div class="app-container">
+<div class="app-container" [class.mass-edit-active]="massEditMode">
   <!-- Header -->
   <div class="app-header">
     <div class="header-left"></div>
@@ -171,7 +171,8 @@
       <div class="ag-grid-container-wrapper" [class.loading]="isLoading">
         <div class="ag-grid-container">
           <ag-grid-angular
-            style="width: 100%; height: calc(100vh - 200px)"
+            style="width: 100%"
+            [style.height]="massEditMode ? 'calc(100vh - 350px)' : 'calc(100vh - 200px)'"
             class="ag-theme-alpine"
             [gridOptions]="gridOptions"
             [columnDefs]="columnDefs"
