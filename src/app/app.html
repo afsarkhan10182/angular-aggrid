@@ -172,7 +172,13 @@
         <div class="ag-grid-container">
           <ag-grid-angular
             style="width: 100%"
-            [style.height]="massEditMode ? 'calc(100vh - 350px)' : 'calc(100vh - 200px)'"
+            [style.height]="
+              massEditMode
+                ? 'calc(100vh - 350px)'
+                : !!saveMessage
+                ? 'calc(100vh - 250px)'
+                : 'calc(100vh - 200px)'
+            "
             class="ag-theme-alpine"
             [gridOptions]="gridOptions"
             [columnDefs]="columnDefs"
