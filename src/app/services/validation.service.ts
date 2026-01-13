@@ -46,9 +46,9 @@ export class ValidationService {
     { keys: ['supplier'], label: 'Supplier' },
     { keys: ['colorDescription'], label: 'Color' },
     { keys: ['partNumber'], label: 'Part' },
-    // { keys: ['bomLinkStartDate'], label: 'Start Date' },
-    // { keys: ['bomLinkEndDate'], label: 'End Date' },
-    // { keys: ['quantity'], label: 'Quantity' },
+    { keys: ['bomLinkStartDate'], label: 'Start Date' },
+    { keys: ['bomLinkEndDate'], label: 'End Date' },
+    { keys: ['quantity'], label: 'Quantity' },
     { keys: ['bomLinkSpecSheetExtra'], label: 'Spec Sheet Extra' },
     { keys: ['bomLinkIncludeInSpecSheet'], label: 'Include In Spec Sheet' },
   ];

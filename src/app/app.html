@@ -86,10 +86,14 @@
             class="save-changes-btn"
             [disabled]="editedRows.size === 0 || isSaving"
           >
-            <i *ngIf="!isSaving" class="fas fa-save"></i>
-            <i *ngIf="isSaving" class="fas fa-spinner fa-spin"></i>
-            <span *ngIf="!isSaving">Save</span>
-            <span *ngIf="isSaving">Saving...</span>
+            <ng-container *ngIf="!isSaving; else savingTpl">
+              <i class="fas fa-save"></i>
+              <span>Save</span>
+            </ng-container>
+            <ng-template #savingTpl>
+              <span class="btn-inline-spinner" aria-hidden="true"></span>
+              <span>Saving</span>
+            </ng-template>
           </button>
         </div>
       </div>

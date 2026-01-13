@@ -230,6 +230,22 @@ body {
   white-space: nowrap;
 }
 
+.btn-inline-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  display: inline-block;
+  animation: btn-spin 0.8s linear infinite;
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .save-changes-btn:disabled {
   background: #9ca3af;
   cursor: not-allowed;

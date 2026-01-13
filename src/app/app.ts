@@ -95,8 +95,14 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       dataService: this.dataService,
     };
 
-    const savedState = localStorage.getItem('showExpiredData');
-    this.showExpiredData = savedState === 'true';
+    // Always default to OFF on landing/refresh
+    this.showExpiredData = false;
+    // Clear any previously persisted state so refresh doesn't flip it back on
+    try {
+      localStorage.removeItem('showExpiredData');
+    } catch {
+      // ignore
+    }
 
     this.defaultColDef = {
       ...this.gridCommonService.getDefaultColDef(),
@@ -1552,7 +1558,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   toggleExpiredData(): void {
-    localStorage.setItem('showExpiredData', this.showExpiredData.toString());
+    // Do not persist across refresh; just apply for the current session.
     this.loadData();
   }
 
