@@ -2152,7 +2152,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     let requiredFields = this.validationService.getDefaultRequiredFields();
 
     // Only require SBOM-specific fields if we are in SBOM mode
-    if (this.bomType !== 'SBOM') {
+    if (this.dataService.getBomType() !== 'SBOM') {
       requiredFields = requiredFields.filter(
         (field) =>
           !field.keys.includes('bomLinkSpecSheetExtra') &&

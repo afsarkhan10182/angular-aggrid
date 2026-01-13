@@ -431,6 +431,13 @@ export class RowManagementService {
               if (response && (response.instances || response.data)) {
                 // If API returns updated data, use it to refresh the grid
                 const responseData = response.instances ? response : response.data;
+                
+                // CRITICAL: Update dataService.apiData with the save response
+                // This ensures validation and SKU matching use the latest data including newly saved rows
+                if (responseData && componentInstance.dataService && componentInstance.dataService.updateApiData) {
+                  componentInstance.dataService.updateApiData(responseData);
+                }
+                
                 if (responseData && componentInstance.transformToHierarchicalData) {
                   try {
                     const updatedHierarchicalData =

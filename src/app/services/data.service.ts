@@ -480,6 +480,26 @@ export class DataService {
   }
 
   /**
+   * Update apiData with new response data after save
+   * This ensures validation and SKU matching use the latest data including newly saved rows
+   */
+  updateApiData(responseData: ApiData): void {
+    if (responseData) {
+      // Backend returns complete updated dataset (similar to mock.json)
+      // Replace apiData with response data to ensure validation uses latest data
+      this.apiData = {
+        ...responseData,
+        // Preserve sectionDetails if not in response (fallback)
+        sectionDetails: responseData.sectionDetails || this.apiData?.sectionDetails || {},
+      };
+      console.log(
+        '[DATA SERVICE] Updated apiData with save response. Instance count:',
+        this.apiData.instances?.length || 0
+      );
+    }
+  }
+
+  /**
    * Update BOM data
    * Sends the payload with bomCheckIn, bomType, bomPartInfo, instances, columns, sectionOrder, skuInfo
    */
