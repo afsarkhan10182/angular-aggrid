@@ -362,20 +362,56 @@ export class RowManagementService {
     }
 
     // Update editedRows set based on whether the row has any edited fields.
-    // If editedFields isn't provided, fall back to simple add-on-change behavior.
+    // Optimized: Generate all ID variants once, then bulk add/remove
+    let wasRemoved = false;
+
+    // Helper: Generate all ID variants for a given ID (matching getRowClass logic)
+    const getIdVariants = (id: any): Set<string | number> => {
+      const variants = new Set<string | number>();
+      if (id === null || id === undefined || `${id}`.trim() === '') return variants;
+      variants.add(id);
+      variants.add(`${id}`);
+      const numId = Number(id);
+      if (!isNaN(numId)) variants.add(numId);
+      return variants;
+    };
+
+    // Collect all base IDs that getRowClass checks
+    const baseIds = new Set([
+      params.data.materialKey,
+      params.data.newRowId,
+      partId,
+      params.data.partNumber,
+      params.data.part,
+      compositeId,
+      params.data.section && (params.data.partNumber || params.data.part)
+        ? `${params.data.section}::${params.data.partNumber || params.data.part}`
+        : null,
+    ]);
+    baseIds.delete(null);
+    baseIds.delete(undefined);
+    baseIds.delete('');
+
+    // Generate all ID variants once
+    const allIdVariants = new Set<string | number>();
+    baseIds.forEach((id) => {
+      getIdVariants(id).forEach((variant) => allIdVariants.add(variant));
+    });
+
     if (!editedFields) {
       if (changed) {
-        editedRows.add(partId);
-        if (compositeId) editedRows.add(compositeId);
+        // Bulk add all variants
+        allIdVariants.forEach((id) => editedRows.add(id));
       }
     } else {
       const hasAnyEdits = editedFields.has(partId) && (editedFields.get(partId)?.size || 0) > 0;
       if (hasAnyEdits) {
-        editedRows.add(partId);
-        if (compositeId) editedRows.add(compositeId);
+        // Bulk add all variants
+        allIdVariants.forEach((id) => editedRows.add(id));
       } else {
-        editedRows.delete(partId);
-        if (compositeId) editedRows.delete(compositeId);
+        // Bulk remove all variants
+        allIdVariants.forEach((id) => editedRows.delete(id));
+        wasRemoved = true;
       }
     }
 
@@ -383,6 +419,22 @@ export class RowManagementService {
       rowNodes: [params.node],
       force: true,
     });
+
+    // Force row class recompute when removing edit flag (highlight should disappear)
+    // Delay redrawRows to avoid flicker during active cell editing
+    if (wasRemoved) {
+      // Use a small timeout to delay until editing UI has settled
+      // This prevents flicker while user is still interacting with the cell
+      setTimeout(() => {
+        // Check if cell is still being edited before redrawing
+        const isEditing = params.api
+          .getEditingCells()
+          .some((cell: any) => cell.rowIndex === params.node.rowIndex);
+        if (!isEditing) {
+          params.api.redrawRows({ rowNodes: [params.node] });
+        }
+      }, 100);
+    }
   }
 
   /**
@@ -486,8 +538,6 @@ export class RowManagementService {
 
       // Log the payload for debugging (can be removed in production)
       if (apiPayload) {
-        console.log('Update API Payload:', JSON.stringify(apiPayload, null, 2));
-
         // Call the API if payload exists and has instances
         if (
           apiPayload.instances &&

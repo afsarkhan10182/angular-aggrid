@@ -2424,10 +2424,55 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   deleteRowById(newRowId: number): void {
-    // Ensure we don't keep "ghost" edited state for deleted new rows
-    this.editedRows.delete(newRowId);
-    if (this.editedFields) {
-      this.editedFields.delete(newRowId);
+    // Find the row to get all possible IDs (matching trackFieldChange logic)
+    const rowToDelete = this.displayData.find((row) => row.newRowId === newRowId);
+
+    if (rowToDelete) {
+      // Generate all possible ID variants (matching getRowClass and trackFieldChange)
+      const getIdVariants = (id: any): Set<string | number> => {
+        const variants = new Set<string | number>();
+        if (id === null || id === undefined || `${id}`.trim() === '') return variants;
+        variants.add(id);
+        variants.add(`${id}`);
+        const numId = Number(id);
+        if (!isNaN(numId)) variants.add(numId);
+        return variants;
+      };
+
+      const baseIds = new Set([
+        rowToDelete.materialKey,
+        rowToDelete.newRowId,
+        rowToDelete.partNumber,
+        rowToDelete.part,
+        rowToDelete.section && (rowToDelete.partNumber || rowToDelete.part)
+          ? `${rowToDelete.section}::${rowToDelete.partNumber || rowToDelete.part}`
+          : null,
+      ]);
+      baseIds.delete(null);
+      baseIds.delete(undefined);
+      baseIds.delete('');
+
+      // Remove all ID variants from editedRows
+      baseIds.forEach((id) => {
+        getIdVariants(id).forEach((variant) => {
+          this.editedRows.delete(variant);
+        });
+      });
+
+      // Remove from editedFields
+      if (this.editedFields) {
+        baseIds.forEach((id) => {
+          this.editedFields.delete(id);
+        });
+      }
+    } else {
+      // Fallback: remove common variants of newRowId
+      this.editedRows.delete(newRowId);
+      this.editedRows.delete(`${newRowId}`);
+      if (this.editedFields) {
+        this.editedFields.delete(newRowId);
+        this.editedFields.delete(`${newRowId}`);
+      }
     }
 
     // Stop editing to avoid AG Grid keeping stale editor state

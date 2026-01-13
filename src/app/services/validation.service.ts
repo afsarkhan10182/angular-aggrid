@@ -887,23 +887,12 @@ export class ValidationService {
                 }
                 const featureSet = sectionMap.get(skuId)!;
                 featureSet.add(bomLinkFeature);
-
-                // Debug logging for feature uniqueness map building
-                console.log(
-                  `[FEATURE UNIQUENESS MAP] Added Feature="${bomLinkFeature}" for SKU=${skuId} in Section="${section}"`
-                );
               }
             }
           });
         }
       }
     }
-
-    // Debug: Log feature uniqueness map summary
-    console.log(
-      `[FEATURE UNIQUENESS MAP] Built map with ${featureUniquenessMap.size} sections. Checking for duplicate features per SKU+Section combination.`
-    );
-
     // Check NEW rows for duplicates
     // RULE: Only validate visible new rows (new rows are always visible - user-created)
     // Check against ALL backend rows (visible + hidden) to prevent duplicates

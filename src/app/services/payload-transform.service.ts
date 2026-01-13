@@ -61,25 +61,6 @@ export class PayloadTransformService {
         );
         if (foundInternalId) {
           resolvedSection = foundInternalId;
-          console.log(
-            `[SKU BUILDER] Resolved section "${row.section}" -> "${foundInternalId}" using sectionDisplayName "${sectionDisplayName}"`
-          );
-        } else {
-          console.warn(
-            `[SKU BUILDER] Could not find internal ID for display name "${sectionDisplayName}" in sectionDetails. Available mappings:`,
-            sectionDetails
-          );
-        }
-      } else {
-        // Debug: Log why resolution failed
-        if (!sectionDisplayName) {
-          console.warn(
-            `[SKU BUILDER] No sectionDisplayName found for row. Original section: "${row.section}". Row keys:`,
-            Object.keys(row)
-          );
-        }
-        if (Object.keys(sectionDetails).length === 0) {
-          console.warn(`[SKU BUILDER] sectionDetails is empty. apiData available:`, !!apiData);
         }
       }
 
@@ -106,10 +87,6 @@ export class PayloadTransformService {
       //      → Match by Section + Feature + SKU ID only (no partNumber requirement)
       if (resolvedSection && rowFeatureValue) {
         const searchPart = isEmptyPartNumber ? '(empty)' : rowPartNumber;
-        console.log(
-          `[SKU BUILDER] Searching for matches: Section=${resolvedSection}, Feature="${rowFeatureValue}", Part=${searchPart}`
-        );
-
         // Search through rowData hierarchy for ALL matching rows
         const findAllMatchingRows = (rows: any[]): any[] => {
           let matches: any[] = [];
@@ -149,19 +126,6 @@ export class PayloadTransformService {
 
               const isPartMatch = requiresPartMatch ? existingPart === rowPartNumber : true; // Skip partNumber check for MBOM rows with ptcbomPartMarkUp !== 'enumMBOM001'
 
-              // Debug logging for potential matches
-              if (isSectionMatch && isFeatureMatch) {
-                console.log(
-                  `[SKU BUILDER] Potential match found: Section=${
-                    r.section
-                  }, Feature="${existingFeature}", Part=${
-                    r.partNumber || '(empty)'
-                  }, ptcbomPartMarkUp=${
-                    r.ptcbomPartMarkUp || '(empty)'
-                  }, RequiresPartMatch=${requiresPartMatch}, PartMatch=${isPartMatch}`
-                );
-              }
-
               // Match using Section + bomLinkFeature (+ PartNumber if required)
               if (isSectionMatch && isFeatureMatch && isPartMatch) {
                 matches.push(r);
@@ -177,19 +141,9 @@ export class PayloadTransformService {
         };
 
         matchingRows = findAllMatchingRows(rowData);
-      } else {
-        console.log(
-          `[SKU BUILDER] Skipping match search - missing required fields: Section=${
-            resolvedSection || row.section
-          }, Feature="${rowFeatureValue}"`
-        );
       }
 
       const hasMatchingRows = matchingRows.length > 0;
-      if (hasMatchingRows) {
-        console.log(`[SKU BUILDER] Found ${matchingRows.length} matching rows for new row.`);
-      }
-
       // Check if any entered SKU value exists unconditionally
       let hasAnySkuValue = false;
       skuInfo.forEach((sku) => {
@@ -218,9 +172,6 @@ export class PayloadTransformService {
               if (matchRow.allSkus && Array.isArray(matchRow.allSkus)) {
                 existingSku = matchRow.allSkus.find((s: any) => s.skuId === sku.skuId);
                 if (existingSku) {
-                  console.log(
-                    `   SKU ${sku.skuId}: Found in filtered rowData (Part: ${matchRow.partNumber})`
-                  );
                   break;
                 }
               }
@@ -276,19 +227,6 @@ export class PayloadTransformService {
                   ? String(instancePart).trim() === String(partNumber || '').trim()
                   : true; // Skip partNumber check for MBOM rows with ptcbomPartMarkUp !== 'enumMBOM001'
 
-                // Debug logging for matching
-                if (isSectionMatch && isFeatureMatch) {
-                  console.log(
-                    `[SKU BUILDER] Checking API instance for SKU ${
-                      sku.skuId
-                    }: Section=${instanceSection}, Feature="${instanceFeature}", Part=${
-                      instancePart || '(empty)'
-                    }, ptcbomPartMarkUp=${
-                      instancePtcbomPartMarkUp || '(empty)'
-                    }, RequiresPartMatch=${requiresPartMatch}, PartMatch=${isPartMatch}`
-                  );
-                }
-
                 // Match by Section + Feature (+ PartNumber if required)
                 if (isSectionMatch && isFeatureMatch && isPartMatch) {
                   // Check if this instance has the SKU we're looking for
@@ -314,13 +252,6 @@ export class PayloadTransformService {
                       );
                       break;
                     } else {
-                      console.log(
-                        `   SKU ${sku.skuId}: Matched row found but SKU ${
-                          sku.skuId
-                        } not found in skus array. Available SKUs: [${bomLink.skus
-                          .map((s: any) => s.skuId)
-                          .join(', ')}]`
-                      );
                     }
                   } else {
                     console.log(`   SKU ${sku.skuId}: Matched row found but no skus array present`);
