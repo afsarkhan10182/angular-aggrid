@@ -196,7 +196,12 @@ export class AutocompleteCellEditorComponent
           this.showDropdown = shouldShow;
 
           if (this.showDropdown) {
-            setTimeout(() => this.positionDropdown(), 0);
+            // Use double requestAnimationFrame to ensure DOM is ready, especially for single-item dropdowns
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                this.positionDropdown();
+              });
+            });
           }
         }
       });
@@ -382,7 +387,12 @@ export class AutocompleteCellEditorComponent
     this.selectedIndex = -1;
 
     if (this.showDropdown) {
-      setTimeout(() => this.positionDropdown(), 0);
+      // Use double requestAnimationFrame to ensure DOM is ready, especially for single-item dropdowns
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          this.positionDropdown();
+        });
+      });
     }
   }
 
@@ -450,7 +460,12 @@ export class AutocompleteCellEditorComponent
     }
 
     if (this.showDropdown) {
-      setTimeout(() => this.positionDropdown(), 0);
+      // Use double requestAnimationFrame to ensure DOM is ready, especially for single-item dropdowns
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          this.positionDropdown();
+        });
+      });
     }
   }
 
@@ -477,7 +492,12 @@ export class AutocompleteCellEditorComponent
     }
 
     if (this.showDropdown) {
-      setTimeout(() => this.positionDropdown(), 0);
+      // Use double requestAnimationFrame to ensure DOM is ready, especially for single-item dropdowns
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          this.positionDropdown();
+        });
+      });
     }
   }
 
@@ -1030,12 +1050,12 @@ export class AutocompleteCellEditorComponent
 
     // Try to find exact match first
     const currentValue = String(this.value || '');
-    let index = this.filteredOptions.findIndex(opt => opt === currentValue);
+    let index = this.filteredOptions.findIndex((opt) => opt === currentValue);
 
     // If no exact match (and not empty), try case-insensitive
     if (index === -1 && currentValue) {
       const lowerValue = currentValue.toLowerCase();
-      index = this.filteredOptions.findIndex(opt => String(opt).toLowerCase() === lowerValue);
+      index = this.filteredOptions.findIndex((opt) => String(opt).toLowerCase() === lowerValue);
     }
 
     // If still not found, default to 0
@@ -1116,6 +1136,11 @@ export class AutocompleteCellEditorComponent
     const inputElement = this.input.nativeElement;
 
     try {
+      // Explicitly set visibility properties
+      dropdownElement.style.display = 'block';
+      dropdownElement.style.visibility = 'visible';
+      dropdownElement.style.opacity = '1';
+
       const inputRect = inputElement.getBoundingClientRect();
       const container = inputElement.offsetParent || document.body;
       const containerRect = container.getBoundingClientRect();
@@ -1129,8 +1154,11 @@ export class AutocompleteCellEditorComponent
       dropdownElement.style.width = `${inputRect.width}px`;
       dropdownElement.style.minWidth = `${inputRect.width}px`;
 
+      // Calculate actual dropdown height (important for single-item dropdowns)
+      const actualDropdownHeight =
+        dropdownElement.offsetHeight || dropdownElement.scrollHeight || 200;
       const viewportHeight = window.innerHeight;
-      const dropdownHeight = 200;
+      const dropdownHeight = Math.min(actualDropdownHeight, 200);
 
       if (inputRect.bottom + dropdownHeight > viewportHeight) {
         if (inputRect.top - dropdownHeight > 0) {
@@ -1148,6 +1176,7 @@ export class AutocompleteCellEditorComponent
         dropdownElement.style.left = `${relativeAdjustedLeft}px`;
       }
 
+      // Force reflow to ensure positioning is applied
       dropdownElement.offsetHeight;
     } catch (error) {
       console.warn('Error positioning dropdown, using fallback:', error);
