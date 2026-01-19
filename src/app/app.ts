@@ -28,6 +28,28 @@ import { ExtendedColDef } from './services/util.service';
 
 type SkuFilterOption = 'all' | 'hdEditable' | 'hdNonEditable' | 'nonHdSource';
 
+const SKU_FILTER_CONFIG: Record<
+  SkuFilterOption,
+  {
+    filter?: (sku: any) => boolean;
+    emptyMessage?: string;
+  }
+> = {
+  all: {},
+  hdEditable: {
+    filter: (sku) => sku.isHDSource === true && sku.isEditable === true,
+    emptyMessage: 'No HD editable SKUs found. Editing is disabled.',
+  },
+  hdNonEditable: {
+    filter: (sku) => sku.isHDSource === true,
+    emptyMessage: 'No HD source SKUs found.',
+  },
+  nonHdSource: {
+    filter: (sku) => sku.isHDSource === false,
+    emptyMessage: 'No non-HD source SKUs found.',
+  },
+};
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -45,6 +67,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('toggleBtn') toggleBtn!: ElementRef;
   @ViewChild('groupByPanel') groupByPanel!: ElementRef;
   @ViewChild('groupByBtn') groupByBtn!: ElementRef;
+  @ViewChild('skuFilterDropdown') skuFilterDropdown!: ElementRef;
   public showExpiredData = false;
   public showMaterialModal = false;
   public selectedMaterialData: any = {};
@@ -59,13 +82,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public bomNamesFull: string = '';
   public bomType: string = '';
   public selectedSkuFilter: SkuFilterOption = 'all';
+  public showSkuFilterDropdown = false;
   public skuFilterOptions: Array<{ label: string; value: SkuFilterOption }> = [
     { label: 'All', value: 'all' },
     { label: 'HD source - editable', value: 'hdEditable' },
     { label: 'HD source', value: 'hdNonEditable' },
     { label: 'Non HD source', value: 'nonHdSource' },
   ];
-  private lastSkuFilter: SkuFilterOption = 'all';
   public isLoading: boolean = true;
   public constraintsData: any = null;
   public isSaving: boolean = false; // Track save operation state
@@ -142,7 +165,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.lastSkuFilter = this.selectedSkuFilter;
     (window as any).toggleSection = (section: string) => {
       this.toggleSection(section);
     };
@@ -412,31 +434,68 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       return skuInfo;
     }
 
-    switch (this.selectedSkuFilter) {
-      case 'hdEditable':
-        return skuInfo.filter((sku) => sku.isHDSource === true && sku.isEditable === true);
-      case 'hdNonEditable':
-        return skuInfo.filter((sku) => sku.isHDSource === true);
-      case 'nonHdSource':
-        return skuInfo.filter((sku) => sku.isHDSource === false);
-      case 'all':
-      default:
-        return skuInfo;
+    return this.filterSkuInfoByOption(this.selectedSkuFilter, skuInfo);
+  }
+
+  private filterSkuInfoByOption(option: SkuFilterOption, skuInfo: any[]): any[] {
+    const config = SKU_FILTER_CONFIG[option];
+    if (!config.filter) {
+      return skuInfo;
     }
+    return skuInfo.filter(config.filter);
+  }
+
+  public isSkuFilterOptionDisabled(option: SkuFilterOption): boolean {
+    if (option === 'all') {
+      return false;
+    }
+
+    const skuInfo = this.dataService.getSkuInfo();
+    return this.filterSkuInfoByOption(option, skuInfo).length === 0;
+  }
+
+  public getSkuFilterOptionTooltip(option: SkuFilterOption): string {
+    if (option === 'all') {
+      return '';
+    }
+
+    const skuInfo = this.dataService.getSkuInfo();
+    if (this.filterSkuInfoByOption(option, skuInfo).length > 0) {
+      return '';
+    }
+
+    return this.getSkuFilterEmptyMessage(option);
+  }
+
+  private getSkuFilterEmptyMessage(option: SkuFilterOption): string {
+    return SKU_FILTER_CONFIG[option].emptyMessage || '';
+  }
+
+  public getSkuFilterLabel(option: SkuFilterOption): string {
+    return this.skuFilterOptions.find((item) => item.value === option)?.label || 'All';
+  }
+
+  public toggleSkuFilterDropdown(): void {
+    this.showSkuFilterDropdown = !this.showSkuFilterDropdown;
+  }
+
+  public selectSkuFilterOption(option: SkuFilterOption): void {
+    if (this.isSkuFilterOptionDisabled(option)) {
+      return;
+    }
+
+    this.selectedSkuFilter = option;
+    this.showSkuFilterDropdown = false;
+    this.onSkuFilterChange();
   }
 
   public onSkuFilterChange(): void {
     if (!this.isMbomMode()) {
       return;
     }
-
-    const previousFilter = this.lastSkuFilter;
-    if (this.selectedSkuFilter === 'hdEditable') {
-      const filtered = this.getFilteredSkuInfo();
-      if (filtered.length === 0) {
-        this.showNotification('No HD editable SKUs found. Editing is disabled.', 'info');
-        this.selectedSkuFilter = previousFilter;
-      }
+    this.showSkuFilterDropdown = false;
+    if (this.isSkuFilterOptionDisabled(this.selectedSkuFilter)) {
+      this.selectedSkuFilter = 'all';
     }
 
     this.initializeColumns();
@@ -452,8 +511,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         this.massEditMode = false;
       }
     }
-
-    this.lastSkuFilter = this.selectedSkuFilter;
   }
 
   /**
@@ -1710,6 +1767,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         panel && !panel.contains(target) && toggleBtn && !toggleBtn.contains(target);
       if (clickedOutside) {
         this.showGroupByPanel = false;
+      }
+    }
+
+    // Handle SKU filter dropdown
+    if (this.showSkuFilterDropdown) {
+      const dropdown = this.skuFilterDropdown?.nativeElement;
+      const clickedOutside = dropdown && !dropdown.contains(target);
+      if (clickedOutside) {
+        this.showSkuFilterDropdown = false;
       }
     }
   }

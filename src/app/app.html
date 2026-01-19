@@ -59,15 +59,28 @@
           </div>
           <div class="sku-filter-container" *ngIf="isMbomMode()">
             <label class="sku-filter-label">SKU Filter:</label>
-            <select
-              class="sku-filter-select"
-              [(ngModel)]="selectedSkuFilter"
-              (change)="onSkuFilterChange()"
-            >
-              <option *ngFor="let option of skuFilterOptions" [ngValue]="option.value">
-                {{ option.label }}
-              </option>
-            </select>
+            <div #skuFilterDropdown class="sku-filter-dropdown" (click)="$event.stopPropagation()">
+              <button type="button" class="sku-filter-trigger" (click)="toggleSkuFilterDropdown()">
+                <span class="sku-filter-trigger-label">
+                  {{ getSkuFilterLabel(selectedSkuFilter) }}
+                </span>
+                <span class="sku-filter-caret" aria-hidden="true">▾</span>
+              </button>
+              <div *ngIf="showSkuFilterDropdown" class="sku-filter-menu">
+                <div
+                  *ngFor="let option of skuFilterOptions"
+                  class="sku-filter-option"
+                  [class.selected]="option.value === selectedSkuFilter"
+                  [class.disabled]="isSkuFilterOptionDisabled(option.value)"
+                  [attr.title]="getSkuFilterOptionTooltip(option.value)"
+                  (click)="selectSkuFilterOption(option.value)"
+                  role="option"
+                  [attr.aria-disabled]="isSkuFilterOptionDisabled(option.value)"
+                >
+                  {{ option.label }}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
