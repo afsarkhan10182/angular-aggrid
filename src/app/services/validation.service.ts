@@ -1053,7 +1053,7 @@ export class ValidationService {
               duplicateSkus.push(skuId);
               foundDuplicate = true;
               duplicateType = 'duplicate-part';
-              errorMessage = 'Duplicate part for the same SKU and section.';
+              errorMessage = 'Duplicate feature and part for the same SKU and section.';
               break;
             }
           }
@@ -1081,7 +1081,7 @@ export class ValidationService {
       } else if (firstDuplicate.duplicateType === 'duplicate-feature') {
         finalErrorMessage = 'Duplicate feature for the same SKU and section.';
       } else if (firstDuplicate.duplicateType === 'duplicate-part') {
-        finalErrorMessage = 'Duplicate part for the same SKU and section.';
+        finalErrorMessage = 'Duplicate feature for the same SKU and section.';
       } else if (firstDuplicate.duplicateType === 'notEnumMBOM001') {
         finalErrorMessage = 'Duplicate Feature for the chosen SKU';
       } else if (firstDuplicate.duplicateType === 'enumMBOM001') {

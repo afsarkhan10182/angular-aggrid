@@ -26,6 +26,8 @@ import { ColumnHeaderPinComponent } from './column-header-pin/column-header-pin.
 import { environment } from '../environments/environment';
 import { ExtendedColDef } from './services/util.service';
 
+type SkuFilterOption = 'all' | 'hdEditable' | 'hdNonEditable' | 'nonHdSource';
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -56,6 +58,14 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public bomNamesDisplay: string = '';
   public bomNamesFull: string = '';
   public bomType: string = '';
+  public selectedSkuFilter: SkuFilterOption = 'all';
+  public skuFilterOptions: Array<{ label: string; value: SkuFilterOption }> = [
+    { label: 'All', value: 'all' },
+    { label: 'HD source - editable', value: 'hdEditable' },
+    { label: 'HD source', value: 'hdNonEditable' },
+    { label: 'Non HD source', value: 'nonHdSource' },
+  ];
+  private lastSkuFilter: SkuFilterOption = 'all';
   public isLoading: boolean = true;
   public constraintsData: any = null;
   public isSaving: boolean = false; // Track save operation state
@@ -132,6 +142,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
+    this.lastSkuFilter = this.selectedSkuFilter;
     (window as any).toggleSection = (section: string) => {
       this.toggleSection(section);
     };
@@ -341,7 +352,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       },
       (error) => {
         this.isLoading = false;
-        console.error('Error loading data:', error);
+        const errorMessage = this.dataService.getLoadErrorMessage(error);
+        this.showNotification(errorMessage, 'error');
       }
     );
     this.subscriptions.push(loadSub);
@@ -392,6 +404,56 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         }
       });
     }
+  }
+
+  private getFilteredSkuInfo(): any[] {
+    const skuInfo = this.dataService.getSkuInfo();
+    if (!this.isMbomMode()) {
+      return skuInfo;
+    }
+
+    switch (this.selectedSkuFilter) {
+      case 'hdEditable':
+        return skuInfo.filter((sku) => sku.isHDSource === true && sku.isEditable === true);
+      case 'hdNonEditable':
+        return skuInfo.filter((sku) => sku.isHDSource === true);
+      case 'nonHdSource':
+        return skuInfo.filter((sku) => sku.isHDSource === false);
+      case 'all':
+      default:
+        return skuInfo;
+    }
+  }
+
+  public onSkuFilterChange(): void {
+    if (!this.isMbomMode()) {
+      return;
+    }
+
+    const previousFilter = this.lastSkuFilter;
+    if (this.selectedSkuFilter === 'hdEditable') {
+      const filtered = this.getFilteredSkuInfo();
+      if (filtered.length === 0) {
+        this.showNotification('No HD editable SKUs found. Editing is disabled.', 'info');
+        this.selectedSkuFilter = previousFilter;
+      }
+    }
+
+    this.initializeColumns();
+
+    if (this.gridApi) {
+      this.gridApi.setGridOption('columnDefs', this.columnDefs);
+      this.gridApi.refreshHeader();
+      this.applyHierarchicalSearch();
+
+      if (this.isSkuFilterReadOnly()) {
+        this.gridApi.deselectAll();
+        this.selectedRows.clear();
+        this.massEditMode = false;
+      }
+    }
+
+    this.lastSkuFilter = this.selectedSkuFilter;
   }
 
   /**
@@ -970,7 +1032,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       columns.push(columnDef);
     });
 
-    const skuColumns = this.dataService.getSkuInfo().map((sku) => ({
+    const skuColumns = this.getFilteredSkuInfo().map((sku) => ({
       skuId: sku.skuId,
       product: sku.product,
       manufacturer: sku.manufacturer,
@@ -1064,6 +1126,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
         cellRenderer: (params: any) => {
           const data = params.data || {};
+          const canDisconnect = !this.isSkuFilterReadOnly();
 
           if (data.isSectionHeader || data.isBranchHeader || data.isGroupHeader) {
             return '';
@@ -1096,7 +1159,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             const valueStr = String(value);
             const htmlValue = this.utilService.escapeHtml(valueStr).replace(/\n/g, '<br>');
             const skuField = params.colDef.field;
-            const deleteIcon = `<button type="button" class="sku-delete-btn-existing" data-action="disconnect-sku" data-sku-field="${skuField}" title="Disconnect part from SKU">✕</button>`;
+            const deleteIcon = canDisconnect
+              ? `<button type="button" class="sku-delete-btn-existing" data-action="disconnect-sku" data-sku-field="${skuField}" title="Disconnect part from SKU">✕</button>`
+              : '';
 
             return `<div style="white-space: pre-line; line-height: 1.5; padding: 4px 0; display: flex; align-items: center;">
               <span style="${textColor}flex: 1;">${htmlValue}</span>
@@ -1111,7 +1176,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           const valueStr = String(value);
           const htmlValue = this.utilService.escapeHtml(valueStr).replace(/\n/g, '<br>');
           const skuField = params.colDef.field;
-          const deleteIcon = `<button type="button" class="sku-delete-btn-existing" data-action="disconnect-sku" data-sku-field="${skuField}" title="Disconnect part from SKU">✕</button>`;
+          const deleteIcon = canDisconnect
+            ? `<button type="button" class="sku-delete-btn-existing" data-action="disconnect-sku" data-sku-field="${skuField}" title="Disconnect part from SKU">✕</button>`
+            : '';
 
           return `<div style="white-space: pre-line; line-height: 1.5; padding: 4px 0; display: flex; align-items: center;">
             <span style="${textColor}flex: 1;">${htmlValue}</span>
@@ -1309,6 +1376,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     return bomType === 'SBOM';
   }
 
+  public isMbomMode(): boolean {
+    const bomType = this.dataService.getBomType();
+    return bomType === 'MBOM';
+  }
+
+  public isSkuFilterReadOnly(): boolean {
+    return this.isMbomMode() && this.selectedSkuFilter !== 'hdEditable';
+  }
+
   /**
    * Check if current user is a service team member
    */
@@ -1322,6 +1398,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
    * SBOM: Only SpecSheet fields are editable (and only for service team members)
    */
   private isFieldEditableInSbom(field: string): boolean {
+    if (this.isSkuFilterReadOnly()) {
+      return false;
+    }
+
     if (!this.isSbomMode()) {
       // MBOM mode - only date and quantity fields are editable for existing rows
       const mbomEditableFields = ['bomLinkStartDate', 'bomLinkEndDate', 'quantity'];
@@ -1343,6 +1423,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
    * Explicitly allows only specified fields
    */
   private isFieldEditableForNewRow(field: string): boolean {
+    if (this.isSkuFilterReadOnly()) {
+      return false;
+    }
+
     const editableFields = [
       'bomLinkFeature',
       'materialDescription',
@@ -1365,6 +1449,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
    * Check if add row functionality should be enabled
    */
   private isAddRowEnabled(): boolean {
+    if (this.isSkuFilterReadOnly()) {
+      return false;
+    }
+
     if (!this.isSbomMode()) {
       return true; // MBOM - add row enabled
     }
@@ -1382,6 +1470,19 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     const hasValue = params.value !== null && params.value !== undefined && params.value !== '';
     const partLabel = this.utilService.escapeHtml(partNumber);
+    const isReadOnly = this.isSkuFilterReadOnly();
+
+    if (isReadOnly) {
+      if (!hasValue) {
+        return '';
+      }
+      const valueText = this.utilService.escapeHtml(String(params.value));
+      return `
+        <div class="sku-cell-action-wrapper filled">
+          <span class="sku-cell-value" title="${valueText}">${valueText}</span>
+        </div>
+      `;
+    }
 
     if (!hasValue) {
       return `
@@ -1791,11 +1892,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       }
     }
     const target = event.event?.target as HTMLElement;
+    const isReadOnlySkuFilter = this.isSkuFilterReadOnly();
 
     const pastePartButton = target?.closest('[data-action="paste-part"]');
     if (pastePartButton) {
       event.event.preventDefault();
       event.event.stopPropagation();
+      if (isReadOnlySkuFilter) {
+        return;
+      }
       if (
         event.colDef.field &&
         event.colDef.field.startsWith('sku') &&
@@ -1811,6 +1916,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (deleteButton) {
       event.event.preventDefault();
       event.event.stopPropagation();
+      if (isReadOnlySkuFilter) {
+        return;
+      }
       if (
         event.colDef.field &&
         event.colDef.field.startsWith('sku') &&
@@ -1824,6 +1932,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     const disconnectButton = target?.closest('[data-action="disconnect-sku"]');
     if (disconnectButton) {
+      if (isReadOnlySkuFilter) {
+        return;
+      }
       const skuField = disconnectButton.getAttribute('data-sku-field');
       if (skuField && event.data) {
         this.disconnectPartFromSku(event.data, skuField, event.event);
@@ -1842,7 +1953,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           isSpecSheetField || field === 'materialDescription' || field === 'material';
 
         // Check if this field is editable for this row
-        const isEditable = event.data.isNewRow || this.isFieldEditableInSbom(field);
+        const isEditable =
+          !isReadOnlySkuFilter && (event.data.isNewRow || this.isFieldEditableInSbom(field));
 
         if (isDateColumn && isEditable) {
           // Store current cell info to ensure we target the correct one
@@ -2195,6 +2307,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   saveChanges(): void {
+    if (this.isSkuFilterReadOnly()) {
+      this.showNotification('Save is disabled in view-only mode.', 'info');
+      return;
+    }
+
     // Clear previous validation errors
     this.invalidRowIds.clear();
 
@@ -2228,7 +2345,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
 
     // Validate SKU selection for new rows
-    const skuInfo = this.dataService.getSkuInfo();
+    const skuInfo = this.getFilteredSkuInfo();
     const skuValidationResult = this.validationService.validateNewRowsSkus(
       this.rowData,
       skuInfo,
@@ -3169,14 +3286,16 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
    * For existing rows: Uses _old/_new suffixes for edited fields (startDate, endDate, quantity)
    * For new rows: Uses regular fields and adds childId + colorId
    */
-  transformGridDataToApiFormat(rowData: any[]): any {
+  transformGridDataToApiFormat(rowData: any[], skuInfoOverride?: any[]): any {
+    const skuInfo = skuInfoOverride || this.getFilteredSkuInfo();
     return this.payloadTransformService.transformGridDataToApiFormat(
       rowData,
       this.displayData,
       this.editedRows,
       this.editedFields,
       this.originalRowValues,
-      this.constraintsData
+      this.constraintsData,
+      skuInfo
     );
   }
 
@@ -3550,6 +3669,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   disconnectPartFromSku(rowData: any, skuField: string, event?: any): void {
     if (!rowData || !skuField || !this.gridApi) return;
+    if (this.isSkuFilterReadOnly()) return;
 
     // Prevent event propagation to avoid flicker
     if (event) {
@@ -3601,12 +3721,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   bulkDisconnectFromSkus(): void {
+    if (this.isSkuFilterReadOnly()) {
+      return;
+    }
     if (this.selectedRows.size === 0 || !this.gridApi) {
       return;
     }
 
     const selectedNodes = this.gridApi.getSelectedNodes();
-    const skuInfo = this.dataService.getSkuInfo();
+    const skuInfo = this.getFilteredSkuInfo();
     const nodesToUpdate: any[] = [];
     const skuFields: string[] = skuInfo.map((sku) => `sku${sku.skuId}`);
 

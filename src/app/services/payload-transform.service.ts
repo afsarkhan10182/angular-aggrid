@@ -20,6 +20,7 @@ export class PayloadTransformService {
    */
   buildSkusArrayFromRow(row: any, skuInfo: any[], rowData: any[], apiData?: any): any[] {
     const skus: any[] = [];
+    const allowedSkuIds = new Set<string>(skuInfo.map((sku: any) => String(sku.skuId)));
     const isNewRow = row.isNewRow;
 
     if (isNewRow) {
@@ -284,6 +285,9 @@ export class PayloadTransformService {
       // For existing/edited rows: Use original SKUs from row.allSkus (from API/mock.json)
       if (row.allSkus && Array.isArray(row.allSkus) && row.allSkus.length > 0) {
         row.allSkus.forEach((originalSku: any) => {
+          if (!allowedSkuIds.has(String(originalSku.skuId))) {
+            return;
+          }
           const skuFieldName = `sku${originalSku.skuId}`;
           const currentValue = row[skuFieldName];
 
@@ -332,10 +336,14 @@ export class PayloadTransformService {
     editedRows: Set<string | number>,
     editedFields: Map<string | number, Set<string>>,
     originalRowValues: Map<string | number, any>,
-    constraintsData: any
+    constraintsData: any,
+    skuInfoOverride?: any[]
   ): any {
     const instances: any[] = [];
-    const skuInfo = this.dataService.getSkuInfo();
+    const skuInfo = Array.isArray(skuInfoOverride)
+      ? skuInfoOverride
+      : this.dataService.getSkuInfo();
+    const allowedSkuIds = new Set<string>(skuInfo.map((sku: any) => String(sku.skuId)));
     const bomType = this.dataService.getBomTypeFromResponse() || this.dataService.getBomType();
 
     // Get original API data to check ALL rows including hidden ones for SKU matching
@@ -557,7 +565,10 @@ export class PayloadTransformService {
         }
 
         if (row.allSkus && Array.isArray(row.allSkus) && row.allSkus.length > 0) {
-          bomLink.skus = row.allSkus.map((originalSku: any) => {
+          const filteredSkus = row.allSkus.filter((originalSku: any) =>
+            allowedSkuIds.has(String(originalSku.skuId))
+          );
+          bomLink.skus = filteredSkus.map((originalSku: any) => {
             const skuFieldName = `sku${originalSku.skuId}`;
             const currentValue = row[skuFieldName];
 
@@ -634,7 +645,7 @@ export class PayloadTransformService {
     const uniqueSkusMap = new Map<string, any>();
 
     skuInfoData.forEach((sku: any) => {
-      if (sku.skuId) {
+      if (sku.skuId && allowedSkuIds.has(String(sku.skuId))) {
         uniqueSkusMap.set(sku.skuId, { ...sku });
       }
     });
@@ -643,7 +654,7 @@ export class PayloadTransformService {
       const bomLink = instance['bom-link'];
       if (bomLink.skus && Array.isArray(bomLink.skus)) {
         bomLink.skus.forEach((sku: any) => {
-          if (sku.skuId) {
+          if (sku.skuId && allowedSkuIds.has(String(sku.skuId))) {
             if (!uniqueSkusMap.has(sku.skuId)) {
               uniqueSkusMap.set(sku.skuId, { ...sku });
             }

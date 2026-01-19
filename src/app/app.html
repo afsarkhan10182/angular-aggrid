@@ -1,7 +1,12 @@
 <div class="app-container" [class.mass-edit-active]="massEditMode">
   <!-- Header -->
   <div class="app-header">
-    <div class="header-left"></div>
+    <div class="header-left">
+      <div class="criteria-display">
+        <strong>Parts of SKUs chosen - </strong>
+        <span [title]="bomNamesFull">{{ bomNamesDisplay }}</span>
+      </div>
+    </div>
     <h2>
       <span>Product BOM Composer</span>
     </h2>
@@ -20,10 +25,6 @@
     <div class="controls-row">
       <!-- Left Group: Criteria and Search -->
       <div class="left-controls-group">
-        <div class="criteria-display">
-          <strong>Parts of SKUs chosen - </strong>
-          <span [title]="bomNamesFull">{{ bomNamesDisplay }}</span>
-        </div>
         <div class="search-filter-section">
           <div class="search-filter-container">
             <div class="search-input-wrapper">
@@ -56,6 +57,18 @@
               Filter
             </button>
           </div>
+          <div class="sku-filter-container" *ngIf="isMbomMode()">
+            <label class="sku-filter-label">SKU Filter:</label>
+            <select
+              class="sku-filter-select"
+              [(ngModel)]="selectedSkuFilter"
+              (change)="onSkuFilterChange()"
+            >
+              <option *ngFor="let option of skuFilterOptions" [ngValue]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -84,7 +97,7 @@
           <button
             (click)="saveChanges()"
             class="save-changes-btn"
-            [disabled]="editedRows.size === 0 || isSaving"
+            [disabled]="editedRows.size === 0 || isSaving || isSkuFilterReadOnly()"
           >
             <ng-container *ngIf="!isSaving; else savingTpl">
               <i class="fas fa-save"></i>

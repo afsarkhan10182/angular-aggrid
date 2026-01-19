@@ -625,7 +625,7 @@ export class RowManagementService {
 
               resolve({
                 success: true,
-                message: `Successfully saved ${changesCount} changes!`,
+                message: `Successfully saved changes!`,
                 payload: apiPayload,
               });
             },
@@ -696,7 +696,7 @@ export class RowManagementService {
 
             resolve({
               success: true,
-              message: `Successfully saved ${changesCount} changes!`,
+              message: `Successfully saved changes!`,
               payload: apiPayload,
             });
           }, 100);

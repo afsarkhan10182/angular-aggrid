@@ -59,6 +59,8 @@ export interface SkuInfo {
   destinationDimensionId?: string;
   bomId?: string;
   bomName?: string;
+  isHDSource?: boolean;
+  isEditable?: boolean;
 }
 
 export interface BomPartInfo {
@@ -475,6 +477,32 @@ export class DataService {
     return throwError(() => new Error(errorMessage));
   }
 
+  getLoadErrorMessage(error: any): string {
+    const fallback = 'Failed to load BOM data. Please try again.';
+    if (!error) return fallback;
+
+    const status = error.status;
+    const payloadError =
+      (error.error && (error.error.error || error.error.message)) ||
+      (typeof error.message === 'string' ? error.message : '');
+
+    if (status === 500) {
+      return payloadError
+        ? `Failed to load BOM data: ${payloadError}`
+        : 'Failed to load BOM data: Server error (500).';
+    }
+
+    if (payloadError) {
+      return `Failed to load BOM data: ${payloadError}`;
+    }
+
+    if (status) {
+      return `Failed to load BOM data: Server error (${status}).`;
+    }
+
+    return fallback;
+  }
+
   getApiData(): ApiData | null {
     return this.apiData;
   }
@@ -590,7 +618,7 @@ export class DataService {
 
   // Get bomType from JSP data attribute
   getBomType(): string | null {
-    return this.utilService.getJspDataAttribute('data-bomtype');
+    return this.utilService.getJspDataAttribute('data-bomtype') || 'MBOM';
   }
 
   // Get refSKUId from JSP data attribute
