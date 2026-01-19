@@ -1089,16 +1089,31 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       columns.push(columnDef);
     });
 
-    const skuColumns = this.getFilteredSkuInfo().map((sku) => ({
-      skuId: sku.skuId,
-      product: sku.product,
-      manufacturer: sku.manufacturer,
-      color: sku.color,
-      size: sku.size1,
-      destination: sku.destination,
-      fieldName: `sku${sku.skuId}`,
-      hasData: true,
-    }));
+    // Get bomType and original skuInfo to check isReleased
+    const bomType = this.dataService.getBomType();
+    const isSbom = bomType === 'SBOM';
+    const originalSkuInfo = this.dataService.getSkuInfo();
+    const skuInfoMap = new Map<string, any>();
+    originalSkuInfo.forEach((sku) => {
+      skuInfoMap.set(sku.skuId, sku);
+    });
+
+    const skuColumns = this.getFilteredSkuInfo().map((sku) => {
+      const originalSku = skuInfoMap.get(sku.skuId);
+      const isDisabled = isSbom && originalSku && originalSku.isReleased === false;
+
+      return {
+        skuId: sku.skuId,
+        product: sku.product,
+        manufacturer: sku.manufacturer,
+        color: sku.color,
+        size: sku.size1,
+        destination: sku.destination,
+        fieldName: `sku${sku.skuId}`,
+        hasData: true,
+        isDisabled: isDisabled,
+      };
+    });
 
     // Custom header component class for SKU columns
     class SkuHeaderComponent {
@@ -1161,6 +1176,16 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       // Full header text for tooltip (each value on new line, no truncation)
       const fullHeader = lines.join('\n');
 
+      // Build header and cell classes
+      const headerClasses = [index === 0 ? 'first-sku-column-header' : ''];
+      const cellClasses = [index === 0 ? 'first-sku-column-cell' : ''];
+
+      // Add disabled class if SKU is not released (SBOM only)
+      if (sku.isDisabled) {
+        headerClasses.push('sku-column-disabled-header');
+        cellClasses.push('sku-column-disabled-cell');
+      }
+
       return {
         headerName: fullHeader,
         headerTooltip: fullHeader,
@@ -1178,8 +1203,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         suppressAutoSize: true,
         // Add skuId to column definition for validation highlighting
         skuId: sku.skuId,
-        headerClass: index === 0 ? 'first-sku-column-header' : '',
-        cellClass: index === 0 ? 'first-sku-column-cell' : '',
+        // Store disabled state in column definition
+        isDisabled: sku.isDisabled,
+        headerClass: headerClasses.filter((c) => c).join(' '),
+        cellClass: cellClasses.filter((c) => c).join(' '),
 
         cellRenderer: (params: any) => {
           const data = params.data || {};
@@ -1205,6 +1232,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           }
 
           if (data.isNewRow) {
+            // Check if this SKU column is disabled (not released in SBOM)
+            if (params.colDef.isDisabled) {
+              return '<div class="sku-cell-disabled-placeholder" style="color: #9ca3af; font-style: italic; text-align: center; padding: 4px;">Not Available</div>';
+            }
             return this.renderNewRowSkuCell(params);
           }
 
@@ -1519,6 +1550,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private renderNewRowSkuCell(params: any): string {
+    // Check if this SKU column is disabled (not released in SBOM)
+    if (params.colDef?.isDisabled) {
+      return '<div class="sku-cell-disabled-placeholder" style="color: #9ca3af; font-style: italic; text-align: center; padding: 4px;">Not Available</div>';
+    }
+
     const rowData = params.data || {};
     const partNumber = this.getPartNumberValue(rowData);
     if (!partNumber) {
@@ -1965,6 +2001,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       event.event.preventDefault();
       event.event.stopPropagation();
       if (isReadOnlySkuFilter) {
+        return;
+      }
+      // Prevent paste if SKU column is disabled (not released in SBOM)
+      if (event.colDef?.isDisabled) {
         return;
       }
       if (
@@ -2485,7 +2525,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         } else {
           // Show error message - do NOT update grid or state
           // UI remains exactly as it was before clicking save
-          this.rowManagementService.showSaveMessage(result.message, 'error', this);
+          // Use error-persistent so message doesn't auto-clear
+          this.rowManagementService.showSaveMessage(result.message, 'error-persistent', this);
         }
       })
       .catch((error) => {
@@ -2494,7 +2535,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         console.error('Unexpected error during save:', error);
         this.rowManagementService.showSaveMessage(
           'An unexpected error occurred while saving. Please try again.',
-          'error',
+          'error-persistent',
           this
         );
       });

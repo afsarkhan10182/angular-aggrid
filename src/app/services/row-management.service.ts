@@ -185,6 +185,11 @@ export class RowManagementService {
       return;
     }
 
+    // Check if this SKU column is disabled (not released in SBOM)
+    if (params.colDef?.isDisabled) {
+      return;
+    }
+
     const valueToPaste = params.data.partNumber || params.data.part;
 
     if (!valueToPaste) {
@@ -632,38 +637,54 @@ export class RowManagementService {
             error: (error: any) => {
               console.error('BOM update failed:', error);
 
+              // Extract error message from backend response
+              // Backend can return:
+              // - {"error":"some message"} -> error.error.error
+              // - {"message":"some message"} -> error.error.message
+              // - "some message" (string) -> error.error (string)
+              const backendError =
+                (typeof error.error === 'string' ? error.error : null) ||
+                error.error?.error ||
+                error.error?.message ||
+                error.message ||
+                '';
+
               // Extract error message based on HTTP status code
               let errorMessage = 'Failed to save changes.';
 
               if (error.status) {
                 switch (error.status) {
                   case 404:
-                    errorMessage =
-                      'Failed to save: Resource not found (404). Please check your connection and try again.';
+                    errorMessage = backendError
+                      ? `Failed to save: ${backendError}`
+                      : 'Failed to save: Resource not found (404). Please check your connection and try again.';
                     break;
                   case 500:
-                    errorMessage =
-                      'Failed to save: Server error (500). Please try again later or contact support.';
+                    errorMessage = backendError
+                      ? `Failed to save: ${backendError}`
+                      : 'Failed to save: Server error (500). Please try again later or contact support.';
                     break;
                   case 400:
-                    errorMessage = `Failed to save: Bad request (400). ${
-                      error.error?.message ||
-                      error.message ||
-                      'Please check your data and try again.'
-                    }`;
+                    errorMessage = backendError
+                      ? `Failed to save: ${backendError}`
+                      : 'Failed to save: Bad request (400). Please check your data and try again.';
                     break;
                   case 401:
-                    errorMessage =
-                      'Failed to save: Unauthorized (401). Please refresh the page and try again.';
+                    errorMessage = backendError
+                      ? `Failed to save: ${backendError}`
+                      : 'Failed to save: Unauthorized (401). Please refresh the page and try again.';
                     break;
                   case 403:
-                    errorMessage =
-                      'Failed to save: Forbidden (403). You do not have permission to perform this action.';
+                    errorMessage = backendError
+                      ? `Failed to save: ${backendError}`
+                      : 'Failed to save: Forbidden (403). You do not have permission to perform this action.';
                     break;
                   default:
-                    errorMessage = `Failed to save: ${error.status} ${
-                      error.statusText || 'Error'
-                    }. ${error.error?.message || error.message || 'Please try again.'}`;
+                    errorMessage = backendError
+                      ? `Failed to save: ${backendError}`
+                      : `Failed to save: ${error.status} ${
+                          error.statusText || 'Error'
+                        }. Please try again.`;
                 }
               } else if (error.message) {
                 errorMessage = `Failed to save: ${error.message}`;
@@ -767,18 +788,21 @@ export class RowManagementService {
    */
   showSaveMessage(
     message: string,
-    type: 'success' | 'error' | 'info' = 'info',
+    type: 'success' | 'error' | 'error-persistent' | 'info' = 'info',
     componentInstance: any
   ): void {
     componentInstance.saveMessage = message;
     componentInstance.saveMessageType = type;
 
     // Auto-clear success and info messages after 3 seconds
+    // error-persistent messages never auto-clear (user must close manually)
+    // error messages also don't auto-clear (for backward compatibility)
     if (type === 'success' || type === 'info') {
       setTimeout(() => {
         this.clearSaveMessage(componentInstance);
       }, 3000);
     }
+    // error and error-persistent types do not auto-clear
   }
 
   /**

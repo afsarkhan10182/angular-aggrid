@@ -61,6 +61,7 @@ export interface SkuInfo {
   bomName?: string;
   isHDSource?: boolean;
   isEditable?: boolean;
+  isReleased?: boolean;
 }
 
 export interface BomPartInfo {
@@ -482,8 +483,15 @@ export class DataService {
     if (!error) return fallback;
 
     const status = error.status;
+    // Extract error message from backend response
+    // Backend can return:
+    // - {"error":"some message"} -> error.error.error
+    // - {"message":"some message"} -> error.error.message
+    // - "some message" (string) -> error.error (string)
     const payloadError =
-      (error.error && (error.error.error || error.error.message)) ||
+      (typeof error.error === 'string' ? error.error : null) ||
+      error.error?.error ||
+      error.error?.message ||
       (typeof error.message === 'string' ? error.message : '');
 
     if (status === 500) {

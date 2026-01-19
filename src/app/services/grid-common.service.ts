@@ -622,6 +622,12 @@ export class GridCommonService {
           params.data &&
           params.data.isNewRow
         ) {
+          // Prevent paste if SKU column is disabled (not released in SBOM)
+          if ((params as any).colDef?.isDisabled) {
+            params.event.preventDefault();
+            return;
+          }
+          
           if (componentInstance.rowManagementService) {
             componentInstance.rowManagementService.pasteSkuValue(params as any, componentInstance);
           }

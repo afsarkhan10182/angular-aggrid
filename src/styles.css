@@ -278,6 +278,12 @@ body {
   border-left: 4px solid #b91c1c;
 }
 
+.save-message.error-persistent {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border-left: 4px solid #b91c1c;
+}
+
 .save-message.info {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
@@ -1594,6 +1600,36 @@ div.ag-header-cell.first-sku-column-header {
 div.ag-cell.first-sku-column-cell {
   background-color: #fff9c4 !important;
   background: #fff9c4 !important;
+}
+
+/* Disabled SKU column headers (not released in SBOM) */
+.sku-column-disabled-header,
+.ag-header-cell.sku-column-disabled-header,
+div.ag-header-cell.sku-column-disabled-header {
+  background-color: #f3f4f6 !important;
+  background: #f3f4f6 !important;
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+}
+
+/* Disabled SKU column cells (not released in SBOM) */
+.sku-column-disabled-cell,
+.ag-cell.sku-column-disabled-cell,
+.ag-theme-alpine .ag-cell.sku-column-disabled-cell,
+div.ag-cell.sku-column-disabled-cell {
+  background-color: #f9fafb !important;
+  background: #f9fafb !important;
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+.sku-cell-disabled-placeholder {
+  color: #9ca3af !important;
+  font-style: italic !important;
+  text-align: center !important;
+  padding: 4px !important;
+  user-select: none !important;
 }
 
 /* 3. ALL SKU column headers - BRUTE FORCE multi-line with ellipsis */
