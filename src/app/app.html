@@ -128,8 +128,8 @@
     <!-- Save Status Message -->
     <div *ngIf="saveMessage" class="save-message" [class]="saveMessageType">
       <span class="save-message-text">{{ saveMessage }}</span>
-      <button (click)="clearSaveMessage()" class="save-message-close">
-        <i class="fas fa-times"></i>
+      <button (click)="clearSaveMessage()" class="save-message-close" title="Close">
+        <span class="close-icon-text">×</span>
       </button>
     </div>
 

@@ -794,15 +794,14 @@ export class RowManagementService {
     componentInstance.saveMessage = message;
     componentInstance.saveMessageType = type;
 
-    // Auto-clear success and info messages after 3 seconds
+    // Auto-clear success, info, and error messages after 3 seconds
     // error-persistent messages never auto-clear (user must close manually)
-    // error messages also don't auto-clear (for backward compatibility)
-    if (type === 'success' || type === 'info') {
+    if (type === 'success' || type === 'info' || type === 'error') {
       setTimeout(() => {
         this.clearSaveMessage(componentInstance);
       }, 3000);
     }
-    // error and error-persistent types do not auto-clear
+    // error-persistent type does not auto-clear
   }
 
   /**

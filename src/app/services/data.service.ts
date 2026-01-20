@@ -160,25 +160,13 @@ export class DataService {
 
     return this.http.get<any>(apiUrl).pipe(
       map((data) => {
-        // If data has instances/columns structure (new API or mock), return as is
+        // Only accept data with instances/columns structure (expected API format)
         if (data && data.instances && Array.isArray(data.instances)) {
           return data;
         }
 
-        // Legacy/Fallback handling for key-value pairs
-        if (data && typeof data === 'object' && !Array.isArray(data)) {
-          return data;
-        }
-        if (Array.isArray(data)) {
-          const keyValuePairs: any = {};
-          data.forEach((item: any) => {
-            if (item.key && item.value !== undefined) {
-              keyValuePairs[item.key] = item.value;
-            }
-          });
-          return keyValuePairs;
-        }
-        return data;
+        // If data doesn't match expected format, throw error
+        throw new Error('Invalid API response format: expected instances/columns structure');
       }),
       catchError(this.handleError)
     );
@@ -465,17 +453,9 @@ export class DataService {
   }
 
   private handleError(error: HttpErrorResponse) {
-    let errorMessage = 'Unknown error occurred';
-
-    if (error.error instanceof ErrorEvent) {
-      // Client-side error
-      errorMessage = `Client Error: ${error.error.message}`;
-    } else {
-      // Server-side error
-      errorMessage = `Server Error: ${error.status} - ${error.message}`;
-    }
-
-    return throwError(() => new Error(errorMessage));
+    // Preserve the original HttpErrorResponse so that error.error (response body) is accessible
+    // This allows getLoadErrorMessage to extract the actual API error message
+    return throwError(() => error);
   }
 
   getLoadErrorMessage(error: any): string {
@@ -483,27 +463,52 @@ export class DataService {
     if (!error) return fallback;
 
     const status = error.status;
+    
     // Extract error message from backend response
     // Backend can return:
     // - {"error":"some message"} -> error.error.error
     // - {"message":"some message"} -> error.error.message
     // - "some message" (string) -> error.error (string)
-    const payloadError =
-      (typeof error.error === 'string' ? error.error : null) ||
-      error.error?.error ||
-      error.error?.message ||
-      (typeof error.message === 'string' ? error.message : '');
+    let backendMessage: string | null = null;
+    
+    if (error.error) {
+      if (typeof error.error === 'string') {
+        // Error body is a plain string - try to parse if it's JSON
+        try {
+          const parsed = JSON.parse(error.error);
+          backendMessage = parsed.error || parsed.message || error.error;
+        } catch {
+          // Not JSON, use as-is
+          backendMessage = error.error;
+        }
+      } else if (typeof error.error === 'object') {
+        // Error body is an object - extract the message
+        backendMessage = error.error.error || error.error.message || null;
+      }
+    }
+    
+    // If no backend message found, check error.message (for transformed errors)
+    if (!backendMessage && typeof error.message === 'string' && error.message) {
+      // Only use error.message if it doesn't look like a generic HTTP error message
+      // Generic messages usually contain "Http failure response" or "Server Error:"
+      if (!error.message.includes('Http failure response') && !error.message.includes('Server Error:')) {
+        backendMessage = error.message;
+      }
+    }
 
+    // For 500 errors, prioritize showing the actual API error message
     if (status === 500) {
-      return payloadError
-        ? `Failed to load BOM data: ${payloadError}`
+      return backendMessage
+        ? `Failed to load BOM data: ${backendMessage}`
         : 'Failed to load BOM data: Server error (500).';
     }
 
-    if (payloadError) {
-      return `Failed to load BOM data: ${payloadError}`;
+    // For other status codes, show the backend error if available
+    if (backendMessage) {
+      return `Failed to load BOM data: ${backendMessage}`;
     }
 
+    // Fallback to status-based message
     if (status) {
       return `Failed to load BOM data: Server error (${status}).`;
     }

@@ -681,6 +681,18 @@
   border: 1px dashed #e2e8f0;
 }
 
+/* Empty Instances State - Centered in modal */
+.empty-instances-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  padding: 60px 28px;
+  margin: 0;
+  background: white;
+}
+
 .empty-icon {
   margin-bottom: 16px;
   color: #cbd5e1;

@@ -16,7 +16,7 @@
           </svg>
         </div>
         <div class="header-info">
-          <h1>{{ partData.material || partData.materialId || partData.part || partData.materialDescription || partData.partNumber || 'N/A' }}</h1>
+          <h1>{{ partData.material || partData.materialDescription || 'N/A' }}</h1>
           </div>
       </div>
       <button class="close-button" (click)="closeModal()" aria-label="Close">
@@ -36,29 +36,6 @@
 
     <!-- Modal Content -->
     <div class="modal-content">
-      <!-- Material Details Table - Shows all data except SKUs -->
-      <div class="key-value-table-card" *ngIf="getAllRowData().length > 0 && !hasInstances()">
-        <div class="card-header">
-          <h3>Material Details</h3>
-        </div>
-        <div class="table-container">
-          <table class="key-value-table">
-            <thead>
-              <tr>
-                <th>Columns</th>
-                <th>Details</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let pair of getAllRowData()">
-                <td class="key-cell">{{ formatKeyName(pair.key) }}</td>
-                <td class="value-cell">{{ pair.value }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
       <!-- BOM Instances Table -->
       <div class="key-value-table-card" *ngIf="hasInstances()">
         <div class="card-header">
@@ -82,10 +59,8 @@
         </div>
       </div>
 
-      <!-- SKU Portfolio section removed as per requirement to follow API columns -->
-
-      <!-- Empty State -->
-      <div *ngIf="getAllRowData().length === 0 && !hasSkus()" class="empty-state">
+      <!-- Empty Instances State - Show centered message when instances array exists but is empty -->
+      <div *ngIf="!hasInstances() && partData?.instances" class="empty-state empty-instances-state">
         <div class="empty-icon">
           <svg
             width="48"
@@ -99,9 +74,10 @@
             <circle cx="12" cy="12" r="9"></circle>
           </svg>
         </div>
-        <h4>No Data Available</h4>
-        <p>This material doesn't have any associated data.</p>
+        <h4>No Material BOM lineitems found for the material</h4>
       </div>
+
+      <!-- SKU Portfolio section removed as per requirement to follow API columns -->
     </div>
   </div>
 </div>

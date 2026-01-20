@@ -78,6 +78,8 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
       'section',
       'allSkus',
       'skus',
+      'instances',
+      'columns',
     ]);
 
     Object.keys(this.partData).forEach((key) => {

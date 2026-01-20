@@ -328,6 +328,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   loadData(): void {
+    console.log('loadData called');
     this.isLoading = true;
     const loadSub = this.dataService.loadData().subscribe(
       (data) => {
@@ -373,9 +374,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         }
       },
       (error) => {
+        console.error('Error loading data', error);
         this.isLoading = false;
         const errorMessage = this.dataService.getLoadErrorMessage(error);
-        this.showNotification(errorMessage, 'error');
+        this.showNotification(errorMessage, 'error-persistent');
       }
     );
     this.subscriptions.push(loadSub);
@@ -2385,22 +2387,36 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const bomSub = this.dataService.getComplexBOM(childId).subscribe({
       next: (bomData: any) => {
         // bomData should have format: { materialMasterId: "...", instances: [...], columns: {...} }
+        // Use only API response data, not materialData - always open modal
+        if (!bomData) {
+          // If no data at all, show error
+          this.showNotification('Failed to load material BOM data.', 'error');
+          return;
+        }
 
+        // Ensure instances is an array (even if empty)
+        if (!Array.isArray(bomData.instances)) {
+          bomData.instances = [];
+        }
+
+        // Preserve material name fields from materialData for modal title display
+        // Only merge display fields, not the full materialData object
         this.selectedMaterialData = {
-          ...materialData,
-          ...bomData, // Merge API response including instances and columns
+          ...bomData,
+          material: materialData.material || materialData.materialDescription || '',
+          materialDescription: materialData.materialDescription || materialData.material || '',
+          part: materialData.part || materialData.partNumber || '',
+          partNumber: materialData.partNumber || materialData.part || '',
+          materialId: materialData.materialId || bomData.materialMasterId || '',
         };
-
-        // Keep existing logic for SKU data if needed, or maybe the new response handles everything
-        this.selectedMaterialSkuData = this.dataService.getSkuDataForPart(materialData);
+        this.selectedMaterialSkuData = [];
         this.showMaterialModal = true;
       },
       error: (error: any) => {
         console.error('Failed to fetch material BOM', error);
-        // Fallback or just show what we have
-        this.selectedMaterialData = materialData;
-        this.selectedMaterialSkuData = this.dataService.getSkuDataForPart(materialData);
-        this.showMaterialModal = true;
+        // Don't show modal on error - only show error notification
+        const errorMessage = error?.error?.message || error?.message || 'Failed to load material BOM data.';
+        this.showNotification(errorMessage, 'error');
       },
     });
     this.subscriptions.push(bomSub);
@@ -2526,7 +2542,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           // Show error message - do NOT update grid or state
           // UI remains exactly as it was before clicking save
           // Use error-persistent so message doesn't auto-clear
-          this.rowManagementService.showSaveMessage(result.message, 'error-persistent', this);
+          this.rowManagementService.showSaveMessage(result.message, 'error', this);
         }
       })
       .catch((error) => {
@@ -3406,14 +3422,19 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     );
   }
 
-  private showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
+  private showNotification(message: string, type: 'success' | 'error' | 'error-persistent' | 'info' = 'info'): void {
     this.saveMessage = message;
     this.saveMessageType = type;
 
-    setTimeout(() => {
-      this.saveMessage = '';
-      this.saveMessageType = '';
-    }, 5000);
+    // Auto-clear success, info, and error messages after 5 seconds
+    // error-persistent messages never auto-clear (user must close manually)
+    if (type === 'success' || type === 'info' || type === 'error') {
+      setTimeout(() => {
+        this.saveMessage = '';
+        this.saveMessageType = '';
+      }, 5000);
+    }
+    // error-persistent type does not auto-clear
   }
 
   onSelectionChanged(params: any): void {

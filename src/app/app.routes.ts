@@ -8,4 +8,9 @@ export const routes: Routes = [
     component: App,
     canActivate: [AuthGuard],
   },
+  {
+    path: '**',
+    redirectTo: '',
+    pathMatch: 'full',
+  },
 ];
