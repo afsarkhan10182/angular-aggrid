@@ -467,15 +467,32 @@ export class GridCommonService {
         // IMPORTANT: editedRows may store different keys depending on row type:
         // materialKey (existing), newRowId (new row), partNumber/part (fallback).
         if (componentInstance.editedRows && params.data) {
-          const candidates: any[] = [
-            params.data.materialKey,
-            params.data.newRowId,
-            params.data.partNumber,
-            params.data.part,
-            params.data.section && (params.data.partNumber || params.data.part)
-              ? `${params.data.section}::${params.data.partNumber || params.data.part}`
-              : null,
-          ].filter((v) => v !== null && v !== undefined && `${v}`.trim() !== '');
+          const isNewRow = params.data.isNewRow === true;
+          
+          // For new rows, only check newRowId (unique identifier)
+          // For existing rows, prioritize materialKey (unique), then fallback to partNumber/part
+          let candidates: any[] = [];
+          
+          if (isNewRow) {
+            // New rows: only check newRowId (unique)
+            if (params.data.newRowId) {
+              candidates = [params.data.newRowId];
+            }
+          } else {
+            // Existing rows: check materialKey first (unique), then fallback to partNumber/part/composite
+            if (params.data.materialKey) {
+              candidates = [params.data.materialKey];
+            } else {
+              // Fallback: check partNumber, part, and composite ID
+              candidates = [
+                params.data.partNumber,
+                params.data.part,
+                params.data.section && (params.data.partNumber || params.data.part)
+                  ? `${params.data.section}::${params.data.partNumber || params.data.part}`
+                  : null,
+              ].filter((v) => v !== null && v !== undefined && `${v}`.trim() !== '');
+            }
+          }
 
           const isEdited = candidates.some((id) => {
             return (
@@ -622,7 +639,7 @@ export class GridCommonService {
           params.data &&
           params.data.isNewRow
         ) {
-          // Prevent paste if SKU column is disabled (not released in SBOM)
+          // Prevent paste if SKU column is disabled (not editable)
           if ((params as any).colDef?.isDisabled) {
             params.event.preventDefault();
             return;

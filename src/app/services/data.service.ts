@@ -44,6 +44,7 @@ export interface BomLink {
   bomLinkCountryOfOrigin: string;
   partThirtyCharacterDescription: string;
   linkedBom?: string;
+  ptcbomPartMarkUp?: string; // MBOM markup type (e.g., 'enumMBOM001')
 }
 
 export interface SkuInfo {
@@ -637,12 +638,6 @@ export class DataService {
   // Get refSKUId from JSP data attribute
   getRefSkuId(): string | null {
     return this.utilService.getJspDataAttribute('data-refskuid');
-  }
-
-  // Get isServiceTeamMember from JSP data attribute
-  isServiceTeamMember(): boolean {
-    const value = this.utilService.getJspDataAttribute('data-isserviceteammember');
-    return value === 'true';
   }
 
   // Get service host URL from JSP data attribute (passed from Windchill)

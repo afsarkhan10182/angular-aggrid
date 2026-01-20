@@ -26,10 +26,15 @@ import { ColumnHeaderPinComponent } from './column-header-pin/column-header-pin.
 import { environment } from '../environments/environment';
 import { ExtendedColDef } from './services/util.service';
 
-type SkuFilterOption = 'all' | 'hdEditable' | 'hdNonEditable' | 'nonHdSource';
+// MBOM filter options
+type MbomSkuFilterOption = 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource';
+// SBOM filter options
+type SbomSkuFilterOption = 'all' | 'editableSkus';
+// Combined type
+type SkuFilterOption = MbomSkuFilterOption | SbomSkuFilterOption;
 
-const SKU_FILTER_CONFIG: Record<
-  SkuFilterOption,
+const MBOM_SKU_FILTER_CONFIG: Record<
+  MbomSkuFilterOption,
   {
     filter?: (sku: any) => boolean;
     emptyMessage?: string;
@@ -40,13 +45,27 @@ const SKU_FILTER_CONFIG: Record<
     filter: (sku) => sku.isHDSource === true && sku.isEditable === true,
     emptyMessage: 'No HD editable SKUs found. Editing is disabled.',
   },
-  hdNonEditable: {
-    filter: (sku) => sku.isHDSource === true,
-    emptyMessage: 'No HD source SKUs found.',
+  hdViewOnly: {
+    filter: (sku) => sku.isHDSource === true && sku.isEditable === false,
+    emptyMessage: 'No HD source view-only SKUs found.',
   },
   nonHdSource: {
     filter: (sku) => sku.isHDSource === false,
     emptyMessage: 'No non-HD source SKUs found.',
+  },
+};
+
+const SBOM_SKU_FILTER_CONFIG: Record<
+  SbomSkuFilterOption,
+  {
+    filter?: (sku: any) => boolean;
+    emptyMessage?: string;
+  }
+> = {
+  all: {},
+  editableSkus: {
+    filter: (sku) => sku.isEditable === true,
+    emptyMessage: 'No editable SKUs found. Editing is disabled.',
   },
 };
 
@@ -83,12 +102,23 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public bomType: string = '';
   public selectedSkuFilter: SkuFilterOption = 'all';
   public showSkuFilterDropdown = false;
-  public skuFilterOptions: Array<{ label: string; value: SkuFilterOption }> = [
-    { label: 'All', value: 'all' },
-    { label: 'HD source - editable', value: 'hdEditable' },
-    { label: 'HD source', value: 'hdNonEditable' },
-    { label: 'Non HD source', value: 'nonHdSource' },
+  // MBOM filter options
+  public mbomSkuFilterOptions: Array<{ label: string; value: MbomSkuFilterOption }> = [
+    { label: 'ALL - View only', value: 'all' },
+    { label: 'HD source - Editable', value: 'hdEditable' },
+    { label: 'HD source - View only', value: 'hdViewOnly' },
+    { label: 'Non HD source - View only', value: 'nonHdSource' },
   ];
+  // SBOM filter options
+  public sbomSkuFilterOptions: Array<{ label: string; value: SbomSkuFilterOption }> = [
+    { label: 'ALL - View only', value: 'all' },
+    { label: 'Editable SKUs', value: 'editableSkus' },
+  ];
+  
+  // Get current filter options based on BOM type
+  public get skuFilterOptions(): Array<{ label: string; value: SkuFilterOption }> {
+    return this.isMbomMode() ? this.mbomSkuFilterOptions : this.sbomSkuFilterOptions;
+  }
   public isLoading: boolean = true;
   public constraintsData: any = null;
   public isSaving: boolean = false; // Track save operation state
@@ -432,16 +462,24 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   private getFilteredSkuInfo(): any[] {
     const skuInfo = this.dataService.getSkuInfo();
-    if (!this.isMbomMode()) {
-      return skuInfo;
+    
+    if (this.isMbomMode()) {
+      return this.filterSkuInfoByOption(this.selectedSkuFilter as MbomSkuFilterOption, skuInfo, 'mbom');
+    } else {
+      return this.filterSkuInfoByOption(this.selectedSkuFilter as SbomSkuFilterOption, skuInfo, 'sbom');
     }
-
-    return this.filterSkuInfoByOption(this.selectedSkuFilter, skuInfo);
   }
 
-  private filterSkuInfoByOption(option: SkuFilterOption, skuInfo: any[]): any[] {
-    const config = SKU_FILTER_CONFIG[option];
-    if (!config.filter) {
+  private filterSkuInfoByOption(
+    option: MbomSkuFilterOption | SbomSkuFilterOption,
+    skuInfo: any[],
+    bomType: 'mbom' | 'sbom'
+  ): any[] {
+    const config = bomType === 'mbom' 
+      ? MBOM_SKU_FILTER_CONFIG[option as MbomSkuFilterOption]
+      : SBOM_SKU_FILTER_CONFIG[option as SbomSkuFilterOption];
+    
+    if (!config || !config.filter) {
       return skuInfo;
     }
     return skuInfo.filter(config.filter);
@@ -453,7 +491,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
 
     const skuInfo = this.dataService.getSkuInfo();
-    return this.filterSkuInfoByOption(option, skuInfo).length === 0;
+    const bomType = this.isMbomMode() ? 'mbom' : 'sbom';
+    return this.filterSkuInfoByOption(option, skuInfo, bomType).length === 0;
   }
 
   public getSkuFilterOptionTooltip(option: SkuFilterOption): string {
@@ -462,7 +501,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
 
     const skuInfo = this.dataService.getSkuInfo();
-    if (this.filterSkuInfoByOption(option, skuInfo).length > 0) {
+    const bomType = this.isMbomMode() ? 'mbom' : 'sbom';
+    if (this.filterSkuInfoByOption(option, skuInfo, bomType).length > 0) {
       return '';
     }
 
@@ -470,7 +510,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private getSkuFilterEmptyMessage(option: SkuFilterOption): string {
-    return SKU_FILTER_CONFIG[option].emptyMessage || '';
+    if (this.isMbomMode()) {
+      return MBOM_SKU_FILTER_CONFIG[option as MbomSkuFilterOption]?.emptyMessage || '';
+    } else {
+      return SBOM_SKU_FILTER_CONFIG[option as SbomSkuFilterOption]?.emptyMessage || '';
+    }
   }
 
   public getSkuFilterLabel(option: SkuFilterOption): string {
@@ -492,9 +536,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   public onSkuFilterChange(): void {
-    if (!this.isMbomMode()) {
-      return;
-    }
     this.showSkuFilterDropdown = false;
     if (this.isSkuFilterOptionDisabled(this.selectedSkuFilter)) {
       this.selectedSkuFilter = 'all';
@@ -622,7 +663,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           if (this.isAddRowEnabled()) {
             return `<span class="add-row-btn" data-part-id="${partId}" title="Add">+</span>`;
           }
-          return ''; // Add button hidden for SBOM non-service-team members
+          return ''; // Add button disabled
         }
 
         return '';
@@ -1091,9 +1132,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       columns.push(columnDef);
     });
 
-    // Get bomType and original skuInfo to check isReleased
-    const bomType = this.dataService.getBomType();
-    const isSbom = bomType === 'SBOM';
+    // Get original skuInfo to check isEditable (single source of truth)
     const originalSkuInfo = this.dataService.getSkuInfo();
     const skuInfoMap = new Map<string, any>();
     originalSkuInfo.forEach((sku) => {
@@ -1102,7 +1141,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     const skuColumns = this.getFilteredSkuInfo().map((sku) => {
       const originalSku = skuInfoMap.get(sku.skuId);
-      const isDisabled = isSbom && originalSku && originalSku.isReleased === false;
+      // Single source of truth: isEditable (removed isReleased logic)
+      const isDisabled = originalSku && originalSku.isEditable === false;
 
       return {
         skuId: sku.skuId,
@@ -1182,7 +1222,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       const headerClasses = [index === 0 ? 'first-sku-column-header' : ''];
       const cellClasses = [index === 0 ? 'first-sku-column-cell' : ''];
 
-      // Add disabled class if SKU is not released (SBOM only)
+      // Add disabled class if SKU is not editable (single source of truth: isEditable)
       if (sku.isDisabled) {
         headerClasses.push('sku-column-disabled-header');
         cellClasses.push('sku-column-disabled-cell');
@@ -1234,7 +1274,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           }
 
           if (data.isNewRow) {
-            // Check if this SKU column is disabled (not released in SBOM)
+            // Check if this SKU column is disabled (isEditable === false)
             if (params.colDef.isDisabled) {
               return '<div class="sku-cell-disabled-placeholder" style="color: #9ca3af; font-style: italic; text-align: center; padding: 4px;">Not Available</div>';
             }
@@ -1461,7 +1501,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   /**
    * Check if we're in SBOM mode
    */
-  private isSbomMode(): boolean {
+  public isSbomMode(): boolean {
     const bomType = this.dataService.getBomType();
     return bomType === 'SBOM';
   }
@@ -1472,20 +1512,42 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   public isSkuFilterReadOnly(): boolean {
-    return this.isMbomMode() && this.selectedSkuFilter !== 'hdEditable';
+    if (this.isMbomMode()) {
+      // MBOM: Only 'hdEditable' is editable, all others are view-only
+      return this.selectedSkuFilter !== 'hdEditable';
+    } else {
+      // SBOM: Only 'editableSkus' is editable, 'all' is view-only
+      return this.selectedSkuFilter !== 'editableSkus';
+    }
   }
 
   /**
-   * Check if current user is a service team member
+   * Get tooltip text for save button based on disabled state
    */
-  private isUserServiceTeamMember(): boolean {
-    return this.dataService.isServiceTeamMember();
+  public getSaveButtonTooltip(): string {
+    if (this.isSaving) {
+      return 'Saving in progress...';
+    }
+
+    if (this.isSkuFilterReadOnly()) {
+      if (this.isMbomMode()) {
+        return 'Switch to "HD source - Editable" view to enable saving';
+      } else {
+        return 'Switch to "Editable SKUs" view to enable saving';
+      }
+    }
+
+    if (this.editedRows.size === 0) {
+      return 'No changes to save';
+    }
+
+    return 'Save changes';
   }
 
   /**
    * Check if field is editable for existing rows based on BOM type
    * MBOM: Only bomLinkStartDate, bomLinkEndDate, and quantity are editable
-   * SBOM: Only SpecSheet fields are editable (and only for service team members)
+   * SBOM: Only SpecSheet fields are editable
    */
   private isFieldEditableInSbom(field: string): boolean {
     if (this.isSkuFilterReadOnly()) {
@@ -1498,12 +1560,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       return mbomEditableFields.includes(field);
     }
 
-    // SBOM mode
-    if (!this.isUserServiceTeamMember()) {
-      return false; // SBOM + not service team = no editing
-    }
-
-    // SBOM + service team = only SpecSheet fields editable
+    // SBOM mode - only SpecSheet fields are editable
     const isEditable = field === 'bomLinkSpecSheetExtra' || field === 'bomLinkIncludeInSpecSheet';
     return isEditable;
   }
@@ -1543,16 +1600,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       return false;
     }
 
-    if (!this.isSbomMode()) {
-      return true; // MBOM - add row enabled
-    }
-
-    // SBOM - only enabled for service team members
-    return this.isUserServiceTeamMember();
+    // Add row enabled for both MBOM and SBOM
+    return true;
   }
 
   private renderNewRowSkuCell(params: any): string {
-    // Check if this SKU column is disabled (not released in SBOM)
+    // Check if this SKU column is disabled (isEditable === false)
     if (params.colDef?.isDisabled) {
       return '<div class="sku-cell-disabled-placeholder" style="color: #9ca3af; font-style: italic; text-align: center; padding: 4px;">Not Available</div>';
     }
@@ -1887,10 +1940,221 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.applyGrouping();
   }
 
+  /**
+   * Check if a row has SKU data in the existing API response
+   * For editable filter: Only show rows that have SKU in existing response (not new rows)
+   * Must verify SKU exists in original API response instances for this specific row
+   */
+  private hasSkuInExistingResponse(row: any, editableSkuIds: Set<string>): boolean {
+    if (!row || row.isSectionHeader || row.isGroupHeader || row.isMaterialHeader || row.isBranchHeader) {
+      return true; // Always show headers
+    }
+
+    // CRITICAL: New rows don't exist in existing response - filter them out
+    if (row.isNewRow) {
+      return false; // New rows should not appear in editable filter
+    }
+
+    // Get API data to verify SKU exists in original response
+    const apiData = this.dataService.getApiData();
+    if (!apiData || !apiData.instances || !Array.isArray(apiData.instances)) {
+      // No API data available - cannot verify, filter out the row
+      return false;
+    }
+
+    // Resolve section for matching
+    const rowSection = row.section || '';
+    const rowFeature = String(row.bomLinkFeature || '').trim();
+    const rowPartNumber = String(row.partNumber || '').trim();
+    const rowPtcbomPartMarkUp = row.ptcbomPartMarkUp || '';
+    const bomType = this.dataService.getBomType();
+    const isSbom = bomType === 'SBOM';
+    const isMbom = bomType === 'MBOM';
+
+    // Find the EXACT API instance that matches this row
+    // When multiple instances share the same section/feature/partNumber, we need to match by SKU values
+    // to identify which specific instance created this row
+    let matchedInstance: any = null;
+    
+    for (const instance of apiData.instances) {
+      const bomLink = instance['bom-link'];
+      if (!bomLink) continue;
+
+      const instanceSection = bomLink.sectionInternalName || bomLink.section || '';
+      const instanceFeature = String(bomLink.bomLinkFeature || '').trim();
+      const instancePartNumber = String(bomLink.partNumber || '').trim();
+      const instancePtcbomPartMarkUp = bomLink.ptcbomPartMarkUp || '';
+
+      // Match row to instance by section and feature
+      const isSectionMatch = instanceSection === rowSection;
+      const isFeatureMatch = instanceFeature === rowFeature;
+
+      if (!isSectionMatch || !isFeatureMatch) {
+        continue; // Not the same row
+      }
+
+      // For MBOM: Always match by partNumber when both row and instance have partNumbers
+      // This ensures we match the correct row when multiple rows share the same feature
+      let requiresPartMatch = false;
+      
+      if (isSbom) {
+        // SBOM: Always require partNumber match
+        requiresPartMatch = true;
+      } else if (isMbom) {
+        // MBOM: Require partNumber match when both row and instance have partNumbers
+        const rowHasPartNumber = !!(rowPartNumber && String(rowPartNumber).trim() !== '');
+        const instanceHasPartNumber = !!(instancePartNumber && String(instancePartNumber).trim() !== '');
+        requiresPartMatch = rowHasPartNumber && instanceHasPartNumber;
+      }
+
+      const isPartMatch = requiresPartMatch
+        ? String(instancePartNumber).trim() === String(rowPartNumber).trim()
+        : true; // Skip partNumber check only when one or both don't have partNumbers
+
+      if (!isPartMatch) {
+        continue; // Part number doesn't match
+      }
+
+      // CRITICAL: When multiple instances match by section/feature/partNumber,
+      // we need to match by SKU values to identify the specific instance
+      // Check if this instance's SKUs match the row's SKU values
+      if (bomLink.skus && Array.isArray(bomLink.skus)) {
+        let skuMatchCount = 0;
+        let totalInstanceSkus = bomLink.skus.length;
+        
+        // Check if row has SKU values that match this instance's SKUs
+        for (const instanceSku of bomLink.skus) {
+          if (!instanceSku || !instanceSku.skuId) continue;
+          
+          const skuFieldName = `sku${instanceSku.skuId}`;
+          const rowSkuValue = row[skuFieldName];
+          const instanceSkuValue = instanceSku.value;
+          
+          // Match if both have the same SKU value, or if instance has SKU and row has it too
+          if (instanceSkuValue !== undefined && instanceSkuValue !== null && String(instanceSkuValue).trim() !== '') {
+            if (rowSkuValue !== undefined && rowSkuValue !== null && String(rowSkuValue).trim() !== '') {
+              if (String(rowSkuValue).trim() === String(instanceSkuValue).trim()) {
+                skuMatchCount++;
+              }
+            }
+          } else {
+            // Instance SKU has no value - check if row also has no value for this SKU
+            if (!rowSkuValue || String(rowSkuValue).trim() === '') {
+              skuMatchCount++;
+            }
+          }
+        }
+        
+        // If all SKUs match, this is the correct instance for this row
+        if (skuMatchCount === totalInstanceSkus && totalInstanceSkus > 0) {
+          matchedInstance = bomLink;
+          break; // Found the exact instance
+        }
+      } else {
+        // Instance has no SKUs - use it if no other instance matched yet
+        if (!matchedInstance) {
+          matchedInstance = bomLink;
+        }
+      }
+    }
+
+    // If no matching instance found, filter out the row
+    if (!matchedInstance) {
+      return false;
+    }
+
+    // Check if this SPECIFIC instance has an editable SKU ID in its skus array
+    if (matchedInstance.skus && Array.isArray(matchedInstance.skus)) {
+      for (const skuId of editableSkuIds) {
+        const hasMatchingSku = matchedInstance.skus.some(
+          (sku: any) => sku && sku.skuId && String(sku.skuId).trim() === String(skuId).trim()
+        );
+
+        if (hasMatchingSku) {
+          return true; // Found matching editable SKU in this specific instance
+        }
+      }
+    }
+
+    return false; // Row has no matching editable SKU in existing API response
+  }
+
+  /**
+   * Filter hierarchical data based on SKU filter selection
+   * When "HD source - editable" (MBOM) or "Editable SKUs" (SBOM) is selected, 
+   * only show rows that have SKU in existing response
+   */
+  private filterHierarchicalDataBySkuFilter(data: any[]): any[] {
+    // Check if editable filter is active
+    const isMbomEditableFilter = this.isMbomMode() && this.selectedSkuFilter === 'hdEditable';
+    const isSbomEditableFilter = this.isSbomMode() && this.selectedSkuFilter === 'editableSkus';
+    
+    if (!isMbomEditableFilter && !isSbomEditableFilter) {
+      return data; // No editable filter active, show all
+    }
+
+    // Get editable SKU IDs based on BOM type
+    const skuInfo = this.dataService.getSkuInfo();
+    let editableSkuIds: Set<string>;
+    
+    if (isMbomEditableFilter) {
+      // MBOM: HD source and editable
+      editableSkuIds = new Set<string>(
+        skuInfo
+          .filter((sku) => sku.isHDSource === true && sku.isEditable === true)
+          .map((sku) => String(sku.skuId))
+      );
+    } else {
+      // SBOM: All editable SKUs (no HD source requirement)
+      editableSkuIds = new Set<string>(
+        skuInfo
+          .filter((sku) => sku.isEditable === true)
+          .map((sku) => String(sku.skuId))
+      );
+    }
+
+    if (editableSkuIds.size === 0) {
+      return data; // No editable SKUs, show all
+    }
+
+    // Recursively filter rows
+    const filterRows = (rows: any[]): any[] => {
+      return rows
+        .map((row) => {
+          // Always keep headers
+          if (row.isSectionHeader || row.isGroupHeader || row.isMaterialHeader || row.isBranchHeader) {
+            const filteredRow = { ...row };
+            if (row.children && Array.isArray(row.children)) {
+              filteredRow.children = filterRows(row.children);
+            }
+            return filteredRow;
+          }
+
+          // For data rows: only keep if they have SKU in existing response
+          if (this.hasSkuInExistingResponse(row, editableSkuIds)) {
+            const filteredRow = { ...row };
+            if (row.children && Array.isArray(row.children)) {
+              filteredRow.children = filterRows(row.children);
+            }
+            return filteredRow;
+          }
+
+          return null; // Filter out this row
+        })
+        .filter((row) => row !== null);
+    };
+
+    return filterRows(data);
+  }
+
   private applyGrouping(): void {
-    // Preserve new rows before rebuilding
+    // Preserve new rows before rebuilding (but not when editable filter is active)
     const newRows: any[] = [];
-    if (this.displayData && Array.isArray(this.displayData)) {
+    const isEditableFilterActive = 
+      (this.isMbomMode() && this.selectedSkuFilter === 'hdEditable') ||
+      (this.isSbomMode() && this.selectedSkuFilter === 'editableSkus');
+    
+    if (!isEditableFilterActive && this.displayData && Array.isArray(this.displayData)) {
       this.displayData.forEach((row) => {
         if (row.isNewRow && !row.isSectionHeader && !row.isGroupHeader && !row.isMaterialHeader) {
           newRows.push(row);
@@ -1903,6 +2167,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (this.searchText && this.searchText.trim() !== '') {
       hierarchicalData = this.filterHierarchicalData(this.rowData, this.searchText);
     }
+
+    // Apply SKU filter for editable view (only show rows with SKU in existing response)
+    hierarchicalData = this.filterHierarchicalDataBySkuFilter(hierarchicalData);
 
     // Apply grouping if active
     if (this.activeGroupFields.length > 0) {
@@ -3351,7 +3618,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       }
 
       // IMPORTANT: use a stable key for original snapshot lookup (duplicates can exist)
-      const rowId = row.materialKey || row.partNumber || row.part || row.newRowId;
+      // CRITICAL: Use same ID resolution order as trackFieldChange (partId)
+      // trackFieldChange uses: materialKey || newRowId || partNumber || part
+      const rowId = row.materialKey || row.newRowId || row.partNumber || row.part;
       if (!rowId) return;
 
       // Store original values for editable fields
@@ -3418,7 +3687,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       this.editedFields,
       this.originalRowValues,
       this.constraintsData,
-      skuInfo
+      skuInfo,
+      this.gridApi // Pass gridApi to get current values from grid
     );
   }
 

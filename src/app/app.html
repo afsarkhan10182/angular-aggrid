@@ -57,8 +57,8 @@
               Filter
             </button>
           </div>
-          <div class="sku-filter-container" *ngIf="isMbomMode()">
-            <label class="sku-filter-label">SKU Filter:</label>
+          <div class="sku-filter-container" *ngIf="isMbomMode() || isSbomMode()">
+            <label class="sku-filter-label">SKU Views:</label>
             <div #skuFilterDropdown class="sku-filter-dropdown" (click)="$event.stopPropagation()">
               <button type="button" class="sku-filter-trigger" (click)="toggleSkuFilterDropdown()">
                 <span class="sku-filter-trigger-label">
@@ -111,6 +111,7 @@
             (click)="saveChanges()"
             class="save-changes-btn"
             [disabled]="editedRows.size === 0 || isSaving || isSkuFilterReadOnly()"
+            [title]="getSaveButtonTooltip()"
           >
             <ng-container *ngIf="!isSaving; else savingTpl">
               <i class="fas fa-save"></i>

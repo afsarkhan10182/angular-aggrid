@@ -337,8 +337,10 @@ export class PayloadTransformService {
     editedFields: Map<string | number, Set<string>>,
     originalRowValues: Map<string | number, any>,
     constraintsData: any,
-    skuInfoOverride?: any[]
+    skuInfoOverride?: any[],
+    gridApi?: any
   ): any {
+    
     const instances: any[] = [];
     const skuInfo = Array.isArray(skuInfoOverride)
       ? skuInfoOverride
@@ -352,6 +354,20 @@ export class PayloadTransformService {
     // Get mapping for IncludeInSpecSheet (Display -> Internal)
     const includeInSpecSheetMap = this.dataService.getIncludeInSpecSheetMapping(constraintsData);
 
+    // Build a map of current row data from grid API (if available) for edited rows
+    const currentRowDataMap = new Map<string | number, any>();
+    if (gridApi) {
+      gridApi.forEachNode((node: any) => {
+        if (node.data) {
+          const nodeRowId = node.data.materialKey || node.data.newRowId || node.data.partNumber || node.data.part || '';
+          if (nodeRowId && editedRows.has(nodeRowId)) {
+            // Store the current data from grid (has latest edited values)
+            currentRowDataMap.set(nodeRowId, node.data);
+          }
+        }
+      });
+    }
+
     const processRow = (row: any): void => {
       if (row.isSectionHeader || row.isMaterialHeader || row.isGroupHeader) {
         if (row.children && Array.isArray(row.children)) {
@@ -364,9 +380,15 @@ export class PayloadTransformService {
         return;
       }
 
-      const rowId = row.newRowId || row.materialKey || row.partNumber || row.part || '';
+      // Use same ID resolution order as trackFieldChange
+      const rowId = row.materialKey || row.newRowId || row.partNumber || row.part || '';
       const isNewRow = row.isNewRow === true;
       const isEdited = editedRows.has(rowId);
+      
+      // For edited rows, get current data from grid API (has latest values)
+      const currentRow = isEdited && currentRowDataMap.has(rowId) 
+        ? currentRowDataMap.get(rowId) 
+        : row;
 
       const bomLink: any = {};
 
@@ -499,6 +521,7 @@ export class PayloadTransformService {
           row.section && (row.partNumber || row.part)
             ? `${row.section}::${row.partNumber || row.part}`
             : null;
+        
         const originalValues =
           originalRowValues.get(row.materialKey) ||
           originalRowValues.get(rowId) ||
@@ -515,53 +538,41 @@ export class PayloadTransformService {
 
         if (editedFieldsForRow.has('bomLinkSpecSheetExtra')) {
           const currentVal = String(originalValues.bomLinkSpecSheetExtra || '');
-          const newVal = String(row.bomLinkSpecSheetExtra || '');
-
-          if (currentVal !== newVal) {
-            bomLink.bomLinkSpecSheetExtra_old =
-              currentVal === 'Yes' ? 'true' : currentVal === 'No' ? 'false' : currentVal;
-            bomLink.bomLinkSpecSheetExtra_new =
-              newVal === 'Yes' ? 'true' : newVal === 'No' ? 'false' : newVal;
-          }
+          const newVal = String(currentRow.bomLinkSpecSheetExtra || '');
+          bomLink.bomLinkSpecSheetExtra_old =
+            currentVal === 'Yes' ? 'true' : currentVal === 'No' ? 'false' : currentVal;
+          bomLink.bomLinkSpecSheetExtra_new =
+            newVal === 'Yes' ? 'true' : newVal === 'No' ? 'false' : newVal;
         }
 
         if (editedFieldsForRow.has('bomLinkIncludeInSpecSheet')) {
           const currentVal = String(originalValues.bomLinkIncludeInSpecSheet || '');
-          const newVal = String(row.bomLinkIncludeInSpecSheet || '');
-
-          if (currentVal !== newVal) {
-            bomLink.bomLinkIncludeInSpecSheet_old = includeInSpecSheetMap[currentVal] || currentVal;
-            bomLink.bomLinkIncludeInSpecSheet_new = includeInSpecSheetMap[newVal] || newVal;
-          }
+          const newVal = String(currentRow.bomLinkIncludeInSpecSheet || '');
+          bomLink.bomLinkIncludeInSpecSheet_old = includeInSpecSheetMap[currentVal] || currentVal;
+          bomLink.bomLinkIncludeInSpecSheet_new = includeInSpecSheetMap[newVal] || newVal;
         }
 
         if (editedFieldsForRow.has('bomLinkStartDate') || editedFieldsForRow.has('startDate')) {
           const currentStartDate =
             originalValues.bomLinkStartDate || originalValues.startDate || '';
-          const newStartDate = row.bomLinkStartDate || row.startDate || '';
-          if (currentStartDate !== newStartDate) {
-            bomLink.bomLinkStartDate_old =
-              this.utilService.convertDateToApiFormat(currentStartDate);
-            bomLink.bomLinkStartDate_new = this.utilService.convertDateToApiFormat(newStartDate);
-          }
+          const newStartDate = currentRow.bomLinkStartDate || currentRow.startDate || '';
+          bomLink.bomLinkStartDate_old =
+            this.utilService.convertDateToApiFormat(currentStartDate);
+          bomLink.bomLinkStartDate_new = this.utilService.convertDateToApiFormat(newStartDate);
         }
 
         if (editedFieldsForRow.has('bomLinkEndDate') || editedFieldsForRow.has('endDate')) {
           const currentEndDate = originalValues.bomLinkEndDate || originalValues.endDate || '';
-          const newEndDate = row.bomLinkEndDate || row.endDate || '';
-          if (currentEndDate !== newEndDate) {
-            bomLink.bomLinkEndDate_old = this.utilService.convertDateToApiFormat(currentEndDate);
-            bomLink.bomLinkEndDate_new = this.utilService.convertDateToApiFormat(newEndDate);
-          }
+          const newEndDate = currentRow.bomLinkEndDate || currentRow.endDate || '';
+          bomLink.bomLinkEndDate_old = this.utilService.convertDateToApiFormat(currentEndDate);
+          bomLink.bomLinkEndDate_new = this.utilService.convertDateToApiFormat(newEndDate);
         }
 
         if (editedFieldsForRow.has('quantity') || editedFieldsForRow.has('qty')) {
-          const currentQuantity = originalValues.quantity || '';
-          const newQuantity = row.quantity || row.qty || '';
-          if (currentQuantity !== newQuantity) {
-            bomLink.quantity_old = this.utilService.formatQuantityToString(currentQuantity);
-            bomLink.quantity_new = this.utilService.formatQuantityToString(newQuantity);
-          }
+          const currentQuantityRaw = originalValues.quantity || originalValues.qty || '';
+          const newQuantityRaw = currentRow.quantity || currentRow.qty || '';
+          bomLink.quantity_old = this.utilService.formatQuantityToString(currentQuantityRaw);
+          bomLink.quantity_new = this.utilService.formatQuantityToString(newQuantityRaw);
         }
 
         if (row.allSkus && Array.isArray(row.allSkus) && row.allSkus.length > 0) {

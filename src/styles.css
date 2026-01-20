@@ -1613,7 +1613,7 @@ div.ag-cell.first-sku-column-cell {
   background: #fff9c4 !important;
 }
 
-/* Disabled SKU column headers (not released in SBOM) */
+/* Disabled SKU column headers (isEditable === false - view only) */
 .sku-column-disabled-header,
 .ag-header-cell.sku-column-disabled-header,
 div.ag-header-cell.sku-column-disabled-header {
@@ -1623,7 +1623,7 @@ div.ag-header-cell.sku-column-disabled-header {
   cursor: not-allowed !important;
 }
 
-/* Disabled SKU column cells (not released in SBOM) */
+/* Disabled SKU column cells (isEditable === false - view only) */
 .sku-column-disabled-cell,
 .ag-cell.sku-column-disabled-cell,
 .ag-theme-alpine .ag-cell.sku-column-disabled-cell,
