@@ -1,7 +1,6 @@
 <%@page language="java"
        import="java.util.*,
                wt.org.WTUser,
-               com.lcs.wc.util.UserGroupHelper,
                wt.session.SessionHelper,
                wt.util.WTProperties,
                com.lcs.wc.foundation.LCSQuery,
@@ -13,37 +12,21 @@
 
 <%!
     public static final String JSPNAME = "BOMComposer";
-    public static final String SERVICE_TEAMS = LCSProperties.get("rfa.bomComposer.serviceTeams","Administrators");
-    private static final Logger logger = LogManager.getLogger("rfa.trek.jsp.bomcomposer.bomComposer");
+    private static final Logger logger = LogManager.getLogger("rfa.trek.jsp.bomcomposer.BOMComposer");
 	%>
 
 <%
     String ids = request.getParameter("ids");
 	System.out.println("ids = "+ids);
 	String refSKU = request.getParameter("referenceSKU");
-	System.out.println("refSKU = "+refSKU);
-
 	LCSRevisableEntity sku = (LCSRevisableEntity) LCSQuery.findObjectById(refSKU);
 	String refSKUId= sku.getName();
 	System.out.println("refSKUId = "+refSKUId);
     String bomType = request.getParameter("bomType");
 	WTUser wtUser = (WTUser) SessionHelper.manager.getPrincipal();
 	String userName = wtUser.getFullName();
-    boolean isServiceTeamMember = false;
-    String[] serviceTeamArray = SERVICE_TEAMS.split(",");
-    for (String teamName : serviceTeamArray) {
-        teamName = teamName.trim();
-        wt.org.WTGroup group = UserGroupHelper.getWTGroup(teamName);
-
-        if (group != null && group.isMember(wtUser)) {
-            isServiceTeamMember = true;
-            break;
-        }
-    }
-    System.out.println("isServiceTeamMember = "+isServiceTeamMember);
 	WTProperties wtproperties = WTProperties.getLocalProperties();
     String  windchillHost = wtproperties.getProperty("wt.rmi.server.hostname","");
-	System.out.println("windchillHost = "+windchillHost);
 %>
 <html>
 <head>
