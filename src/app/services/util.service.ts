@@ -253,7 +253,6 @@ export class UtilService {
         // Get all visible columns (excluding hidden ones)
         const allColumns = gridApi.getColumns();
         if (!allColumns || allColumns.length === 0) {
-          console.warn('No columns found for export');
           reject(new Error('No columns found for export'));
           return;
         }
@@ -395,7 +394,6 @@ export class UtilService {
 
         resolve();
       } catch (error) {
-        console.error('Error exporting to Excel:', error);
         reject(error);
       }
     });

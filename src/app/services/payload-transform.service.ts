@@ -402,17 +402,7 @@ export class PayloadTransformService {
             );
             if (foundInternalId) {
               resolvedSection = foundInternalId;
-            } else {
-              console.error(
-                `[SECTION RESOLVE] Could not find internal ID for display name "${sectionDisplayName}" in sectionDetails. Available mappings:`,
-                sectionDetails
-              );
             }
-          } else {
-            console.error(
-              `[SECTION RESOLVE] Could not determine sectionDisplayName for section "${resolvedSection}". Row:`,
-              row
-            );
           }
         }
 

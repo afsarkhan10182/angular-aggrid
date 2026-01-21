@@ -322,10 +322,6 @@ export class DataService {
         return { results: finalResults, resultCount, hasMore };
       }),
       catchError((error) => {
-        const errorMessage = environment.useMockApi
-          ? 'Failed to load mock material data'
-          : 'Material search API error';
-        console.error(errorMessage + ':', error);
         return of({ results: [], resultCount: 0, hasMore: false });
       })
     );
@@ -413,8 +409,7 @@ export class DataService {
           hasMore: totalRows > rows.length,
         };
       }),
-      catchError((error) => {
-        console.error(`${flexTypeName} search API error:`, error);
+      catchError(() => {
         return of({ results: [], resultCount: 0, hasMore: false });
       })
     );
@@ -550,7 +545,6 @@ export class DataService {
 
     return this.http.put<any>(apiUrl, payload, { headers: this.buildHttpHeaders() }).pipe(
       catchError((error: HttpErrorResponse) => {
-        console.error('Update BOM API error:', error);
         return throwError(() => error);
       })
     );
@@ -664,8 +658,7 @@ export class DataService {
       : `${this.getServiceHostUrl()}/Windchill/servlet/rest/tm/types/com.lcs.wc.flexbom.FlexBOMLink/attributes/bomLinkIncludeInSpecSheet`;
 
     return this.http.get<any>(url).pipe(
-      catchError((error) => {
-        console.error('Error loading IncludeInSpecSheet constraints', error);
+      catchError(() => {
         return of({});
       })
     );

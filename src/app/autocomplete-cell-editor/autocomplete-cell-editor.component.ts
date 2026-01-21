@@ -149,11 +149,7 @@ export class AutocompleteCellEditorComponent
 
           return of({ results: [], resultCount: 0, hasMore: false });
         }),
-        catchError((error) => {
-          console.error('[Autocomplete Search] API error:', error);
-          if (error.error) {
-            console.error('[Autocomplete Search] Error details:', error.error);
-          }
+        catchError(() => {
           return of({ results: [], resultCount: 0, hasMore: false });
         })
       )
@@ -590,7 +586,6 @@ export class AutocompleteCellEditorComponent
           }
         },
         error: (error) => {
-          console.error('Error loading more results:', error);
           this.isLoadingMore = false;
           this.hasMore = false;
         },
@@ -1179,7 +1174,6 @@ export class AutocompleteCellEditorComponent
       // Force reflow to ensure positioning is applied
       dropdownElement.offsetHeight;
     } catch (error) {
-      console.warn('Error positioning dropdown, using fallback:', error);
       this.positionDropdownFallback();
     }
   }
@@ -1435,7 +1429,6 @@ export class AutocompleteCellEditorComponent
         }
       },
       error: (error) => {
-        console.error('Error fetching all parts for dropdowns:', error);
       },
     });
     this.subscriptions.push(materialsSub);

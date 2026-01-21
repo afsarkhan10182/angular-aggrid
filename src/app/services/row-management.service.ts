@@ -583,7 +583,6 @@ export class RowManagementService {
                       componentInstance.applyHierarchicalSearch();
                     }
                   } catch (error) {
-                    console.warn('Could not transform API response, using local update:', error);
                     // Fall back to local update
                     this.updateLocalRowDataAfterSave(rowData, componentInstance, editedRows);
                   }
@@ -635,13 +634,6 @@ export class RowManagementService {
               });
             },
             error: (error: any) => {
-              console.error('BOM update failed:', error);
-
-              // Extract error message from backend response
-              // Backend can return:
-              // - {"error":"some message"} -> error.error.error
-              // - {"message":"some message"} -> error.error.message
-              // - "some message" (string) -> error.error (string)
               const backendError =
                 (typeof error.error === 'string' ? error.error : null) ||
                 error.error?.error ||
@@ -649,7 +641,6 @@ export class RowManagementService {
                 error.message ||
                 '';
 
-              // Extract error message based on HTTP status code
               let errorMessage = 'Failed to save changes.';
 
               if (error.status) {

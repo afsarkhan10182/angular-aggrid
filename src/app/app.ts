@@ -378,7 +378,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             } else {
               this.bomNamesDisplay = this.bomNamesFull;
             }
-            // For backward compatibility if needed, though view uses new props
             this.bomName = this.bomNamesDisplay;
           }
           if (bomPartInfoArray.length > 0 && bomPartInfoArray[0]?.modifyTimestamp) {
@@ -387,7 +386,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         }
 
         this.rowData = this.transformToHierarchicalData(data);
-        this.storeOriginalValues(); // Store original values for tracking edits
+        this.storeOriginalValues();
         this.initializeColumns();
 
         if (this.gridApi) {
@@ -404,7 +403,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         }
       },
       (error) => {
-        console.error('Error loading data', error);
         this.isLoading = false;
         const errorMessage = this.dataService.getLoadErrorMessage(error);
         this.showNotification(errorMessage, 'error-persistent');
@@ -414,17 +412,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    // Only fetch constraints if we are in SBOM mode
     if (this.dataService.getBomType() !== 'SBOM') {
       return;
     }
 
-    // Fetch constraints after view initialization
     this.dataService.fetchIncludeInSpecSheetConstraints().subscribe({
       next: (constraints) => {
         this.constraintsData = constraints;
       },
-      error: (err) => console.error('Error fetching IncludeInSpecSheet constraints', err),
+      error: () => {},
     });
   }
 
@@ -2405,7 +2401,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
                   });
                   return true;
                 } catch (e) {
-                  console.warn('Error opening date picker:', e);
                   return false;
                 }
               }
@@ -2413,16 +2408,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             return false;
           };
 
-          // Cleanup function - idempotent, safe to call multiple times
           const cleanup = () => {
-            if (isCleanedUp) return; // Already cleaned up
+            if (isCleanedUp) return;
             isCleanedUp = true;
 
             if (observer) {
               try {
                 observer.disconnect();
               } catch (e) {
-                console.warn('Error disconnecting observer:', e);
+                // Observer cleanup failed, continue
               }
               observer = null;
             }
@@ -2431,19 +2425,17 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               try {
                 clearTimeout(t);
               } catch (e) {
-                console.warn('Error clearing timeout:', e);
+                // Timeout cleanup failed, continue
               }
             });
             timeouts.length = 0;
           };
 
-          // Try immediately
           if (openDatePicker()) {
             cleanup();
             return;
           }
 
-          // Use MutationObserver to watch for the input to appear - only observe grid container
           try {
             observer = new MutationObserver(() => {
               if (!isCleanedUp && openDatePicker()) {
@@ -2456,11 +2448,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               subtree: true,
             });
           } catch (e) {
-            console.warn('Error setting up MutationObserver:', e);
             cleanup();
           }
 
-          // Also try with progressive timeouts as fallback
           [100, 200, 300].forEach((delay) => {
             const timeout = setTimeout(() => {
               if (!isCleanedUp && openDatePicker()) {
@@ -2470,7 +2460,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             timeouts.push(timeout);
           });
 
-          // Final cleanup timeout - ensure cleanup always happens
           const cleanupTimeout = setTimeout(() => {
             cleanup();
           }, 1000);
@@ -2526,7 +2515,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
                   });
                   return true;
                 } catch (e) {
-                  console.warn('Error focusing autocomplete editor:', e);
                   return false;
                 }
               }
@@ -2534,16 +2522,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             return false;
           };
 
-          // Cleanup function - idempotent, safe to call multiple times
           const cleanup = () => {
-            if (isCleanedUp) return; // Already cleaned up
+            if (isCleanedUp) return;
             isCleanedUp = true;
 
             if (observer) {
               try {
                 observer.disconnect();
               } catch (e) {
-                console.warn('Error disconnecting observer:', e);
+                // Observer cleanup failed, continue
               }
               observer = null;
             }
@@ -2552,7 +2539,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               try {
                 clearTimeout(t);
               } catch (e) {
-                console.warn('Error clearing timeout:', e);
+                // Timeout cleanup failed, continue
               }
             });
             timeouts.length = 0;
@@ -2564,7 +2551,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             return;
           }
 
-          // Use MutationObserver to watch for the editor to appear
           try {
             observer = new MutationObserver(() => {
               if (!isCleanedUp && focusAutocompleteEditor()) {
@@ -2577,11 +2563,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               subtree: true,
             });
           } catch (e) {
-            console.warn('Error setting up MutationObserver:', e);
             cleanup();
           }
 
-          // Also try with progressive timeouts as fallback
           [100, 200, 300].forEach((delay) => {
             const timeout = setTimeout(() => {
               if (!isCleanedUp && focusAutocompleteEditor()) {
@@ -2591,7 +2575,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             timeouts.push(timeout);
           });
 
-          // Final cleanup timeout - ensure cleanup always happens
           const cleanupTimeout = setTimeout(() => {
             cleanup();
           }, 1000);
@@ -2653,11 +2636,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    // Use childId for the API call (this is the material master ID)
     const childId = materialData.childId;
 
     if (!childId) {
-      console.warn('No childId found in material data');
       return;
     }
 
@@ -2690,8 +2671,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         this.showMaterialModal = true;
       },
       error: (error: any) => {
-        console.error('Failed to fetch material BOM', error);
-        // Don't show modal on error - only show error notification
         const errorMessage = error?.error?.message || error?.message || 'Failed to load material BOM data.';
         this.showNotification(errorMessage, 'error');
       },
@@ -2833,9 +2812,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         }
       })
       .catch((error) => {
-        // Handle any unexpected errors
         this.isSaving = false;
-        console.error('Unexpected error during save:', error);
         this.rowManagementService.showSaveMessage(
           'An unexpected error occurred while saving. Please try again.',
           this,
@@ -4260,8 +4237,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       .then(() => {
         this.showNotification('Excel file exported successfully', 'success');
       })
-      .catch((error) => {
-        console.error('Error exporting to Excel:', error);
+      .catch(() => {
         this.showNotification('Error exporting to Excel. Please try again.', 'error');
       });
   }
