@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, map, catchError, throwError, of, switchMap } from 'rxjs';
+import { Observable, map, catchError, throwError, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { SessionService } from './session.service';
 import { UtilService } from './util.service';
@@ -95,9 +95,9 @@ export class DataService {
   private apiData: ApiData | null = null;
 
   constructor(
-    private http: HttpClient,
-    private sessionService: SessionService,
-    private utilService: UtilService
+    private readonly http: HttpClient,
+    private readonly sessionService: SessionService,
+    private readonly utilService: UtilService
   ) {}
 
   /**
@@ -162,7 +162,7 @@ export class DataService {
     return this.http.get<any>(apiUrl).pipe(
       map((data) => {
         // Only accept data with instances/columns structure (expected API format)
-        if (data && data.instances && Array.isArray(data.instances)) {
+        if (data?.instances && Array.isArray(data.instances)) {
           return data;
         }
 
@@ -261,7 +261,7 @@ export class DataService {
         .post<any>(apiUrl, requestBody, { headers: this.buildHttpHeaders() })
         .pipe(
           map((response) => {
-            if (!response || !response.results || !Array.isArray(response.results)) {
+            if (!response?.results || !Array.isArray(response.results)) {
               return { results: [], resultCount: 0, hasMore: false };
             }
 
@@ -339,7 +339,7 @@ export class DataService {
     fetchLimit: number = 20
   ): Observable<{ results: any[]; resultCount: number; hasMore: boolean }> {
     return this.searchFlexInstances(
-      'Business Object\\bomFeature',
+      String.raw`Business Object\bomFeature`,
       'name',
       query,
       fetchLimit,
@@ -459,57 +459,59 @@ export class DataService {
     return throwError(() => error);
   }
 
+  /**
+   * Extract error message from error object
+   */
+  private extractBackendMessage(error: any): string | null {
+    if (!error?.error) return null;
+
+    if (typeof error.error === 'string') {
+      try {
+        const parsed = JSON.parse(error.error);
+        return parsed.error || parsed.message || error.error;
+      } catch {
+        return error.error;
+      }
+    }
+
+    if (typeof error.error === 'object') {
+      return error.error.error || error.error.message || null;
+    }
+
+    return null;
+  }
+
+  /**
+   * Extract message from error.message if it's not a generic HTTP error
+   */
+  private extractErrorMessage(error: any): string | null {
+    if (!error?.message || typeof error.message !== 'string') return null;
+    
+    const genericPatterns = ['Http failure response', 'Server Error:'];
+    if (genericPatterns.some(pattern => error.message.includes(pattern))) {
+      return null;
+    }
+    
+    return error.message;
+  }
+
   getLoadErrorMessage(error: any): string {
     const fallback = 'Failed to load BOM data. Please try again.';
     if (!error) return fallback;
 
     const status = error.status;
-    
-    // Extract error message from backend response
-    // Backend can return:
-    // - {"error":"some message"} -> error.error.error
-    // - {"message":"some message"} -> error.error.message
-    // - "some message" (string) -> error.error (string)
-    let backendMessage: string | null = null;
-    
-    if (error.error) {
-      if (typeof error.error === 'string') {
-        // Error body is a plain string - try to parse if it's JSON
-        try {
-          const parsed = JSON.parse(error.error);
-          backendMessage = parsed.error || parsed.message || error.error;
-        } catch {
-          // Not JSON, use as-is
-          backendMessage = error.error;
-        }
-      } else if (typeof error.error === 'object') {
-        // Error body is an object - extract the message
-        backendMessage = error.error.error || error.error.message || null;
-      }
-    }
-    
-    // If no backend message found, check error.message (for transformed errors)
-    if (!backendMessage && typeof error.message === 'string' && error.message) {
-      // Only use error.message if it doesn't look like a generic HTTP error message
-      // Generic messages usually contain "Http failure response" or "Server Error:"
-      if (!error.message.includes('Http failure response') && !error.message.includes('Server Error:')) {
-        backendMessage = error.message;
-      }
-    }
+    const backendMessage = this.extractBackendMessage(error) || this.extractErrorMessage(error);
 
-    // For 500 errors, prioritize showing the actual API error message
     if (status === 500) {
       return backendMessage
         ? `Failed to load BOM data: ${backendMessage}`
         : 'Failed to load BOM data: Server error (500).';
     }
 
-    // For other status codes, show the backend error if available
     if (backendMessage) {
       return `Failed to load BOM data: ${backendMessage}`;
     }
 
-    // Fallback to status-based message
     if (status) {
       return `Failed to load BOM data: Server error (${status}).`;
     }
@@ -534,10 +536,6 @@ export class DataService {
         // Preserve sectionDetails if not in response (fallback)
         sectionDetails: responseData.sectionDetails || this.apiData?.sectionDetails || {},
       };
-      console.log(
-        '[DATA SERVICE] Updated apiData with save response. Instance count:',
-        this.apiData.instances?.length || 0
-      );
     }
   }
 
@@ -632,7 +630,7 @@ export class DataService {
 
   // Get bomType from JSP data attribute
   getBomType(): string | null {
-    return this.utilService.getJspDataAttribute('data-bomtype') || 'MBOM';
+    return this.utilService.getJspDataAttribute('data-bomtype') || 'SBOM';
   }
 
   // Get refSKUId from JSP data attribute
@@ -654,7 +652,7 @@ export class DataService {
     }
 
     // Otherwise, use the current page's protocol (http or https)
-    const protocol = window.location.protocol; // Returns "http:" or "https:"
+    const protocol = globalThis.location.protocol; // Returns "http:" or "https:"
     return `${protocol}//${hostFromJsp}`;
   }
   /**
@@ -678,7 +676,7 @@ export class DataService {
    * Returns an array of display names sorted by sort_order
    */
   getIncludeInSpecSheetOptions(constraints: any): string[] {
-    if (!constraints || !constraints.constraints) return [];
+    if (!constraints?.constraints) return [];
 
     // Find the constraint that contains the enumeration definition (members)
     const constraintWithMembers = constraints.constraints.find(
@@ -702,7 +700,7 @@ export class DataService {
    * Used for payload construction
    */
   getIncludeInSpecSheetMapping(constraints: any): { [key: string]: string } {
-    if (!constraints || !constraints.constraints) return {};
+    if (!constraints?.constraints) return {};
 
     // Find the constraint that contains the enumeration definition (members)
     const constraintWithMembers = constraints.constraints.find(

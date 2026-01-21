@@ -8,10 +8,10 @@ import { GridCommonService } from './grid-common.service';
 })
 export class RowManagementService {
   private nextRowId = 10000;
-  private newRows = new Map<number, any>();
+  private readonly newRows = new Map<number, any>();
   private lastSavedAt: Date | null = null;
 
-  constructor(private gridCommonService: GridCommonService) {
+  constructor(private readonly gridCommonService: GridCommonService) {
     const savedTimestamp = localStorage.getItem('lastSavedAt');
     if (savedTimestamp) {
       this.lastSavedAt = new Date(savedTimestamp);
@@ -90,8 +90,15 @@ export class RowManagementService {
 
     const skuInfo = dataService.getSkuInfo();
     skuInfo.forEach((sku) => {
-      (newRow as any)[`sku${sku.skuId}`] = '';
+      newRow[`sku${sku.skuId}`] = '';
     });
+
+    // For SBOM: Set default bomLinkSpecSheetExtra to "Yes"
+    const bomType = dataService.getBomType();
+    if (bomType === 'SBOM') {
+      newRow.bomLinkSpecSheetExtra = 'Yes';
+      newRow.bomLinkIncludeInSpecSheet = '';
+    }
 
     const insertIndex = rowIndex;
 
@@ -170,8 +177,8 @@ export class RowManagementService {
       gridApi.applyTransaction(transaction);
       rowData.splice(rowIndex, 1);
 
-      const partIdNum = parseInt(partId, 10);
-      if (!isNaN(partIdNum)) {
+      const partIdNum = Number.parseInt(partId, 10);
+      if (!Number.isNaN(partIdNum)) {
         this.newRows.delete(partIdNum);
       }
     }
@@ -181,7 +188,7 @@ export class RowManagementService {
    * Paste Part Number specifically to a cell
    */
   pastePartNumber(params: any, componentInstance: any): void {
-    if (!params.data || !params.data.isNewRow) {
+    if (!params.data?.isNewRow) {
       return;
     }
 
@@ -233,12 +240,12 @@ export class RowManagementService {
    * Clear SKU cell value for a new row
    */
   clearSkuValue(params: any, componentInstance: any): void {
-    if (!params?.data || !params.data.isNewRow) {
+    if (!params?.data?.isNewRow) {
       return;
     }
 
     const fieldName = params.colDef?.field;
-    if (!fieldName || !fieldName.startsWith('sku')) {
+    if (!fieldName?.startsWith('sku')) {
       return;
     }
 
@@ -300,8 +307,8 @@ export class RowManagementService {
         const s = v.trim();
         if (s === '') return '';
         if (f === 'quantity' || f === 'qty') {
-          const n = parseFloat(s);
-          return isNaN(n) ? s : n;
+          const n = Number.parseFloat(s);
+          return Number.isNaN(n) ? s : n;
         }
         if (
           f === 'bomLinkStartDate' ||
@@ -377,7 +384,7 @@ export class RowManagementService {
       variants.add(id);
       variants.add(`${id}`);
       const numId = Number(id);
-      if (!isNaN(numId)) variants.add(numId);
+      if (!Number.isNaN(numId)) variants.add(numId);
       return variants;
     };
 
@@ -403,12 +410,7 @@ export class RowManagementService {
       getIdVariants(id).forEach((variant) => allIdVariants.add(variant));
     });
 
-    if (!editedFields) {
-      if (changed) {
-        // Bulk add all variants
-        allIdVariants.forEach((id) => editedRows.add(id));
-      }
-    } else {
+    if (editedFields) {
       const hasAnyEdits = editedFields.has(partId) && (editedFields.get(partId)?.size || 0) > 0;
       if (hasAnyEdits) {
         // Bulk add all variants
@@ -418,6 +420,9 @@ export class RowManagementService {
         allIdVariants.forEach((id) => editedRows.delete(id));
         wasRemoved = true;
       }
+    } else if (changed) {
+      // Bulk add all variants
+      allIdVariants.forEach((id) => editedRows.add(id));
     }
 
     params.api.refreshCells({
@@ -485,7 +490,7 @@ export class RowManagementService {
             if (oldData[fieldName] !== valueToSet) {
               params.node.setDataValue(fieldName, valueToSet);
               if (params.node.data) {
-                (params.node.data as any)[fieldName] = valueToSet;
+                params.node.data[fieldName] = valueToSet;
               }
             }
           }
@@ -500,7 +505,7 @@ export class RowManagementService {
           if (oldData[skuFieldName] !== newSkuValue) {
             params.node.setDataValue(skuFieldName, newSkuValue);
             if (params.node.data) {
-              (params.node.data as any)[skuFieldName] = newSkuValue;
+              params.node.data[skuFieldName] = newSkuValue;
             }
           }
         });
@@ -534,14 +539,11 @@ export class RowManagementService {
         return;
       }
 
-      const changesCount = editedRows.size;
-
       // Transform grid data to API format with mixed edit/create support
       const apiPayload = componentInstance.transformGridDataToApiFormat
         ? componentInstance.transformGridDataToApiFormat(rowData)
         : null;
 
-      // Log the payload for debugging (can be removed in production)
       if (apiPayload) {
         // Call the API if payload exists and has instances
         if (
@@ -551,7 +553,6 @@ export class RowManagementService {
         ) {
           componentInstance.dataService.updateBomData(apiPayload).subscribe({
             next: (response: any) => {
-              console.log('BOM update successful:', response);
 
               // Update grid with API response if available
               if (response && (response.instances || response.data)) {
@@ -562,8 +563,7 @@ export class RowManagementService {
                 // This ensures validation and SKU matching use the latest data including newly saved rows
                 if (
                   responseData &&
-                  componentInstance.dataService &&
-                  componentInstance.dataService.updateApiData
+                  componentInstance.dataService?.updateApiData
                 ) {
                   componentInstance.dataService.updateApiData(responseData);
                 }
@@ -788,8 +788,8 @@ export class RowManagementService {
    */
   showSaveMessage(
     message: string,
-    type: 'success' | 'error' | 'error-persistent' | 'info' = 'info',
-    componentInstance: any
+    componentInstance: any,
+    type: 'success' | 'error' | 'error-persistent' | 'info' = 'info'
   ): void {
     componentInstance.saveMessage = message;
     componentInstance.saveMessageType = type;

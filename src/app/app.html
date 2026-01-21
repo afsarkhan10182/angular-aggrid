@@ -58,28 +58,45 @@
             </button>
           </div>
           <div class="sku-filter-container" *ngIf="isMbomMode() || isSbomMode()">
-            <label class="sku-filter-label">SKU Views:</label>
-            <div #skuFilterDropdown class="sku-filter-dropdown" (click)="$event.stopPropagation()">
-              <button type="button" class="sku-filter-trigger" (click)="toggleSkuFilterDropdown()">
+            <label class="sku-filter-label" for="sku-filter-trigger">SKU Views:</label>
+            <div 
+              #skuFilterDropdown 
+              class="sku-filter-dropdown"
+            >
+              <button 
+                id="sku-filter-trigger"
+                type="button" 
+                class="sku-filter-trigger" 
+                (click)="toggleSkuFilterDropdown()"
+                [attr.aria-expanded]="showSkuFilterDropdown"
+                [attr.aria-haspopup]="true"
+                [attr.aria-controls]="showSkuFilterDropdown ? 'sku-filter-menu' : null"
+                aria-label="SKU filter dropdown"
+              >
                 <span class="sku-filter-trigger-label">
                   {{ getSkuFilterLabel(selectedSkuFilter) }}
                 </span>
                 <span class="sku-filter-caret" aria-hidden="true">▾</span>
               </button>
-              <div *ngIf="showSkuFilterDropdown" class="sku-filter-menu">
-                <div
+              <ul *ngIf="showSkuFilterDropdown" id="sku-filter-menu" class="sku-filter-menu" aria-label="SKU filter options">
+                <li
                   *ngFor="let option of skuFilterOptions"
                   class="sku-filter-option"
                   [class.selected]="option.value === selectedSkuFilter"
                   [class.disabled]="isSkuFilterOptionDisabled(option.value)"
                   [attr.title]="getSkuFilterOptionTooltip(option.value)"
-                  (click)="selectSkuFilterOption(option.value)"
-                  role="option"
-                  [attr.aria-disabled]="isSkuFilterOptionDisabled(option.value)"
                 >
-                  {{ option.label }}
-                </div>
-              </div>
+                  <button
+                    type="button"
+                    class="sku-filter-option-button"
+                    [disabled]="isSkuFilterOptionDisabled(option.value)"
+                    (click)="selectSkuFilterOption(option.value)"
+                    [attr.aria-selected]="option.value === selectedSkuFilter"
+                  >
+                    {{ option.label }}
+                  </button>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
@@ -88,9 +105,9 @@
       <!-- Right Group: Show Expired, Last Saved, Export, and Save -->
       <div class="right-controls-group">
         <div class="toggle-switch-container">
-          <span class="toggle-text">Show Expired:</span>
           <label class="toggle-switch">
-            <input type="checkbox" [(ngModel)]="showExpiredData" (change)="toggleExpiredData()" />
+            <span class="toggle-text">Show Expired:</span>
+            <input type="checkbox" id="show-expired-toggle" [(ngModel)]="showExpiredData" (change)="toggleExpiredData()" />
             <span class="toggle-slider"></span>
           </label>
         </div>
@@ -143,27 +160,31 @@
         </button>
       </div>
       <div class="mass-edit-fields">
-        <div class="mass-edit-field">
-          <label>Start Date:</label>
+        <!-- MBOM Fields -->
+        <div class="mass-edit-field" *ngIf="isMbomMode()">
+          <label for="mass-edit-start-date">Start Date:</label>
           <input
+            id="mass-edit-start-date"
             type="date"
             [(ngModel)]="massEditStartDate"
             class="mass-edit-input"
             placeholder="MM/DD/YYYY"
           />
         </div>
-        <div class="mass-edit-field">
-          <label>End Date:</label>
+        <div class="mass-edit-field" *ngIf="isMbomMode()">
+          <label for="mass-edit-end-date">End Date:</label>
           <input
+            id="mass-edit-end-date"
             type="date"
             [(ngModel)]="massEditEndDate"
             class="mass-edit-input"
             placeholder="MM/DD/YYYY"
           />
         </div>
-        <div class="mass-edit-field">
-          <label>Quantity:</label>
+        <div class="mass-edit-field" *ngIf="isMbomMode()">
+          <label for="mass-edit-quantity">Quantity:</label>
           <input
+            id="mass-edit-quantity"
             type="number"
             [(ngModel)]="massEditQuantity"
             class="mass-edit-input"
@@ -172,6 +193,66 @@
             placeholder="Enter quantity"
           />
         </div>
+        <!-- SBOM Fields - MBOM Line Items (only IncludeInSpecSheet) -->
+        <div class="mass-edit-field" *ngIf="isSbomMode() && hasMbomLineItemsInSelection()">
+          <label for="sbom-mbom-mass-edit-include-in-spec-sheet">Include In Spec Sheet:</label>
+          <select
+            id="sbom-mbom-mass-edit-include-in-spec-sheet"
+            [(ngModel)]="massEditIncludeInSpecSheet"
+            class="mass-edit-input"
+          >
+            <option value="">-- Select --</option>
+            <option *ngFor="let option of getIncludeInSpecSheetOptionsForMassEdit()" [value]="option">
+              {{ option }}
+            </option>
+          </select>
+        </div>
+        <!-- SBOM Non-MBOM Fields (dates, quantity, IncludeInSpecSheet) -->
+        <div class="mass-edit-field" *ngIf="isSbomMode() && !hasMbomLineItemsInSelection()">
+          <label for="sbom-mass-edit-start-date">Start Date:</label>
+          <input
+            id="sbom-mass-edit-start-date"
+            type="date"
+            [(ngModel)]="massEditStartDate"
+            class="mass-edit-input"
+            placeholder="MM/DD/YYYY"
+          />
+        </div>
+        <div class="mass-edit-field" *ngIf="isSbomMode() && !hasMbomLineItemsInSelection()">
+          <label for="sbom-mass-edit-end-date">End Date:</label>
+          <input
+            id="sbom-mass-edit-end-date"
+            type="date"
+            [(ngModel)]="massEditEndDate"
+            class="mass-edit-input"
+            placeholder="MM/DD/YYYY"
+          />
+        </div>
+        <div class="mass-edit-field" *ngIf="isSbomMode() && !hasMbomLineItemsInSelection()">
+          <label for="sbom-mass-edit-quantity">Quantity:</label>
+          <input
+            id="sbom-mass-edit-quantity"
+            type="number"
+            [(ngModel)]="massEditQuantity"
+            class="mass-edit-input"
+            min="0"
+            step="any"
+            placeholder="Enter quantity"
+          />
+        </div>
+        <div class="mass-edit-field" *ngIf="isSbomMode() && !hasMbomLineItemsInSelection()">
+          <label for="sbom-mass-edit-include-in-spec-sheet">Include In Spec Sheet:</label>
+          <select
+            id="sbom-mass-edit-include-in-spec-sheet"
+            [(ngModel)]="massEditIncludeInSpecSheet"
+            class="mass-edit-input"
+          >
+            <option value="">-- Select --</option>
+            <option *ngFor="let option of getIncludeInSpecSheetOptionsForMassEdit()" [value]="option">
+              {{ option }}
+            </option>
+          </select>
+        </div>
         <div class="mass-edit-actions">
           <button (click)="applyMassEdit()" class="apply-mass-edit-btn" [disabled]="isMassEditing">
             <i *ngIf="!isMassEditing" class="fas fa-check"></i>
@@ -179,11 +260,6 @@
             <span *ngIf="!isMassEditing">Apply</span>
             <span *ngIf="isMassEditing">Applying...</span>
           </button>
-          <!--
-          <button (click)="bulkDisconnectFromSkus()" class="bulk-disconnect-btn">
-            <i class="fas fa-unlink"></i> Disconnect from SKUs
-          </button>
-          -->
         </div>
       </div>
     </div>
@@ -270,7 +346,11 @@
         class="grid-column-visibility-panel-container"
         #columnPanel
       >
-        <div class="column-visibility-panel" (click)="$event.stopPropagation()">
+        <div 
+          class="column-visibility-panel" 
+          (click)="$event.stopPropagation()"
+          (keydown.escape)="showColumnVisibilityPanel = false"
+        >
           <div class="column-visibility-header">
             <h4>Visible Columns</h4>
             <button (click)="showColumnVisibilityPanel = false" class="close-panel-btn">
@@ -300,7 +380,11 @@
         class="grid-column-visibility-panel-container group-by-panel"
         #groupByPanel
       >
-        <div class="column-visibility-panel" (click)="$event.stopPropagation()">
+        <div 
+          class="column-visibility-panel" 
+          (click)="$event.stopPropagation()"
+          (keydown.escape)="showColumnVisibilityPanel = false"
+        >
           <div class="column-visibility-header">
             <h4>Group By</h4>
             <button (click)="showGroupByPanel = false" class="close-panel-btn">

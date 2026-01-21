@@ -6,7 +6,7 @@ import { UtilService } from './util.service';
   providedIn: 'root',
 })
 export class PayloadTransformService {
-  constructor(private dataService: DataService, private utilService: UtilService) {}
+  constructor(private readonly dataService: DataService, private readonly utilService: UtilService) {}
 
   /**
    * Build SKUs array from a row for the API payload
@@ -76,7 +76,6 @@ export class PayloadTransformService {
       // bomLinkFeatureId contains the ID like "bomLinkFeature-1" (used for payload only)
       const rowFeatureValue = row.bomLinkFeature || '';
       const rowPartNumber = String(row.partNumber || '').trim();
-      const isEmptyPartNumber = !rowPartNumber || rowPartNumber === '';
 
       // Search for matching rows to find existing SKU objects
       // MATCHING RULES:
@@ -87,7 +86,6 @@ export class PayloadTransformService {
       //   2. Otherwise (empty partNumber OR ptcbomPartMarkUp != 'enumMBOM001')
       //      → Match by Section + Feature + SKU ID only (no partNumber requirement)
       if (resolvedSection && rowFeatureValue) {
-        const searchPart = isEmptyPartNumber ? '(empty)' : rowPartNumber;
         // Search through rowData hierarchy for ALL matching rows
         const findAllMatchingRows = (rows: any[]): any[] => {
           let matches: any[] = [];
@@ -181,11 +179,10 @@ export class PayloadTransformService {
 
           // If not found in filtered rows, check ALL API instances (including hidden rows)
           // Hidden rows represent existing backend records and must reuse SKU objects
-          if (!existingSku && apiData && apiData.instances && Array.isArray(apiData.instances)) {
+          if (!existingSku && apiData?.instances && Array.isArray(apiData.instances)) {
             const section = resolvedSection || '';
             const partNumber = String(row.partNumber || '').trim();
             const bomLinkFeature = String(row.bomLinkFeature || '').trim();
-            const isEmptyPartNumber = !partNumber || partNumber === '';
 
             if (section && bomLinkFeature) {
               for (const instance of apiData.instances) {
@@ -206,8 +203,7 @@ export class PayloadTransformService {
                 //      → Match by Section + Feature + SKU ID only (no partNumber requirement)
                 const isSectionMatch = instanceSection === section;
                 const isFeatureMatch = instanceFeature === bomLinkFeature;
-                const instanceHasPartNumber =
-                  instancePart && String(instancePart).trim() !== '' ? true : false;
+                const instanceHasPartNumber = Boolean(instancePart && String(instancePart).trim() !== '');
 
                 // Get bomType to determine matching rules
                 const bomType = this.dataService.getBomType();
@@ -221,7 +217,7 @@ export class PayloadTransformService {
                 } else if (isMbom) {
                   // MBOM: Require partNumber match only if ptcbomPartMarkUp === 'enumMBOM001'
                   const instanceIsEnumMBOM001 = instancePtcbomPartMarkUp === 'enumMBOM001';
-                  requiresPartMatch = instanceHasPartNumber && instanceIsEnumMBOM001;
+                  requiresPartMatch = instanceHasPartNumber && Boolean(instanceIsEnumMBOM001);
                 }
 
                 const isPartMatch = requiresPartMatch
@@ -235,27 +231,8 @@ export class PayloadTransformService {
                   if (bomLink.skus && Array.isArray(bomLink.skus)) {
                     existingSku = bomLink.skus.find((s: any) => s.skuId === sku.skuId);
                     if (existingSku) {
-                      const isHiddenRow =
-                        (this.dataService.getBomType() === 'MBOM' &&
-                          bomLink.ptcbomPartMarkUp === 'enumMBOM001') ||
-                        !instancePart ||
-                        String(instancePart).trim() === '';
-                      console.log(
-                        `   SKU ${sku.skuId}: Found in API data (${
-                          isHiddenRow ? 'hidden' : 'visible'
-                        } row, Part: ${instancePart || '(empty)'}, ptcbomPartMarkUp: ${
-                          instancePtcbomPartMarkUp || '(empty)'
-                        })`
-                      );
-                      console.log(
-                        `   SKU ${sku.skuId}: Reusing SKU object with attributes:`,
-                        JSON.stringify(existingSku, null, 2)
-                      );
                       break;
-                    } else {
                     }
-                  } else {
-                    console.log(`   SKU ${sku.skuId}: Matched row found but no skus array present`);
                   }
                 }
               }
@@ -263,17 +240,11 @@ export class PayloadTransformService {
           }
 
           if (existingSku) {
-            console.log(`   SKU ${sku.skuId}: Reusing attributes from matching row.`);
             skus.push({
               ...existingSku,
               value: String(skuValue || ''),
             });
           } else {
-            if (hasSkuValue(skuValue)) {
-              console.log(
-                `   SKU ${sku.skuId}: No matching existing SKU found. Using default attributes.`
-              );
-            }
             skus.push({
               ...sku,
               value: String(skuValue || ''),
@@ -283,23 +254,7 @@ export class PayloadTransformService {
       });
     } else {
       // For existing/edited rows: Use original SKUs from row.allSkus (from API/mock.json)
-      if (row.allSkus && Array.isArray(row.allSkus) && row.allSkus.length > 0) {
-        row.allSkus.forEach((originalSku: any) => {
-          if (!allowedSkuIds.has(String(originalSku.skuId))) {
-            return;
-          }
-          const skuFieldName = `sku${originalSku.skuId}`;
-          const currentValue = row[skuFieldName];
-
-          skus.push({
-            ...originalSku,
-            value:
-              currentValue !== undefined && currentValue !== null
-                ? String(currentValue)
-                : originalSku.value || '',
-          });
-        });
-      } else {
+      if (!row.allSkus || !Array.isArray(row.allSkus) || row.allSkus.length === 0) {
         // Fallback: Build from skuInfo if allSkus not available
         skuInfo.forEach((sku) => {
           const skuFieldName = `sku${sku.skuId}`;
@@ -313,7 +268,24 @@ export class PayloadTransformService {
             });
           }
         });
+        return skus;
       }
+
+      row.allSkus.forEach((originalSku: any) => {
+        if (!allowedSkuIds.has(String(originalSku.skuId))) {
+          return;
+        }
+        const skuFieldName = `sku${originalSku.skuId}`;
+        const currentValue = row[skuFieldName];
+
+        skus.push({
+          ...originalSku,
+          value:
+            currentValue !== undefined && currentValue !== null
+              ? String(currentValue)
+              : originalSku.value || '',
+        });
+      });
     }
 
     return skus;
@@ -328,6 +300,8 @@ export class PayloadTransformService {
    * @param editedRows - Set of edited row IDs
    * @param editedFields - Map of edited field names per row
    * @param originalRowValues - Map of original values before editing
+   * @param constraintsData - Constraints data for mapping
+   * @param options - Optional parameters (skuInfoOverride, gridApi)
    * @returns Complete API payload object
    */
   transformGridDataToApiFormat(
@@ -337,9 +311,10 @@ export class PayloadTransformService {
     editedFields: Map<string | number, Set<string>>,
     originalRowValues: Map<string | number, any>,
     constraintsData: any,
-    skuInfoOverride?: any[],
-    gridApi?: any
+    options?: { skuInfoOverride?: any[]; gridApi?: any }
   ): any {
+    const skuInfoOverride = options?.skuInfoOverride;
+    const gridApi = options?.gridApi;
     
     const instances: any[] = [];
     const skuInfo = Array.isArray(skuInfoOverride)
@@ -398,10 +373,10 @@ export class PayloadTransformService {
         // Backend provides sectionDetails specifically for frontend to map sectionDisplayName to internal section ID
         let resolvedSection = row.section || '';
 
-        if (resolvedSection && resolvedSection.startsWith('__missing_section__')) {
+        if (resolvedSection?.startsWith('__missing_section__')) {
           // Missing section detected - resolve using sectionDetails from backend
           const apiData = this.dataService.getApiData();
-          const sectionDetails = apiData?.sectionDetails || {};
+          const sectionDetails = apiData?.sectionDetails ?? {};
 
           // Get sectionDisplayName from row, or traverse parent chain
           let sectionDisplayName = row.sectionDisplayName || '';
@@ -427,9 +402,6 @@ export class PayloadTransformService {
             );
             if (foundInternalId) {
               resolvedSection = foundInternalId;
-              console.log(
-                `[SECTION RESOLVE] Mapped "${sectionDisplayName}" -> "${foundInternalId}"`
-              );
             } else {
               console.error(
                 `[SECTION RESOLVE] Could not find internal ID for display name "${sectionDisplayName}" in sectionDetails. Available mappings:`,
@@ -453,12 +425,12 @@ export class PayloadTransformService {
           bomLink.ptcbomPartMarkUp = 'enumMBOM001';
         }
 
-        const quantityValue =
-          row.quantity !== undefined && row.quantity !== null && row.quantity !== ''
-            ? row.quantity
-            : row.qty !== undefined && row.qty !== null && row.qty !== ''
-            ? row.qty
-            : null;
+        let quantityValue: any = null;
+        if (row.quantity !== undefined && row.quantity !== null && row.quantity !== '') {
+          quantityValue = row.quantity;
+        } else if (row.qty !== undefined && row.qty !== null && row.qty !== '') {
+          quantityValue = row.qty;
+        }
 
         if (quantityValue !== null && quantityValue !== 0 && quantityValue !== '0') {
           const formattedQuantity = this.utilService.formatQuantityToString(quantityValue);
@@ -501,7 +473,13 @@ export class PayloadTransformService {
 
         if (row.bomLinkSpecSheetExtra) {
           const val = String(row.bomLinkSpecSheetExtra);
-          bomLink.bomLinkSpecSheetExtra = val === 'Yes' ? 'true' : val === 'No' ? 'false' : val;
+          if (val === 'Yes') {
+            bomLink.bomLinkSpecSheetExtra = 'true';
+          } else if (val === 'No') {
+            bomLink.bomLinkSpecSheetExtra = 'false';
+          } else {
+            bomLink.bomLinkSpecSheetExtra = val;
+          }
         }
 
         if (row.bomLinkIncludeInSpecSheet) {
@@ -539,10 +517,22 @@ export class PayloadTransformService {
         if (editedFieldsForRow.has('bomLinkSpecSheetExtra')) {
           const currentVal = String(originalValues.bomLinkSpecSheetExtra || '');
           const newVal = String(currentRow.bomLinkSpecSheetExtra || '');
-          bomLink.bomLinkSpecSheetExtra_old =
-            currentVal === 'Yes' ? 'true' : currentVal === 'No' ? 'false' : currentVal;
-          bomLink.bomLinkSpecSheetExtra_new =
-            newVal === 'Yes' ? 'true' : newVal === 'No' ? 'false' : newVal;
+          
+          if (currentVal === 'Yes') {
+            bomLink.bomLinkSpecSheetExtra_old = 'true';
+          } else if (currentVal === 'No') {
+            bomLink.bomLinkSpecSheetExtra_old = 'false';
+          } else {
+            bomLink.bomLinkSpecSheetExtra_old = currentVal;
+          }
+          
+          if (newVal === 'Yes') {
+            bomLink.bomLinkSpecSheetExtra_new = 'true';
+          } else if (newVal === 'No') {
+            bomLink.bomLinkSpecSheetExtra_new = 'false';
+          } else {
+            bomLink.bomLinkSpecSheetExtra_new = newVal;
+          }
         }
 
         if (editedFieldsForRow.has('bomLinkIncludeInSpecSheet')) {
@@ -600,6 +590,7 @@ export class PayloadTransformService {
           );
         }
       } else {
+        // Skip rows that are not new and not edited
         return;
       }
 
@@ -638,7 +629,7 @@ export class PayloadTransformService {
     const bomPartInfo = this.dataService.getBomPartInfo();
     const columnsRaw = this.dataService.getColumnMapping();
     const sectionOrder = apiData?.sectionOrder || [];
-    const skuInfoData = Array.isArray(apiData?.skuInfo) ? apiData!.skuInfo : [];
+    const skuInfoData = Array.isArray(apiData?.skuInfo) ? apiData.skuInfo : [];
 
     const columns: { [key: string]: string } = {};
     if (columnsRaw) {
@@ -678,10 +669,17 @@ export class PayloadTransformService {
 
     const skuIds = apiData?.skuIds || '';
 
+    let finalBomPartInfo: any[] = [];
+    if (Array.isArray(bomPartInfo)) {
+      finalBomPartInfo = bomPartInfo;
+    } else if (bomPartInfo) {
+      finalBomPartInfo = [bomPartInfo];
+    }
+
     return {
       bomCheckIn: 'true',
       bomType: bomType,
-      bomPartInfo: Array.isArray(bomPartInfo) ? bomPartInfo : bomPartInfo ? [bomPartInfo] : [],
+      bomPartInfo: finalBomPartInfo,
       instances: instances,
       columns: columns,
       sectionOrder: sectionOrder,

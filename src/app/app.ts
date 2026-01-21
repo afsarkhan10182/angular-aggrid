@@ -20,11 +20,10 @@ import { RowManagementService } from './services/row-management.service';
 import { SessionService } from './services/session.service';
 import { GroupByService, GroupConfig } from './services/group-by.service';
 import { ValidationService } from './services/validation.service';
-import { UtilService } from './services/util.service';
+import { UtilService, ExtendedColDef } from './services/util.service';
 import { PayloadTransformService } from './services/payload-transform.service';
 import { ColumnHeaderPinComponent } from './column-header-pin/column-header-pin.component';
 import { environment } from '../environments/environment';
-import { ExtendedColDef } from './services/util.service';
 
 // MBOM filter options
 type MbomSkuFilterOption = 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource';
@@ -46,7 +45,7 @@ const MBOM_SKU_FILTER_CONFIG: Record<
     emptyMessage: 'No HD editable SKUs found. Editing is disabled.',
   },
   hdViewOnly: {
-    filter: (sku) => sku.isHDSource === true && sku.isEditable === false,
+    filter: (sku) => sku.isHDSource === true,
     emptyMessage: 'No HD source view-only SKUs found.',
   },
   nonHdSource: {
@@ -123,14 +122,16 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public constraintsData: any = null;
   public isSaving: boolean = false; // Track save operation state
   public isMassEditing: boolean = false; // Track mass edit operation state
-  public originalRowValues = new Map<string | number, any>(); // Store original values for existing rows
-  private editedFields = new Map<string | number, Set<string>>(); // Track which specific fields were edited per row
+  public readonly originalRowValues = new Map<string | number, any>(); // Store original values for existing rows
+  private readonly editedFields = new Map<string | number, Set<string>>(); // Track which specific fields were edited per row
   public invalidRowIds = new Set<string | number>(); // Track rows with validation errors for highlighting
   public selectedRows = new Set<any>();
   public massEditMode = false;
   public massEditStartDate: string = '';
   public massEditEndDate: string = '';
   public massEditQuantity: number | null = null;
+  // SBOM fields
+  public massEditIncludeInSpecSheet: string = '';
 
   public gridOptions: GridOptions = {} as GridOptions;
 
@@ -142,17 +143,17 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public displayData: any[] = []; // Flattened data for display
   public activeGroupFields: GroupConfig[] = []; // Currently active group fields
   public availableGroupFields: GroupConfig[] = []; // Available columns for grouping
-  private groupExpandedState: Map<string, boolean> = new Map(); // Track group expand/collapse state
+  private readonly groupExpandedState: Map<string, boolean> = new Map(); // Track group expand/collapse state
 
   constructor(
     public dataService: DataService,
-    private gridCommonService: GridCommonService,
-    private rowManagementService: RowManagementService,
-    private sessionService: SessionService,
-    private groupByService: GroupByService,
-    private validationService: ValidationService,
-    private utilService: UtilService,
-    private payloadTransformService: PayloadTransformService
+    private readonly gridCommonService: GridCommonService,
+    private readonly rowManagementService: RowManagementService,
+    private readonly sessionService: SessionService,
+    private readonly groupByService: GroupByService,
+    private readonly validationService: ValidationService,
+    private readonly utilService: UtilService,
+    private readonly payloadTransformService: PayloadTransformService
   ) {
     this.gridOptions.context = {
       dataService: this.dataService,
@@ -175,12 +176,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.gridOptions = {
       ...commonOptions,
       components: {
-        ...(commonOptions.components || {}),
-        AutocompleteCellEditorComponent: AutocompleteCellEditorComponent,
-        ColumnHeaderPinComponent: ColumnHeaderPinComponent,
+        ...(commonOptions.components ?? {}),
+        AutocompleteCellEditorComponent,
+        ColumnHeaderPinComponent,
       },
       context: {
-        ...(commonOptions.context || {}),
+        ...(commonOptions.context ?? {}),
         dataService: this.dataService,
       },
       isFullWidthRow: (params: any) => {
@@ -195,17 +196,17 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
-    (window as any).toggleSection = (section: string) => {
+    (globalThis as any).toggleSection = (section: string) => {
       this.toggleSection(section);
     };
-    (window as any).toggleMaterial = (
+    (globalThis as any).toggleMaterial = (
       section: string,
       materialIdentifier: string,
       materialIndex?: number
     ) => {
       this.toggleMaterial(section, materialIdentifier, materialIndex);
     };
-    (window as any).toggleGroup = (groupKey: string) => {
+    (globalThis as any).toggleGroup = (groupKey: string) => {
       this.toggleGroup(groupKey);
     };
   }
@@ -255,7 +256,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           child.partNumber,
         ].filter((val) => val !== undefined && val !== null);
 
-        return candidateValues.some((val) => val === materialIdentifier);
+        return candidateValues.includes(materialIdentifier);
       });
     }
 
@@ -286,7 +287,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       if (node.isSectionHeader) {
         result.push(node);
         // Process children if section is expanded (default to expanded)
-        const isExpanded = node.isExpanded !== undefined ? node.isExpanded : true;
+        const isExpanded = node.isExpanded ?? true;
         if (isExpanded && node.children && Array.isArray(node.children)) {
           node.children.forEach((child: any) => {
             processNode(child);
@@ -358,7 +359,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   loadData(): void {
-    console.log('loadData called');
     this.isLoading = true;
     const loadSub = this.dataService.loadData().subscribe(
       (data) => {
@@ -369,7 +369,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           if (bomPartInfoArray.length > 0) {
             const names = bomPartInfoArray
               .map((info: any) => info.bomName)
-              .filter((name: string) => name);
+              .filter(Boolean);
 
             this.bomNamesFull = names.join(', ');
 
@@ -479,7 +479,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       ? MBOM_SKU_FILTER_CONFIG[option as MbomSkuFilterOption]
       : SBOM_SKU_FILTER_CONFIG[option as SbomSkuFilterOption];
     
-    if (!config || !config.filter) {
+    if (!config?.filter) {
       return skuInfo;
     }
     return skuInfo.filter(config.filter);
@@ -710,7 +710,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         }
 
         // Existing rows - check SBOM restrictions
-        return this.isFieldEditableInSbom('bomLinkFeature');
+        return this.isFieldEditableInSbom('bomLinkFeature', params.data);
       },
       cellEditor: AutocompleteCellEditorComponent,
       cellEditorParams: () => ({
@@ -768,7 +768,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             }
 
             // Existing rows - check SBOM restrictions
-            return this.isFieldEditableInSbom('bomLinkCountryOfOrigin');
+            return this.isFieldEditableInSbom('bomLinkCountryOfOrigin', params.data);
           },
           cellEditor: AutocompleteCellEditorComponent,
           cellEditorParams: () => ({
@@ -821,7 +821,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               return this.isFieldEditableForNewRow(field);
             }
             // Existing rows - check SBOM restrictions
-            return this.isFieldEditableInSbom('bomLinkSpecSheetExtra');
+            return this.isFieldEditableInSbom('bomLinkSpecSheetExtra', params.data);
           },
           cellEditor: AutocompleteCellEditorComponent,
           cellEditorParams: {
@@ -876,7 +876,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               return this.isFieldEditableForNewRow(field);
             }
             // Existing rows - check SBOM restrictions
-            return this.isFieldEditableInSbom('bomLinkIncludeInSpecSheet');
+            return this.isFieldEditableInSbom('bomLinkIncludeInSpecSheet', params.data);
           },
           cellEditor: AutocompleteCellEditorComponent,
           cellEditorParams: (params: any) => ({
@@ -939,7 +939,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           }
 
           // Existing rows - check SBOM restrictions
-          return this.isFieldEditableInSbom(field);
+          return this.isFieldEditableInSbom(field, params.data);
         },
       };
 
@@ -984,12 +984,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           }
 
           // New rows - check restriction
-          if (params.data && params.data.isNewRow) {
+          if (params.data?.isNewRow) {
             return this.isFieldEditableForNewRow(field);
           }
 
           // Existing rows - check SBOM restrictions
-          return this.isFieldEditableInSbom(field);
+          return this.isFieldEditableInSbom(field, params.data);
         };
         columnDef.valueSetter = (params: any) => {
           if (!params.data || !params.colDef?.field) return false;
@@ -1068,12 +1068,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           }
 
           // New rows - check restriction
-          if (params.data && params.data.isNewRow) {
+          if (params.data?.isNewRow) {
             return this.isFieldEditableForNewRow(field);
           }
 
           // Existing rows - check SBOM restrictions
-          return this.isFieldEditableInSbom(field);
+          return this.isFieldEditableInSbom(field, params.data);
         };
         columnDef.cellRenderer = (params: any) => {
           if (
@@ -1142,7 +1142,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const skuColumns = this.getFilteredSkuInfo().map((sku) => {
       const originalSku = skuInfoMap.get(sku.skuId);
       // Single source of truth: isEditable (removed isReleased logic)
-      const isDisabled = originalSku && originalSku.isEditable === false;
+      const isDisabled = originalSku?.isEditable === false;
 
       return {
         skuId: sku.skuId,
@@ -1174,7 +1174,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
         // Prevent text selection during resize
         this.eGui.style.userSelect = 'none';
-        this.eGui.style.webkitUserSelect = 'none';
 
         lines.forEach((line: string) => {
           const div = document.createElement('div');
@@ -1247,8 +1246,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         skuId: sku.skuId,
         // Store disabled state in column definition
         isDisabled: sku.isDisabled,
-        headerClass: headerClasses.filter((c) => c).join(' '),
-        cellClass: cellClasses.filter((c) => c).join(' '),
+        headerClass: headerClasses.filter(Boolean).join(' '),
+        cellClass: cellClasses.filter(Boolean).join(' '),
 
         cellRenderer: (params: any) => {
           const data = params.data || {};
@@ -1268,7 +1267,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             // Convert value to string and preserve newlines
             const valueStr = String(value);
             // Replace newlines with <br> tags for HTML rendering
-            const htmlValue = this.utilService.escapeHtml(valueStr).replace(/\n/g, '<br>');
+            const htmlValue = this.utilService.escapeHtml(valueStr).replaceAll('\n', '<br>');
 
             return `<div style="${textColor}white-space: pre-line; line-height: 1.5; padding: 4px 0;">${htmlValue}</div>`;
           }
@@ -1287,7 +1286,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             if (!value && value !== 0) return '';
 
             const valueStr = String(value);
-            const htmlValue = this.utilService.escapeHtml(valueStr).replace(/\n/g, '<br>');
+            const htmlValue = this.utilService.escapeHtml(valueStr).replaceAll('\n', '<br>');
             const skuField = params.colDef.field;
             const deleteIcon = canDisconnect
               ? `<button type="button" class="sku-delete-btn-existing" data-action="disconnect-sku" data-sku-field="${skuField}" title="Disconnect part from SKU">✕</button>`
@@ -1304,7 +1303,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           if (!value && value !== 0) return '';
 
           const valueStr = String(value);
-          const htmlValue = this.utilService.escapeHtml(valueStr).replace(/\n/g, '<br>');
+          const htmlValue = this.utilService.escapeHtml(valueStr).replaceAll('\n', '<br>');
           const skuField = params.colDef.field;
           const deleteIcon = canDisconnect
             ? `<button type="button" class="sku-delete-btn-existing" data-action="disconnect-sku" data-sku-field="${skuField}" title="Disconnect part from SKU">✕</button>`
@@ -1332,7 +1331,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   renderHierarchicalCell(params: any): string {
     const data = params.data;
-    const level = data.level || 0;
 
     if (data.isGroupHeader) {
       const arrowIcon = data.isExpanded ? '▼' : '▶';
@@ -1341,19 +1339,17 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           ? String(data.groupValue)
           : '(Empty)';
       const groupCount = this.groupByService.getGroupCount(data);
-      const bgColor =
-        data.groupLevel === 0 ? '#f0f9ff' : data.groupLevel === 1 ? '#f0fdf4' : '#fef3c7';
-      const borderColor =
-        data.groupLevel === 0 ? '#3b82f6' : data.groupLevel === 1 ? '#10b981' : '#f59e0b';
-      const hoverBg =
-        data.groupLevel === 0 ? '#e0f2fe' : data.groupLevel === 1 ? '#dcfce7' : '#fde68a';
-      const indentPx = (data.groupLevel || 0) * 16;
+      const groupLevel = data.groupLevel ?? 0;
+      const bgColor = this.getGroupBackgroundColor(groupLevel);
+      const borderColor = this.getGroupBorderColor(groupLevel);
+      const hoverBg = this.getGroupHoverBackgroundColor(groupLevel);
+      const indentPx = groupLevel * 16;
 
       return `
         <div
           class="hier-header hier-clickable"
           style="--bg:${bgColor};--bg-hover:${hoverBg};--border:${borderColor};--arrow-color:${borderColor};--indent:${indentPx}px;"
-          onclick="window.toggleGroup('${data.groupKey}')"
+          onclick="globalThis.toggleGroup('${data.groupKey}')"
         >
           <span class="hier-arrow">${arrowIcon}</span>
           <span class="hier-title">
@@ -1375,7 +1371,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         <div
           class="hier-header hier-clickable section-header"
           title="${this.utilService.escapeHtml(displayName)}"
-          onclick="window.toggleSection('${internalName}')"
+          onclick="globalThis.toggleSection('${internalName}')"
         >
           <span class="hier-arrow">${arrowIcon}</span>
           <span class="hier-title">${this.utilService.escapeHtml(displayName)}</span>
@@ -1384,16 +1380,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
 
     if (data.isMaterialHeader) {
-      const arrowIcon = data.isExpanded ? '▼' : '▶';
       const materialIdentifier = data.materialKey || '';
-      const materialIndex = data.materialIndex !== undefined ? data.materialIndex : '';
+      const materialIndex = data.materialIndex ?? '';
       const linkIcon = data.hasLinkedBom ? '🔗' : '';
 
       // Check if this row has a part for the reference SKU
       const textColor = this.shouldHighlightRow(data) ? 'color: #ff0000;' : '';
 
       return `
-        <div class="hier-header hier-clickable material-header" onclick="window.toggleMaterial('${
+        <div class="hier-header hier-clickable material-header" onclick="globalThis.toggleMaterial('${
           data.section
         }', '${materialIdentifier}', ${materialIndex})">
           ${linkIcon ? `<span class="material-link-icon">${linkIcon}</span>` : ''}
@@ -1472,20 +1467,18 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         ? String(data.groupValue)
         : '(Empty)';
     // Use padding for indent instead of &nbsp; for better alignment
-    const indentPixels = data.groupLevel * 20;
+    const groupLevel = data.groupLevel ?? 0;
+    const indentPixels = groupLevel * 20;
     const groupCount = this.groupByService.getGroupCount(data);
-    const bgColor =
-      data.groupLevel === 0 ? '#f0f9ff' : data.groupLevel === 1 ? '#f0fdf4' : '#fef3c7';
-    const borderColor =
-      data.groupLevel === 0 ? '#3b82f6' : data.groupLevel === 1 ? '#10b981' : '#f59e0b';
-    const hoverBg =
-      data.groupLevel === 0 ? '#e0f2fe' : data.groupLevel === 1 ? '#dcfce7' : '#fde68a';
+    const bgColor = this.getGroupBackgroundColor(groupLevel);
+    const borderColor = this.getGroupBorderColor(groupLevel);
+    const hoverBg = this.getGroupHoverBackgroundColor(groupLevel);
 
     return `
       <div
         class="hier-header hier-clickable"
         style="height:100%;padding:0 8px;--bg:${bgColor};--bg-hover:${hoverBg};--border:${borderColor};--arrow-color:${borderColor};--indent:${indentPixels}px;"
-        onclick="window.toggleGroup('${data.groupKey}')"
+          onclick="globalThis.toggleGroup('${data.groupKey}')"
       >
         <span class="hier-arrow">${arrowIcon}</span>
         <span class="hier-title">
@@ -1547,9 +1540,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   /**
    * Check if field is editable for existing rows based on BOM type
    * MBOM: Only bomLinkStartDate, bomLinkEndDate, and quantity are editable
-   * SBOM: Only SpecSheet fields are editable
+   * SBOM: 
+   *   - If MBOM line item (ptcbomPartMarkUp === 'enumMBOM001'): Only IncludeInSpecSheet editable
+   *   - If NOT MBOM line item: IncludeInSpecSheet, quantity, and dates editable
    */
-  private isFieldEditableInSbom(field: string): boolean {
+  private isFieldEditableInSbom(field: string, rowData?: any): boolean {
     if (this.isSkuFilterReadOnly()) {
       return false;
     }
@@ -1560,9 +1555,17 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       return mbomEditableFields.includes(field);
     }
 
-    // SBOM mode - only SpecSheet fields are editable
-    const isEditable = field === 'bomLinkSpecSheetExtra' || field === 'bomLinkIncludeInSpecSheet';
-    return isEditable;
+    // SBOM mode - check if it's an MBOM line item
+    const isMbomLineItem = rowData?.ptcbomPartMarkUp === 'enumMBOM001';
+    
+    if (isMbomLineItem) {
+      // MBOM line items: Only IncludeInSpecSheet is editable
+      return field === 'bomLinkIncludeInSpecSheet';
+    } else {
+      // Non-MBOM line items: IncludeInSpecSheet, quantity, and dates are editable
+      const editableFields = ['bomLinkIncludeInSpecSheet', 'quantity', 'bomLinkStartDate', 'bomLinkEndDate'];
+      return editableFields.includes(field);
+    }
   }
 
   /**
@@ -1571,6 +1574,16 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
    */
   private isFieldEditableForNewRow(field: string): boolean {
     if (this.isSkuFilterReadOnly()) {
+      return false;
+    }
+
+    // For SBOM: bomLinkSpecSheetExtra is non-editable (defaulted to "Yes")
+    if (this.isSbomMode() && field === 'bomLinkSpecSheetExtra') {
+      return false;
+    }
+
+    // For SBOM: bomLinkFeature is disabled (not editable)
+    if (this.isSbomMode() && field === 'bomLinkFeature') {
       return false;
     }
 
@@ -1667,8 +1680,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const hasPartForRefSku = this.shouldHighlightRow(data);
 
     if (isGroupHeader) {
-      const bgColor =
-        data.groupLevel === 0 ? '#f0f9ff' : data.groupLevel === 1 ? '#f0fdf4' : '#fef3c7';
+      const groupLevel = data.groupLevel ?? 0;
+      const bgColor = this.getGroupBackgroundColor(groupLevel);
       return {
         backgroundColor: bgColor,
         borderTop: 'none',
@@ -1735,8 +1748,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const isActionsColumn = params.colDef.field === 'actions';
 
     if (data.isGroupHeader) {
-      const bgColor =
-        data.groupLevel === 0 ? '#f0f9ff' : data.groupLevel === 1 ? '#f0fdf4' : '#fef3c7';
+      const groupLevel = data.groupLevel ?? 0;
+      const bgColor = this.getGroupBackgroundColor(groupLevel);
       return {
         backgroundColor: bgColor,
         color: 'transparent',
@@ -1958,7 +1971,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     // Get API data to verify SKU exists in original response
     const apiData = this.dataService.getApiData();
-    if (!apiData || !apiData.instances || !Array.isArray(apiData.instances)) {
+    if (!apiData?.instances || !Array.isArray(apiData.instances)) {
       // No API data available - cannot verify, filter out the row
       return false;
     }
@@ -2027,7 +2040,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
       // Get SKU IDs from this instance's skus array
       const instanceSkuIds = bomLink.skus
-        .map((sku: any) => sku && sku.skuId ? String(sku.skuId).trim() : '')
+        .map((sku: any) => sku?.skuId ? String(sku.skuId).trim() : '')
         .filter((id: string) => id !== '');
 
       // Check if any target SKU ID exists in this instance's skus array
@@ -2059,17 +2072,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       }
     }
 
-    // Log the result
     const targetSkuIdsArray = Array.from(targetSkuIds);
     if (!matchedInstance) {
-      console.log('[SKU FILTER] ❌ Row FILTERED OUT:', {
-        rowSection,
-        rowFeature,
-        rowPartNumber,
-        targetSkuIds: targetSkuIdsArray,
-        checkedInstances,
-        reason: 'No matching instance with target SKU ID',
-      });
       return false;
     }
 
@@ -2092,36 +2096,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
 
     if (!rowHasTargetSkuValue) {
-      console.log('[SKU FILTER] ❌ Row FILTERED OUT (empty SKU value):', {
-        rowSection,
-        rowFeature,
-        rowPartNumber,
-        targetSkuIds: targetSkuIdsArray,
-        matchedInstanceSkuIds,
-        reason: 'Row has empty value for target SKU ID column',
-      });
       return false;
     }
-
-    console.log('[SKU FILTER] ✅ Row INCLUDED:', {
-      rowSection,
-      rowFeature,
-      rowPartNumber,
-      targetSkuIds: targetSkuIdsArray,
-      matchedInstanceSkuIds: matchedInstanceSkuIds,
-      matchedTargetSkuId: matchedTargetSkuId,
-      rowHasTargetSkuValue,
-      actualSkuValue,
-      hasOnlyTargetSku: matchedInstanceSkuIds.length === 1 && matchedInstanceSkuIds[0] === matchedTargetSkuId,
-      checkedInstances: checkedInstances.map(inst => ({
-        section: inst.section,
-        feature: inst.feature,
-        partNumber: inst.partNumber,
-        instanceSkuIds: inst.instanceSkuIds || [],
-        hasTargetSku: inst.hasTargetSku,
-        matchedTargetSkuId: inst.matchedTargetSkuId || '',
-      })),
-    });
 
     return true; // Found matching instance with target SKU ID and row has value for it
   }
@@ -2152,12 +2128,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const visibleSkuIds = new Set<string>(
       visibleSkus.map((sku) => String(sku.skuId || '').trim()).filter((id: string) => id !== '')
     );
-
-    console.log('[SKU FILTER] Starting filter:', {
-      selectedFilter: this.selectedSkuFilter,
-      visibleSkus: visibleSkus.map(s => ({ skuId: s.skuId, product: s.product, isHDSource: s.isHDSource, isEditable: s.isEditable })),
-      visibleSkuIds: Array.from(visibleSkuIds),
-    });
 
     if (visibleSkuIds.size === 0) {
       return data; // No visible SKUs, show all rows
@@ -2230,13 +2200,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
           // Ensure section headers are expanded by default
           if (newItem.isSectionHeader) {
-            newItem.isExpanded = newItem.isExpanded !== undefined ? newItem.isExpanded : true;
+            newItem.isExpanded = newItem.isExpanded ?? true;
           }
 
           if (newItem.isGroupHeader && newItem.groupKey) {
             const savedState = this.groupExpandedState.get(newItem.groupKey);
             // Default to expanded
-            newItem.isExpanded = savedState !== undefined ? savedState : true;
+            newItem.isExpanded = savedState ?? true;
           }
 
           if (newItem.children && Array.isArray(newItem.children)) {
@@ -2295,7 +2265,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    if (event.event && event.event.target) {
+    if (event.event?.target) {
       const target = event.event.target as HTMLElement;
       if (
         target.closest('.ag-header-cell-filter-button') ||
@@ -2321,10 +2291,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         return;
       }
       if (
-        event.colDef.field &&
-        event.colDef.field.startsWith('sku') &&
-        event.data &&
-        event.data.isNewRow
+        event.colDef.field?.startsWith('sku') &&
+        event.data?.isNewRow
       ) {
         this.rowManagementService.pastePartNumber(event, this);
       }
@@ -2339,22 +2307,20 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         return;
       }
       if (
-        event.colDef.field &&
-        event.colDef.field.startsWith('sku') &&
-        event.data &&
-        event.data.isNewRow
+        event.colDef.field?.startsWith('sku') &&
+        event.data?.isNewRow
       ) {
         this.rowManagementService.clearSkuValue(event, this);
       }
       return;
     }
 
-    const disconnectButton = target?.closest('[data-action="disconnect-sku"]');
+    const disconnectButton = target?.closest('[data-action="disconnect-sku"]') as HTMLElement | null;
     if (disconnectButton) {
       if (isReadOnlySkuFilter) {
         return;
       }
-      const skuField = disconnectButton.getAttribute('data-sku-field');
+      const skuField = disconnectButton.dataset['skuField'];
       if (skuField && event.data) {
         this.disconnectPartFromSku(event.data, skuField, event.event);
       }
@@ -2418,7 +2384,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
                 (editingCell.querySelector('input.ag-date-input') as HTMLInputElement) ||
                 (editingCell.querySelector('input') as HTMLInputElement);
 
-              if (dateInput && dateInput.type === 'date') {
+              if (dateInput?.type === 'date') {
                 try {
                   dateInput.focus();
                   // Use requestAnimationFrame to ensure DOM is ready
@@ -2428,7 +2394,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
                         if (typeof dateInput.showPicker === 'function') {
                           try {
                             dateInput.showPicker();
-                          } catch (e) {
+                          } catch {
                             dateInput.click();
                           }
                         } else {
@@ -2646,18 +2612,18 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (event.colDef.field === 'actions') {
       const target = event.event?.target as HTMLElement;
 
-      if (target && target.classList.contains('add-row-btn')) {
+      if (target?.classList.contains('add-row-btn')) {
         const rowIndex = event.rowIndex;
         if (rowIndex !== null && rowIndex !== undefined) {
           this.addRowAfter(rowIndex);
           return;
         }
-      } else if (target && target.classList.contains('delete-row-btn')) {
-        const partId = target.getAttribute('data-part-id');
-        const newRowId = target.getAttribute('data-new-row-id');
+      } else if (target?.classList.contains('delete-row-btn')) {
+        const partId = target.dataset['partId'];
+        const newRowId = target.dataset['newRowId'];
 
-        if (newRowId !== null) {
-          this.deleteRowById(parseInt(newRowId));
+        if (newRowId) {
+          this.deleteRowById(Number.parseInt(newRowId));
           return;
         } else if (partId) {
           this.deleteRow(partId);
@@ -2666,7 +2632,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       }
     } else if (event.colDef.field === 'material' || event.colDef.field === 'materialDescription') {
       // For new rows or when material is empty, allow editing
-      if (event.data && event.data.isNewRow) {
+      if (event.data?.isNewRow) {
         event.api.startEditingCell({
           rowIndex: event.rowIndex,
           colKey: event.column.getId(),
@@ -2751,8 +2717,18 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     // Validate new rows before saving (required fields)
     let requiredFields = this.validationService.getDefaultRequiredFields();
 
-    // Only require SBOM-specific fields if we are in SBOM mode
-    if (this.dataService.getBomType() !== 'SBOM') {
+    const bomType = this.dataService.getBomType();
+    
+    if (bomType === 'SBOM') {
+      // For SBOM: Remove bomLinkFeature and bomLinkSpecSheetExtra from required fields
+      // bomLinkFeature is disabled, bomLinkSpecSheetExtra is defaulted to "Yes" and non-editable
+      requiredFields = requiredFields.filter(
+        (field) =>
+          !field.keys.includes('bomLinkFeature') &&
+          !field.keys.includes('bomLinkSpecSheetExtra')
+      );
+    } else {
+      // For MBOM: Remove SBOM-specific fields
       requiredFields = requiredFields.filter(
         (field) =>
           !field.keys.includes('bomLinkSpecSheetExtra') &&
@@ -2848,12 +2824,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         if (result.success) {
           // Clear validation errors after successful save
           this.invalidRowIds.clear();
-          this.rowManagementService.showSaveMessage(result.message, 'success', this);
+          this.rowManagementService.showSaveMessage(result.message, this, 'success');
         } else {
           // Show error message - do NOT update grid or state
           // UI remains exactly as it was before clicking save
           // Use error-persistent so message doesn't auto-clear
-          this.rowManagementService.showSaveMessage(result.message, 'error', this);
+          this.rowManagementService.showSaveMessage(result.message, this, 'error');
         }
       })
       .catch((error) => {
@@ -2862,8 +2838,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         console.error('Unexpected error during save:', error);
         this.rowManagementService.showSaveMessage(
           'An unexpected error occurred while saving. Please try again.',
-          'error-persistent',
-          this
+          this,
+          'error-persistent'
         );
       });
   }
@@ -2958,7 +2934,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       insertIndex++;
     }
 
-    const result = this.rowManagementService.addRowAfter(
+    this.rowManagementService.addRowAfter(
       insertIndex,
       this.displayData,
       this.gridApi,
@@ -2986,7 +2962,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         variants.add(id);
         variants.add(`${id}`);
         const numId = Number(id);
-        if (!isNaN(numId)) variants.add(numId);
+        if (!Number.isNaN(numId)) variants.add(numId);
         return variants;
       };
 
@@ -3044,7 +3020,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   deleteRow(partId: string): void {
     // Best-effort cleanup if this delete path is used for a new row id stored as string
     const maybeId = Number(partId);
-    if (!isNaN(maybeId)) {
+    if (!Number.isNaN(maybeId)) {
       this.editedRows.delete(maybeId);
       if (this.editedFields) {
         this.editedFields.delete(maybeId);
@@ -3731,8 +3707,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       this.editedFields,
       this.originalRowValues,
       this.constraintsData,
-      skuInfo,
-      this.gridApi // Pass gridApi to get current values from grid
+      {
+        skuInfoOverride: skuInfo,
+        gridApi: this.gridApi, // Pass gridApi to get current values from grid
+      }
     );
   }
 
@@ -3769,6 +3747,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       this.massEditStartDate = '';
       this.massEditEndDate = '';
       this.massEditQuantity = null;
+      this.massEditIncludeInSpecSheet = '';
     }
   }
 
@@ -3822,17 +3801,84 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       this.massEditEndDate = '';
     }
 
-    // Check if all rows have the same quantity
-    const qtyFields = ['quantity'];
-    const firstQty = getQtyValue(selectedRows[0], qtyFields);
-    const allSameQty = selectedRows.every((row) => {
-      const rowQty = getQtyValue(row, qtyFields);
-      return rowQty === firstQty;
-    });
-    if (allSameQty && firstQty !== null) {
-      this.massEditQuantity = firstQty;
-    } else {
-      this.massEditQuantity = null;
+    // Check if all rows have the same quantity (MBOM mode only)
+    if (this.isMbomMode()) {
+      const qtyFields = ['quantity'];
+      const firstQty = getQtyValue(selectedRows[0], qtyFields);
+      const allSameQty = selectedRows.every((row) => {
+        const rowQty = getQtyValue(row, qtyFields);
+        return rowQty === firstQty;
+      });
+      if (allSameQty && firstQty !== null) {
+        this.massEditQuantity = firstQty;
+      } else {
+        this.massEditQuantity = null;
+      }
+    }
+
+    // SBOM fields
+    if (this.isSbomMode()) {
+      // Helper to get string field value
+      const getStringValue = (row: any, fields: string[]): string => {
+        for (const field of fields) {
+          if (row[field] !== undefined && row[field] !== null && String(row[field]).trim() !== '') {
+            return String(row[field]).trim();
+          }
+        }
+        return '';
+      };
+
+      // Check if selection contains MBOM line items
+      const hasMbomRows = selectedRows.some(
+        (row: any) => row?.ptcbomPartMarkUp === 'enumMBOM001'
+      );
+
+      if (hasMbomRows) {
+        // If MBOM rows are present: Only show IncludeInSpecSheet
+        // Check if all rows have the same Include In Spec Sheet value
+        const includeInSpecSheetFields = ['bomLinkIncludeInSpecSheet'];
+        const firstIncludeInSpecSheet = getStringValue(selectedRows[0], includeInSpecSheetFields);
+        const allSameIncludeInSpecSheet = selectedRows.every((row) => {
+          const rowValue = getStringValue(row, includeInSpecSheetFields);
+          return rowValue === firstIncludeInSpecSheet;
+        });
+        if (allSameIncludeInSpecSheet && firstIncludeInSpecSheet) {
+          this.massEditIncludeInSpecSheet = firstIncludeInSpecSheet;
+        } else {
+          this.massEditIncludeInSpecSheet = '';
+        }
+        // Clear dates and quantity for MBOM rows
+        this.massEditStartDate = '';
+        this.massEditEndDate = '';
+        this.massEditQuantity = null;
+      } else {
+        // If no MBOM rows: Show dates, quantity, and IncludeInSpecSheet
+        // Check if all rows have the same quantity
+        const qtyFields = ['quantity'];
+        const firstQty = getQtyValue(selectedRows[0], qtyFields);
+        const allSameQty = selectedRows.every((row) => {
+          const rowQty = getQtyValue(row, qtyFields);
+          return rowQty === firstQty;
+        });
+        if (allSameQty && firstQty !== null) {
+          this.massEditQuantity = firstQty;
+        } else {
+          this.massEditQuantity = null;
+        }
+
+        // Check if all rows have the same Include In Spec Sheet value
+        const includeInSpecSheetFields = ['bomLinkIncludeInSpecSheet'];
+        const firstIncludeInSpecSheet = getStringValue(selectedRows[0], includeInSpecSheetFields);
+        const allSameIncludeInSpecSheet = selectedRows.every((row) => {
+          const rowValue = getStringValue(row, includeInSpecSheetFields);
+          return rowValue === firstIncludeInSpecSheet;
+        });
+        if (allSameIncludeInSpecSheet && firstIncludeInSpecSheet) {
+          this.massEditIncludeInSpecSheet = firstIncludeInSpecSheet;
+        } else {
+          this.massEditIncludeInSpecSheet = '';
+        }
+      }
     }
   }
 
@@ -3895,9 +3941,17 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
       const rowData = node.data;
       let hasChanges = false;
+      
+      // Determine if this is an MBOM row (for SBOM mode)
+      const isMbomRow = rowData?.ptcbomPartMarkUp === 'enumMBOM001';
 
       // Update start date - check which field exists in the grid
-      if (this.massEditStartDate) {
+      // Apply to MBOM mode or SBOM non-MBOM rows
+      const shouldUpdateStartDate = 
+        this.massEditStartDate && 
+        (this.isMbomMode() || (this.isSbomMode() && !isMbomRow));
+      
+      if (shouldUpdateStartDate) {
         const formattedDate = this.gridCommonService.formatDateToMMDDYYYY(this.massEditStartDate);
         const startDateFields = ['bomLinkStartDate'];
 
@@ -3936,7 +3990,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       }
 
       // Update end date - check which field exists in the grid
-      if (this.massEditEndDate) {
+      // Apply to MBOM mode or SBOM non-MBOM rows
+      const shouldUpdateEndDate = 
+        this.massEditEndDate && 
+        (this.isMbomMode() || (this.isSbomMode() && !isMbomRow));
+      
+      if (shouldUpdateEndDate) {
         const formattedDate = this.gridCommonService.formatDateToMMDDYYYY(this.massEditEndDate);
         const endDateFields = ['bomLinkEndDate'];
 
@@ -3974,8 +4033,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         }
       }
 
-      // Update quantity - check which field exists in the grid
-      if (this.massEditQuantity !== null && this.massEditQuantity !== undefined) {
+      // Update quantity - check which field exists in the grid (MBOM mode or SBOM non-MBOM rows)
+      const shouldUpdateQuantity = 
+        (this.isMbomMode() || (this.isSbomMode() && !isMbomRow)) &&
+        this.massEditQuantity !== null && 
+        this.massEditQuantity !== undefined;
+      
+      if (shouldUpdateQuantity) {
         const qtyFields = ['quantity'];
 
         // Find which field exists in the column definitions
@@ -4012,6 +4076,45 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         }
       }
 
+      // Update Include In Spec Sheet (SBOM only)
+      // Apply to all SBOM rows (both MBOM and non-MBOM)
+      if (this.isSbomMode() && this.massEditIncludeInSpecSheet) {
+        const includeInSpecSheetFields = ['bomLinkIncludeInSpecSheet'];
+
+        // Find which field exists in the column definitions
+        let targetField: string | null = null;
+        for (const field of includeInSpecSheetFields) {
+          if (columnFields.has(field)) {
+            targetField = field;
+            break;
+          }
+        }
+
+        // If no column found, try to use the field that exists in rowData
+        if (!targetField) {
+          for (const field of includeInSpecSheetFields) {
+            if (rowData.hasOwnProperty(field)) {
+              targetField = field;
+              break;
+            }
+          }
+        }
+
+        // Default if nothing found
+        if (!targetField) {
+          targetField = 'bomLinkIncludeInSpecSheet';
+        }
+
+        // Update the value
+        const currentValue = rowData[targetField] || '';
+        if (currentValue !== this.massEditIncludeInSpecSheet) {
+          rowData[targetField] = this.massEditIncludeInSpecSheet;
+          node.setDataValue(targetField, this.massEditIncludeInSpecSheet);
+          columnsToUpdate.add(targetField);
+          hasChanges = true;
+        }
+      }
+
       if (hasChanges) {
         // Mark row as edited (use stable keys to avoid misses/duplicates)
         const primaryKey =
@@ -4032,35 +4135,88 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           }
           const editedFieldsForRow = this.editedFields.get(editKey)!;
 
-          // Track start date field
-          if (this.massEditStartDate) {
-            const startDateFields = ['bomLinkStartDate'];
-            for (const field of startDateFields) {
-              if (columnFields.has(field) || rowData.hasOwnProperty(field)) {
-                editedFieldsForRow.add(field);
-                break;
+          // Track MBOM fields (MBOM mode)
+          if (this.isMbomMode()) {
+            // Track start date field
+            if (this.massEditStartDate) {
+              const startDateFields = ['bomLinkStartDate'];
+              for (const field of startDateFields) {
+                if (columnFields.has(field) || rowData.hasOwnProperty(field)) {
+                  editedFieldsForRow.add(field);
+                  break;
+                }
+              }
+            }
+
+            // Track end date field
+            if (this.massEditEndDate) {
+              const endDateFields = ['bomLinkEndDate'];
+              for (const field of endDateFields) {
+                if (columnFields.has(field) || rowData.hasOwnProperty(field)) {
+                  editedFieldsForRow.add(field);
+                  break;
+                }
+              }
+            }
+
+            // Track quantity field
+            if (this.massEditQuantity !== null && this.massEditQuantity !== undefined) {
+              const qtyFields = ['quantity'];
+              for (const field of qtyFields) {
+                if (columnFields.has(field) || rowData.hasOwnProperty(field)) {
+                  editedFieldsForRow.add(field);
+                  break;
+                }
               }
             }
           }
 
-          // Track end date field
-          if (this.massEditEndDate) {
-            const endDateFields = ['bomLinkEndDate'];
-            for (const field of endDateFields) {
-              if (columnFields.has(field) || rowData.hasOwnProperty(field)) {
-                editedFieldsForRow.add(field);
-                break;
+          // Track SBOM fields
+          if (this.isSbomMode()) {
+            // For SBOM non-MBOM rows: Track dates and quantity
+            if (!isMbomRow) {
+              // Track start date field
+              if (this.massEditStartDate) {
+                const startDateFields = ['bomLinkStartDate'];
+                for (const field of startDateFields) {
+                  if (columnFields.has(field) || rowData.hasOwnProperty(field)) {
+                    editedFieldsForRow.add(field);
+                    break;
+                  }
+                }
+              }
+
+              // Track end date field
+              if (this.massEditEndDate) {
+                const endDateFields = ['bomLinkEndDate'];
+                for (const field of endDateFields) {
+                  if (columnFields.has(field) || rowData.hasOwnProperty(field)) {
+                    editedFieldsForRow.add(field);
+                    break;
+                  }
+                }
+              }
+
+              // Track quantity field
+              if (this.massEditQuantity !== null && this.massEditQuantity !== undefined) {
+                const qtyFields = ['quantity'];
+                for (const field of qtyFields) {
+                  if (columnFields.has(field) || rowData.hasOwnProperty(field)) {
+                    editedFieldsForRow.add(field);
+                    break;
+                  }
+                }
               }
             }
-          }
 
-          // Track quantity field
-          if (this.massEditQuantity !== null && this.massEditQuantity !== undefined) {
-            const qtyFields = ['quantity'];
-            for (const field of qtyFields) {
-              if (columnFields.has(field) || rowData.hasOwnProperty(field)) {
-                editedFieldsForRow.add(field);
-                break;
+            // Track Include In Spec Sheet field (for both MBOM and non-MBOM SBOM rows)
+            if (this.massEditIncludeInSpecSheet) {
+              const includeInSpecSheetFields = ['bomLinkIncludeInSpecSheet'];
+              for (const field of includeInSpecSheetFields) {
+                if (columnFields.has(field) || rowData.hasOwnProperty(field)) {
+                  editedFieldsForRow.add(field);
+                  break;
+                }
               }
             }
           }
@@ -4084,6 +4240,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.massEditStartDate = '';
     this.massEditEndDate = '';
     this.massEditQuantity = null;
+    this.massEditIncludeInSpecSheet = '';
   }
 
   exportToExcel(): void {
@@ -4151,6 +4308,50 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  /**
+   * Get background color for group header based on group level
+   */
+  private getGroupBackgroundColor(groupLevel: number): string {
+    if (groupLevel === 0) return '#f0f9ff';
+    if (groupLevel === 1) return '#f0fdf4';
+    return '#fef3c7';
+  }
+
+  /**
+   * Get border color for group header based on group level
+   */
+  private getGroupBorderColor(groupLevel: number): string {
+    if (groupLevel === 0) return '#3b82f6';
+    if (groupLevel === 1) return '#10b981';
+    return '#f59e0b';
+  }
+
+  /**
+   * Get hover background color for group header based on group level
+   */
+  private getGroupHoverBackgroundColor(groupLevel: number): string {
+    if (groupLevel === 0) return '#e0f2fe';
+    if (groupLevel === 1) return '#dcfce7';
+    return '#fde68a';
+  }
+
+  getIncludeInSpecSheetOptionsForMassEdit(): string[] {
+    return this.dataService.getIncludeInSpecSheetOptions(this.constraintsData);
+  }
+
+  /**
+   * Check if any selected rows contain MBOM line items (ptcbomPartMarkUp === 'enumMBOM001')
+   * Used to determine which mass edit fields to show in SBOM mode
+   */
+  hasMbomLineItemsInSelection(): boolean {
+    if (!this.isSbomMode() || this.selectedRows.size === 0) {
+      return false;
+    }
+    return Array.from(this.selectedRows).some(
+      (row: any) => row?.ptcbomPartMarkUp === 'enumMBOM001'
+    );
+  }
+
   closeMassEditMode(): void {
     this.massEditMode = false;
     if (this.gridApi) {
@@ -4160,6 +4361,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.massEditStartDate = '';
     this.massEditEndDate = '';
     this.massEditQuantity = null;
+    this.massEditIncludeInSpecSheet = '';
   }
 
   bulkDisconnectFromSkus(): void {
@@ -4220,8 +4422,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       (this.gridApi as any)._hoverSyncCleanup();
     }
 
-    delete (window as any).toggleSection;
-    delete (window as any).toggleMaterial;
-    delete (window as any).toggleGroup;
+    delete (globalThis as any).toggleSection;
+    delete (globalThis as any).toggleMaterial;
+    delete (globalThis as any).toggleGroup;
   }
 }
