@@ -1945,14 +1945,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
    * For editable filter: Only show rows that have SKU in existing response (not new rows)
    * Must verify SKU exists in original API response instances for this specific row
    */
-  private hasSkuInExistingResponse(row: any, editableSkuIds: Set<string>): boolean {
+  private hasSkuInExistingResponse(row: any, targetSkuIds: Set<string>): boolean {
     if (!row || row.isSectionHeader || row.isGroupHeader || row.isMaterialHeader || row.isBranchHeader) {
       return true; // Always show headers
     }
 
-    // CRITICAL: New rows don't exist in existing response - filter them out
+    // CRITICAL: New rows don't exist in existing response - filter them out for all SKU filters
+    // (except "all" filter which shows everything)
     if (row.isNewRow) {
-      return false; // New rows should not appear in editable filter
+      return false; // New rows should not appear in any SKU filter (they don't have SKU values yet)
     }
 
     // Get API data to verify SKU exists in original response
@@ -1966,15 +1967,14 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const rowSection = row.section || '';
     const rowFeature = String(row.bomLinkFeature || '').trim();
     const rowPartNumber = String(row.partNumber || '').trim();
-    const rowPtcbomPartMarkUp = row.ptcbomPartMarkUp || '';
     const bomType = this.dataService.getBomType();
     const isSbom = bomType === 'SBOM';
     const isMbom = bomType === 'MBOM';
 
-    // Find the EXACT API instance that matches this row
-    // When multiple instances share the same section/feature/partNumber, we need to match by SKU values
-    // to identify which specific instance created this row
+    // Find the API instance that matches this row by section/feature/partNumber
     let matchedInstance: any = null;
+    let matchedInstanceSkuIds: string[] = [];
+    let checkedInstances: any[] = [];
     
     for (const instance of apiData.instances) {
       const bomLink = instance['bom-link'];
@@ -1983,7 +1983,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       const instanceSection = bomLink.sectionInternalName || bomLink.section || '';
       const instanceFeature = String(bomLink.bomLinkFeature || '').trim();
       const instancePartNumber = String(bomLink.partNumber || '').trim();
-      const instancePtcbomPartMarkUp = bomLink.ptcbomPartMarkUp || '';
 
       // Match row to instance by section and feature
       const isSectionMatch = instanceSection === rowSection;
@@ -1993,8 +1992,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         continue; // Not the same row
       }
 
-      // For MBOM: Always match by partNumber when both row and instance have partNumbers
-      // This ensures we match the correct row when multiple rows share the same feature
+      // For MBOM: Match by partNumber when both row and instance have partNumbers
       let requiresPartMatch = false;
       
       if (isSbom) {
@@ -2015,106 +2013,154 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         continue; // Part number doesn't match
       }
 
-      // CRITICAL: When multiple instances match by section/feature/partNumber,
-      // we need to match by SKU values to identify the specific instance
-      // Check if this instance's SKUs match the row's SKU values
-      if (bomLink.skus && Array.isArray(bomLink.skus)) {
-        let skuMatchCount = 0;
-        let totalInstanceSkus = bomLink.skus.length;
-        
-        // Check if row has SKU values that match this instance's SKUs
-        for (const instanceSku of bomLink.skus) {
-          if (!instanceSku || !instanceSku.skuId) continue;
-          
-          const skuFieldName = `sku${instanceSku.skuId}`;
-          const rowSkuValue = row[skuFieldName];
-          const instanceSkuValue = instanceSku.value;
-          
-          // Match if both have the same SKU value, or if instance has SKU and row has it too
-          if (instanceSkuValue !== undefined && instanceSkuValue !== null && String(instanceSkuValue).trim() !== '') {
-            if (rowSkuValue !== undefined && rowSkuValue !== null && String(rowSkuValue).trim() !== '') {
-              if (String(rowSkuValue).trim() === String(instanceSkuValue).trim()) {
-                skuMatchCount++;
-              }
-            }
-          } else {
-            // Instance SKU has no value - check if row also has no value for this SKU
-            if (!rowSkuValue || String(rowSkuValue).trim() === '') {
-              skuMatchCount++;
-            }
-          }
+      // This instance matches by section/feature/partNumber - check its SKUs
+      if (!bomLink.skus || !Array.isArray(bomLink.skus)) {
+        checkedInstances.push({
+          section: instanceSection,
+          feature: instanceFeature,
+          partNumber: instancePartNumber,
+          skus: [],
+          reason: 'No SKUs array',
+        });
+        continue; // Instance has no SKUs, skip it
+      }
+
+      // Get SKU IDs from this instance's skus array
+      const instanceSkuIds = bomLink.skus
+        .map((sku: any) => sku && sku.skuId ? String(sku.skuId).trim() : '')
+        .filter((id: string) => id !== '');
+
+      // Check if any target SKU ID exists in this instance's skus array
+      let hasTargetSku = false;
+      let matchedTargetSkuId = '';
+      for (const targetSkuId of targetSkuIds) {
+        const normalizedTargetId = String(targetSkuId).trim();
+        if (instanceSkuIds.includes(normalizedTargetId)) {
+          hasTargetSku = true;
+          matchedTargetSkuId = normalizedTargetId;
+          break;
         }
-        
-        // If all SKUs match, this is the correct instance for this row
-        if (skuMatchCount === totalInstanceSkus && totalInstanceSkus > 0) {
-          matchedInstance = bomLink;
-          break; // Found the exact instance
-        }
-      } else {
-        // Instance has no SKUs - use it if no other instance matched yet
-        if (!matchedInstance) {
-          matchedInstance = bomLink;
-        }
+      }
+
+      checkedInstances.push({
+        section: instanceSection,
+        feature: instanceFeature,
+        partNumber: instancePartNumber,
+        instanceSkuIds,
+        hasTargetSku,
+        matchedTargetSkuId,
+      });
+
+      // Only use this instance if it has the target SKU ID
+      if (hasTargetSku) {
+        matchedInstance = bomLink;
+        matchedInstanceSkuIds = instanceSkuIds;
+        break; // Found matching instance with target SKU ID
       }
     }
 
-    // If no matching instance found, filter out the row
+    // Log the result
+    const targetSkuIdsArray = Array.from(targetSkuIds);
     if (!matchedInstance) {
+      console.log('[SKU FILTER] ❌ Row FILTERED OUT:', {
+        rowSection,
+        rowFeature,
+        rowPartNumber,
+        targetSkuIds: targetSkuIdsArray,
+        checkedInstances,
+        reason: 'No matching instance with target SKU ID',
+      });
       return false;
     }
 
-    // Check if this SPECIFIC instance has an editable SKU ID in its skus array
-    if (matchedInstance.skus && Array.isArray(matchedInstance.skus)) {
-      for (const skuId of editableSkuIds) {
-        const hasMatchingSku = matchedInstance.skus.some(
-          (sku: any) => sku && sku.skuId && String(sku.skuId).trim() === String(skuId).trim()
-        );
-
-        if (hasMatchingSku) {
-          return true; // Found matching editable SKU in this specific instance
-        }
+    const matchedTargetSkuId = matchedInstanceSkuIds.find(id => targetSkuIds.has(id));
+    
+    // CRITICAL CHECK: Verify that the row actually has a NON-EMPTY value for at least one target SKU ID
+    // If the SKU column is empty, the row should NOT be shown
+    // This ensures we only show rows where the target SKU has an actual part number/value
+    let rowHasTargetSkuValue = false;
+    let actualSkuValue = '';
+    for (const targetSkuId of targetSkuIds) {
+      const skuFieldName = `sku${targetSkuId}`;
+      const skuValue = row[skuFieldName];
+      // Check if row has a NON-EMPTY value for this SKU
+      if (skuValue !== undefined && skuValue !== null && String(skuValue).trim() !== '') {
+        rowHasTargetSkuValue = true;
+        actualSkuValue = String(skuValue).trim();
+        break;
       }
     }
 
-    return false; // Row has no matching editable SKU in existing API response
+    if (!rowHasTargetSkuValue) {
+      console.log('[SKU FILTER] ❌ Row FILTERED OUT (empty SKU value):', {
+        rowSection,
+        rowFeature,
+        rowPartNumber,
+        targetSkuIds: targetSkuIdsArray,
+        matchedInstanceSkuIds,
+        reason: 'Row has empty value for target SKU ID column',
+      });
+      return false;
+    }
+
+    console.log('[SKU FILTER] ✅ Row INCLUDED:', {
+      rowSection,
+      rowFeature,
+      rowPartNumber,
+      targetSkuIds: targetSkuIdsArray,
+      matchedInstanceSkuIds: matchedInstanceSkuIds,
+      matchedTargetSkuId: matchedTargetSkuId,
+      rowHasTargetSkuValue,
+      actualSkuValue,
+      hasOnlyTargetSku: matchedInstanceSkuIds.length === 1 && matchedInstanceSkuIds[0] === matchedTargetSkuId,
+      checkedInstances: checkedInstances.map(inst => ({
+        section: inst.section,
+        feature: inst.feature,
+        partNumber: inst.partNumber,
+        instanceSkuIds: inst.instanceSkuIds || [],
+        hasTargetSku: inst.hasTargetSku,
+        matchedTargetSkuId: inst.matchedTargetSkuId || '',
+      })),
+    });
+
+    return true; // Found matching instance with target SKU ID and row has value for it
   }
 
   /**
    * Filter hierarchical data based on SKU filter selection
-   * When "HD source - editable" (MBOM) or "Editable SKUs" (SBOM) is selected, 
-   * only show rows that have SKU in existing response
+   * 
+   * Applies to ALL filters except "all":
+   * - MBOM: "hdEditable", "hdViewOnly", "nonHdSource"
+   * - SBOM: "editableSkus"
+   * 
+   * Filtering logic:
+   * Step 1: Get visible SKU IDs from filtered SKU columns (what's shown in UI)
+   * Step 2: Filter rows - only show rows where:
+   *   a) Matched instance has at least one visible SKU ID
+   *   b) Row has a NON-EMPTY value for at least one visible SKU ID column
+   * 
+   * This ensures rows with empty SKU columns are filtered out for all SKU views.
    */
   private filterHierarchicalDataBySkuFilter(data: any[]): any[] {
-    // Check if editable filter is active
-    const isMbomEditableFilter = this.isMbomMode() && this.selectedSkuFilter === 'hdEditable';
-    const isSbomEditableFilter = this.isSbomMode() && this.selectedSkuFilter === 'editableSkus';
-    
-    if (!isMbomEditableFilter && !isSbomEditableFilter) {
-      return data; // No editable filter active, show all
+    // "All" filter shows all rows (no filtering needed)
+    if (this.selectedSkuFilter === 'all') {
+      return data;
     }
 
-    // Get editable SKU IDs based on BOM type
-    const skuInfo = this.dataService.getSkuInfo();
-    let editableSkuIds: Set<string>;
-    
-    if (isMbomEditableFilter) {
-      // MBOM: HD source and editable
-      editableSkuIds = new Set<string>(
-        skuInfo
-          .filter((sku) => sku.isHDSource === true && sku.isEditable === true)
-          .map((sku) => String(sku.skuId))
-      );
-    } else {
-      // SBOM: All editable SKUs (no HD source requirement)
-      editableSkuIds = new Set<string>(
-        skuInfo
-          .filter((sku) => sku.isEditable === true)
-          .map((sku) => String(sku.skuId))
-      );
-    }
+    // Step 1: Get the SKU IDs that are visible in the UI (after SKU column filtering)
+    const visibleSkus = this.getFilteredSkuInfo();
+    const visibleSkuIds = new Set<string>(
+      visibleSkus.map((sku) => String(sku.skuId || '').trim()).filter((id: string) => id !== '')
+    );
 
-    if (editableSkuIds.size === 0) {
-      return data; // No editable SKUs, show all
+    console.log('[SKU FILTER] Starting filter:', {
+      selectedFilter: this.selectedSkuFilter,
+      visibleSkus: visibleSkus.map(s => ({ skuId: s.skuId, product: s.product, isHDSource: s.isHDSource, isEditable: s.isEditable })),
+      visibleSkuIds: Array.from(visibleSkuIds),
+    });
+
+    if (visibleSkuIds.size === 0) {
+      return data; // No visible SKUs, show all rows
     }
 
     // Recursively filter rows
@@ -2130,8 +2176,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             return filteredRow;
           }
 
-          // For data rows: only keep if they have SKU in existing response
-          if (this.hasSkuInExistingResponse(row, editableSkuIds)) {
+          // Step 2: For data rows - only keep if matched instance has at least one visible SKU ID
+          if (this.hasSkuInExistingResponse(row, visibleSkuIds)) {
             const filteredRow = { ...row };
             if (row.children && Array.isArray(row.children)) {
               filteredRow.children = filterRows(row.children);
@@ -2148,13 +2194,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private applyGrouping(): void {
-    // Preserve new rows before rebuilding (but not when editable filter is active)
+    // Preserve new rows before rebuilding (but not when any SKU filter is active that filters rows)
     const newRows: any[] = [];
-    const isEditableFilterActive = 
-      (this.isMbomMode() && this.selectedSkuFilter === 'hdEditable') ||
-      (this.isSbomMode() && this.selectedSkuFilter === 'editableSkus');
+    const isSkuFilterActive = this.selectedSkuFilter !== 'all';
     
-    if (!isEditableFilterActive && this.displayData && Array.isArray(this.displayData)) {
+    if (!isSkuFilterActive && this.displayData && Array.isArray(this.displayData)) {
       this.displayData.forEach((row) => {
         if (row.isNewRow && !row.isSectionHeader && !row.isGroupHeader && !row.isMaterialHeader) {
           newRows.push(row);
