@@ -88,6 +88,10 @@ export interface ApiData {
   skuIds?: string; // Version IDs from API response (e.g., "VR:com.lcs.wc.foundation.LCSRevisableEntity:574978")
 }
 
+export type MbomSkuFilterOption = 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource';
+export type SbomSkuFilterOption = 'all' | 'editableSkus';
+export type SkuFilterOption = MbomSkuFilterOption | SbomSkuFilterOption;
+
 @Injectable({
   providedIn: 'root',
 })
@@ -712,5 +716,133 @@ export class DataService {
     });
 
     return mapping;
+  }
+
+  // SKU Filter Methods (merged from SkuFilterService)
+  getMbomSkuFilterOptions(): Array<{ label: string; value: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' }> {
+    return [
+      { label: 'ALL - View only', value: 'all' },
+      { label: 'HD source - Editable', value: 'hdEditable' },
+      { label: 'HD source - View only', value: 'hdViewOnly' },
+      { label: 'Non HD source - View only', value: 'nonHdSource' },
+    ];
+  }
+
+  getSbomSkuFilterOptions(): Array<{ label: string; value: 'all' | 'editableSkus' }> {
+    return [
+      { label: 'ALL - View only', value: 'all' },
+      { label: 'Editable SKUs', value: 'editableSkus' },
+    ];
+  }
+
+  getFilteredSkuInfo(
+    selectedFilter: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' | 'editableSkus',
+    isMbomMode: () => boolean
+  ): any[] {
+    const skuInfo = this.getSkuInfo();
+
+    if (isMbomMode()) {
+      return this.filterSkuInfoByOption(selectedFilter as 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource', skuInfo, 'mbom');
+    } else {
+      return this.filterSkuInfoByOption(selectedFilter as 'all' | 'editableSkus', skuInfo, 'sbom');
+    }
+  }
+
+  filterSkuInfoByOption(
+    option: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' | 'editableSkus',
+    skuInfo: any[],
+    bomType: 'mbom' | 'sbom'
+  ): any[] {
+    const mbomConfig: Record<string, { filter?: (sku: any) => boolean; emptyMessage?: string }> = {
+      all: {},
+      hdEditable: {
+        filter: (sku) => sku.isHDSource === true && sku.isEditable === true,
+        emptyMessage: 'No HD editable SKUs found. Editing is disabled.',
+      },
+      hdViewOnly: {
+        filter: (sku) => sku.isHDSource === true,
+        emptyMessage: 'No HD source view-only SKUs found.',
+      },
+      nonHdSource: {
+        filter: (sku) => sku.isHDSource === false,
+        emptyMessage: 'No non-HD source SKUs found.',
+      },
+    };
+
+    const sbomConfig: Record<string, { filter?: (sku: any) => boolean; emptyMessage?: string }> = {
+      all: {},
+      editableSkus: {
+        filter: (sku) => sku.isEditable === true,
+        emptyMessage: 'No editable SKUs found. Editing is disabled.',
+      },
+    };
+
+    const config = bomType === 'mbom' ? mbomConfig[option] : sbomConfig[option];
+
+    if (!config?.filter) {
+      return skuInfo;
+    }
+    return skuInfo.filter(config.filter);
+  }
+
+  isSkuFilterOptionDisabled(
+    option: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' | 'editableSkus',
+    isMbomMode: () => boolean
+  ): boolean {
+    if (option === 'all') {
+      return false;
+    }
+
+    const skuInfo = this.getSkuInfo();
+    const bomType = isMbomMode() ? 'mbom' : 'sbom';
+    return this.filterSkuInfoByOption(option, skuInfo, bomType).length === 0;
+  }
+
+  getSkuFilterOptionTooltip(
+    option: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' | 'editableSkus',
+    isMbomMode: () => boolean
+  ): string {
+    if (option === 'all') {
+      return '';
+    }
+
+    const skuInfo = this.getSkuInfo();
+    const bomType = isMbomMode() ? 'mbom' : 'sbom';
+    if (this.filterSkuInfoByOption(option, skuInfo, bomType).length > 0) {
+      return '';
+    }
+
+    return this.getSkuFilterEmptyMessage(option, isMbomMode);
+  }
+
+  getSkuFilterEmptyMessage(
+    option: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' | 'editableSkus',
+    isMbomModeFn: () => boolean
+  ): string {
+    const mbomMessages: Record<string, string> = {
+      hdEditable: 'No HD editable SKUs found. Editing is disabled.',
+      hdViewOnly: 'No HD source view-only SKUs found.',
+      nonHdSource: 'No non-HD source SKUs found.',
+    };
+
+    const sbomMessages: Record<string, string> = {
+      editableSkus: 'No editable SKUs found. Editing is disabled.',
+    };
+
+    if (isMbomModeFn()) {
+      return mbomMessages[option] || '';
+    } else {
+      return sbomMessages[option] || '';
+    }
+  }
+
+  getSkuFilterLabel(
+    option: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' | 'editableSkus',
+    mbomOptions: Array<{ label: string; value: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' }>,
+    sbomOptions: Array<{ label: string; value: 'all' | 'editableSkus' }>,
+    isMbomMode: () => boolean
+  ): string {
+    const options = isMbomMode() ? mbomOptions : sbomOptions;
+    return options.find((item) => item.value === option)?.label || 'All';
   }
 }

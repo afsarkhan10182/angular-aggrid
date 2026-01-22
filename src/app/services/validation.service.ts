@@ -929,9 +929,16 @@ export class ValidationService {
       const partNumber = String(row.partNumber || '').trim();
       const bomLinkFeature = String(row.bomLinkFeature || '').trim();
       const isEmptyPartNumber = !partNumber || partNumber === '';
+      const isEmptyFeature = !bomLinkFeature || bomLinkFeature === '';
 
-      // Require section and feature
-      if (!section || !bomLinkFeature) {
+      // Require section
+      if (!section) {
+        continue;
+      }
+
+      // For MBOM: Require feature
+      // For SBOM: Feature can be empty (we'll validate differently)
+      if (!isSbom && isEmptyFeature) {
         continue;
       }
 
@@ -965,96 +972,169 @@ export class ValidationService {
 
       // Validate each SKU in the new row
       for (const skuId of rowSkus.skuIds) {
-        // STEP 1: Count how many records exist for the same feature + section + skuId
-        // Check in apiData.instances (all backend data including hidden rows)
-        const matchingRecords: any[] = [];
-        if (apiData && apiData.instances && Array.isArray(apiData.instances)) {
-          for (const instance of apiData.instances) {
-            const bomLink = instance['bom-link'];
-            if (!bomLink) continue;
+        // For SBOM: Different validation logic based on whether feature is present
+        if (isSbom) {
+          if (isEmptyFeature) {
+            // SBOM: Feature is NOT present → Check Section + PartNumber + SKU ID (ignore feature)
+            const matchingRecords: any[] = [];
+            if (apiData && apiData.instances && Array.isArray(apiData.instances)) {
+              for (const instance of apiData.instances) {
+                const bomLink = instance['bom-link'];
+                if (!bomLink) continue;
 
-            const instanceSection = bomLink.sectionInternalName || bomLink.section || '';
-            const instanceFeature = String(bomLink.bomLinkFeature || '').trim();
-            const instancePartNumber = String(bomLink.partNumber || '').trim();
-            const instancePtcbomPartMarkUp = bomLink.ptcbomPartMarkUp || '';
+                const instanceSection = bomLink.sectionInternalName || bomLink.section || '';
+                const instancePartNumber = String(bomLink.partNumber || '').trim();
+                const instanceFeature = String(bomLink.bomLinkFeature || '').trim();
 
-            // Match by: feature + section + skuId (partNumber is checked later)
-            if (
-              instanceSection === section &&
-              instanceFeature === bomLinkFeature &&
-              bomLink.skus &&
-              Array.isArray(bomLink.skus)
-            ) {
-              // Check if this instance has the matching skuId
-              const hasMatchingSku = bomLink.skus.some(
-                (sku: any) => sku && sku.skuId && String(sku.skuId).trim() === skuId
-              );
+                // Match by: section + partNumber + skuId (ignore feature)
+                if (
+                  instanceSection === section &&
+                  instancePartNumber === partNumber &&
+                  bomLink.skus &&
+                  Array.isArray(bomLink.skus)
+                ) {
+                  const hasMatchingSku = bomLink.skus.some(
+                    (sku: any) => sku && sku.skuId && String(sku.skuId).trim() === skuId
+                  );
 
-              if (hasMatchingSku) {
-                matchingRecords.push({
-                  bomLink,
-                  section: instanceSection,
-                  feature: instanceFeature,
-                  partNumber: instancePartNumber,
-                  ptcbomPartMarkUp: instancePtcbomPartMarkUp,
-                  isEmptyPartNumber: !instancePartNumber || instancePartNumber === '',
-                });
+                  if (hasMatchingSku) {
+                    matchingRecords.push({
+                      bomLink,
+                      section: instanceSection,
+                      feature: instanceFeature,
+                      partNumber: instancePartNumber,
+                    });
+                  }
+                }
               }
             }
-          }
-        }
 
-        const recordCount = matchingRecords.length;
-
-        // STEP 1 DECISION: Result handling
-        if (recordCount > 1) {
-          // ❌ Throw error: "Duplicate feature for the same SKU and section"
-          // Stop processing
-          duplicateSkus.push(skuId);
-          foundDuplicate = true;
-          duplicateType = 'feature-uniqueness';
-          errorMessage = 'Duplicate feature for the same SKU and section.';
-          break; // Stop processing - error found
-        } else if (recordCount === 0) {
-          // ✅ Safe → this is a brand-new feature
-          // Allow save (no further duplicate checks needed)
-          // Continue to next SKU - this is valid
-        } else if (recordCount === 1) {
-          // ✅ Continue to Step 2
-          const matchingRecord = matchingRecords[0];
-          const existingPartNumber = matchingRecord.partNumber;
-          const existingPtcbomPartMarkUp = matchingRecord.ptcbomPartMarkUp;
-          const isMbomRecord = existingPtcbomPartMarkUp === 'enumMBOM001';
-          const isEmptyExistingPart = matchingRecord.isEmptyPartNumber;
-
-          // STEP 3: Check MBOM vs NON-MBOM (conceptual only - rules are IDENTICAL)
-          // STEP 4: Part number validation (CORE LOGIC)
-          // The rules below are IDENTICAL for MBOM and NON-MBOM
-          // (the distinction is only conceptual, behavior is same)
-
-          // Case 1: existingPart is EMPTY
-          if (isEmptyExistingPart) {
-            // ✅ NO error - This is a hidden/update row
-            // Use this existing row to inject enteredPart into payload and send update to backend
-            // Continue to next SKU - this is valid
-          } else {
-            // existingPart is NOT EMPTY
-            // Case 2: existingPart NOT EMPTY AND different from enteredPart
-            if (existingPartNumber !== partNumber) {
-              // ❌ Error: Duplicate feature for the same SKU and section
-              duplicateSkus.push(skuId);
-              foundDuplicate = true;
-              duplicateType = 'duplicate-feature';
-              errorMessage = 'Duplicate feature for the same SKU and section.';
-              break;
-            } else {
-              // Case 3: existingPart NOT EMPTY AND same as enteredPart
-              // ❌ Error: Duplicate part for the same SKU and section
+            // If any matching record found → Error: Duplicate part for the same SKU
+            if (matchingRecords.length > 0) {
               duplicateSkus.push(skuId);
               foundDuplicate = true;
               duplicateType = 'duplicate-part';
-              errorMessage = 'Duplicate feature and part for the same SKU and section.';
+              errorMessage = 'Duplicate part number for the same SKU. Part number cannot be duplicated when feature is not present.';
               break;
+            }
+          } else {
+            // SBOM: Feature IS present → Check Section + Feature + PartNumber + SKU ID
+            // Allow duplicate parts for same SKU if feature is different
+            const matchingRecords: any[] = [];
+            if (apiData && apiData.instances && Array.isArray(apiData.instances)) {
+              for (const instance of apiData.instances) {
+                const bomLink = instance['bom-link'];
+                if (!bomLink) continue;
+
+                const instanceSection = bomLink.sectionInternalName || bomLink.section || '';
+                const instanceFeature = String(bomLink.bomLinkFeature || '').trim();
+                const instancePartNumber = String(bomLink.partNumber || '').trim();
+
+                // Match by: section + feature + partNumber + skuId (all must match)
+                if (
+                  instanceSection === section &&
+                  instanceFeature === bomLinkFeature &&
+                  instancePartNumber === partNumber &&
+                  bomLink.skus &&
+                  Array.isArray(bomLink.skus)
+                ) {
+                  const hasMatchingSku = bomLink.skus.some(
+                    (sku: any) => sku && sku.skuId && String(sku.skuId).trim() === skuId
+                  );
+
+                  if (hasMatchingSku) {
+                    matchingRecords.push({
+                      bomLink,
+                      section: instanceSection,
+                      feature: instanceFeature,
+                      partNumber: instancePartNumber,
+                    });
+                  }
+                }
+              }
+            }
+
+            // If matching record found → Error: Duplicate feature + part for the same SKU
+            if (matchingRecords.length > 0) {
+              duplicateSkus.push(skuId);
+              foundDuplicate = true;
+              duplicateType = 'duplicate-part';
+              errorMessage = 'Duplicate part for the same SKU.';
+              break;
+            }
+          }
+        } else {
+          // MBOM: Original validation logic
+          // STEP 1: Count how many records exist for the same feature + section + skuId
+          const matchingRecords: any[] = [];
+          if (apiData && apiData.instances && Array.isArray(apiData.instances)) {
+            for (const instance of apiData.instances) {
+              const bomLink = instance['bom-link'];
+              if (!bomLink) continue;
+
+              const instanceSection = bomLink.sectionInternalName || bomLink.section || '';
+              const instanceFeature = String(bomLink.bomLinkFeature || '').trim();
+              const instancePartNumber = String(bomLink.partNumber || '').trim();
+              const instancePtcbomPartMarkUp = bomLink.ptcbomPartMarkUp || '';
+
+              // Match by: feature + section + skuId (partNumber is checked later)
+              if (
+                instanceSection === section &&
+                instanceFeature === bomLinkFeature &&
+                bomLink.skus &&
+                Array.isArray(bomLink.skus)
+              ) {
+                const hasMatchingSku = bomLink.skus.some(
+                  (sku: any) => sku && sku.skuId && String(sku.skuId).trim() === skuId
+                );
+
+                if (hasMatchingSku) {
+                  matchingRecords.push({
+                    bomLink,
+                    section: instanceSection,
+                    feature: instanceFeature,
+                    partNumber: instancePartNumber,
+                    ptcbomPartMarkUp: instancePtcbomPartMarkUp,
+                    isEmptyPartNumber: !instancePartNumber || instancePartNumber === '',
+                  });
+                }
+              }
+            }
+          }
+
+          const recordCount = matchingRecords.length;
+
+          // STEP 1 DECISION: Result handling
+          if (recordCount > 1) {
+            duplicateSkus.push(skuId);
+            foundDuplicate = true;
+            duplicateType = 'feature-uniqueness';
+            errorMessage = 'Duplicate feature for the same SKU and section.';
+            break;
+          } else if (recordCount === 0) {
+            // Continue to next SKU - this is valid
+          } else if (recordCount === 1) {
+            const matchingRecord = matchingRecords[0];
+            const existingPartNumber = matchingRecord.partNumber;
+            const existingPtcbomPartMarkUp = matchingRecord.ptcbomPartMarkUp;
+            const isEmptyExistingPart = matchingRecord.isEmptyPartNumber;
+
+            if (isEmptyExistingPart) {
+              // Continue to next SKU - this is valid
+            } else {
+              if (existingPartNumber !== partNumber) {
+                duplicateSkus.push(skuId);
+                foundDuplicate = true;
+                duplicateType = 'duplicate-feature';
+                errorMessage = 'Duplicate feature for the same SKU and section.';
+                break;
+              } else {
+                duplicateSkus.push(skuId);
+                foundDuplicate = true;
+                duplicateType = 'duplicate-part';
+                errorMessage = 'Duplicate feature and part for the same SKU and section.';
+                break;
+              }
             }
           }
         }
@@ -1081,7 +1161,7 @@ export class ValidationService {
       } else if (firstDuplicate.duplicateType === 'duplicate-feature') {
         finalErrorMessage = 'Duplicate feature for the same SKU and section.';
       } else if (firstDuplicate.duplicateType === 'duplicate-part') {
-        finalErrorMessage = 'Duplicate feature for the same SKU and section.';
+        finalErrorMessage = 'Duplicate part for the same SKU and section.';
       } else if (firstDuplicate.duplicateType === 'notEnumMBOM001') {
         finalErrorMessage = 'Duplicate Feature for the chosen SKU';
       } else if (firstDuplicate.duplicateType === 'enumMBOM001') {

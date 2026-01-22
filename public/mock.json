@@ -28,7 +28,7 @@
     "instances": [
         {
             "bom-link": {
-                "ptcbomPartMarkUp": "enumMBOM001",
+                "ptcbomPartMarkUp": "",
                 "materialColorServiceMessage": "",
                 "bomLinkFeature": "150 | Fuselage : Compliance Label 1",
                 "skus": [
@@ -58,7 +58,7 @@
                 ],
                 "color": "Baja Smoke",
                 "materialColorStatus": "",
-                "ptcbomPartMarkUpDisplayName": "MBOM",
+                "ptcbomPartMarkUpDisplayName": "",
                 "materialColorSixtyCharacterDescription": "",
                 "section": "enumSection001",
                 "materialSupplierPrimaryUOM": "Inch",
