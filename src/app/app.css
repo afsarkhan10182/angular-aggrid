@@ -19,6 +19,9 @@
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
+  /* Prevent text clipping for descenders (g, y, p, q, j) */
+  line-height: 1.5 !important;
+  min-height: 20px !important;
 }
 
 :host ::ng-deep .hier-clickable {
@@ -35,6 +38,9 @@
   background: var(--bg, transparent);
   border-left: 4px solid var(--border, transparent);
   transition: background-color 0.15s ease, border-left-color 0.15s ease;
+  /* Prevent text clipping for descenders (g, y, p, q, j) */
+  line-height: 1.5 !important;
+  min-height: 20px !important;
 }
 
 :host ::ng-deep .hier-header:hover {
@@ -61,6 +67,10 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
+  /* Prevent text clipping for descenders (g, y, p, q, j) */
+  line-height: 1.5 !important;
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
 }
 
 :host ::ng-deep .hier-count {
@@ -85,6 +95,9 @@
   border-left-width: 0;
   padding: 4px 6px;
   column-gap: 2px;
+  /* Prevent text clipping for descenders (g, y, p, q, j) */
+  line-height: 1.5 !important;
+  min-height: 20px !important;
 }
 
 :host ::ng-deep .section-header .hier-arrow {
@@ -100,6 +113,9 @@
   --title-size: 13px;
   --title-color: #065f46;
   --arrow-color: #065f46;
+  /* Prevent text clipping for descenders (g, y, p, q, j) */
+  line-height: 1.5 !important;
+  min-height: 20px !important;
 }
 
 :host ::ng-deep .parent-row-header {
@@ -115,12 +131,18 @@
   margin: 1px 0;
   border-left-width: 3px;
   font-weight: 500;
+  /* Prevent text clipping for descenders (g, y, p, q, j) */
+  line-height: 1.5 !important;
+  min-height: 18px !important;
 }
 
 :host ::ng-deep .direct-row {
   padding: 4px 6px;
   overflow: hidden;
   width: 100%;
+  /* Prevent text clipping for descenders (g, y, p, q, j) */
+  line-height: 1.5 !important;
+  min-height: 20px !important;
 }
 
 :host ::ng-deep .direct-row .direct-text {
@@ -130,6 +152,10 @@
   display: block;
   width: 100%;
   min-width: 0;
+  /* Prevent text clipping for descenders (g, y, p, q, j) */
+  line-height: 1.5 !important;
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
 }
 
 :host ::ng-deep .direct-row .direct-link-icon,
@@ -926,4 +952,58 @@
 .sku-delete-btn-existing:hover {
   opacity: 1;
   background: #dc2626 !important;
+}
+
+/* Responsive adjustments for section names - prevent text clipping */
+@media (max-width: 768px) {
+  :host ::ng-deep .hier-title,
+  :host ::ng-deep .hier-header,
+  :host ::ng-deep .section-header,
+  :host ::ng-deep .material-header,
+  :host ::ng-deep .parent-row-header,
+  :host ::ng-deep .direct-row,
+  :host ::ng-deep .direct-row .direct-text {
+    line-height: 1.5 !important;
+  }
+  
+  :host ::ng-deep .hier-header,
+  :host ::ng-deep .section-header,
+  :host ::ng-deep .material-header {
+    min-height: 22px !important;
+    padding: 5px 7px !important;
+  }
+  
+  :host ::ng-deep .parent-row-header {
+    min-height: 20px !important;
+    padding: 4px 6px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  :host ::ng-deep .hier-title {
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+  }
+  
+  :host ::ng-deep .hier-header,
+  :host ::ng-deep .section-header,
+  :host ::ng-deep .material-header {
+    min-height: 22px !important;
+    padding: 4px 6px !important;
+    line-height: 1.5 !important;
+  }
+  
+  :host ::ng-deep .parent-row-header {
+    min-height: 20px !important;
+    padding: 3px 5px !important;
+    line-height: 1.5 !important;
+  }
+  
+  :host ::ng-deep .direct-row {
+    padding: 3px 5px !important;
+    line-height: 1.5 !important;
+    min-height: 20px !important;
+  }
 }

@@ -145,9 +145,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         dataService: this.dataService,
       },
       isFullWidthRow: (params: any) => {
-        return params.rowNode.data.isGroupHeader;
+        return params.rowNode.data.isGroupHeader || params.rowNode.data.isSectionHeader;
       },
       fullWidthCellRenderer: (params: any) => {
+        if (params.data.isSectionHeader) {
+          return this.renderSectionHeaderFullWidth(params);
+        }
         return this.renderGroupHeaderFullWidth(params);
       },
     };
@@ -648,8 +651,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       filter: true,
       tooltipValueGetter: (params: any) => {
         if (!params.data) return null;
+        // Section headers are now full-width rows, not in Feature column
         if (params.data.isSectionHeader) {
-          return params.data.section || null;
+          return null;
         }
         const featureValue = this.getFeatureValue(params.data);
         if (!featureValue) return null;
@@ -1335,6 +1339,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   renderHierarchicalCell(params: any): string {
     const data = params.data;
 
+    // Note: Group headers and section headers are now rendered via fullWidthCellRenderer
+    // They are kept here for backward compatibility but should not be reached
     if (data.isGroupHeader) {
       const arrowIcon = data.isExpanded ? '▼' : '▶';
       const groupValue =
@@ -1365,21 +1371,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       `;
     }
 
+    // Section headers are now rendered via fullWidthCellRenderer, so return empty for Feature column
     if (data.isSectionHeader) {
-      const arrowIcon = data.isExpanded ? '▼' : '▶';
-      // Use sectionDisplayName for UI display (always from API), but use section (internal name) for toggle function
-      const displayName = data.sectionDisplayName; // Always from API response
-      const internalName = data.section; // Keep internal name for toggle function
-      return `
-        <div
-          class="hier-header hier-clickable section-header"
-          title="${this.utilService.escapeHtml(displayName)}"
-          onclick="globalThis.toggleSection('${internalName}')"
-        >
-          <span class="hier-arrow">${arrowIcon}</span>
-          <span class="hier-title">${this.utilService.escapeHtml(displayName)}</span>
-        </div>
-      `;
+      return '';
     }
 
     if (data.isMaterialHeader) {
@@ -1460,6 +1454,26 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   private getFeatureValue(row: any): string {
     return row.bomLinkFeature;
+  }
+
+  private renderSectionHeaderFullWidth(params: any): string {
+    const data = params.data;
+    const arrowIcon = data.isExpanded ? '▼' : '▶';
+    // Use sectionDisplayName for UI display (always from API), but use section (internal name) for toggle function
+    const displayName = data.sectionDisplayName; // Always from API response
+    const internalName = data.section; // Keep internal name for toggle function
+
+    return `
+      <div
+        class="hier-header hier-clickable section-header"
+        style="height:100%;padding:0 8px;background-color:#eff6ff;"
+        title="${this.utilService.escapeHtml(displayName)}"
+        onclick="globalThis.toggleSection('${internalName}')"
+      >
+        <span class="hier-arrow">${arrowIcon}</span>
+        <span class="hier-title">${this.utilService.escapeHtml(displayName)}</span>
+      </div>
+    `;
   }
 
   private renderGroupHeaderFullWidth(params: any): string {

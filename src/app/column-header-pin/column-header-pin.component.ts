@@ -437,7 +437,11 @@ export class ColumnHeaderPinComponent
     this.updatePinnedState();
 
     const field = params.column?.getColDef()?.field;
-    this.showMenuButton = field !== 'actions';
+    const colId = params.column?.getColId();
+    
+    // Show menu button for all columns except 'actions' and 'checkbox'
+    // This ensures pin options are available for all data columns in view mode
+    this.showMenuButton = field !== 'actions' && colId !== 'checkbox' && field !== 'checkbox';
   }
 
   refresh(params: IHeaderParams): boolean {

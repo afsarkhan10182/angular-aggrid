@@ -1939,7 +1939,24 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
   border-left: none !important; /* Let container handle the main border */
 }
 
-/* Section header rows - Remove vertical borders except for actions column */
+/* Section header rows - Full-width row styling */
+.ag-theme-alpine .ag-row.section-header-row {
+  background-color: #eff6ff !important;
+  border-bottom: 1px solid #cbd5e1 !important;
+}
+
+/* Full-width cell for section headers */
+.ag-theme-alpine .ag-row.section-header-row .ag-full-width-cell {
+  background-color: #eff6ff !important;
+  border-top: none !important;
+  border-bottom: 1px solid #cbd5e1 !important;
+  border-right: none !important;
+  border-left: none !important;
+  padding: 0 !important;
+  height: 100% !important;
+}
+
+/* Legacy support: Section header rows with individual cells (for backward compatibility) */
 .ag-theme-alpine .ag-row.section-header-row .ag-cell {
   background-color: #eff6ff !important;
   border-top: none !important;
@@ -1949,7 +1966,7 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
   --ag-cell-vertical-border-width: 0 !important;
 }
 
-/* Keep actions column border visible */
+/* Keep actions column border visible (legacy) */
 .ag-theme-alpine .ag-row.section-header-row .ag-cell[col-id='actions'] {
   border-right: 1px solid #e2e8f0 !important;
   --ag-cell-vertical-border-width: 1px !important;
@@ -1961,7 +1978,8 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
   cursor: default !important;
 }
 
-.ag-theme-alpine .ag-row.section-header-row:hover .ag-cell {
+.ag-theme-alpine .ag-row.section-header-row:hover .ag-cell,
+.ag-theme-alpine .ag-row.section-header-row:hover .ag-full-width-cell {
   background-color: #eff6ff !important;
 }
 
@@ -1971,7 +1989,8 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
   border-left: none !important;
 }
 
-.ag-theme-alpine .ag-row.section-header-row.ag-row-selected .ag-cell {
+.ag-theme-alpine .ag-row.section-header-row.ag-row-selected .ag-cell,
+.ag-theme-alpine .ag-row.section-header-row.ag-row-selected .ag-full-width-cell {
   background-color: #eff6ff !important;
   color: inherit !important;
   font-weight: bold !important;
