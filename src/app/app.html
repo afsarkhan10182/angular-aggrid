@@ -353,22 +353,55 @@
         >
           <div class="column-visibility-header">
             <h4>Visible Columns</h4>
-            <button (click)="showColumnVisibilityPanel = false" class="close-panel-btn">
-              <i class="fas fa-times"></i>
-            </button>
+            <div class="header-actions">
+              <button (click)="selectAllColumns()" class="select-all-btn">
+                <i class="fas fa-check-square"></i> Select All
+              </button>
+              <button (click)="clearAllColumns()" class="clear-all-btn">
+                <i class="fas fa-square"></i> Clear All
+              </button>
+              <button (click)="showColumnVisibilityPanel = false" class="close-panel-btn">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
           </div>
-          <div class="column-checkboxes">
-            <ng-container *ngFor="let col of allColumns">
-              <div *ngIf="!isSkuColumn(col) && !isFieldGrouped(col.field)" class="column-checkbox">
-                <label>
+          <div class="column-checkboxes" 
+               #columnCheckboxes
+               (dragover)="onDragOver($event)"
+               (drop)="onDrop($event)"
+               (dragleave)="stopAutoScroll()">
+            <ng-container *ngFor="let col of getVisibleColumnsForPanel(); let i = index">
+              <!-- Drop indicator line -->
+              <div *ngIf="dragOverIndex === i && draggedColumnIndex !== i && draggedColumnIndex < i" 
+                   class="drop-indicator"></div>
+              
+              <div *ngIf="col.field && !isSkuColumn(col) && !isFieldGrouped(col.field)" 
+                   class="column-checkbox"
+                   [class.dragging]="draggedColumnIndex === i"
+                   [class.drag-over]="dragOverIndex === i && draggedColumnIndex !== i"
+                   draggable="true"
+                   (dragstart)="onDragStart($event, col, i)"
+                   (dragend)="onDragEnd($event)"
+                   (dragover)="onItemDragOver($event, i)"
+                   (dragleave)="onItemDragLeave($event)"
+                   (mousedown)="onColumnMouseDown($event)">
+                <div class="drag-handle" title="Drag to reorder">
+                  <i class="fas fa-grip-vertical"></i>
+                </div>
+                <label (mousedown)="$event.stopPropagation()">
                   <input
                     type="checkbox"
                     [checked]="!col.hide"
                     (change)="toggleColumnVisibility(col, $event)"
+                    (mousedown)="$event.stopPropagation()"
                   />
-                  <span class="column-name">{{ col.headerName }}</span>
+                  <span class="column-name" (mousedown)="$event.stopPropagation()">{{ col.headerName }}</span>
                 </label>
               </div>
+              
+              <!-- Drop indicator line -->
+              <div *ngIf="dragOverIndex === i && draggedColumnIndex !== i && draggedColumnIndex > i" 
+                   class="drop-indicator"></div>
             </ng-container>
           </div>
         </div>

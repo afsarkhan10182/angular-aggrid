@@ -38,12 +38,20 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   private subscriptions: Subscription[] = [];
   public showColumnVisibilityPanel = false;
   public showGroupByPanel = false;
+  public draggedColumn: ExtendedColDef | null = null;
+  public draggedColumnIndex: number = -1;
+  public dragOverIndex: number = -1;
+  public panelColumnOrder: ExtendedColDef[] = []; // Track column order in panel
+  private autoScrollInterval: any = null;
+  private readonly AUTO_SCROLL_THRESHOLD = 50; // pixels from edge
+  private readonly AUTO_SCROLL_SPEED = 10; // pixels per interval
 
   @ViewChild('columnPanel') columnPanel!: ElementRef;
   @ViewChild('toggleBtn') toggleBtn!: ElementRef;
   @ViewChild('groupByPanel') groupByPanel!: ElementRef;
   @ViewChild('groupByBtn') groupByBtn!: ElementRef;
   @ViewChild('skuFilterDropdown') skuFilterDropdown!: ElementRef;
+  @ViewChild('columnCheckboxes') columnCheckboxes!: ElementRef;
   public showExpiredData = false;
   public showMaterialModal = false;
   public selectedMaterialData: any = {};
@@ -514,6 +522,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       sortable: false,
       filter: false,
       suppressHeaderMenuButton: true,
+      suppressMovable: true, // Make the column non-draggable
       context: {
         excludeFromExport: true,
       },
@@ -550,6 +559,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       resizable: false,
       sortable: false,
       filter: true,
+      suppressMovable: true, // Make the column non-draggable
       context: {
         excludeFromExport: true, // Exclude this column from Excel export
       },
@@ -1778,7 +1788,366 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       }
     } else {
       this.showColumnVisibilityPanel = !this.showColumnVisibilityPanel;
+      // Reset panel order when opening panel to sync with grid
+      if (this.showColumnVisibilityPanel) {
+        this.panelColumnOrder = [];
+      }
     }
+  }
+
+  selectAllColumns(): void {
+    if (!this.gridApi) return;
+
+    const columnsToShow = this.allColumns.filter(
+      (col) => col.field && !this.isSkuColumn(col) && !this.isFieldGrouped(col.field)
+    );
+    const fieldsToShow = columnsToShow
+      .map((col) => col.field)
+      .filter((field): field is string => Boolean(field));
+
+    if (fieldsToShow.length > 0) {
+      this.gridApi.setColumnsVisible(fieldsToShow, true);
+      columnsToShow.forEach((col) => {
+        col.hide = false;
+      });
+    }
+  }
+
+  clearAllColumns(): void {
+    if (!this.gridApi) return;
+
+    const columnsToHide = this.allColumns.filter(
+      (col) => col.field && !this.isSkuColumn(col) && !this.isFieldGrouped(col.field)
+    );
+    const fieldsToHide = columnsToHide
+      .map((col) => col.field)
+      .filter((field): field is string => Boolean(field));
+
+    if (fieldsToHide.length > 0) {
+      this.gridApi.setColumnsVisible(fieldsToHide, false);
+      columnsToHide.forEach((col) => {
+        col.hide = true;
+      });
+    }
+  }
+
+  /**
+   * Get visible columns for the panel (excluding SKU and grouped columns)
+   * Returns columns in their current display order from ag-grid or panel order
+   */
+  getVisibleColumnsForPanel(): ExtendedColDef[] {
+    // If panel order is initialized and panel is open, use it
+    if (this.panelColumnOrder.length > 0 && this.showColumnVisibilityPanel) {
+      // Filter out any columns that should be hidden (grouped, etc.)
+      return this.panelColumnOrder.filter(
+        (col) =>
+          col &&
+          col.field &&
+          !this.isSkuColumn(col) &&
+          !this.isFieldGrouped(col.field) &&
+          col.field !== 'checkbox'
+      );
+    }
+
+    // Initialize or refresh panel order from grid
+    if (!this.gridApi) {
+      const columns = this.allColumns.filter(
+        (col) => col.field && !this.isSkuColumn(col) && !this.isFieldGrouped(col.field)
+      );
+      this.panelColumnOrder = [...columns];
+      return columns;
+    }
+
+    // Get columns in their actual display order from ag-grid
+    const gridColumns = this.gridApi.getColumns();
+    if (!gridColumns || gridColumns.length === 0) {
+      const columns = this.allColumns.filter(
+        (col) => col.field && !this.isSkuColumn(col) && !this.isFieldGrouped(col.field)
+      );
+      this.panelColumnOrder = [...columns];
+      return columns;
+    }
+
+    // Create a map of field to columnDef for quick lookup
+    const colDefMap = new Map<string, ExtendedColDef>();
+    this.allColumns.forEach((colDef) => {
+      const field = colDef.field || colDef.colId;
+      if (field) {
+        colDefMap.set(field, colDef);
+      }
+    });
+
+    // Get columns in grid display order, filtered
+    const orderedColumns = gridColumns
+      .map((gridCol) => {
+        const colId = gridCol.getColId();
+        return colDefMap.get(colId);
+      })
+      .filter((colDef): colDef is ExtendedColDef => {
+        if (!colDef || !colDef.field) return false;
+        return (
+          !this.isSkuColumn(colDef) &&
+          !this.isFieldGrouped(colDef.field) &&
+          colDef.field !== 'checkbox'
+        );
+      });
+
+    // Update panel order
+    this.panelColumnOrder = [...orderedColumns];
+    return orderedColumns;
+  }
+
+  /**
+   * Get the actual column order from ag-grid
+   * Returns columns in their current display order
+   */
+  private getCurrentColumnOrder(): string[] {
+    if (!this.gridApi) return [];
+    const allColumns = this.gridApi.getColumns();
+    if (!allColumns) return [];
+    // getColumns() returns columns in their display order
+    return allColumns
+      .map((col) => col.getColId())
+      .filter((id): id is string => Boolean(id));
+  }
+
+  onColumnMouseDown(event: MouseEvent): void {
+    // Prevent dragging when clicking on checkbox or label
+    const target = event.target as HTMLElement;
+    if (target.closest('input[type="checkbox"]') || target.closest('label')) {
+      event.stopPropagation();
+    }
+  }
+
+  onDragStart(event: DragEvent, col: ExtendedColDef, index: number): void {
+    // Don't start drag if clicking on checkbox or label
+    const target = event.target as HTMLElement;
+    if (target.closest('input[type="checkbox"]') || target.closest('label')) {
+      event.preventDefault();
+      return;
+    }
+
+    this.draggedColumn = col;
+    this.draggedColumnIndex = index;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', ''); // Required for Firefox
+    }
+    // Visual feedback is handled by CSS class binding [class.dragging]
+  }
+
+  onDragEnd(event: DragEvent): void {
+    // Stop auto-scrolling
+    this.stopAutoScroll();
+    
+    // Reset drag state - visual feedback is handled by CSS class binding
+    this.draggedColumn = null;
+    this.draggedColumnIndex = -1;
+    this.dragOverIndex = -1;
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+    // Check auto-scroll when dragging over the container
+    this.checkAutoScroll(event);
+  }
+
+  onItemDragOver(event: DragEvent, index: number): void {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    if (this.draggedColumnIndex === -1 || this.draggedColumnIndex === index) {
+      this.dragOverIndex = -1;
+      this.stopAutoScroll();
+      return;
+    }
+
+    // Set drag over index - the visual feedback will show where it will drop
+    this.dragOverIndex = index;
+    
+    // Check if we need to auto-scroll
+    this.checkAutoScroll(event);
+    
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  /**
+   * Check if we need to auto-scroll and start/stop scrolling accordingly
+   */
+  private checkAutoScroll(event: DragEvent): void {
+    if (!this.columnCheckboxes?.nativeElement) {
+      return;
+    }
+
+    const container = this.columnCheckboxes.nativeElement;
+    const rect = container.getBoundingClientRect();
+    const mouseY = event.clientY;
+    const scrollTop = container.scrollTop;
+    const scrollHeight = container.scrollHeight;
+    const clientHeight = container.clientHeight;
+
+    // Calculate distance from top and bottom edges
+    const distanceFromTop = mouseY - rect.top;
+    const distanceFromBottom = rect.bottom - mouseY;
+
+    // Stop any existing auto-scroll
+    this.stopAutoScroll();
+
+    // Check if we're near the top edge and can scroll up
+    if (distanceFromTop < this.AUTO_SCROLL_THRESHOLD && scrollTop > 0) {
+      this.startAutoScroll('up');
+    }
+    // Check if we're near the bottom edge and can scroll down
+    else if (distanceFromBottom < this.AUTO_SCROLL_THRESHOLD && scrollTop < scrollHeight - clientHeight) {
+      this.startAutoScroll('down');
+    }
+  }
+
+  /**
+   * Start auto-scrolling in the specified direction
+   */
+  private startAutoScroll(direction: 'up' | 'down'): void {
+    if (this.autoScrollInterval) {
+      return; // Already scrolling
+    }
+
+    const container = this.columnCheckboxes?.nativeElement;
+    if (!container) {
+      return;
+    }
+
+    this.autoScrollInterval = setInterval(() => {
+      if (!container) {
+        this.stopAutoScroll();
+        return;
+      }
+
+      const scrollAmount = direction === 'up' 
+        ? -this.AUTO_SCROLL_SPEED 
+        : this.AUTO_SCROLL_SPEED;
+      
+      container.scrollTop += scrollAmount;
+
+      // Stop if we've reached the top or bottom
+      if (direction === 'up' && container.scrollTop <= 0) {
+        this.stopAutoScroll();
+      } else if (direction === 'down' && 
+                 container.scrollTop >= container.scrollHeight - container.clientHeight) {
+        this.stopAutoScroll();
+      }
+    }, 16); // ~60fps
+  }
+
+  /**
+   * Stop auto-scrolling
+   */
+  stopAutoScroll(): void {
+    if (this.autoScrollInterval) {
+      clearInterval(this.autoScrollInterval);
+      this.autoScrollInterval = null;
+    }
+  }
+
+  onItemDragLeave(event: DragEvent): void {
+    // Only clear dragOverIndex if we're actually leaving the item
+    const relatedTarget = event.relatedTarget as HTMLElement | null;
+    const currentTarget = event.currentTarget as HTMLElement;
+    if (!relatedTarget || !currentTarget.contains(relatedTarget)) {
+      this.dragOverIndex = -1;
+    }
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!this.draggedColumn || !this.gridApi) {
+      this.resetDragState();
+      return;
+    }
+
+    const visibleColumns = this.getVisibleColumnsForPanel();
+    const targetIndex = this.dragOverIndex >= 0 ? this.dragOverIndex : visibleColumns.length - 1;
+
+    if (this.draggedColumnIndex === targetIndex) {
+      this.resetDragState();
+      return;
+    }
+
+    // Update panel column order first (for immediate visual feedback)
+    const newPanelOrder = [...this.panelColumnOrder];
+    const draggedItem = newPanelOrder[this.draggedColumnIndex];
+    newPanelOrder.splice(this.draggedColumnIndex, 1);
+    newPanelOrder.splice(targetIndex, 0, draggedItem);
+    this.panelColumnOrder = newPanelOrder;
+
+    // Get the target column
+    const targetColumn = visibleColumns[targetIndex];
+    if (!targetColumn?.field) {
+      this.resetDragState();
+      return;
+    }
+
+    const draggedField = this.draggedColumn.field;
+    const targetField = targetColumn.field;
+
+    if (!draggedField || !targetField) {
+      this.resetDragState();
+      return;
+    }
+
+    // Get the actual column objects from ag-grid
+    const draggedCol = this.gridApi.getColumn(draggedField);
+    const targetCol = this.gridApi.getColumn(targetField);
+
+    if (!draggedCol || !targetCol) {
+      this.resetDragState();
+      return;
+    }
+
+    // Get all columns in current display order
+    const allColumns = this.gridApi.getColumns();
+    if (!allColumns || allColumns.length === 0) {
+      this.resetDragState();
+      return;
+    }
+
+    // Find current positions in the grid
+    const draggedIndex = allColumns.indexOf(draggedCol);
+    const targetIndexInGrid = allColumns.indexOf(targetCol);
+
+    if (draggedIndex === -1 || targetIndexInGrid === -1) {
+      this.resetDragState();
+      return;
+    }
+
+    // Calculate new position
+    const newIndex = draggedIndex < targetIndexInGrid 
+      ? targetIndexInGrid + 1  // Moving down, insert after target
+      : targetIndexInGrid;      // Moving up, insert before target
+
+    // Move the column using ag-grid API
+    try {
+      this.gridApi.moveColumns([draggedCol], newIndex);
+    } catch (error) {
+      console.error('Error moving column:', error);
+    }
+
+    this.resetDragState();
+  }
+
+  /**
+   * Reset drag state - Angular best practice: centralized state management
+   */
+  private resetDragState(): void {
+    this.dragOverIndex = -1;
+    this.draggedColumn = null;
+    this.draggedColumnIndex = -1;
   }
 
   @HostListener('document:click', ['$event'])
@@ -3881,6 +4250,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnDestroy(): void {
+    // Clean up auto-scroll interval
+    this.stopAutoScroll();
     this.subscriptions.forEach((sub) => sub.unsubscribe());
     this.subscriptions = [];
 
