@@ -79,13 +79,23 @@ export class PayloadTransformService {
 
       // Search for matching rows to find existing SKU objects
       // MATCHING RULES:
-      // For SBOM: Always match by Section + Feature + PartNumber + SKU ID (all 4 must match)
+      // For SBOM: 
+      //   - If feature is present: Match by Section + Feature + PartNumber + SKU ID (all 4 must match)
+      //   - If feature is empty: Match by Section + PartNumber + SKU ID (ignore feature)
       // For MBOM:
       //   1. If existing row has partNumber NOT empty AND ptcbomPartMarkUp == 'enumMBOM001'
       //      → Match by Section + Feature + SKU ID + PartNumber (all 4 must match)
       //   2. Otherwise (empty partNumber OR ptcbomPartMarkUp != 'enumMBOM001')
       //      → Match by Section + Feature + SKU ID only (no partNumber requirement)
-      if (resolvedSection && rowFeatureValue) {
+      const bomType = this.dataService.getBomType();
+      const isSbom = bomType === 'SBOM';
+      const isEmptyFeature = !rowFeatureValue || rowFeatureValue.trim() === '';
+      
+      // For MBOM: Preserve original behavior - require feature to be present
+      // For SBOM: Allow empty feature matching
+      const shouldSearchForMatches = resolvedSection && (isSbom || rowFeatureValue);
+      
+      if (shouldSearchForMatches) {
         // Search through rowData hierarchy for ALL matching rows
         const findAllMatchingRows = (rows: any[]): any[] => {
           let matches: any[] = [];
@@ -98,32 +108,34 @@ export class PayloadTransformService {
             // Check data rows (not headers)
             if ((r.isDirectRow || r.isSubRow) && !r.isNewRow) {
               const isSectionMatch = r.section === resolvedSection;
-              // Normalize bomLinkFeature for comparison (trim whitespace, handle null/undefined)
-              // Existing rows have display value like "150 | Fuselage : Compliance Label 1"
               const existingFeature = String(r.bomLinkFeature || '').trim();
-              const newRowFeature = String(rowFeatureValue).trim();
-              const isFeatureMatch = existingFeature === newRowFeature && existingFeature !== '';
-
-              // Determine if we need to match partNumber
-              // For SBOM: Always match by Section + Feature + PartNumber + SKU ID (all 4 must match)
-              // For MBOM: Match by Section + Feature + PartNumber + SKU ID only if ptcbomPartMarkUp === 'enumMBOM001'
-              const existingPart = String(r.partNumber || '').trim();
-              const existingHasPartNumber = existingPart !== '';
-              const bomType = this.dataService.getBomType();
-              const isSbom = bomType === 'SBOM';
               const isMbom = bomType === 'MBOM';
 
+              let isFeatureMatch = false;
               let requiresPartMatch = false;
+
               if (isSbom) {
-                // SBOM: Always require partNumber match
-                requiresPartMatch = true;
+                // SBOM: Handle empty feature case
+                if (isEmptyFeature) {
+                  // SBOM with empty feature: Match records with empty feature
+                  isFeatureMatch = !existingFeature || existingFeature === '';
+                  requiresPartMatch = true;
+                } else {
+                  // SBOM with feature: Match by feature
+                  isFeatureMatch = existingFeature === rowFeatureValue.trim();
+                  requiresPartMatch = true;
+                }
               } else if (isMbom) {
-                // MBOM: Require partNumber match only if ptcbomPartMarkUp === 'enumMBOM001'
+                // MBOM: Original logic - match by feature (feature must be present)
+                isFeatureMatch = existingFeature === rowFeatureValue.trim();
+                const existingPart = String(r.partNumber || '').trim();
+                const existingHasPartNumber = existingPart !== '';
                 const existingIsEnumMBOM001 = r.ptcbomPartMarkUp === 'enumMBOM001';
                 requiresPartMatch = existingHasPartNumber && existingIsEnumMBOM001;
               }
 
-              const isPartMatch = requiresPartMatch ? existingPart === rowPartNumber : true; // Skip partNumber check for MBOM rows with ptcbomPartMarkUp !== 'enumMBOM001'
+              const existingPart = String(r.partNumber || '').trim();
+              const isPartMatch = requiresPartMatch ? existingPart === rowPartNumber : true;
 
               // Match using Section + bomLinkFeature (+ PartNumber if required)
               if (isSectionMatch && isFeatureMatch && isPartMatch) {
@@ -183,8 +195,17 @@ export class PayloadTransformService {
             const section = resolvedSection || '';
             const partNumber = String(row.partNumber || '').trim();
             const bomLinkFeature = String(row.bomLinkFeature || '').trim();
+            
+            // Get bomType to determine matching rules
+            const bomType = this.dataService.getBomType();
+            const isSbom = bomType === 'SBOM';
+            const isEmptyFeature = !bomLinkFeature || bomLinkFeature === '';
 
-            if (section && bomLinkFeature) {
+            // For MBOM: Preserve original behavior - require feature to be present
+            // For SBOM: Allow empty feature matching
+            const shouldSearchApiInstances = section && (isSbom || bomLinkFeature);
+
+            if (shouldSearchApiInstances) {
               for (const instance of apiData.instances) {
                 const bomLink = instance['bom-link'];
                 if (!bomLink) continue;
@@ -194,40 +215,42 @@ export class PayloadTransformService {
                 const instanceFeature = String(bomLink.bomLinkFeature || '').trim();
                 const instancePtcbomPartMarkUp = bomLink.ptcbomPartMarkUp || '';
 
-                // MATCHING RULES:
-                // For SBOM: Always match by Section + Feature + PartNumber + SKU ID (all 4 must match)
-                // For MBOM:
-                //   1. If existing row has partNumber NOT empty AND ptcbomPartMarkUp == 'enumMBOM001'
-                //      → Match by Section + Feature + SKU ID + PartNumber (all 4 must match)
-                //   2. Otherwise (empty partNumber OR ptcbomPartMarkUp != 'enumMBOM001')
-                //      → Match by Section + Feature + SKU ID only (no partNumber requirement)
                 const isSectionMatch = instanceSection === section;
-                const isFeatureMatch = instanceFeature === bomLinkFeature;
                 const instanceHasPartNumber = Boolean(instancePart && String(instancePart).trim() !== '');
 
-                // Get bomType to determine matching rules
-                const bomType = this.dataService.getBomType();
-                const isSbom = bomType === 'SBOM';
                 const isMbom = bomType === 'MBOM';
 
+                let isFeatureMatch = false;
                 let requiresPartMatch = false;
+
                 if (isSbom) {
-                  // SBOM: Always require partNumber match
-                  requiresPartMatch = true;
+                  // SBOM: Match by Section + PartNumber + SKU ID
+                  // If feature is empty, match records with empty feature
+                  // If feature is present, match by feature
+                  if (isEmptyFeature) {
+                    // Match records with empty feature
+                    isFeatureMatch = !instanceFeature || instanceFeature === '';
+                    requiresPartMatch = true;
+                  } else {
+                    // Match by feature
+                    isFeatureMatch = instanceFeature === bomLinkFeature;
+                    requiresPartMatch = true;
+                  }
                 } else if (isMbom) {
-                  // MBOM: Require partNumber match only if ptcbomPartMarkUp === 'enumMBOM001'
+                  // MBOM: Original logic - match by feature (feature must be present)
+                  isFeatureMatch = instanceFeature === bomLinkFeature;
                   const instanceIsEnumMBOM001 = instancePtcbomPartMarkUp === 'enumMBOM001';
                   requiresPartMatch = instanceHasPartNumber && Boolean(instanceIsEnumMBOM001);
                 }
 
                 const isPartMatch = requiresPartMatch
                   ? String(instancePart).trim() === String(partNumber || '').trim()
-                  : true; // Skip partNumber check for MBOM rows with ptcbomPartMarkUp !== 'enumMBOM001'
+                  : true;
 
                 // Match by Section + Feature (+ PartNumber if required)
                 if (isSectionMatch && isFeatureMatch && isPartMatch) {
                   // Check if this instance has the SKU we're looking for
-                  // Include hidden rows (ptcbomPartMarkUp === "enumMBOM001" OR empty partNumber)
+                  // Include hidden rows (ptcbomPartMarkUp === "enumMBOM001" OR empty partNumber OR specSheetExtra: "No")
                   if (bomLink.skus && Array.isArray(bomLink.skus)) {
                     existingSku = bomLink.skus.find((s: any) => s.skuId === sku.skuId);
                     if (existingSku) {

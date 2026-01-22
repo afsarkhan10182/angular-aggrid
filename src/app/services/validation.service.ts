@@ -976,6 +976,7 @@ export class ValidationService {
         if (isSbom) {
           if (isEmptyFeature) {
             // SBOM: Feature is NOT present → Check Section + PartNumber + SKU ID (ignore feature)
+            // Special case: If there's exactly ONE hidden record (specSheetExtra: "No"), allow it as an update
             const matchingRecords: any[] = [];
             if (apiData && apiData.instances && Array.isArray(apiData.instances)) {
               for (const instance of apiData.instances) {
@@ -985,14 +986,15 @@ export class ValidationService {
                 const instanceSection = bomLink.sectionInternalName || bomLink.section || '';
                 const instancePartNumber = String(bomLink.partNumber || '').trim();
                 const instanceFeature = String(bomLink.bomLinkFeature || '').trim();
+                const instanceSpecSheetExtra = String(bomLink.bomLinkSpecSheetExtra || '').trim();
 
-                // Match by: section + partNumber + skuId (ignore feature)
-                if (
-                  instanceSection === section &&
-                  instancePartNumber === partNumber &&
-                  bomLink.skus &&
-                  Array.isArray(bomLink.skus)
-                ) {
+                // Match by: section + partNumber + skuId + empty feature
+                const isSectionMatch = instanceSection === section;
+                const isPartMatch = instancePartNumber === partNumber;
+                const isEmptyFeatureMatch = !instanceFeature || instanceFeature === '';
+                const hasSkus = bomLink.skus && Array.isArray(bomLink.skus);
+
+                if (isSectionMatch && isPartMatch && isEmptyFeatureMatch && hasSkus) {
                   const hasMatchingSku = bomLink.skus.some(
                     (sku: any) => sku && sku.skuId && String(sku.skuId).trim() === skuId
                   );
@@ -1003,20 +1005,45 @@ export class ValidationService {
                       section: instanceSection,
                       feature: instanceFeature,
                       partNumber: instancePartNumber,
+                      specSheetExtra: instanceSpecSheetExtra,
                     });
                   }
                 }
               }
             }
 
-            // If any matching record found → Error: Duplicate part for the same SKU
-            if (matchingRecords.length > 0) {
+            // Filter to only hidden records (specSheetExtra: "No")
+            const hiddenRecords = matchingRecords.filter(
+              (record) => record.specSheetExtra === 'No' || record.specSheetExtra === 'false'
+            );
+
+            const visibleRecords = matchingRecords.filter(
+              (record) => record.specSheetExtra !== 'No' && record.specSheetExtra !== 'false'
+            );
+
+            // Validation rules for SBOM with empty feature:
+            // 1. If multiple hidden records → Error: Duplicate
+            // 2. If exactly one hidden record → Allow (will be treated as update)
+            // 3. If any visible records → Error: Duplicate (same part + SKU + section already exists)
+            // 4. If no matching records → Allow (new row)
+            if (visibleRecords.length > 0) {
+              // Any visible record with same section + part + SKU + empty feature is a duplicate
               duplicateSkus.push(skuId);
               foundDuplicate = true;
               duplicateType = 'duplicate-part';
-              errorMessage = 'Duplicate part number for the same SKU. Part number cannot be duplicated when feature is not present.';
+              errorMessage = 'Duplicate part number for the same SKU. A record with the same part and SKU already exists when feature is not present.';
+              break;
+            } else if (hiddenRecords.length > 1) {
+              duplicateSkus.push(skuId);
+              foundDuplicate = true;
+              duplicateType = 'duplicate-part';
+              errorMessage = 'Duplicate part number for the same SKU. Multiple records found with the same part and SKU when feature is not present.';
               break;
             }
+
+            // If exactly one hidden record → Allow (will be treated as update)
+            // If zero or one visible record → Also allow (new row or update)
+            // Only error if multiple hidden records exist (handled above)
           } else {
             // SBOM: Feature IS present → Check Section + Feature + PartNumber + SKU ID
             // Allow duplicate parts for same SKU if feature is different
@@ -1031,13 +1058,12 @@ export class ValidationService {
                 const instancePartNumber = String(bomLink.partNumber || '').trim();
 
                 // Match by: section + feature + partNumber + skuId (all must match)
-                if (
-                  instanceSection === section &&
-                  instanceFeature === bomLinkFeature &&
-                  instancePartNumber === partNumber &&
-                  bomLink.skus &&
-                  Array.isArray(bomLink.skus)
-                ) {
+                const isSectionMatch = instanceSection === section;
+                const isFeatureMatch = instanceFeature === bomLinkFeature;
+                const isPartMatch = instancePartNumber === partNumber;
+                const hasSkus = bomLink.skus && Array.isArray(bomLink.skus);
+
+                if (isSectionMatch && isFeatureMatch && isPartMatch && hasSkus) {
                   const hasMatchingSku = bomLink.skus.some(
                     (sku: any) => sku && sku.skuId && String(sku.skuId).trim() === skuId
                   );
@@ -1179,6 +1205,7 @@ export class ValidationService {
           : 'No duplicate Feature+Part+SKU combinations found.',
       invalidRows: invalidRows.length > 0 ? invalidRows : undefined,
     };
+
 
     return result;
   }

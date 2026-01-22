@@ -1,113 +1,684 @@
 {
-  "resultCount": 3,
-  "from": 1,
-  "to": 3,
-  "results": [
-    {
-      "material-supplier": {
-        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:243751",
-        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
-        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:243750"
-      },
-      "material": {
-        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:243710",
-        "versionId": "VR:com.lcs.wc.material.LCSMaterial:243711",
-        "thumbnail": null,
-        "ptc_typeInternalName": "com.plmtestlab.rim$com_lcs_wc_material_LCSMaterial",
-        "ptcmaterialName": "2020RIM"
-      },
-      "color": {
-        "colorName": "Baja Smoke",
-        "thumbnail": null,
-        "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
-        "name": "Baja Smoke",
-        "iterationId": "OR:com.lcs.wc.color.LCSColor:208864",
-        "colorHexidecimalValue": "FF0000"
-      },
-      "supplier": {
-        "supplierName": "Diamant Grad GC",
-        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:208692",
-        "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
-        "primaryImageURL": null,
-        "name": "Diamant Grad GC"
-      },
-      "material-color": {
-        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
-        "name": "",
-        "partNumber": "4243455",
-        "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:243770"
-      }
-    },
-    {
-      "material-supplier": {
-        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:244860",
-        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
-        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:244859"
-      },
-      "material": {
-        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:244819",
-        "versionId": "VR:com.lcs.wc.material.LCSMaterial:244820",
-        "thumbnail": null,
-        "ptc_typeInternalName": "com.plmtestlab.wheelft$com_lcs_wc_material_LCSMaterial",
-        "ptcmaterialName": "2020WHEELFT"
-      },
-      "color": {
-        "colorName": "Blue",
-        "thumbnail": null,
-        "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
-        "name": "Blue",
-        "iterationId": "OR:com.lcs.wc.color.LCSColor:208913",
-        "colorHexidecimalValue": "00FFFF"
-      },
-      "supplier": {
-        "supplierName": "Diamant Grad GC",
-        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:208692",
-        "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
-        "primaryImageURL": null,
-        "name": "Diamant Grad GC"
-      },
-      "material-color": {
-        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
-        "name": "Deccription11",
-        "partNumber": "2020WHEELFT",
-        "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:244874"
-      }
-    },
-    {
-      "material-supplier": {
-        "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:776055",
-        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
-        "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:776054"
-      },
-      "material": {
-        "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:776055",
-        "versionId": "VR:com.lcs.wc.material.LCSMaterial:776056",
-        "thumbnail": null,
-        "ptc_typeInternalName": "com.plmtestlab.wheelft$com_lcs_wc_material_LCSMaterial",
-        "ptcmaterialName": "2030WHEELFT"
-      },
-      "color": {
-        "colorName": "Baja Smoke",
-        "thumbnail": null,
-        "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
-        "name": "Baja Smoke",
-        "iterationId": "OR:com.lcs.wc.color.LCSColor:208864",
-        "colorHexidecimalValue": "FF0000"
-      },
-      "supplier": {
-        "supplierName": "GC",
-        "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:208692",
-        "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
-        "primaryImageURL": null,
-        "name": "GC"
-      },
-      "material-color": {
-        "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
-        "name": "",
-        "partNumber": "2030WHEELFT",
-        "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:776057"
-      }
-    }
-  ],
-  "errors": []
+    "resultCount": 182,
+    "from": 1,
+    "to": 20,
+    "results": [
+        {
+            "material-supplier": {
+                "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:554725",
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+                "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:554724"
+            },
+            "material": {
+                "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:538167",
+                "versionId": "VR:com.lcs.wc.material.LCSMaterial:538168",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.plmtestlab.battery$com_lcs_wc_material_LCSMaterial",
+                "ptcmaterialName": "00.3018.201.001; EP POWERPACK 2 BATTERY"
+            },
+            "color": {
+                "colorName": "BK - Black(TK-0101)",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+                "name": "BK - Black(TK-0101)",
+                "iterationId": "OR:com.lcs.wc.color.LCSColor:537913",
+                "colorHexidecimalValue": "000000"
+            },
+            "supplier": {
+                "supplierName": "Robert Bosch GMBH Supplier Buyer",
+                "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:538128",
+                "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+                "primaryImageURL": null,
+                "name": "Robert Bosch GMBH Supplier Buyer"
+            },
+            "material-color": {
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+                "name": "",
+                "partNumber": "582579",
+                "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:554736"
+            }
+        },
+        {
+            "material-supplier": {
+                "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:554725",
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+                "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:554724"
+            },
+            "material": {
+                "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:538167",
+                "versionId": "VR:com.lcs.wc.material.LCSMaterial:538168",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.plmtestlab.battery$com_lcs_wc_material_LCSMaterial",
+                "ptcmaterialName": "00.3018.201.001; EP POWERPACK 2 BATTERY"
+            },
+            "color": {
+                "colorName": "Yellow",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+                "name": "Yellow",
+                "iterationId": "OR:com.lcs.wc.color.LCSColor:208897",
+                "colorHexidecimalValue": "FFFF00"
+            },
+            "supplier": {
+                "supplierName": "Robert Bosch GMBH Supplier Buyer",
+                "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:538128",
+                "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+                "primaryImageURL": null,
+                "name": "Robert Bosch GMBH Supplier Buyer"
+            },
+            "material-color": {
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+                "name": "",
+                "partNumber": "",
+                "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:924527"
+            }
+        },
+        {
+            "material-supplier": {
+                "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:243751",
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+                "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:243750"
+            },
+            "material": {
+                "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:243710",
+                "versionId": "VR:com.lcs.wc.material.LCSMaterial:243711",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.plmtestlab.rim$com_lcs_wc_material_LCSMaterial",
+                "ptcmaterialName": "2020RIM"
+            },
+            "color": {
+                "colorName": "Baja Smoke",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+                "name": "Baja Smoke",
+                "iterationId": "OR:com.lcs.wc.color.LCSColor:208864",
+                "colorHexidecimalValue": "FF0000"
+            },
+            "supplier": {
+                "supplierName": "Diamant Grad GC",
+                "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:208692",
+                "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+                "primaryImageURL": null,
+                "name": "Diamant Grad GC"
+            },
+            "material-color": {
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+                "name": "",
+                "partNumber": "2020RIM",
+                "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:243770"
+            }
+        },
+        {
+            "material-supplier": {
+                "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:735204",
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+                "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:735203"
+            },
+            "material": {
+                "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:734892",
+                "versionId": "VR:com.lcs.wc.material.LCSMaterial:734893",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.plmtestlab.rim$com_lcs_wc_material_LCSMaterial",
+                "ptcmaterialName": "2020RIM_Copy"
+            },
+            "supplier": {
+                "supplierName": "placeholder",
+                "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:140909",
+                "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+                "primaryImageURL": null,
+                "name": "placeholder"
+            }
+        },
+        {
+            "material-supplier": {
+                "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:244860",
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+                "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:244859"
+            },
+            "material": {
+                "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:244819",
+                "versionId": "VR:com.lcs.wc.material.LCSMaterial:244820",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.plmtestlab.wheelft$com_lcs_wc_material_LCSMaterial",
+                "ptcmaterialName": "2020WHEELFT"
+            },
+            "color": {
+                "colorName": "Blue",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+                "name": "Blue",
+                "iterationId": "OR:com.lcs.wc.color.LCSColor:208913",
+                "colorHexidecimalValue": "00FFFF"
+            },
+            "supplier": {
+                "supplierName": "Diamant Grad GC",
+                "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:208692",
+                "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+                "primaryImageURL": null,
+                "name": "Diamant Grad GC"
+            },
+            "material-color": {
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+                "name": "",
+                "partNumber": "2020WHEELFT",
+                "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:244874"
+            }
+        },
+        {
+            "material-supplier": {
+                "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:776078",
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+                "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:776077"
+            },
+            "material": {
+                "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:776055",
+                "versionId": "VR:com.lcs.wc.material.LCSMaterial:776056",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.plmtestlab.wheelft$com_lcs_wc_material_LCSMaterial",
+                "ptcmaterialName": "2030WHEELFT"
+            },
+            "color": {
+                "colorName": "Baja Smoke",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+                "name": "Baja Smoke",
+                "iterationId": "OR:com.lcs.wc.color.LCSColor:208864",
+                "colorHexidecimalValue": "FF0000"
+            },
+            "supplier": {
+                "supplierName": "DT",
+                "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:589846",
+                "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+                "primaryImageURL": null,
+                "name": "DT"
+            },
+            "material-color": {
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+                "name": "",
+                "partNumber": "2030WHEELFT",
+                "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:778249"
+            }
+        },
+        {
+            "material-supplier": {
+                "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:244164",
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+                "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:244163"
+            },
+            "material": {
+                "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:244127",
+                "versionId": "VR:com.lcs.wc.material.LCSMaterial:244128",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.plmtestlab.nipple$com_lcs_wc_material_LCSMaterial",
+                "ptcmaterialName": "3030Nipple"
+            },
+            "color": {
+                "colorName": "Blue",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+                "name": "Blue",
+                "iterationId": "OR:com.lcs.wc.color.LCSColor:208913",
+                "colorHexidecimalValue": "00FFFF"
+            },
+            "supplier": {
+                "supplierName": "DT",
+                "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:501669",
+                "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+                "primaryImageURL": null,
+                "name": "DT"
+            },
+            "material-color": {
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+                "name": "",
+                "partNumber": "776886",
+                "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:244178"
+            }
+        },
+        {
+            "material-supplier": {
+                "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:243932",
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+                "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:243931"
+            },
+            "material": {
+                "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:243783",
+                "versionId": "VR:com.lcs.wc.material.LCSMaterial:243784",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.plmtestlab.rim$com_lcs_wc_material_LCSMaterial",
+                "ptcmaterialName": "3030RIM"
+            },
+            "color": {
+                "colorName": "Voilet",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+                "name": "Voilet",
+                "iterationId": "OR:com.lcs.wc.color.LCSColor:208929",
+                "colorHexidecimalValue": "FF9FFF"
+            },
+            "supplier": {
+                "supplierName": "Giant China GC",
+                "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:234852",
+                "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+                "primaryImageURL": null,
+                "name": "Giant China GC"
+            },
+            "material-color": {
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+                "name": "",
+                "partNumber": "7889544",
+                "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:243946"
+            }
+        },
+        {
+            "material-supplier": {
+                "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:258370",
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+                "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:258369"
+            },
+            "material": {
+                "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:258333",
+                "versionId": "VR:com.lcs.wc.material.LCSMaterial:258334",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.plmtestlab.wheelft$com_lcs_wc_material_LCSMaterial",
+                "ptcmaterialName": "3030WHEELFT"
+            },
+            "color": {
+                "colorName": "Voilet",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+                "name": "Voilet",
+                "iterationId": "OR:com.lcs.wc.color.LCSColor:208929",
+                "colorHexidecimalValue": "FF9FFF"
+            },
+            "supplier": {
+                "supplierName": "Giant China GC",
+                "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:234852",
+                "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+                "primaryImageURL": null,
+                "name": "Giant China GC"
+            },
+            "material-color": {
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+                "name": "",
+                "partNumber": "3030WHEELFT",
+                "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:258389"
+            }
+        },
+        {
+            "material-supplier": {
+                "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:248986",
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+                "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:248985"
+            },
+            "material": {
+                "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:248945",
+                "versionId": "VR:com.lcs.wc.material.LCSMaterial:248946",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.plmtestlab.wheelrr$com_lcs_wc_material_LCSMaterial",
+                "ptcmaterialName": "3030WHEELRR"
+            },
+            "color": {
+                "colorName": "Blue",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+                "name": "Blue",
+                "iterationId": "OR:com.lcs.wc.color.LCSColor:207299",
+                "colorHexidecimalValue": "0AFF00"
+            },
+            "supplier": {
+                "supplierName": "Giant Taiwan GC Taiwan China",
+                "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:208672",
+                "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+                "primaryImageURL": null,
+                "name": "Giant Taiwan GC Taiwan China"
+            },
+            "material-color": {
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+                "name": "",
+                "partNumber": "3030WHEELRR",
+                "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:250001"
+            }
+        },
+        {
+            "material-supplier": {
+                "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:929501",
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+                "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:928800"
+            },
+            "material": {
+                "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:612802",
+                "versionId": "VR:com.lcs.wc.material.LCSMaterial:612803",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.plmtestlab.wheelft$com_lcs_wc_material_LCSMaterial",
+                "ptcmaterialName": "890922"
+            },
+            "color": {
+                "colorName": "Baja Smoke",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+                "name": "Baja Smoke",
+                "iterationId": "OR:com.lcs.wc.color.LCSColor:208864",
+                "colorHexidecimalValue": "FF0000"
+            },
+            "supplier": {
+                "supplierName": "Diamant Grad GC",
+                "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:208692",
+                "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+                "primaryImageURL": null,
+                "name": "Diamant Grad GC"
+            },
+            "material-color": {
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+                "name": "",
+                "partNumber": "890922_BS_2",
+                "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:929540"
+            }
+        },
+        {
+            "material-supplier": {
+                "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:942250",
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+                "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:942249"
+            },
+            "material": {
+                "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:612802",
+                "versionId": "VR:com.lcs.wc.material.LCSMaterial:612803",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.plmtestlab.wheelft$com_lcs_wc_material_LCSMaterial",
+                "ptcmaterialName": "890922"
+            },
+            "color": {
+                "colorName": "Baja Smoke",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+                "name": "Baja Smoke",
+                "iterationId": "OR:com.lcs.wc.color.LCSColor:208864",
+                "colorHexidecimalValue": "FF0000"
+            },
+            "supplier": {
+                "supplierName": "Diamant Non-P1 HD",
+                "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:289475",
+                "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+                "primaryImageURL": null,
+                "name": "Diamant Non-P1 HD"
+            },
+            "material-color": {
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+                "name": "",
+                "partNumber": "",
+                "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:942265"
+            }
+        },
+        {
+            "material-supplier": {
+                "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:613095",
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+                "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:613094"
+            },
+            "material": {
+                "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:612802",
+                "versionId": "VR:com.lcs.wc.material.LCSMaterial:612803",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.plmtestlab.wheelft$com_lcs_wc_material_LCSMaterial",
+                "ptcmaterialName": "890922"
+            },
+            "color": {
+                "colorName": "Baja Smoke",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+                "name": "Baja Smoke",
+                "iterationId": "OR:com.lcs.wc.color.LCSColor:208864",
+                "colorHexidecimalValue": "FF0000"
+            },
+            "supplier": {
+                "supplierName": "Giant China GC",
+                "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:234852",
+                "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+                "primaryImageURL": null,
+                "name": "Giant China GC"
+            },
+            "material-color": {
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+                "name": "",
+                "partNumber": "890922_BS_1",
+                "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:613233"
+            }
+        },
+        {
+            "material-supplier": {
+                "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:613808",
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+                "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:613807"
+            },
+            "material": {
+                "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:612802",
+                "versionId": "VR:com.lcs.wc.material.LCSMaterial:612803",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.plmtestlab.wheelft$com_lcs_wc_material_LCSMaterial",
+                "ptcmaterialName": "890922"
+            },
+            "color": {
+                "colorName": "Baja Smoke",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+                "name": "Baja Smoke",
+                "iterationId": "OR:com.lcs.wc.color.LCSColor:208864",
+                "colorHexidecimalValue": "FF0000"
+            },
+            "supplier": {
+                "supplierName": "Giant Vietnam GC",
+                "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:208828",
+                "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+                "primaryImageURL": null,
+                "name": "Giant Vietnam GC"
+            },
+            "material-color": {
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+                "name": "",
+                "partNumber": "",
+                "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:613846"
+            }
+        },
+        {
+            "material-supplier": {
+                "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:929553",
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+                "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:929552"
+            },
+            "material": {
+                "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:612802",
+                "versionId": "VR:com.lcs.wc.material.LCSMaterial:612803",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.plmtestlab.wheelft$com_lcs_wc_material_LCSMaterial",
+                "ptcmaterialName": "890922"
+            },
+            "color": {
+                "colorName": "Baja Smoke",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+                "name": "Baja Smoke",
+                "iterationId": "OR:com.lcs.wc.color.LCSColor:208864",
+                "colorHexidecimalValue": "FF0000"
+            },
+            "supplier": {
+                "supplierName": "HD-Fahrradwerke GmbH GC",
+                "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:208810",
+                "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+                "primaryImageURL": null,
+                "name": "HD-Fahrradwerke GmbH GC"
+            },
+            "material-color": {
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+                "name": "",
+                "partNumber": "",
+                "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:929601"
+            }
+        },
+        {
+            "material-supplier": {
+                "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:612825",
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+                "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:612824"
+            },
+            "material": {
+                "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:612802",
+                "versionId": "VR:com.lcs.wc.material.LCSMaterial:612803",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.plmtestlab.wheelft$com_lcs_wc_material_LCSMaterial",
+                "ptcmaterialName": "890922"
+            },
+            "supplier": {
+                "supplierName": "placeholder",
+                "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:140909",
+                "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+                "primaryImageURL": null,
+                "name": "placeholder"
+            }
+        },
+        {
+            "material-supplier": {
+                "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:612814",
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+                "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:612813"
+            },
+            "material": {
+                "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:612802",
+                "versionId": "VR:com.lcs.wc.material.LCSMaterial:612803",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.plmtestlab.wheelft$com_lcs_wc_material_LCSMaterial",
+                "ptcmaterialName": "890922"
+            },
+            "color": {
+                "colorName": "Baja Smoke",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+                "name": "Baja Smoke",
+                "iterationId": "OR:com.lcs.wc.color.LCSColor:208864",
+                "colorHexidecimalValue": "FF0000"
+            },
+            "supplier": {
+                "supplierName": "Trek Approved",
+                "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:490984",
+                "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+                "primaryImageURL": null,
+                "name": "Trek Approved"
+            },
+            "material-color": {
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+                "name": "",
+                "partNumber": "902030",
+                "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:612863"
+            }
+        },
+        {
+            "material-supplier": {
+                "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:493033",
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+                "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:493032"
+            },
+            "material": {
+                "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:455628",
+                "versionId": "VR:com.lcs.wc.material.LCSMaterial:455629",
+                "thumbnail": "/Windchill/images/000001/000001/000001/33422.png",
+                "ptc_typeInternalName": "com.plmtestlab.hubft$com_lcs_wc_material_LCSMaterial",
+                "ptcmaterialName": "ADH3D37BAL5, HUB DYNAMO, DH-3D37-QR,6V 3.0W, 32H OLD:100MM"
+            },
+            "color": {
+                "colorName": "Baja Smoke",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+                "name": "Baja Smoke",
+                "iterationId": "OR:com.lcs.wc.color.LCSColor:208864",
+                "colorHexidecimalValue": "FF0000"
+            },
+            "supplier": {
+                "supplierName": "Diamant Grad GC",
+                "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:208692",
+                "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+                "primaryImageURL": null,
+                "name": "Diamant Grad GC"
+            },
+            "material-color": {
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+                "name": "",
+                "partNumber": "902021",
+                "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:493064"
+            }
+        },
+        {
+            "material-supplier": {
+                "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:493033",
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+                "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:493032"
+            },
+            "material": {
+                "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:455628",
+                "versionId": "VR:com.lcs.wc.material.LCSMaterial:455629",
+                "thumbnail": "/Windchill/images/000001/000001/000001/33422.png",
+                "ptc_typeInternalName": "com.plmtestlab.hubft$com_lcs_wc_material_LCSMaterial",
+                "ptcmaterialName": "ADH3D37BAL5, HUB DYNAMO, DH-3D37-QR,6V 3.0W, 32H OLD:100MM"
+            },
+            "color": {
+                "colorName": "Blue",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+                "name": "Blue",
+                "iterationId": "OR:com.lcs.wc.color.LCSColor:208913",
+                "colorHexidecimalValue": "00FFFF"
+            },
+            "supplier": {
+                "supplierName": "Diamant Grad GC",
+                "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:208692",
+                "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+                "primaryImageURL": null,
+                "name": "Diamant Grad GC"
+            },
+            "material-color": {
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+                "name": "",
+                "partNumber": "902022",
+                "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:493044"
+            }
+        },
+        {
+            "material-supplier": {
+                "versionId": "VR:com.lcs.wc.material.LCSMaterialSupplier:493033",
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialSupplier",
+                "materialSupplierMaster": "OR:com.lcs.wc.material.LCSMaterialSupplierMaster:493032"
+            },
+            "material": {
+                "materialMaster": "OR:com.lcs.wc.material.LCSMaterialMaster:455628",
+                "versionId": "VR:com.lcs.wc.material.LCSMaterial:455629",
+                "thumbnail": "/Windchill/images/000001/000001/000001/33422.png",
+                "ptc_typeInternalName": "com.plmtestlab.hubft$com_lcs_wc_material_LCSMaterial",
+                "ptcmaterialName": "ADH3D37BAL5, HUB DYNAMO, DH-3D37-QR,6V 3.0W, 32H OLD:100MM"
+            },
+            "color": {
+                "colorName": "Supernova",
+                "thumbnail": null,
+                "ptc_typeInternalName": "com.lcs.wc.color.LCSColor",
+                "name": "Supernova",
+                "iterationId": "OR:com.lcs.wc.color.LCSColor:208881",
+                "colorHexidecimalValue": "0000FF"
+            },
+            "supplier": {
+                "supplierName": "Diamant Grad GC",
+                "versionId": "VR:com.lcs.wc.supplier.LCSSupplier:208692",
+                "ptc_typeInternalName": "com.lcs.wc.supplier.LCSSupplier",
+                "primaryImageURL": null,
+                "name": "Diamant Grad GC"
+            },
+            "material-color": {
+                "ptc_typeInternalName": "com.lcs.wc.material.LCSMaterialColor",
+                "name": "",
+                "partNumber": "902023",
+                "iterationId": "OR:com.lcs.wc.material.LCSMaterialColor:493054"
+            }
+        }
+    ],
+    "errors": [
+        {
+            "error": "(wt.indexsearch.indexsearchResource/3) wt.util.WTException:\r\nThere is a problem with your query or the connection with the Indexing Engine. Provide your administrator with this message and the time that you encountered this error."
+        }
+    ]
 }

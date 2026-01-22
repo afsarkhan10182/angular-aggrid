@@ -569,7 +569,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           return `<span class="delete-row-btn" data-new-row-id="${newRowId}" title="Delete">−</span>`;
         }
 
-        // Check if section has any VISIBLE children (MaterialHeaders or DirectRows with content)
+        // Check if section has any VISIBLE children (after filtering)
         const hasVisibleChildren = () => {
           if (
             !params.data.children ||
@@ -578,11 +578,31 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           ) {
             return false;
           }
+          
+          const bomType = this.dataService.getBomType();
+          const isSbom = bomType === 'SBOM';
+          
           return params.data.children.some((child: any) => {
             if (child.isMaterialHeader) return true;
+            
             // Direct rows are only visible if they have a part number/part
             const val = child.partNumber || child.part;
-            return val && String(val).trim() !== '';
+            if (!val || String(val).trim() === '') {
+              return false;
+            }
+            
+            // For SBOM: Apply the same filtering logic as flattenHierarchicalData
+            if (isSbom) {
+              const isMbomLineItem = child.ptcbomPartMarkUp === 'enumMBOM001';
+              const specSheetExtra = String(child.bomLinkSpecSheetExtra || '').trim();
+              
+              // If NOT MBOM line item and SpecSheetExtra is "No", it's filtered out (not visible)
+              if (!isMbomLineItem && specSheetExtra === 'No') {
+                return false;
+              }
+            }
+            
+            return true;
           });
         };
 
