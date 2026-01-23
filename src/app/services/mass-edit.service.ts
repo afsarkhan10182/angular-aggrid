@@ -302,31 +302,43 @@ export class MassEditService {
       }
 
       if (isSbomMode() && state.includeInSpecSheet) {
-        const includeInSpecSheetFields = ['bomLinkIncludeInSpecSheet'];
-        let targetField: string | null = null;
-        for (const field of includeInSpecSheetFields) {
-          if (columnFields.has(field)) {
-            targetField = field;
-            break;
-          }
-        }
-        if (!targetField) {
-          for (const field of includeInSpecSheetFields) {
-            if (rowData.hasOwnProperty(field)) {
-              targetField = field;
-              break;
+        // Skip bomLinkIncludeInSpecSheet for new rows (disabled and not sent in payload)
+        if (rowData.isNewRow) {
+          // Don't apply to new rows - field is disabled
+        } else {
+          // For existing rows: Only apply if bomLinkSpecSheetExtra doesn't exist
+          // (field is disabled if bomLinkSpecSheetExtra exists)
+          const specSheetExtra = rowData?.bomLinkSpecSheetExtra;
+          const hasSpecSheetExtra = specSheetExtra !== undefined && specSheetExtra !== null && String(specSheetExtra).trim() !== '';
+          
+          if (!hasSpecSheetExtra) {
+            const includeInSpecSheetFields = ['bomLinkIncludeInSpecSheet'];
+            let targetField: string | null = null;
+            for (const field of includeInSpecSheetFields) {
+              if (columnFields.has(field)) {
+                targetField = field;
+                break;
+              }
+            }
+            if (!targetField) {
+              for (const field of includeInSpecSheetFields) {
+                if (rowData.hasOwnProperty(field)) {
+                  targetField = field;
+                  break;
+                }
+              }
+            }
+            if (!targetField) {
+              targetField = 'bomLinkIncludeInSpecSheet';
+            }
+            const currentValue = rowData[targetField] || '';
+            if (currentValue !== state.includeInSpecSheet) {
+              rowData[targetField] = state.includeInSpecSheet;
+              node.setDataValue(targetField, state.includeInSpecSheet);
+              columnsToUpdate.add(targetField);
+              hasChanges = true;
             }
           }
-        }
-        if (!targetField) {
-          targetField = 'bomLinkIncludeInSpecSheet';
-        }
-        const currentValue = rowData[targetField] || '';
-        if (currentValue !== state.includeInSpecSheet) {
-          rowData[targetField] = state.includeInSpecSheet;
-          node.setDataValue(targetField, state.includeInSpecSheet);
-          columnsToUpdate.add(targetField);
-          hasChanges = true;
         }
       }
 

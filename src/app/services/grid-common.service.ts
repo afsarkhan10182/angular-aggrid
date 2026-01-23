@@ -794,6 +794,14 @@ export class GridCommonService {
       return mbomEditableFields.includes(field);
     }
 
+    // For SBOM: Disable bomLinkIncludeInSpecSheet if bomLinkSpecSheetExtra exists
+    if (field === 'bomLinkIncludeInSpecSheet') {
+      const specSheetExtra = rowData?.bomLinkSpecSheetExtra;
+      if (specSheetExtra !== undefined && specSheetExtra !== null && String(specSheetExtra).trim() !== '') {
+        return false; // Disabled if bomLinkSpecSheetExtra exists
+      }
+    }
+
     const isMbomLineItem = rowData?.ptcbomPartMarkUp === 'enumMBOM001';
 
     if (isMbomLineItem) {
@@ -818,6 +826,11 @@ export class GridCommonService {
     }
 
     if (isSbomMode() && field === 'bomLinkFeature') {
+      return false;
+    }
+
+    // For SBOM: Disable bomLinkIncludeInSpecSheet for new rows
+    if (isSbomMode() && field === 'bomLinkIncludeInSpecSheet') {
       return false;
     }
 

@@ -495,9 +495,17 @@ export class PayloadTransformService {
           }
         }
 
+        // For SBOM: Don't send bomLinkIncludeInSpecSheet for new rows (defaulted to "Yes" via bomLinkSpecSheetExtra)
+        // Only include it if it's not a new row or if bomType is not SBOM
         if (row.bomLinkIncludeInSpecSheet) {
-          const val = String(row.bomLinkIncludeInSpecSheet);
-          bomLink.bomLinkIncludeInSpecSheet = includeInSpecSheetMap[val] || val;
+          const isSbom = bomType === 'SBOM';
+          const isNewRow = row.isNewRow;
+          
+          // Skip bomLinkIncludeInSpecSheet for new rows in SBOM
+          if (!(isSbom && isNewRow)) {
+            const val = String(row.bomLinkIncludeInSpecSheet);
+            bomLink.bomLinkIncludeInSpecSheet = includeInSpecSheetMap[val] || val;
+          }
         }
 
         bomLink.skus = this.buildSkusArrayFromRow(

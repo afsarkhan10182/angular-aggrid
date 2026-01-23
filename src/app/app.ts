@@ -28,12 +28,23 @@ import { UtilService, ExtendedColDef } from './services/util.service';
 import { PayloadTransformService } from './services/payload-transform.service';
 import { MassEditService, MassEditState } from './services/mass-edit.service';
 import { environment } from '../environments/environment';
-import type { SkuFilterOption, MbomSkuFilterOption, SbomSkuFilterOption } from './services/data.service';
+import type {
+  SkuFilterOption,
+  MbomSkuFilterOption,
+  SbomSkuFilterOption,
+} from './services/data.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule, AgGridAngular, IconComponent, PartModalComponent, PartsEditModalComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    AgGridAngular,
+    IconComponent,
+    PartModalComponent,
+    PartsEditModalComponent,
+  ],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
 })
@@ -122,7 +133,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     private readonly utilService: UtilService,
     private readonly payloadTransformService: PayloadTransformService,
     private readonly massEditService: MassEditService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
   ) {
     this.gridOptions.context = {
       dataService: this.dataService,
@@ -171,7 +182,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     (globalThis as any).toggleMaterial = (
       section: string,
       materialIdentifier: string,
-      materialIndex?: number
+      materialIndex?: number,
     ) => {
       this.toggleMaterial(section, materialIdentifier, materialIndex);
     };
@@ -184,7 +195,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (!this.gridApi) return;
 
     const sectionRow = this.rowData.find(
-      (row: any) => row.section === section && row.isSectionHeader
+      (row: any) => row.section === section && row.isSectionHeader,
     );
     if (!sectionRow) return;
 
@@ -195,12 +206,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public toggleMaterial(
     section: string,
     materialIdentifier?: string,
-    materialIndex?: number
+    materialIndex?: number,
   ): void {
     if (!this.gridApi) return;
 
     const sectionRow = this.rowData.find(
-      (row: any) => row.section === section && row.isSectionHeader
+      (row: any) => row.section === section && row.isSectionHeader,
     );
     if (!sectionRow) return;
 
@@ -208,7 +219,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     if (materialIndex !== undefined) {
       materialRow = sectionRow.children.find(
-        (child: any) => child.isMaterialHeader && child.materialIndex === materialIndex
+        (child: any) => child.isMaterialHeader && child.materialIndex === materialIndex,
       );
     }
 
@@ -241,7 +252,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (this.activeGroupFields.length > 0) {
       hierarchicalData = this.gridCommonService.groupHierarchicalData(
         hierarchicalData,
-        this.activeGroupFields
+        this.activeGroupFields,
       );
     }
 
@@ -276,7 +287,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       if (isSbom && isDataRow && hasPartNumber) {
         const isMbomLineItem = node.ptcbomPartMarkUp === 'enumMBOM001';
         const specSheetExtra = String(node.bomLinkSpecSheetExtra || '').trim();
-        
+
         // If NOT MBOM line item, check SpecSheetExtra
         if (!isMbomLineItem) {
           // Don't display if SpecSheetExtra is "No"
@@ -344,7 +355,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       error: (error) => {
         this.showNotification(
           'This application must be accessed through FlexPLM. Please login to FlexPLM first.',
-          'error'
+          'error',
         );
       },
     });
@@ -360,9 +371,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         if (bomPartInfo) {
           const bomPartInfoArray = Array.isArray(bomPartInfo) ? bomPartInfo : [bomPartInfo];
           if (bomPartInfoArray.length > 0) {
-            const names = bomPartInfoArray
-              .map((info: any) => info.bomName)
-              .filter(Boolean);
+            const names = bomPartInfoArray.map((info: any) => info.bomOwner).filter(Boolean);
 
             this.bomNamesFull = names.join(', ');
 
@@ -399,7 +408,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         this.isLoading = false;
         const errorMessage = this.dataService.getLoadErrorMessage(error);
         this.showNotification(errorMessage, 'error-persistent');
-      }
+      },
     );
     this.subscriptions.push(loadSub);
   }
@@ -466,7 +475,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       option,
       this.mbomSkuFilterOptions,
       this.sbomSkuFilterOptions,
-      () => this.isMbomMode()
+      () => this.isMbomMode(),
     );
   }
 
@@ -486,7 +495,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   public onSkuFilterChange(): void {
     this.showSkuFilterDropdown = false;
-    if (this.dataService.isSkuFilterOptionDisabled(this.selectedSkuFilter, () => this.isMbomMode())) {
+    if (
+      this.dataService.isSkuFilterOptionDisabled(this.selectedSkuFilter, () => this.isMbomMode())
+    ) {
       this.selectedSkuFilter = 'all';
     }
 
@@ -597,30 +608,30 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           ) {
             return false;
           }
-          
+
           const bomType = this.dataService.getBomType();
           const isSbom = bomType === 'SBOM';
-          
+
           return params.data.children.some((child: any) => {
             if (child.isMaterialHeader) return true;
-            
+
             // Direct rows are only visible if they have a part number/part
             const val = child.partNumber || child.part;
             if (!val || String(val).trim() === '') {
               return false;
             }
-            
+
             // For SBOM: Apply the same filtering logic as flattenHierarchicalData
             if (isSbom) {
               const isMbomLineItem = child.ptcbomPartMarkUp === 'enumMBOM001';
               const specSheetExtra = String(child.bomLinkSpecSheetExtra || '').trim();
-              
+
               // If NOT MBOM line item and SpecSheetExtra is "No", it's filtered out (not visible)
               if (!isMbomLineItem && specSheetExtra === 'No') {
                 return false;
               }
             }
-            
+
             return true;
           });
         };
@@ -670,24 +681,24 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       cellStyle: (params: any) => {
         return this.getHierarchicalCellStyle(params);
       },
-          editable: (params: any) => {
-            if (!params.data || params.data.isSectionHeader) {
-              return false;
-            }
-            if (params.data.isNewRow) {
-              return this.gridCommonService.isFieldEditableForNewRow(
-                'bomLinkFeature',
-                () => this.isSkuFilterReadOnly(),
-                () => this.isSbomMode()
-              );
-            }
-            return this.gridCommonService.isFieldEditableInSbom(
-              'bomLinkFeature',
-              params.data,
-              () => this.isSkuFilterReadOnly(),
-              () => this.isSbomMode()
-            );
-          },
+      editable: (params: any) => {
+        if (!params.data || params.data.isSectionHeader) {
+          return false;
+        }
+        if (params.data.isNewRow) {
+          return this.gridCommonService.isFieldEditableForNewRow(
+            'bomLinkFeature',
+            () => this.isSkuFilterReadOnly(),
+            () => this.isSbomMode(),
+          );
+        }
+        return this.gridCommonService.isFieldEditableInSbom(
+          'bomLinkFeature',
+          params.data,
+          () => this.isSkuFilterReadOnly(),
+          () => this.isSbomMode(),
+        );
+      },
       cellEditor: AutocompleteCellEditorComponent,
       cellEditorParams: () => ({
         placeholder: 'search BOM features...',
@@ -725,7 +736,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             return this.utilService.createCellContentWithTooltip(
               params.value,
               columnWidth,
-              textColor
+              textColor,
             );
           },
           tooltipValueGetter: (params: any) => {
@@ -733,24 +744,24 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             return String(params.value);
           },
           cellStyle: (params: any) => this.getDataCellStyle(params),
-            editable: (params: any) => {
-              if (!params.data || params.data.isSectionHeader) {
-                return false;
-              }
-              if (params.data.isNewRow) {
-                return this.gridCommonService.isFieldEditableForNewRow(
-                  field,
-                  () => this.isSkuFilterReadOnly(),
-                  () => this.isSbomMode()
-                );
-              }
-              return this.gridCommonService.isFieldEditableInSbom(
-                'bomLinkCountryOfOrigin',
-                params.data,
+          editable: (params: any) => {
+            if (!params.data || params.data.isSectionHeader) {
+              return false;
+            }
+            if (params.data.isNewRow) {
+              return this.gridCommonService.isFieldEditableForNewRow(
+                field,
                 () => this.isSkuFilterReadOnly(),
-                () => this.isSbomMode()
+                () => this.isSbomMode(),
               );
-            },
+            }
+            return this.gridCommonService.isFieldEditableInSbom(
+              'bomLinkCountryOfOrigin',
+              params.data,
+              () => this.isSkuFilterReadOnly(),
+              () => this.isSbomMode(),
+            );
+          },
           cellEditor: AutocompleteCellEditorComponent,
           cellEditorParams: () => ({
             placeholder: 'search countries...',
@@ -785,7 +796,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             return this.utilService.createCellContentWithTooltip(
               params.value,
               columnWidth,
-              textColor
+              textColor,
             );
           },
           tooltipValueGetter: (params: any) => {
@@ -801,14 +812,14 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               return this.gridCommonService.isFieldEditableForNewRow(
                 field,
                 () => this.isSkuFilterReadOnly(),
-                () => this.isSbomMode()
+                () => this.isSbomMode(),
               );
             }
             return this.gridCommonService.isFieldEditableInSbom(
               'bomLinkSpecSheetExtra',
               params.data,
               () => this.isSkuFilterReadOnly(),
-              () => this.isSbomMode()
+              () => this.isSbomMode(),
             );
           },
           cellEditor: AutocompleteCellEditorComponent,
@@ -847,7 +858,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             return this.utilService.createCellContentWithTooltip(
               params.value,
               columnWidth,
-              textColor
+              textColor,
             );
           },
           tooltipValueGetter: (params: any) => {
@@ -863,14 +874,14 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               return this.gridCommonService.isFieldEditableForNewRow(
                 field,
                 () => this.isSkuFilterReadOnly(),
-                () => this.isSbomMode()
+                () => this.isSbomMode(),
               );
             }
             return this.gridCommonService.isFieldEditableInSbom(
               'bomLinkIncludeInSpecSheet',
               params.data,
               () => this.isSkuFilterReadOnly(),
-              () => this.isSbomMode()
+              () => this.isSbomMode(),
             );
           },
           cellEditor: AutocompleteCellEditorComponent,
@@ -913,7 +924,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           return this.utilService.createCellContentWithTooltip(
             params.value,
             columnWidth,
-            textColor
+            textColor,
           );
         },
         tooltipValueGetter: (params: any) => {
@@ -928,17 +939,17 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             return false;
           }
           if (params.data.isNewRow) {
-              return this.gridCommonService.isFieldEditableForNewRow(
+            return this.gridCommonService.isFieldEditableForNewRow(
               field,
               () => this.isSkuFilterReadOnly(),
-              () => this.isSbomMode()
+              () => this.isSbomMode(),
             );
           }
-            return this.gridCommonService.isFieldEditableInSbom(
+          return this.gridCommonService.isFieldEditableInSbom(
             field,
             params.data,
             () => this.isSkuFilterReadOnly(),
-            () => this.isSbomMode()
+            () => this.isSbomMode(),
           );
         },
       };
@@ -984,17 +995,17 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           }
 
           if (params.data?.isNewRow) {
-              return this.gridCommonService.isFieldEditableForNewRow(
+            return this.gridCommonService.isFieldEditableForNewRow(
               field,
               () => this.isSkuFilterReadOnly(),
-              () => this.isSbomMode()
+              () => this.isSbomMode(),
             );
           }
-            return this.gridCommonService.isFieldEditableInSbom(
+          return this.gridCommonService.isFieldEditableInSbom(
             field,
             params.data,
             () => this.isSkuFilterReadOnly(),
-            () => this.isSbomMode()
+            () => this.isSbomMode(),
           );
         };
         columnDef.valueSetter = (params: any) => {
@@ -1074,17 +1085,17 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           }
 
           if (params.data?.isNewRow) {
-              return this.gridCommonService.isFieldEditableForNewRow(
+            return this.gridCommonService.isFieldEditableForNewRow(
               field,
               () => this.isSkuFilterReadOnly(),
-              () => this.isSbomMode()
+              () => this.isSbomMode(),
             );
           }
-            return this.gridCommonService.isFieldEditableInSbom(
+          return this.gridCommonService.isFieldEditableInSbom(
             field,
             params.data,
             () => this.isSkuFilterReadOnly(),
-            () => this.isSbomMode()
+            () => this.isSbomMode(),
           );
         };
         columnDef.cellRenderer = (params: any) => {
@@ -1105,7 +1116,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           return this.utilService.createCellContentWithTooltip(
             formattedValue,
             columnWidth,
-            textColor
+            textColor,
           );
         };
         columnDef.valueGetter = (params: any) => {
@@ -1159,6 +1170,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       return {
         skuId: sku.skuId,
         product: sku.product,
+        material: sku.material,
+        bomName: sku.bomName,
         manufacturer: sku.manufacturer,
         color: sku.color,
         size: sku.size1,
@@ -1177,12 +1190,16 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       init(params: any) {
         this.params = params;
         const lines = params.lines || [];
+        const bomName = params.bomName || '';
         const fullText = lines.join('\n');
 
         this.eGui = document.createElement('div');
         this.eGui.className = 'sku-header-wrapper';
         // Displays: SKU, Product, Manufacturer, Color, Size, and Destination (if present)
-        this.eGui.setAttribute('title', fullText);
+        // Only add bomName to tooltip if it exists and is not empty
+        const tooltipText =
+          bomName && bomName.trim() !== '' ? `${fullText}\nBOM Name - ${bomName}` : fullText;
+        this.eGui.setAttribute('title', tooltipText);
 
         // Prevent text selection during resize
         this.eGui.style.userSelect = 'none';
@@ -1212,14 +1229,33 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
 
     const dynamicSkuColumns: ColDef[] = skuColumns.map((sku, index) => {
-      // Individual lines for custom header
-      const lines = [
-        `SKU - ${sku.skuId}`,
-        `Product - ${sku.product}`,
-        `Manufacturer - ${sku.manufacturer}`,
-        `Color - ${sku.color}`,
-        `Size - ${sku.size}`,
-      ];
+      // Individual lines for custom header - only include non-undefined values
+      const lines = [`SKU - ${sku.skuId}`];
+
+      // Only add Product if it's defined
+      if (sku.product !== undefined && sku.product !== null && sku.product !== '') {
+        lines.push(`Product - ${sku.product}`);
+      }
+
+      // Only add Material if it's defined
+      if (sku.material !== undefined && sku.material !== null && sku.material !== '') {
+        lines.push(`Material - ${sku.material}`);
+      }
+
+      // Only add Manufacturer if it's defined
+      if (sku.manufacturer !== undefined && sku.manufacturer !== null && sku.manufacturer !== '') {
+        lines.push(`Manufacturer - ${sku.manufacturer}`);
+      }
+
+      // Only add Color if it's defined
+      if (sku.color !== undefined && sku.color !== null && sku.color !== '') {
+        lines.push(`Color - ${sku.color}`);
+      }
+
+      // Only add Size if it's defined
+      if (sku.size !== undefined && sku.size !== null && sku.size !== '') {
+        lines.push(`Size - ${sku.size}`);
+      }
 
       // Add Destination if present, otherwise stop at Size
       if (sku.destination && sku.destination.trim() !== '') {
@@ -1246,6 +1282,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         headerComponentParams: {
           lines: lines,
           fullText: fullHeader,
+          bomName: sku.bomName || '',
         },
         field: sku.fieldName,
         width: 200,
@@ -1366,7 +1403,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           <span class="hier-arrow">${arrowIcon}</span>
           <span class="hier-title">
             <span class="hier-indent"></span>${this.utilService.escapeHtml(
-              data.groupHeaderName
+              data.groupHeaderName,
             )}: ${this.utilService.escapeHtml(groupValue)}
           </span>
           <span class="hier-count">(${groupCount})</span>
@@ -1405,8 +1442,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         }', '${materialIdentifier}', ${materialIndex})">
           ${linkIcon ? `<span class="material-link-icon">${linkIcon}</span>` : ''}
           <span class="hier-title" style="${textColor}">${this.utilService.escapeHtml(
-        String(data.material || data.part || data.partNumber || '')
-      )}</span>
+            String(data.material || data.part || data.partNumber || ''),
+          )}</span>
         </div>
       `;
     }
@@ -1418,8 +1455,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       return `
         <div class="hier-header parent-row-header">
           <span class="hier-title" style="${textColor}"><span class="hier-indent" style="--indent:16px;"></span>${this.utilService.escapeHtml(
-        String(data.part || '')
-      )}</span>
+            String(data.part || ''),
+          )}</span>
         </div>
       `;
     }
@@ -1435,8 +1472,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         <div class="hier-row direct-row">
           ${linkIcon ? `<span class="direct-link-icon">${linkIcon}</span>` : ''}
           <span class="direct-text" style="${textColor}">${this.utilService.escapeHtml(
-        featureValue
-      )}</span>
+            featureValue,
+          )}</span>
         </div>
       `;
     }
@@ -1495,7 +1532,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         <span class="hier-arrow">${arrowIcon}</span>
         <span class="hier-title">
           <span class="hier-indent"></span>${this.utilService.escapeHtml(
-            data.groupHeaderName
+            data.groupHeaderName,
           )}: ${this.utilService.escapeHtml(groupValue)}
         </span>
         <span class="hier-count">(${groupCount})</span>
@@ -1514,6 +1551,38 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public isMbomMode(): boolean {
     const bomType = this.dataService.getBomType();
     return bomType === 'MBOM';
+  }
+
+  public getBomComposerTitle(): string {
+    const bomType = this.dataService.getBomType();
+    
+    if (bomType === 'MBOM') {
+      return 'MBOM Composer';
+    }
+    
+    if (bomType === 'SBOM') {
+      return 'SBOM Composer';
+    }
+    
+    if (bomType === 'EBOM') {
+      return 'EBOM Composer';
+    }
+    
+    if (bomType === 'MATERIALMBOM') {
+      return 'Material BOM Composer';
+    }
+    
+    // Default fallback
+    return 'Product BOM Composer';
+  }
+
+  public getCriteriaLabel(): string {
+    const bomType = this.dataService.getBomType();
+    if (bomType === 'EBOM' || bomType === 'MATERIALMBOM') {
+      return 'Material of SKUs chosen - ';
+    }
+    // For MBOM and SBOM
+    return 'Products of SKUs chosen - ';
   }
 
   public isSkuFilterReadOnly(): boolean {
@@ -1552,7 +1621,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   /**
    * Check if field is editable for existing rows based on BOM type
    * MBOM: Only bomLinkStartDate, bomLinkEndDate, and quantity are editable
-   * SBOM: 
+   * SBOM:
    *   - If MBOM line item (ptcbomPartMarkUp === 'enumMBOM001'): Only IncludeInSpecSheet editable
    *   - If NOT MBOM line item: IncludeInSpecSheet, quantity, and dates editable
    */
@@ -1808,7 +1877,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (!this.gridApi) return;
 
     const columnsToShow = this.allColumns.filter(
-      (col) => col.field && !this.isSkuColumn(col) && !this.isFieldGrouped(col.field)
+      (col) => col.field && !this.isSkuColumn(col) && !this.isFieldGrouped(col.field),
     );
     const fieldsToShow = columnsToShow
       .map((col) => col.field)
@@ -1826,7 +1895,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (!this.gridApi) return;
 
     const columnsToHide = this.allColumns.filter(
-      (col) => col.field && !this.isSkuColumn(col) && !this.isFieldGrouped(col.field)
+      (col) => col.field && !this.isSkuColumn(col) && !this.isFieldGrouped(col.field),
     );
     const fieldsToHide = columnsToHide
       .map((col) => col.field)
@@ -1854,14 +1923,14 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           col.field &&
           !this.isSkuColumn(col) &&
           !this.isFieldGrouped(col.field) &&
-          col.field !== 'checkbox'
+          col.field !== 'checkbox',
       );
     }
 
     // Initialize or refresh panel order from grid
     if (!this.gridApi) {
       const columns = this.allColumns.filter(
-        (col) => col.field && !this.isSkuColumn(col) && !this.isFieldGrouped(col.field)
+        (col) => col.field && !this.isSkuColumn(col) && !this.isFieldGrouped(col.field),
       );
       this.panelColumnOrder = [...columns];
       return columns;
@@ -1871,7 +1940,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const gridColumns = this.gridApi.getColumns();
     if (!gridColumns || gridColumns.length === 0) {
       const columns = this.allColumns.filter(
-        (col) => col.field && !this.isSkuColumn(col) && !this.isFieldGrouped(col.field)
+        (col) => col.field && !this.isSkuColumn(col) && !this.isFieldGrouped(col.field),
       );
       this.panelColumnOrder = [...columns];
       return columns;
@@ -1915,9 +1984,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const allColumns = this.gridApi.getColumns();
     if (!allColumns) return [];
     // getColumns() returns columns in their display order
-    return allColumns
-      .map((col) => col.getColId())
-      .filter((id): id is string => Boolean(id));
+    return allColumns.map((col) => col.getColId()).filter((id): id is string => Boolean(id));
   }
 
   onColumnMouseDown(event: MouseEvent): void {
@@ -1948,7 +2015,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   onDragEnd(event: DragEvent): void {
     // Stop auto-scrolling
     this.stopAutoScroll();
-    
+
     // Reset drag state - visual feedback is handled by CSS class binding
     this.draggedColumn = null;
     this.draggedColumnIndex = -1;
@@ -1967,7 +2034,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   onItemDragOver(event: DragEvent, index: number): void {
     event.preventDefault();
     event.stopPropagation();
-    
+
     if (this.draggedColumnIndex === -1 || this.draggedColumnIndex === index) {
       this.dragOverIndex = -1;
       this.stopAutoScroll();
@@ -1976,10 +2043,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     // Set drag over index - the visual feedback will show where it will drop
     this.dragOverIndex = index;
-    
+
     // Check if we need to auto-scroll
     this.checkAutoScroll(event);
-    
+
     if (event.dataTransfer) {
       event.dataTransfer.dropEffect = 'move';
     }
@@ -2012,7 +2079,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       this.startAutoScroll('up');
     }
     // Check if we're near the bottom edge and can scroll down
-    else if (distanceFromBottom < this.AUTO_SCROLL_THRESHOLD && scrollTop < scrollHeight - clientHeight) {
+    else if (
+      distanceFromBottom < this.AUTO_SCROLL_THRESHOLD &&
+      scrollTop < scrollHeight - clientHeight
+    ) {
       this.startAutoScroll('down');
     }
   }
@@ -2036,17 +2106,17 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         return;
       }
 
-      const scrollAmount = direction === 'up' 
-        ? -this.AUTO_SCROLL_SPEED 
-        : this.AUTO_SCROLL_SPEED;
-      
+      const scrollAmount = direction === 'up' ? -this.AUTO_SCROLL_SPEED : this.AUTO_SCROLL_SPEED;
+
       container.scrollTop += scrollAmount;
 
       // Stop if we've reached the top or bottom
       if (direction === 'up' && container.scrollTop <= 0) {
         this.stopAutoScroll();
-      } else if (direction === 'down' && 
-                 container.scrollTop >= container.scrollHeight - container.clientHeight) {
+      } else if (
+        direction === 'down' &&
+        container.scrollTop >= container.scrollHeight - container.clientHeight
+      ) {
         this.stopAutoScroll();
       }
     }, 16); // ~60fps
@@ -2136,9 +2206,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
 
     // Calculate new position
-    const newIndex = draggedIndex < targetIndexInGrid 
-      ? targetIndexInGrid + 1  // Moving down, insert after target
-      : targetIndexInGrid;      // Moving up, insert before target
+    const newIndex =
+      draggedIndex < targetIndexInGrid
+        ? targetIndexInGrid + 1 // Moving down, insert after target
+        : targetIndexInGrid; // Moving up, insert before target
 
     // Move the column using ag-grid API
     try {
@@ -2288,7 +2359,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
    * Must verify SKU exists in original API response instances for this specific row
    */
   private hasSkuInExistingResponse(row: any, targetSkuIds: Set<string>): boolean {
-    if (!row || row.isSectionHeader || row.isGroupHeader || row.isMaterialHeader || row.isBranchHeader) {
+    if (
+      !row ||
+      row.isSectionHeader ||
+      row.isGroupHeader ||
+      row.isMaterialHeader ||
+      row.isBranchHeader
+    ) {
       return true; // Always show headers
     }
 
@@ -2317,7 +2394,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     let matchedInstance: any = null;
     let matchedInstanceSkuIds: string[] = [];
     let checkedInstances: any[] = [];
-    
+
     for (const instance of apiData.instances) {
       const bomLink = instance['bom-link'];
       if (!bomLink) continue;
@@ -2336,14 +2413,16 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
       // For MBOM: Match by partNumber when both row and instance have partNumbers
       let requiresPartMatch = false;
-      
+
       if (isSbom) {
         // SBOM: Always require partNumber match
         requiresPartMatch = true;
       } else if (isMbom) {
         // MBOM: Require partNumber match when both row and instance have partNumbers
         const rowHasPartNumber = !!(rowPartNumber && String(rowPartNumber).trim() !== '');
-        const instanceHasPartNumber = !!(instancePartNumber && String(instancePartNumber).trim() !== '');
+        const instanceHasPartNumber = !!(
+          instancePartNumber && String(instancePartNumber).trim() !== ''
+        );
         requiresPartMatch = rowHasPartNumber && instanceHasPartNumber;
       }
 
@@ -2369,7 +2448,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
       // Get SKU IDs from this instance's skus array
       const instanceSkuIds = bomLink.skus
-        .map((sku: any) => sku?.skuId ? String(sku.skuId).trim() : '')
+        .map((sku: any) => (sku?.skuId ? String(sku.skuId).trim() : ''))
         .filter((id: string) => id !== '');
 
       // Check if any target SKU ID exists in this instance's skus array
@@ -2406,8 +2485,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       return false;
     }
 
-    const matchedTargetSkuId = matchedInstanceSkuIds.find(id => targetSkuIds.has(id));
-    
+    const matchedTargetSkuId = matchedInstanceSkuIds.find((id) => targetSkuIds.has(id));
+
     // CRITICAL CHECK: Verify that the row actually has a NON-EMPTY value for at least one target SKU ID
     // If the SKU column is empty, the row should NOT be shown
     // This ensures we only show rows where the target SKU has an actual part number/value
@@ -2433,17 +2512,17 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   /**
    * Filter hierarchical data based on SKU filter selection
-   * 
+   *
    * Applies to ALL filters except "all":
    * - MBOM: "hdEditable", "hdViewOnly", "nonHdSource"
    * - SBOM: "editableSkus"
-   * 
+   *
    * Filtering logic:
    * Step 1: Get visible SKU IDs from filtered SKU columns (what's shown in UI)
    * Step 2: Filter rows - only show rows where:
    *   a) Matched instance has at least one visible SKU ID
    *   b) Row has a NON-EMPTY value for at least one visible SKU ID column
-   * 
+   *
    * This ensures rows with empty SKU columns are filtered out for all SKU views.
    */
   private filterHierarchicalDataBySkuFilter(data: any[]): any[] {
@@ -2455,7 +2534,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     // Step 1: Get the SKU IDs that are visible in the UI (after SKU column filtering)
     const visibleSkus = this.getFilteredSkuInfo();
     const visibleSkuIds = new Set<string>(
-      visibleSkus.map((sku) => String(sku.skuId || '').trim()).filter((id: string) => id !== '')
+      visibleSkus.map((sku) => String(sku.skuId || '').trim()).filter((id: string) => id !== ''),
     );
 
     if (visibleSkuIds.size === 0) {
@@ -2467,7 +2546,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       return rows
         .map((row) => {
           // Always keep headers
-          if (row.isSectionHeader || row.isGroupHeader || row.isMaterialHeader || row.isBranchHeader) {
+          if (
+            row.isSectionHeader ||
+            row.isGroupHeader ||
+            row.isMaterialHeader ||
+            row.isBranchHeader
+          ) {
             const filteredRow = { ...row };
             if (row.children && Array.isArray(row.children)) {
               filteredRow.children = filterRows(row.children);
@@ -2496,7 +2580,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     // Preserve new rows before rebuilding (but not when any SKU filter is active that filters rows)
     const newRows: any[] = [];
     const isSkuFilterActive = this.selectedSkuFilter !== 'all';
-    
+
     if (!isSkuFilterActive && this.displayData && Array.isArray(this.displayData)) {
       this.displayData.forEach((row) => {
         if (row.isNewRow && !row.isSectionHeader && !row.isGroupHeader && !row.isMaterialHeader) {
@@ -2519,7 +2603,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       // Group the hierarchical data (groups materials within sections)
       let groupedHierarchicalData = this.gridCommonService.groupHierarchicalData(
         hierarchicalData,
-        this.activeGroupFields
+        this.activeGroupFields,
       );
 
       // Apply saved expand/collapse state to group headers and ensure sections are expanded
@@ -2619,10 +2703,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       if (event.colDef?.isDisabled) {
         return;
       }
-      if (
-        event.colDef.field?.startsWith('sku') &&
-        event.data?.isNewRow
-      ) {
+      if (event.colDef.field?.startsWith('sku') && event.data?.isNewRow) {
         this.rowManagementService.pastePartNumber(event, this);
       }
       return;
@@ -2635,16 +2716,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       if (isReadOnlySkuFilter) {
         return;
       }
-      if (
-        event.colDef.field?.startsWith('sku') &&
-        event.data?.isNewRow
-      ) {
+      if (event.colDef.field?.startsWith('sku') && event.data?.isNewRow) {
         this.rowManagementService.clearSkuValue(event, this);
       }
       return;
     }
 
-    const disconnectButton = target?.closest('[data-action="disconnect-sku"]') as HTMLElement | null;
+    const disconnectButton = target?.closest(
+      '[data-action="disconnect-sku"]',
+    ) as HTMLElement | null;
     if (disconnectButton) {
       if (isReadOnlySkuFilter) {
         return;
@@ -2674,7 +2754,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               field,
               event.data,
               () => this.isSkuFilterReadOnly(),
-              () => this.isSbomMode()
+              () => this.isSbomMode(),
             ));
 
         if (isDateColumn && isEditable) {
@@ -2712,7 +2792,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
             // Only look for editing cell within the grid container
             const editingCell = gridContainer.querySelector(
-              '.ag-cell-inline-editing'
+              '.ag-cell-inline-editing',
             ) as HTMLElement;
             if (editingCell) {
               const dateInput =
@@ -2837,7 +2917,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             if (isCleanedUp) return false;
 
             const editingCell = gridContainer.querySelector(
-              '.ag-cell-inline-editing'
+              '.ag-cell-inline-editing',
             ) as HTMLElement;
             if (editingCell) {
               // Find the autocomplete input
@@ -3011,7 +3091,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         this.showMaterialModal = true;
       },
       error: (error: any) => {
-        const errorMessage = error?.error?.message || error?.message || 'Failed to load material BOM data.';
+        const errorMessage =
+          error?.error?.message || error?.message || 'Failed to load material BOM data.';
         this.showNotification(errorMessage, 'error');
       },
     });
@@ -3037,28 +3118,31 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     let requiredFields = this.validationService.getDefaultRequiredFields();
 
     const bomType = this.dataService.getBomType();
-    
+
     if (bomType === 'SBOM') {
-      // For SBOM: Remove bomLinkFeature and bomLinkSpecSheetExtra from required fields
-      // bomLinkFeature is disabled, bomLinkSpecSheetExtra is defaulted to "Yes" and non-editable
+      // For SBOM: Remove bomLinkFeature, bomLinkSpecSheetExtra, and bomLinkIncludeInSpecSheet from required fields
+      // bomLinkFeature is disabled
+      // bomLinkSpecSheetExtra is defaulted to "Yes" and non-editable
+      // bomLinkIncludeInSpecSheet is disabled for new rows and not sent in payload (defaulted via bomLinkSpecSheetExtra)
       requiredFields = requiredFields.filter(
         (field) =>
           !field.keys.includes('bomLinkFeature') &&
-          !field.keys.includes('bomLinkSpecSheetExtra')
+          !field.keys.includes('bomLinkSpecSheetExtra') &&
+          !field.keys.includes('bomLinkIncludeInSpecSheet'),
       );
     } else {
       // For MBOM: Remove SBOM-specific fields
       requiredFields = requiredFields.filter(
         (field) =>
           !field.keys.includes('bomLinkSpecSheetExtra') &&
-          !field.keys.includes('bomLinkIncludeInSpecSheet')
+          !field.keys.includes('bomLinkIncludeInSpecSheet'),
       );
     }
 
     const validationResult = this.validationService.validateNewRows(
       this.rowData,
       this.displayData,
-      requiredFields
+      requiredFields,
     );
     if (!validationResult.isValid) {
       // Mark invalid rows for highlighting
@@ -3077,7 +3161,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const skuValidationResult = this.validationService.validateNewRowsSkus(
       this.rowData,
       skuInfo,
-      this.displayData
+      this.displayData,
     );
     if (!skuValidationResult.isValid) {
       // Mark invalid rows for highlighting
@@ -3098,7 +3182,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       const payloadValidation = this.validationService.validateSkuPayload(
         newRow,
         skuInfo,
-        payloadSkus
+        payloadSkus,
       );
       if (!payloadValidation.isValid) {
         const rowId = newRow.newRowId || newRow.partNumber || newRow.part || 'Unknown';
@@ -3116,7 +3200,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       this.rowData,
       this.displayData,
       skuInfo,
-      apiData || undefined
+      apiData || undefined,
     );
     if (!duplicateValidation.isValid) {
       // Mark invalid rows for highlighting
@@ -3156,7 +3240,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         this.rowManagementService.showSaveMessage(
           'An unexpected error occurred while saving. Please try again.',
           this,
-          'error-persistent'
+          'error-persistent',
         );
       });
   }
@@ -3257,7 +3341,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       this.gridApi,
       this.dataService,
       section, // Pass section to be assigned to new row
-      sectionDisplayName // Pass sectionDisplayName to be assigned to new row
+      sectionDisplayName, // Pass sectionDisplayName to be assigned to new row
     );
 
     setTimeout(() => {
@@ -4027,11 +4111,14 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       {
         skuInfoOverride: skuInfo,
         gridApi: this.gridApi, // Pass gridApi to get current values from grid
-      }
+      },
     );
   }
 
-  private showNotification(message: string, type: 'success' | 'error' | 'error-persistent' | 'info' = 'info'): void {
+  private showNotification(
+    message: string,
+    type: 'success' | 'error' | 'error-persistent' | 'info' = 'info',
+  ): void {
     this.saveMessage = message;
     this.saveMessageType = type;
 
@@ -4054,7 +4141,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         this.selectedRows.add(node.data);
       }
     });
-    
+
     // For SBOM: Don't auto-show mass edit panel, show buttons instead
     // For MBOM: Keep existing behavior (auto-show mass edit panel)
     if (this.isSbomMode()) {
@@ -4068,7 +4155,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       const massEditState = this.massEditService.populateMassEditFields(
         Array.from(this.selectedRows),
         () => this.isMbomMode(),
-        () => this.isSbomMode()
+        () => this.isSbomMode(),
       );
       this.massEditStartDate = massEditState.startDate;
       this.massEditEndDate = massEditState.endDate;
@@ -4081,7 +4168,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       this.massEditIncludeInSpecSheet = '';
     }
   }
-
 
   applyMassEdit(): void {
     if (this.selectedRows.size === 0 || !this.gridApi) return;
@@ -4106,7 +4192,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           () => this.isSbomMode(),
           this.editedRows,
           this.editedFields,
-          this.originalRowValues
+          this.originalRowValues,
         );
 
         this.massEditStartDate = '';
@@ -4234,9 +4320,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
    * Used to determine which mass edit fields to show in SBOM mode
    */
   hasMbomLineItemsInSelection(): boolean {
-    return this.massEditService.hasMbomLineItemsInSelection(
-      this.selectedRows,
-      () => this.isSbomMode()
+    return this.massEditService.hasMbomLineItemsInSelection(this.selectedRows, () =>
+      this.isSbomMode(),
     );
   }
 
@@ -4258,7 +4343,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       const massEditState = this.massEditService.populateMassEditFields(
         Array.from(this.selectedRows),
         () => this.isMbomMode(),
-        () => this.isSbomMode()
+        () => this.isSbomMode(),
       );
       this.massEditStartDate = massEditState.startDate;
       this.massEditEndDate = massEditState.endDate;

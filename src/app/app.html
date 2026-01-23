@@ -3,12 +3,12 @@
   <div class="app-header">
     <div class="header-left">
       <div class="criteria-display">
-        <strong>Parts of SKUs chosen - </strong>
+        <strong>{{ getCriteriaLabel() }}</strong>
         <span [title]="bomNamesFull">{{ bomNamesDisplay }}</span>
       </div>
     </div>
     <h2>
-      <span>Product BOM Composer</span>
+      <span>{{ getBomComposerTitle() }}</span>
     </h2>
     <div class="header-right">
       <!-- User info display -->

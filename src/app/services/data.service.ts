@@ -51,6 +51,7 @@ export interface SkuInfo {
   skuId: string; // Changed from 'sku' to match actual API response
   product: string;
   productId?: string;
+  material?: string; // Material field for EBOM and MATERIALMBOM
   manufacturer: string;
   color: string;
   size1: string;
