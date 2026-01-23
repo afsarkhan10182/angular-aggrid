@@ -10,12 +10,13 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
+import { IconComponent } from '../icon/icon.component';
 import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 
 @Component({
   selector: 'app-parts-edit-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, AgGridAngular],
+  imports: [CommonModule, FormsModule, AgGridAngular, IconComponent],
   templateUrl: './parts-edit-modal.component.html',
   styleUrls: ['./parts-edit-modal.component.css'],
 })

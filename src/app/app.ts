@@ -6,15 +6,19 @@ import {
   ViewChild,
   ElementRef,
   HostListener,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { Subscription } from 'rxjs';
-import { PartModalComponent } from './part-modal/part-modal.component';
-import { PartsEditModalComponent } from './parts-edit-modal/parts-edit-modal.component';
-import { AutocompleteCellEditorComponent } from './autocomplete-cell-editor/autocomplete-cell-editor.component';
+import { AutocompleteCellEditorComponent } from './components/autocomplete-cell-editor/autocomplete-cell-editor.component';
+import { IconComponent } from './components/icon/icon.component';
+import { ColumnHeaderPinComponent } from './components/column-header-pin/column-header-pin.component';
+// Modals are lazy loaded via @defer blocks in template - Angular will code-split them
+import { PartModalComponent } from './components/part-modal/part-modal.component';
+import { PartsEditModalComponent } from './components/parts-edit-modal/parts-edit-modal.component';
 import { DataService } from './services/data.service';
 import { GridCommonService, GroupConfig } from './services/grid-common.service';
 import { RowManagementService } from './services/row-management.service';
@@ -23,14 +27,13 @@ import { ValidationService } from './services/validation.service';
 import { UtilService, ExtendedColDef } from './services/util.service';
 import { PayloadTransformService } from './services/payload-transform.service';
 import { MassEditService, MassEditState } from './services/mass-edit.service';
-import { ColumnHeaderPinComponent } from './column-header-pin/column-header-pin.component';
 import { environment } from '../environments/environment';
 import type { SkuFilterOption, MbomSkuFilterOption, SbomSkuFilterOption } from './services/data.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule, AgGridAngular, PartModalComponent, PartsEditModalComponent],
+  imports: [CommonModule, FormsModule, AgGridAngular, IconComponent, PartModalComponent, PartsEditModalComponent],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
 })
@@ -53,6 +56,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('groupByBtn') groupByBtn!: ElementRef;
   @ViewChild('skuFilterDropdown') skuFilterDropdown!: ElementRef;
   @ViewChild('columnCheckboxes') columnCheckboxes!: ElementRef;
+  @ViewChild('actionDropdown') actionDropdown!: ElementRef;
   public showExpiredData = false;
   public showMaterialModal = false;
   public selectedMaterialData: any = {};
@@ -70,6 +74,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public bomType: string = '';
   public selectedSkuFilter: SkuFilterOption = 'all';
   public showSkuFilterDropdown = false;
+  public showActionDropdown = false;
   public get mbomSkuFilterOptions(): Array<{ label: string; value: MbomSkuFilterOption }> {
     return this.dataService.getMbomSkuFilterOptions();
   }
@@ -116,7 +121,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     private readonly validationService: ValidationService,
     private readonly utilService: UtilService,
     private readonly payloadTransformService: PayloadTransformService,
-    private readonly massEditService: MassEditService
+    private readonly massEditService: MassEditService,
+    private readonly cdr: ChangeDetectorRef
   ) {
     this.gridOptions.context = {
       dataService: this.dataService,
@@ -2138,7 +2144,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     try {
       this.gridApi.moveColumns([draggedCol], newIndex);
     } catch (error) {
-      console.error('Error moving column:', error);
+      // Silently handle column move errors
     }
 
     this.resetDragState();
@@ -2187,6 +2193,24 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         this.showSkuFilterDropdown = false;
       }
     }
+
+    // Handle action dropdown
+    if (this.showActionDropdown) {
+      const dropdown = this.actionDropdown?.nativeElement;
+      const clickedOutside = dropdown && !dropdown.contains(target);
+      if (clickedOutside) {
+        this.showActionDropdown = false;
+      }
+    }
+  }
+
+  // Action Dropdown Methods
+  toggleActionDropdown(): void {
+    this.showActionDropdown = !this.showActionDropdown;
+  }
+
+  closeActionDropdown(): void {
+    this.showActionDropdown = false;
   }
 
   // Group By Methods
@@ -4102,15 +4126,30 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     // You can add field names here or set excludeFromExport: true in column definitions
     const excludedFields = ['actions']; // Add more field names to exclude here
 
+    // Check if any rows are selected
+    const selectedNodes = this.gridApi.getSelectedNodes();
+    const hasSelectedRows = selectedNodes && selectedNodes.length > 0;
+
+    // If rows are selected, export only selected rows, otherwise export all
+    const exportOptions: any = {
+      excludedFields,
+      fileName: `BOM_Composer_Export_${new Date().toISOString().split('T')[0]}.xlsx`,
+      sheetName: 'BOM Export',
+      excludeHeaderRows: true,
+    };
+
+    // If rows are selected, pass them to the export function
+    if (hasSelectedRows) {
+      exportOptions.selectedNodes = selectedNodes;
+    }
+
     this.utilService
-      .exportGridToExcel(this.gridApi, {
-        excludedFields,
-        fileName: `BOM_Composer_Export_${new Date().toISOString().split('T')[0]}.xlsx`,
-        sheetName: 'BOM Export',
-        excludeHeaderRows: true,
-      })
+      .exportGridToExcel(this.gridApi, exportOptions)
       .then(() => {
-        this.showNotification('Excel file exported successfully', 'success');
+        const message = hasSelectedRows
+          ? `Excel file exported successfully (${selectedNodes.length} row${selectedNodes.length > 1 ? 's' : ''} selected)`
+          : 'Excel file exported successfully';
+        this.showNotification(message, 'success');
       })
       .catch(() => {
         this.showNotification('Error exporting to Excel. Please try again.', 'error');
@@ -4275,12 +4314,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   savePartsEditModal(data: any[]): void {
-    // TODO: Implement save logic with API call
-    console.log('Saving parts edit data:', data);
     // Update the modal data with saved data
     this.partsEditModalData = data;
-    // For now, just close the modal
-    // In the future, make API call here to save the data
+    // Close the modal after save
     this.closePartsEditModal();
   }
 

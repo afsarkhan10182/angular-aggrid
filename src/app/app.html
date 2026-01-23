@@ -13,7 +13,7 @@
     <div class="header-right">
       <!-- User info display -->
       <div class="user-info" *ngIf="currentUser">
-        <i class="fas fa-user"></i>
+        <app-icon name="user" size="16"></app-icon>
         <span class="username">{{ currentUser.fullName || currentUser.name }}</span>
       </div>
     </div>
@@ -28,7 +28,6 @@
         <div class="search-filter-section">
           <div class="search-filter-container">
             <div class="search-input-wrapper">
-              <i class="fas fa-search search-icon"></i>
               <input
                 type="text"
                 class="search-input"
@@ -44,29 +43,25 @@
                 (click)="clearSearch()"
                 title="Clear search"
               >
-                <i class="fas fa-times"></i>
+                <app-icon name="times" size="14"></app-icon>
               </button>
             </div>
             <button
               class="search-filter-btn"
               (click)="applyHierarchicalSearch()"
               [disabled]="!searchText"
-              title="Apply filter"
+              title="Search"
             >
-              <i class="fas fa-filter"></i>
-              Filter
+              <app-icon name="search" size="14"></app-icon>
             </button>
           </div>
           <div class="sku-filter-container" *ngIf="isMbomMode() || isSbomMode()">
             <label class="sku-filter-label" for="sku-filter-trigger">SKU Views:</label>
-            <div 
-              #skuFilterDropdown 
-              class="sku-filter-dropdown"
-            >
-              <button 
+            <div #skuFilterDropdown class="sku-filter-dropdown">
+              <button
                 id="sku-filter-trigger"
-                type="button" 
-                class="sku-filter-trigger" 
+                type="button"
+                class="sku-filter-trigger"
                 (click)="toggleSkuFilterDropdown()"
                 [attr.aria-expanded]="showSkuFilterDropdown"
                 [attr.aria-haspopup]="true"
@@ -76,9 +71,14 @@
                 <span class="sku-filter-trigger-label">
                   {{ getSkuFilterLabel(selectedSkuFilter) }}
                 </span>
-                <span class="sku-filter-caret" aria-hidden="true">▾</span>
+                <span class="sku-filter-caret" [class.rotated]="showSkuFilterDropdown" aria-hidden="true">▾</span>
               </button>
-              <ul *ngIf="showSkuFilterDropdown" id="sku-filter-menu" class="sku-filter-menu" aria-label="SKU filter options">
+              <ul
+                *ngIf="showSkuFilterDropdown"
+                id="sku-filter-menu"
+                class="sku-filter-menu"
+                aria-label="SKU filter options"
+              >
                 <li
                   *ngFor="let option of skuFilterOptions"
                   class="sku-filter-option"
@@ -107,36 +107,74 @@
         <div class="toggle-switch-container">
           <label class="toggle-switch">
             <span class="toggle-text">Show Expired:</span>
-            <input type="checkbox" id="show-expired-toggle" [(ngModel)]="showExpiredData" (change)="toggleExpiredData()" />
+            <input
+              type="checkbox"
+              id="show-expired-toggle"
+              [(ngModel)]="showExpiredData"
+              (change)="toggleExpiredData()"
+            />
             <span class="toggle-slider"></span>
           </label>
         </div>
-        <!-- Export Button -->
-        <button (click)="exportToExcel()" class="export-btn" title="Export to Excel">
-          <i class="fas fa-file-excel"></i> Export
-        </button>
-        <!-- Mass Edit Button (SBOM only, when rows selected) -->
-        <button
-          *ngIf="isSbomMode() && selectedRows.size > 1"
-          (click)="openMassEditForSbom()"
-          class="export-btn mass-edit-btn"
-          title="Mass Edit Selected Rows"
-        >
-          <i class="fas fa-edit"></i> Mass Edit
-        </button>
-        <!-- Edit Parts Button (SBOM only, when rows selected) -->
-        <button
-          *ngIf="isSbomMode() && selectedRows.size > 0"
-          (click)="openPartsEditModal()"
-          class="export-btn edit-parts-btn"
-          title="Edit Parts Data"
-        >
-          <i class="fas fa-cog"></i> Edit Parts
-        </button>
+        <!-- Action Dropdown -->
+        <div class="action-dropdown-container" #actionDropdown>
+          <button
+            (click)="toggleActionDropdown()"
+            class="action-dropdown-btn"
+            [class.active]="showActionDropdown"
+            title="Actions"
+          >
+            Actions
+            <app-icon name="chevron-down" size="20" [class.rotated]="showActionDropdown"></app-icon>
+          </button>
+          <div class="action-dropdown-menu" *ngIf="showActionDropdown">
+            <!-- Export - Always enabled -->
+            <button
+              (click)="exportToExcel(); closeActionDropdown()"
+              class="action-dropdown-item"
+              title="Export selected rows if any, otherwise export all data"
+            >
+              <app-icon name="file-excel" size="14"></app-icon>
+              <span>Export</span>
+            </button>
+            <!-- Mass Edit - Enabled when more than 1 selected (SBOM only) -->
+            <button
+              *ngIf="isSbomMode()"
+              (click)="openMassEditForSbom(); closeActionDropdown()"
+              class="action-dropdown-item"
+              [class.disabled]="selectedRows.size <= 1"
+              [disabled]="selectedRows.size <= 1"
+              [title]="
+                selectedRows.size <= 1
+                  ? 'Select more than 1 row to enable Mass Edit'
+                  : 'Mass Edit Selected Rows'
+              "
+            >
+              <app-icon name="edit" size="14"></app-icon>
+              <span>Mass Edit</span>
+            </button>
+            <!-- Service - DataManager - Enabled when more than 1 selected (SBOM only) -->
+            <button
+              *ngIf="isSbomMode()"
+              (click)="openPartsEditModal(); closeActionDropdown()"
+              class="action-dropdown-item"
+              [class.disabled]="selectedRows.size <= 1"
+              [disabled]="selectedRows.size <= 1"
+              [title]="
+                selectedRows.size <= 1
+                  ? 'Select more than 1 row to enable Service - DataManager'
+                  : 'Service - DataManager'
+              "
+            >
+              <app-icon name="cog" size="14"></app-icon>
+              <span>Service - DataManager</span>
+            </button>
+          </div>
+        </div>
         <div class="save-section">
           <!-- Last Saved Display -->
           <div class="last-saved-display">
-            <i class="fas fa-clock"></i>
+            <app-icon name="clock" size="14"></app-icon>
             <span class="last-saved-text">
               {{ getLastSavedText() }}
             </span>
@@ -149,7 +187,7 @@
             [title]="getSaveButtonTooltip()"
           >
             <ng-container *ngIf="!isSaving; else savingTpl">
-              <i class="fas fa-save"></i>
+              <app-icon name="save" size="14"></app-icon>
               <span>Save</span>
             </ng-container>
             <ng-template #savingTpl>
@@ -220,7 +258,10 @@
             class="mass-edit-input"
           >
             <option value="">-- Select --</option>
-            <option *ngFor="let option of getIncludeInSpecSheetOptionsForMassEdit()" [value]="option">
+            <option
+              *ngFor="let option of getIncludeInSpecSheetOptionsForMassEdit()"
+              [value]="option"
+            >
               {{ option }}
             </option>
           </select>
@@ -266,15 +307,18 @@
             class="mass-edit-input"
           >
             <option value="">-- Select --</option>
-            <option *ngFor="let option of getIncludeInSpecSheetOptionsForMassEdit()" [value]="option">
+            <option
+              *ngFor="let option of getIncludeInSpecSheetOptionsForMassEdit()"
+              [value]="option"
+            >
               {{ option }}
             </option>
           </select>
         </div>
         <div class="mass-edit-actions">
           <button (click)="applyMassEdit()" class="apply-mass-edit-btn" [disabled]="isMassEditing">
-            <i *ngIf="!isMassEditing" class="fas fa-check"></i>
-            <i *ngIf="isMassEditing" class="fas fa-spinner fa-spin"></i>
+            <app-icon *ngIf="!isMassEditing" name="check" size="14"></app-icon>
+            <app-icon *ngIf="isMassEditing" name="spinner" size="14"></app-icon>
             <span *ngIf="!isMassEditing">Apply</span>
             <span *ngIf="isMassEditing">Applying...</span>
           </button>
@@ -301,8 +345,8 @@
               massEditMode
                 ? 'calc(100vh - 350px)'
                 : !!saveMessage
-                ? 'calc(100vh - 250px)'
-                : 'calc(100vh - 200px)'
+                  ? 'calc(100vh - 250px)'
+                  : 'calc(100vh - 200px)'
             "
             class="ag-theme-alpine"
             [gridOptions]="gridOptions"
@@ -318,191 +362,203 @@
       </div>
 
       @defer (on idle) {
-      <!-- Side Buttons Wrapper -->
-      <div class="side-buttons-wrapper">
-        <!-- Toggle Columns Button - Outside grid but visually integrated -->
-        <div class="grid-toggle-button-container" [class.panel-open]="showColumnVisibilityPanel">
-          <button
-            (click)="toggleColumnVisibility()"
-            class="grid-toggle-columns-btn"
-            title="Show/Hide Columns"
-            #toggleBtn
-          >
-            <div class="toggle-button-content">
-              <i class="fas fa-columns"></i>
-              <span class="toggle-button-text">COLUMNS</span>
-            </div>
-          </button>
-        </div>
-
-        <!-- Group By Button - Outside grid but visually integrated -->
-        <div
-          class="grid-toggle-button-container group-by-container"
-          [class.panel-open]="showGroupByPanel"
-        >
-          <button
-            (click)="toggleGroupByPanel()"
-            class="grid-toggle-columns-btn"
-            [class.active]="activeGroupFields.length > 0"
-            title="Group By"
-            #groupByBtn
-          >
-            <div class="toggle-button-content">
-              <i class="fas fa-layer-group"></i>
-              <span class="toggle-button-text">GROUP BY</span>
-              <span *ngIf="activeGroupFields.length > 0" class="group-count-badge">{{
-                activeGroupFields.length
-              }}</span>
-            </div>
-          </button>
-        </div>
-      </div>
-
-      <!-- Column Visibility Panel - Positioned near grid toggle button -->
-      <div
-        *ngIf="showColumnVisibilityPanel"
-        class="grid-column-visibility-panel-container"
-        #columnPanel
-      >
-        <div 
-          class="column-visibility-panel" 
-          (click)="$event.stopPropagation()"
-          (keydown.escape)="showColumnVisibilityPanel = false"
-        >
-          <div class="column-visibility-header">
-            <h4>Visible Columns</h4>
-            <div class="header-actions">
-              <button (click)="selectAllColumns()" class="select-all-btn">
-                <i class="fas fa-check-square"></i> Select All
-              </button>
-              <button (click)="clearAllColumns()" class="clear-all-btn">
-                <i class="fas fa-square"></i> Clear All
-              </button>
-              <button (click)="showColumnVisibilityPanel = false" class="close-panel-btn">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-          </div>
-          <div class="column-checkboxes" 
-               #columnCheckboxes
-               (dragover)="onDragOver($event)"
-               (drop)="onDrop($event)"
-               (dragleave)="stopAutoScroll()">
-            <ng-container *ngFor="let col of getVisibleColumnsForPanel(); let i = index">
-              <!-- Drop indicator line -->
-              <div *ngIf="dragOverIndex === i && draggedColumnIndex !== i && draggedColumnIndex < i" 
-                   class="drop-indicator"></div>
-              
-              <div *ngIf="col.field && !isSkuColumn(col) && !isFieldGrouped(col.field)" 
-                   class="column-checkbox"
-                   [class.dragging]="draggedColumnIndex === i"
-                   [class.drag-over]="dragOverIndex === i && draggedColumnIndex !== i"
-                   draggable="true"
-                   (dragstart)="onDragStart($event, col, i)"
-                   (dragend)="onDragEnd($event)"
-                   (dragover)="onItemDragOver($event, i)"
-                   (dragleave)="onItemDragLeave($event)"
-                   (mousedown)="onColumnMouseDown($event)">
-                <div class="drag-handle" title="Drag to reorder">
-                  <i class="fas fa-grip-vertical"></i>
-                </div>
-                <label (mousedown)="$event.stopPropagation()">
-                  <input
-                    type="checkbox"
-                    [checked]="!col.hide"
-                    (change)="toggleColumnVisibility(col, $event)"
-                    (mousedown)="$event.stopPropagation()"
-                  />
-                  <span class="column-name" (mousedown)="$event.stopPropagation()">{{ col.headerName }}</span>
-                </label>
+        <!-- Side Buttons Wrapper -->
+        <div class="side-buttons-wrapper">
+          <!-- Toggle Columns Button - Outside grid but visually integrated -->
+          <div class="grid-toggle-button-container" [class.panel-open]="showColumnVisibilityPanel">
+            <button
+              (click)="toggleColumnVisibility()"
+              class="grid-toggle-columns-btn"
+              title="Show/Hide Columns"
+              #toggleBtn
+            >
+              <div class="toggle-button-content">
+                <app-icon name="columns" size="14"></app-icon>
+                <span class="toggle-button-text">COLUMNS</span>
               </div>
-              
-              <!-- Drop indicator line -->
-              <div *ngIf="dragOverIndex === i && draggedColumnIndex !== i && draggedColumnIndex > i" 
-                   class="drop-indicator"></div>
-            </ng-container>
-          </div>
-        </div>
-      </div>
-
-      <!-- Group By Panel - Positioned near group by button -->
-      <div
-        *ngIf="showGroupByPanel"
-        class="grid-column-visibility-panel-container group-by-panel"
-        #groupByPanel
-      >
-        <div 
-          class="column-visibility-panel" 
-          (click)="$event.stopPropagation()"
-          (keydown.escape)="showColumnVisibilityPanel = false"
-        >
-          <div class="column-visibility-header">
-            <h4>Group By</h4>
-            <button (click)="showGroupByPanel = false" class="close-panel-btn">
-              <i class="fas fa-times"></i>
             </button>
           </div>
 
-          <!-- Active Groups -->
-          <div *ngIf="activeGroupFields.length > 0" class="active-groups-section">
-            <div class="active-groups-header">
-              <div class="section-title">Active Groups:</div>
-              <button (click)="clearAllGroups()" class="clear-all-groups-btn">
-                <i class="fas fa-trash"></i> Clear All
-              </button>
-            </div>
-            <div class="active-groups-list">
-              <div *ngFor="let group of activeGroupFields; let i = index" class="active-group-item">
-                <span class="group-level-badge">{{ i + 1 }}</span>
-                <span class="group-name">{{ group.headerName }}</span>
-                <button (click)="removeGroupField(group)" class="remove-group-btn" title="Remove">
-                  <i class="fas fa-times"></i>
+          <!-- Group By Button - Outside grid but visually integrated -->
+          <div
+            class="grid-toggle-button-container group-by-container"
+            [class.panel-open]="showGroupByPanel"
+          >
+            <button
+              (click)="toggleGroupByPanel()"
+              class="grid-toggle-columns-btn"
+              [class.active]="activeGroupFields.length > 0"
+              title="Group By"
+              #groupByBtn
+            >
+              <div class="toggle-button-content">
+                <app-icon name="layer-group" size="14"></app-icon>
+                <span class="toggle-button-text">GROUP BY</span>
+                <span *ngIf="activeGroupFields.length > 0" class="group-count-badge">{{
+                  activeGroupFields.length
+                }}</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Column Visibility Panel - Positioned near grid toggle button -->
+        <div
+          *ngIf="showColumnVisibilityPanel"
+          class="grid-column-visibility-panel-container"
+          #columnPanel
+        >
+          <div
+            class="column-visibility-panel"
+            (click)="$event.stopPropagation()"
+            (keydown.escape)="showColumnVisibilityPanel = false"
+          >
+            <div class="column-visibility-header">
+              <h4>Visible Columns</h4>
+              <div class="header-actions">
+                <button (click)="selectAllColumns()" class="select-all-btn">
+                  <app-icon name="check-square" size="14"></app-icon> Select All
+                </button>
+                <button (click)="clearAllColumns()" class="clear-all-btn">
+                  <app-icon name="square" size="14"></app-icon> Clear All
+                </button>
+                <button (click)="showColumnVisibilityPanel = false" class="close-panel-btn">
+                  <app-icon name="times" size="14"></app-icon>
                 </button>
               </div>
             </div>
-          </div>
+            <div
+              class="column-checkboxes"
+              #columnCheckboxes
+              (dragover)="onDragOver($event)"
+              (drop)="onDrop($event)"
+              (dragleave)="stopAutoScroll()"
+            >
+              <ng-container *ngFor="let col of getVisibleColumnsForPanel(); let i = index">
+                <!-- Drop indicator line -->
+                <div
+                  *ngIf="dragOverIndex === i && draggedColumnIndex !== i && draggedColumnIndex < i"
+                  class="drop-indicator"
+                ></div>
 
-          <!-- Available Fields -->
-          <div class="available-fields-section">
-            <div class="section-title">Group by Column:</div>
-            <div class="column-checkboxes">
-              <ng-container *ngFor="let field of availableGroupFields">
-                <div class="column-checkbox" *ngIf="!isFieldGrouped(field.field)">
-                  <label>
-                    <input type="checkbox" [checked]="false" (change)="addGroupField(field)" />
-                    <span class="column-name">{{ field.headerName }}</span>
+                <div
+                  *ngIf="col.field && !isSkuColumn(col) && !isFieldGrouped(col.field)"
+                  class="column-checkbox"
+                  [class.dragging]="draggedColumnIndex === i"
+                  [class.drag-over]="dragOverIndex === i && draggedColumnIndex !== i"
+                  draggable="true"
+                  (dragstart)="onDragStart($event, col, i)"
+                  (dragend)="onDragEnd($event)"
+                  (dragover)="onItemDragOver($event, i)"
+                  (dragleave)="onItemDragLeave($event)"
+                  (mousedown)="onColumnMouseDown($event)"
+                >
+                  <div class="drag-handle" title="Drag to reorder">
+                    <app-icon name="grip-vertical" size="14"></app-icon>
+                  </div>
+                  <label (mousedown)="$event.stopPropagation()">
+                    <input
+                      type="checkbox"
+                      [checked]="!col.hide"
+                      (change)="toggleColumnVisibility(col, $event)"
+                      (mousedown)="$event.stopPropagation()"
+                    />
+                    <span class="column-name" (mousedown)="$event.stopPropagation()">{{
+                      col.headerName
+                    }}</span>
                   </label>
                 </div>
+
+                <!-- Drop indicator line -->
+                <div
+                  *ngIf="dragOverIndex === i && draggedColumnIndex !== i && draggedColumnIndex > i"
+                  class="drop-indicator"
+                ></div>
               </ng-container>
             </div>
           </div>
         </div>
-      </div>
+
+        <!-- Group By Panel - Positioned near group by button -->
+        <div
+          *ngIf="showGroupByPanel"
+          class="grid-column-visibility-panel-container group-by-panel"
+          #groupByPanel
+        >
+          <div
+            class="column-visibility-panel"
+            (click)="$event.stopPropagation()"
+            (keydown.escape)="showColumnVisibilityPanel = false"
+          >
+            <div class="column-visibility-header">
+              <h4>Group By</h4>
+              <button (click)="showGroupByPanel = false" class="close-panel-btn">
+                <app-icon name="times" size="14"></app-icon>
+              </button>
+            </div>
+
+            <!-- Active Groups -->
+            <div *ngIf="activeGroupFields.length > 0" class="active-groups-section">
+              <div class="active-groups-header">
+                <div class="section-title">Active Groups:</div>
+                <button (click)="clearAllGroups()" class="clear-all-groups-btn">
+                  <app-icon name="trash" size="14"></app-icon> Clear All
+                </button>
+              </div>
+              <div class="active-groups-list">
+                <div
+                  *ngFor="let group of activeGroupFields; let i = index"
+                  class="active-group-item"
+                >
+                  <span class="group-level-badge">{{ i + 1 }}</span>
+                  <span class="group-name">{{ group.headerName }}</span>
+                  <button (click)="removeGroupField(group)" class="remove-group-btn" title="Remove">
+                    <app-icon name="times" size="14"></app-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Available Fields -->
+            <div class="available-fields-section">
+              <div class="section-title">Group by Column:</div>
+              <div class="column-checkboxes">
+                <ng-container *ngFor="let field of availableGroupFields">
+                  <div class="column-checkbox" *ngIf="!isFieldGrouped(field.field)">
+                    <label>
+                      <input type="checkbox" [checked]="false" (change)="addGroupField(field)" />
+                      <span class="column-name">{{ field.headerName }}</span>
+                    </label>
+                  </div>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+        </div>
       } @placeholder {
-      <div class="side-buttons-wrapper defer-placeholder">
-        <div class="grid-toggle-button-container">
-          <button class="grid-toggle-columns-btn" disabled>
-            <div class="toggle-button-content">
-              <i class="fas fa-columns"></i>
-              <span class="toggle-button-text">COLUMNS</span>
-            </div>
-          </button>
+        <div class="side-buttons-wrapper defer-placeholder">
+          <div class="grid-toggle-button-container">
+            <button class="grid-toggle-columns-btn" disabled>
+              <div class="toggle-button-content">
+                <app-icon name="columns" size="14"></app-icon>
+                <span class="toggle-button-text">COLUMNS</span>
+              </div>
+            </button>
+          </div>
+          <div class="grid-toggle-button-container group-by-container">
+            <button class="grid-toggle-columns-btn" disabled>
+              <div class="toggle-button-content">
+                <app-icon name="layer-group" size="14"></app-icon>
+                <span class="toggle-button-text">GROUP BY</span>
+              </div>
+            </button>
+          </div>
         </div>
-        <div class="grid-toggle-button-container group-by-container">
-          <button class="grid-toggle-columns-btn" disabled>
-            <div class="toggle-button-content">
-              <i class="fas fa-layer-group"></i>
-              <span class="toggle-button-text">GROUP BY</span>
-            </div>
-          </button>
-        </div>
-      </div>
       }
     </div>
   </div>
 
   <!-- Material Detail Modal -->
-  @defer (when showMaterialModal) {
   <app-part-modal
     *ngIf="showMaterialModal"
     [partData]="selectedMaterialData"
@@ -510,11 +566,8 @@
     (close)="closeMaterialModal()"
   >
   </app-part-modal>
-  } @placeholder {
-  <!-- Modal placeholder intentionally empty -->
-  }
 
-  @defer (on immediate) {
+  <!-- Parts Edit Modal -->
   <app-parts-edit-modal
     *ngIf="showPartsEditModal"
     [partsData]="partsEditModalData"
@@ -522,7 +575,4 @@
     (save)="savePartsEditModal($event)"
   >
   </app-parts-edit-modal>
-  } @placeholder {
-  <!-- Modal placeholder intentionally empty -->
-  }
 </div>

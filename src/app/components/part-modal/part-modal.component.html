@@ -17,7 +17,7 @@
         </div>
         <div class="header-info">
           <h1>{{ partData.material || partData.materialDescription || 'N/A' }}</h1>
-          </div>
+        </div>
       </div>
       <button class="close-button" (click)="closeModal()" aria-label="Close">
         <svg
@@ -45,7 +45,9 @@
           <table class="key-value-table">
             <thead>
               <tr>
-                <th *ngFor="let key of getColumnKeys()" [attr.data-column]="key">{{ getColumns()[key] }}</th>
+                <th *ngFor="let key of getColumnKeys()" [attr.data-column]="key">
+                  {{ getColumns()[key] }}
+                </th>
               </tr>
             </thead>
             <tbody>

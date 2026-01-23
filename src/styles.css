@@ -476,7 +476,8 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -544,7 +545,7 @@ body {
   user-select: none;
 }
 
-.column-checkbox input[type="checkbox"] {
+.column-checkbox input[type='checkbox'] {
   cursor: pointer;
   pointer-events: auto;
   width: 14px;
@@ -2401,7 +2402,9 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
     box-shadow: 0 1px 3px rgba(220, 38, 38, 0.4);
   }
   50% {
-    box-shadow: 0 1px 3px rgba(220, 38, 38, 0.4), 0 0 0 4px rgba(220, 38, 38, 0.1);
+    box-shadow:
+      0 1px 3px rgba(220, 38, 38, 0.4),
+      0 0 0 4px rgba(220, 38, 38, 0.1);
   }
 }
 

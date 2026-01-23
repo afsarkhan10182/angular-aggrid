@@ -2,8 +2,8 @@ import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } fr
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ICellEditorAngularComp } from 'ag-grid-angular';
-import { DataService } from '../services/data.service';
-import { UtilService } from '../services/util.service';
+import { DataService } from '../../services/data.service';
+import { UtilService } from '../../services/util.service';
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 import { of, Subject, Subscription } from 'rxjs';
 

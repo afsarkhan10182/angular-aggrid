@@ -13,6 +13,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { IHeaderParams } from 'ag-grid-community';
 import { IHeaderAngularComp } from 'ag-grid-angular';
+import { IconComponent } from '../icon/icon.component';
 
 class MenuStateService {
   private static currentOpenMenu: ColumnHeaderPinComponent | null = null;
@@ -34,7 +35,7 @@ class MenuStateService {
 @Component({
   selector: 'app-column-header-pin',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   template: `
     <div class="simple-pin-header">
       <div class="header-content-wrapper">
@@ -97,26 +98,26 @@ class MenuStateService {
             >
               <div class="menu-item" (click)="pinColumn('left', $event)">
                 <span class="menu-icon"
-                  ><i class="fas fa-thumbtack" style="transform: rotate(-45deg)"></i
+                  ><app-icon name="thumbtack" size="14" [style.transform]="'rotate(-45deg)'"></app-icon
                 ></span>
                 <span class="menu-text">Pin Left</span>
                 <span class="menu-check" *ngIf="pinnedSide === 'left'">✓</span>
               </div>
               <div class="menu-item" (click)="pinColumn('right', $event)">
                 <span class="menu-icon"
-                  ><i class="fas fa-thumbtack" style="transform: rotate(45deg)"></i
+                  ><app-icon name="thumbtack" size="14" [style.transform]="'rotate(45deg)'"></app-icon
                 ></span>
                 <span class="menu-text">Pin Right</span>
                 <span class="menu-check" *ngIf="pinnedSide === 'right'">✓</span>
               </div>
               <div class="menu-item" (click)="pinColumn(null, $event)">
-                <span class="menu-icon"><i class="fas fa-ban"></i></span>
+                <span class="menu-icon"><app-icon name="ban" size="14"></app-icon></span>
                 <span class="menu-text">No Pin</span>
                 <span class="menu-check" *ngIf="!pinnedSide">✓</span>
               </div>
               <div class="menu-divider"></div>
               <div class="menu-item" (click)="autosizeColumn($event)">
-                <span class="menu-icon"><i class="fas fa-arrows-alt-h"></i></span>
+                <span class="menu-icon"><app-icon name="arrows-alt-h" size="14"></app-icon></span>
                 <span class="menu-text">Autosize This Column</span>
               </div>
             </div>

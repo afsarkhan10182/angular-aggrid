@@ -239,6 +239,7 @@ export class UtilService {
       fileName?: string;
       sheetName?: string;
       excludeHeaderRows?: boolean;
+      selectedNodes?: any[];
     } = {}
   ): Promise<void> {
     return new Promise(async (resolve, reject) => {
@@ -283,27 +284,51 @@ export class UtilService {
             };
           });
 
-        // Get all row data (excluding group headers, section headers, etc.)
+        // Get row data - either selected nodes or all nodes
         const rowData: any[] = [];
         const rowNodes: any[] = [];
-        gridApi.forEachNode((node) => {
-          if (!node.data) return;
+        
+        // If selectedNodes are provided, use only those
+        if (options.selectedNodes && options.selectedNodes.length > 0) {
+          options.selectedNodes.forEach((node) => {
+            if (!node.data) return;
 
-          // Skip header rows if excludeHeaderRows is true
-          if (excludeHeaderRows) {
-            if (
-              node.data.isSectionHeader ||
-              node.data.isGroupHeader ||
-              node.data.isMaterialHeader ||
-              node.data.isBranchHeader
-            ) {
-              return;
+            // Skip header rows if excludeHeaderRows is true
+            if (excludeHeaderRows) {
+              if (
+                node.data.isSectionHeader ||
+                node.data.isGroupHeader ||
+                node.data.isMaterialHeader ||
+                node.data.isBranchHeader
+              ) {
+                return;
+              }
             }
-          }
 
-          rowData.push(node.data);
-          rowNodes.push(node); // Store node reference to access parent section info if needed
-        });
+            rowData.push(node.data);
+            rowNodes.push(node);
+          });
+        } else {
+          // Otherwise, get all nodes
+          gridApi.forEachNode((node) => {
+            if (!node.data) return;
+
+            // Skip header rows if excludeHeaderRows is true
+            if (excludeHeaderRows) {
+              if (
+                node.data.isSectionHeader ||
+                node.data.isGroupHeader ||
+                node.data.isMaterialHeader ||
+                node.data.isBranchHeader
+              ) {
+                return;
+              }
+            }
+
+            rowData.push(node.data);
+            rowNodes.push(node); // Store node reference to access parent section info if needed
+          });
+        }
 
         // Prepare data for Excel export
         const excelData: any[] = [];
