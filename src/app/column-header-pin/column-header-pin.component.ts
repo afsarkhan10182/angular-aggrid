@@ -437,13 +437,21 @@ export class ColumnHeaderPinComponent
     this.updatePinnedState();
 
     const field = params.column?.getColDef()?.field;
-    this.showMenuButton = field !== 'actions';
+    const colId = params.column?.getColId();
+    // Hide menu button for actions and checkbox columns
+    this.showMenuButton = field !== 'actions' && field !== 'checkbox' && colId !== 'actions' && colId !== 'checkbox';
   }
 
   refresh(params: IHeaderParams): boolean {
     this.params = params;
     this.updateDisplayName();
     this.updatePinnedState();
+    
+    const field = params.column?.getColDef()?.field;
+    const colId = params.column?.getColId();
+    // Hide menu button for actions and checkbox columns
+    this.showMenuButton = field !== 'actions' && field !== 'checkbox' && colId !== 'actions' && colId !== 'checkbox';
+    
     return true;
   }
 

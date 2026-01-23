@@ -13,6 +13,7 @@ import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { Subscription } from 'rxjs';
 import { PartModalComponent } from './part-modal/part-modal.component';
+import { PartsEditModalComponent } from './parts-edit-modal/parts-edit-modal.component';
 import { AutocompleteCellEditorComponent } from './autocomplete-cell-editor/autocomplete-cell-editor.component';
 import { DataService } from './services/data.service';
 import { GridCommonService, GroupConfig } from './services/grid-common.service';
@@ -29,7 +30,7 @@ import type { SkuFilterOption, MbomSkuFilterOption, SbomSkuFilterOption } from '
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule, AgGridAngular, PartModalComponent],
+  imports: [CommonModule, FormsModule, AgGridAngular, PartModalComponent, PartsEditModalComponent],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
 })
@@ -56,6 +57,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public showMaterialModal = false;
   public selectedMaterialData: any = {};
   public selectedMaterialSkuData: any[] = [];
+  public showPartsEditModal = false;
+  public partsEditModalData: any[] = [];
   public searchText: string = '';
   public saveMessage: string = '';
   public saveMessageType: string = '';
@@ -4027,8 +4030,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         this.selectedRows.add(node.data);
       }
     });
-    // Show mass edit only when more than 1 checkbox is selected
-    this.massEditMode = this.selectedRows.size > 1;
+    
+    // For SBOM: Don't auto-show mass edit panel, show buttons instead
+    // For MBOM: Keep existing behavior (auto-show mass edit panel)
+    if (this.isSbomMode()) {
+      this.massEditMode = false; // Don't auto-show for SBOM
+    } else {
+      // Show mass edit only when more than 1 checkbox is selected (MBOM)
+      this.massEditMode = this.selectedRows.size > 1;
+    }
 
     if (this.massEditMode && this.selectedRows.size > 1) {
       const massEditState = this.massEditService.populateMassEditFields(
@@ -4201,6 +4211,77 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.massEditEndDate = '';
     this.massEditQuantity = null;
     this.massEditIncludeInSpecSheet = '';
+  }
+
+  openMassEditForSbom(): void {
+    if (this.selectedRows.size > 1) {
+      this.massEditMode = true;
+      const massEditState = this.massEditService.populateMassEditFields(
+        Array.from(this.selectedRows),
+        () => this.isMbomMode(),
+        () => this.isSbomMode()
+      );
+      this.massEditStartDate = massEditState.startDate;
+      this.massEditEndDate = massEditState.endDate;
+      this.massEditQuantity = massEditState.quantity;
+      this.massEditIncludeInSpecSheet = massEditState.includeInSpecSheet;
+    }
+  }
+
+  openPartsEditModal(): void {
+    if (this.selectedRows.size === 0) {
+      return;
+    }
+
+    // Get unique partNumbers from selected rows
+    const partNumberSet = new Set<string>();
+    const rowsByPartNumber = new Map<string, any>();
+
+    this.selectedRows.forEach((row: any) => {
+      const partNumber = row.partNumber || row.part || '';
+      if (partNumber && String(partNumber).trim() !== '') {
+        partNumberSet.add(String(partNumber).trim());
+        // Store first occurrence of each partNumber
+        if (!rowsByPartNumber.has(String(partNumber).trim())) {
+          rowsByPartNumber.set(String(partNumber).trim(), row);
+        }
+      }
+    });
+
+    // Create modal data with mock data for now (will be replaced with API call)
+    this.partsEditModalData = Array.from(partNumberSet).map((partNumber) => {
+      const row = rowsByPartNumber.get(partNumber);
+      return {
+        partNumber: partNumber,
+        materialColorThirtyCharacterDescription: row?.materialColorThirtyCharacterDescription || '',
+        materialColorSixtyCharacterDescription: row?.materialColorSixtyCharacterDescription || '',
+        materialColorStatus: row?.materialColorStatus || '',
+        materialColorManufacturersPartNumber: row?.materialColorManufacturersPartNumber || '',
+        materialColorServiceDescription: row?.materialColorServiceDescription || '',
+        materialColorServiceSubstituteOne: row?.materialColorServiceSubstituteOne || '',
+        materialColorServiceSubstituteTwo: row?.materialColorServiceSubstituteTwo || '',
+        materialColorServiceMessage: row?.materialColorServiceMessage || '',
+        materialColorServiceEquivalent: row?.materialColorServiceEquivalent || '',
+        isSelected: false, // For checkbox
+      };
+    });
+
+    this.showPartsEditModal = true;
+  }
+
+  closePartsEditModal(): void {
+    this.showPartsEditModal = false;
+    this.partsEditModalData = [];
+  }
+
+  savePartsEditModal(data: any[]): void {
+    // TODO: Implement save logic with API call
+    console.log('Saving parts edit data:', data);
+    // Update the modal data with saved data
+    this.partsEditModalData = data;
+    // For now, just close the modal
+    // In the future, make API call here to save the data
+    this.closePartsEditModal();
   }
 
   bulkDisconnectFromSkus(): void {

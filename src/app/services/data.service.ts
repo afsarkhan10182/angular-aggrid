@@ -101,7 +101,7 @@ export class DataService {
   constructor(
     private readonly http: HttpClient,
     private readonly sessionService: SessionService,
-    private readonly utilService: UtilService
+    private readonly utilService: UtilService,
   ) {}
 
   /**
@@ -144,7 +144,7 @@ export class DataService {
         this.apiData = data;
         return data;
       }),
-      catchError(this.handleError)
+      catchError(this.handleError),
     );
   }
 
@@ -173,7 +173,7 @@ export class DataService {
         // If data doesn't match expected format, throw error
         throw new Error('Invalid API response format: expected instances/columns structure');
       }),
-      catchError(this.handleError)
+      catchError(this.handleError),
     );
   }
 
@@ -189,7 +189,7 @@ export class DataService {
     query: string,
     fromIndex: number = 1,
     toIndex: number = 20,
-    isPartNumberSearch: boolean = false
+    isPartNumberSearch: boolean = false,
   ): Observable<{ results: any[]; resultCount: number; hasMore: boolean }> {
     let dataSource: Observable<any>;
 
@@ -224,7 +224,7 @@ export class DataService {
             resultCount,
             hasMore,
           };
-        })
+        }),
       );
     } else {
       // Production: Use real API with CSRF token
@@ -277,7 +277,7 @@ export class DataService {
               resultCount,
               hasMore,
             };
-          })
+          }),
         );
     }
 
@@ -327,7 +327,7 @@ export class DataService {
       }),
       catchError((error) => {
         return of({ results: [], resultCount: 0, hasMore: false });
-      })
+      }),
     );
   }
 
@@ -336,14 +336,14 @@ export class DataService {
    */
   searchBomFeatures(
     query: string,
-    fetchLimit: number = 20
+    fetchLimit: number = 20,
   ): Observable<{ results: any[]; resultCount: number; hasMore: boolean }> {
     return this.searchFlexInstances(
       String.raw`Business Object\bomFeature`,
       'name',
       query,
       fetchLimit,
-      'bomLinkFeature'
+      'bomLinkFeature',
     );
   }
 
@@ -352,7 +352,7 @@ export class DataService {
    */
   searchCountriesOfOrigin(
     query: string,
-    fetchLimit: number = 20
+    fetchLimit: number = 20,
   ): Observable<{ results: any[]; resultCount: number; hasMore: boolean }> {
     return this.searchFlexInstances('Country', 'name', query, fetchLimit, 'bomLinkCountryOfOrigin');
   }
@@ -362,7 +362,7 @@ export class DataService {
     attributeName: string,
     query: string,
     fetchLimit: number,
-    mockFieldName: string
+    mockFieldName: string,
   ): Observable<{ results: any[]; resultCount: number; hasMore: boolean }> {
     const searchTerm = (query || '').trim();
 
@@ -415,7 +415,7 @@ export class DataService {
       }),
       catchError(() => {
         return of({ results: [], resultCount: 0, hasMore: false });
-      })
+      }),
     );
   }
 
@@ -485,12 +485,12 @@ export class DataService {
    */
   private extractErrorMessage(error: any): string | null {
     if (!error?.message || typeof error.message !== 'string') return null;
-    
+
     const genericPatterns = ['Http failure response', 'Server Error:'];
-    if (genericPatterns.some(pattern => error.message.includes(pattern))) {
+    if (genericPatterns.some((pattern) => error.message.includes(pattern))) {
       return null;
     }
-    
+
     return error.message;
   }
 
@@ -550,7 +550,7 @@ export class DataService {
     return this.http.put<any>(apiUrl, payload, { headers: this.buildHttpHeaders() }).pipe(
       catchError((error: HttpErrorResponse) => {
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -664,7 +664,7 @@ export class DataService {
     return this.http.get<any>(url).pipe(
       catchError(() => {
         return of({});
-      })
+      }),
     );
   }
 
@@ -677,7 +677,7 @@ export class DataService {
 
     // Find the constraint that contains the enumeration definition (members)
     const constraintWithMembers = constraints.constraints.find(
-      (c: any) => c.ruleData?.enumerationDefinition?.members
+      (c: any) => c.ruleData?.enumerationDefinition?.members,
     );
 
     if (!constraintWithMembers) return [];
@@ -701,7 +701,7 @@ export class DataService {
 
     // Find the constraint that contains the enumeration definition (members)
     const constraintWithMembers = constraints.constraints.find(
-      (c: any) => c.ruleData?.enumerationDefinition?.members
+      (c: any) => c.ruleData?.enumerationDefinition?.members,
     );
 
     if (!constraintWithMembers) return {};
@@ -719,7 +719,10 @@ export class DataService {
   }
 
   // SKU Filter Methods (merged from SkuFilterService)
-  getMbomSkuFilterOptions(): Array<{ label: string; value: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' }> {
+  getMbomSkuFilterOptions(): Array<{
+    label: string;
+    value: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource';
+  }> {
     return [
       { label: 'ALL - View only', value: 'all' },
       { label: 'HD source - Editable', value: 'hdEditable' },
@@ -737,12 +740,16 @@ export class DataService {
 
   getFilteredSkuInfo(
     selectedFilter: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' | 'editableSkus',
-    isMbomMode: () => boolean
+    isMbomMode: () => boolean,
   ): any[] {
     const skuInfo = this.getSkuInfo();
 
     if (isMbomMode()) {
-      return this.filterSkuInfoByOption(selectedFilter as 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource', skuInfo, 'mbom');
+      return this.filterSkuInfoByOption(
+        selectedFilter as 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource',
+        skuInfo,
+        'mbom',
+      );
     } else {
       return this.filterSkuInfoByOption(selectedFilter as 'all' | 'editableSkus', skuInfo, 'sbom');
     }
@@ -751,7 +758,7 @@ export class DataService {
   filterSkuInfoByOption(
     option: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' | 'editableSkus',
     skuInfo: any[],
-    bomType: 'mbom' | 'sbom'
+    bomType: 'mbom' | 'sbom',
   ): any[] {
     const mbomConfig: Record<string, { filter?: (sku: any) => boolean; emptyMessage?: string }> = {
       all: {},
@@ -787,7 +794,7 @@ export class DataService {
 
   isSkuFilterOptionDisabled(
     option: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' | 'editableSkus',
-    isMbomMode: () => boolean
+    isMbomMode: () => boolean,
   ): boolean {
     if (option === 'all') {
       return false;
@@ -800,7 +807,7 @@ export class DataService {
 
   getSkuFilterOptionTooltip(
     option: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' | 'editableSkus',
-    isMbomMode: () => boolean
+    isMbomMode: () => boolean,
   ): string {
     if (option === 'all') {
       return '';
@@ -817,7 +824,7 @@ export class DataService {
 
   getSkuFilterEmptyMessage(
     option: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' | 'editableSkus',
-    isMbomModeFn: () => boolean
+    isMbomModeFn: () => boolean,
   ): string {
     const mbomMessages: Record<string, string> = {
       hdEditable: 'No HD editable SKUs found. Editing is disabled.',
@@ -838,9 +845,12 @@ export class DataService {
 
   getSkuFilterLabel(
     option: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' | 'editableSkus',
-    mbomOptions: Array<{ label: string; value: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' }>,
+    mbomOptions: Array<{
+      label: string;
+      value: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource';
+    }>,
     sbomOptions: Array<{ label: string; value: 'all' | 'editableSkus' }>,
-    isMbomMode: () => boolean
+    isMbomMode: () => boolean,
   ): string {
     const options = isMbomMode() ? mbomOptions : sbomOptions;
     return options.find((item) => item.value === option)?.label || 'All';

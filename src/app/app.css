@@ -739,6 +739,27 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
+.mass-edit-btn,
+.edit-parts-btn {
+  margin-left: 8px;
+}
+
+.mass-edit-btn {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.mass-edit-btn:hover {
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+}
+
+.edit-parts-btn {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+}
+
+.edit-parts-btn:hover {
+  background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%);
+}
+
 /* Mass Edit Panel */
 .mass-edit-panel {
   background: #f8fafc;

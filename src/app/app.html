@@ -115,6 +115,24 @@
         <button (click)="exportToExcel()" class="export-btn" title="Export to Excel">
           <i class="fas fa-file-excel"></i> Export
         </button>
+        <!-- Mass Edit Button (SBOM only, when rows selected) -->
+        <button
+          *ngIf="isSbomMode() && selectedRows.size > 1"
+          (click)="openMassEditForSbom()"
+          class="export-btn mass-edit-btn"
+          title="Mass Edit Selected Rows"
+        >
+          <i class="fas fa-edit"></i> Mass Edit
+        </button>
+        <!-- Edit Parts Button (SBOM only, when rows selected) -->
+        <button
+          *ngIf="isSbomMode() && selectedRows.size > 0"
+          (click)="openPartsEditModal()"
+          class="export-btn edit-parts-btn"
+          title="Edit Parts Data"
+        >
+          <i class="fas fa-cog"></i> Edit Parts
+        </button>
         <div class="save-section">
           <!-- Last Saved Display -->
           <div class="last-saved-display">
@@ -492,6 +510,18 @@
     (close)="closeMaterialModal()"
   >
   </app-part-modal>
+  } @placeholder {
+  <!-- Modal placeholder intentionally empty -->
+  }
+
+  @defer (on immediate) {
+  <app-parts-edit-modal
+    *ngIf="showPartsEditModal"
+    [partsData]="partsEditModalData"
+    (close)="closePartsEditModal()"
+    (save)="savePartsEditModal($event)"
+  >
+  </app-parts-edit-modal>
   } @placeholder {
   <!-- Modal placeholder intentionally empty -->
   }
