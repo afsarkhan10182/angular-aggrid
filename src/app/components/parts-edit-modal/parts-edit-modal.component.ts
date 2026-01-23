@@ -11,7 +11,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
 import { IconComponent } from '../icon/icon.component';
+import { AutocompleteCellEditorComponent } from '../autocomplete-cell-editor/autocomplete-cell-editor.component';
 import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
+import { DataService } from '../../services/data.service';
 
 @Component({
   selector: 'app-parts-edit-modal',
@@ -30,7 +32,7 @@ export class PartsEditModalComponent implements OnInit, OnDestroy {
   public columnDefs: ColDef[] = [];
   public rowData: any[] = [];
 
-  constructor() {}
+  constructor(private readonly dataService: DataService) {}
 
   ngOnInit(): void {
     this.initializeGrid();
@@ -123,6 +125,14 @@ export class PartsEditModalComponent implements OnInit, OnDestroy {
         editable: true,
         sortable: true,
         filter: true,
+        cellEditor: AutocompleteCellEditorComponent,
+        cellEditorParams: () => ({
+          placeholder: 'search materials...',
+          useApiSearch: true,
+          context: {
+            dataService: this.dataService,
+          },
+        }),
       },
       {
         headerName: 'Service Substitute Two',
@@ -132,6 +142,14 @@ export class PartsEditModalComponent implements OnInit, OnDestroy {
         editable: true,
         sortable: true,
         filter: true,
+        cellEditor: AutocompleteCellEditorComponent,
+        cellEditorParams: () => ({
+          placeholder: 'search materials...',
+          useApiSearch: true,
+          context: {
+            dataService: this.dataService,
+          },
+        }),
       },
       {
         headerName: 'Service Message',
@@ -150,18 +168,32 @@ export class PartsEditModalComponent implements OnInit, OnDestroy {
         editable: true,
         sortable: true,
         filter: true,
+        cellEditor: AutocompleteCellEditorComponent,
+        cellEditorParams: () => ({
+          placeholder: 'search materials...',
+          useApiSearch: true,
+          context: {
+            dataService: this.dataService,
+          },
+        }),
       },
     ];
 
     this.gridOptions = {
+      theme: 'legacy', // Use CSS-based theming (ag-theme-alpine)
       defaultColDef: {
         resizable: true,
         sortable: true,
         filter: true,
       },
+      components: {
+        AutocompleteCellEditorComponent,
+      },
+      context: {
+        dataService: this.dataService,
+      },
       rowSelection: 'multiple',
       suppressRowClickSelection: true,
-      enableRangeSelection: true,
       animateRows: true,
       onGridReady: (params) => {
         this.gridApi = params.api;

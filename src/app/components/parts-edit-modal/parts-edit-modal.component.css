@@ -18,8 +18,8 @@
   box-shadow:
     0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  width: 90%;
-  max-width: 1400px;
+  width: 95%;
+  max-width: 1600px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
@@ -61,9 +61,10 @@
 .modal-body {
   flex: 1;
   padding: 20px 24px;
-  overflow: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .modal-info {
@@ -80,10 +81,56 @@
 
 .modal-grid-container {
   flex: 1;
-  min-height: 0;
+  min-height: 400px;
+  height: 0; /* Allow flex to control height */
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   overflow: hidden;
+  background: white;
+  position: relative;
+}
+
+/* Ensure modal grid matches main grid styling */
+.modal-grid-container ::ng-deep .ag-theme-alpine {
+  width: 100%;
+  height: 100%;
+}
+
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-root-wrapper {
+  border: none;
+}
+
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-header {
+  background: #f3f4f6;
+  border-bottom: 1px solid #d1d5db;
+}
+
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-header-cell {
+  background: #f3f4f6;
+  border-right: 1px solid #d1d5db;
+  font-weight: 700;
+  color: #374151;
+}
+
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-cell {
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-row {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-row:hover {
+  background-color: #f9fafb;
+}
+
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-row-selected {
+  background-color: #dbeafe;
+}
+
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-row-selected:hover {
+  background-color: #bfdbfe;
 }
 
 .modal-footer {

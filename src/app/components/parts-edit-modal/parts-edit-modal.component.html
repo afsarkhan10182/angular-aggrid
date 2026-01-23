@@ -1,7 +1,7 @@
 <div class="modal-overlay" (click)="closeModal()">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>Edit Parts Data</h3>
+      <h3>Service - DataManager</h3>
       <button (click)="closeModal()" class="close-btn" title="Close">
         <app-icon name="times" size="16"></app-icon>
       </button>
@@ -12,12 +12,13 @@
           {{ partsData.length }} unique part{{ partsData.length > 1 ? 's' : '' }} selected
         </span>
         <span *ngIf="getSelectedRowsCount() > 0" class="selected-count">
-          ({{ getSelectedRowsCount() }} row{{ getSelectedRowsCount() > 1 ? 's' : '' }} selected in grid)
+          ({{ getSelectedRowsCount() }} row{{ getSelectedRowsCount() > 1 ? 's' : '' }} selected in
+          grid)
         </span>
       </div>
       <div class="modal-grid-container">
         <ag-grid-angular
-          style="width: 100%; height: 500px;"
+          style="width: 100%; height: 500px"
           class="ag-theme-alpine"
           [gridOptions]="gridOptions"
           [columnDefs]="columnDefs"
@@ -28,9 +29,7 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button (click)="closeModal()" class="cancel-btn">
-        Cancel
-      </button>
+      <button (click)="closeModal()" class="cancel-btn">Cancel</button>
       <button (click)="saveModal()" class="save-btn">
         <app-icon name="save" size="14"></app-icon> Save
       </button>
