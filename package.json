@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build --configuration=production",
+    "postbuild": "node scripts/inject-assets.js",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },

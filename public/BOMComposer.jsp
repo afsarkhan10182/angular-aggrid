@@ -28,19 +28,20 @@
 	WTProperties wtproperties = WTProperties.getLocalProperties();
     String  windchillHost = wtproperties.getProperty("wt.rmi.server.hostname","");
 %>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<title>BOM Composer</title>
   <meta charset="utf-8">
-  <title>AgGridApp</title>
-  <base href="./">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= bomType %> Composer</title>
+  <base href="./">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-<style>*{box-sizing:border-box;margin:0;padding:0}html,body{height:100%;margin:0;padding:0;overflow:hidden}body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background-color:#f8fafc;color:#1e293b}</style><link rel="stylesheet" href="styles-JWFSWXJX.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="styles-JWFSWXJX.css"></noscript></head>
+  <style>*{box-sizing:border-box;margin:0;padding:0}html,body{height:100%;margin:0;padding:0;overflow:hidden}body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background-color:#f8fafc;color:#1e293b}</style>
+  <!-- ANGULAR_STYLES -->
+</head>
 <body>
-<div id="angular-root" data-bomid="<%= ids %>" data-username="<%= userName %>" data-host="<%= windchillHost %>" data-bomtype="<%= bomType %>" data-refskuid="<%= refSKUId %>" data-isserviceteammember="<%= isServiceTeamMember %>" > </div>
-<app-root></app-root>
-<link rel="modulepreload" href="chunk-KK4UT7WN.js"><link rel="modulepreload" href="chunk-4CLCTAJ7.js"><script src="polyfills-B6TNHZQ6.js" type="module"></script><script src="main-YXMEOBZY.js" type="module"></script></body>
-<!-- You can add logic to display details or trigger actions for these IDs -->
+  <div id="angular-root" data-bomid="<%= ids %>" data-username="<%= userName %>" data-host="<%= windchillHost %>" data-bomtype="<%= bomType %>" data-refskuid="<%= refSKUId %>"></div>
+  <app-root></app-root>
+  <!-- ANGULAR_SCRIPTS -->
 </body>
 </html>
