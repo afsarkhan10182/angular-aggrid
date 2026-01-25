@@ -4142,31 +4142,14 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       }
     });
 
-    // For SBOM: Don't auto-show mass edit panel, show buttons instead
-    // For MBOM: Keep existing behavior (auto-show mass edit panel)
-    if (this.isSbomMode()) {
-      this.massEditMode = false; // Don't auto-show for SBOM
-    } else {
-      // Show mass edit only when more than 1 checkbox is selected (MBOM)
-      this.massEditMode = this.selectedRows.size > 1;
-    }
-
-    if (this.massEditMode && this.selectedRows.size > 1) {
-      const massEditState = this.massEditService.populateMassEditFields(
-        Array.from(this.selectedRows),
-        () => this.isMbomMode(),
-        () => this.isSbomMode(),
-      );
-      this.massEditStartDate = massEditState.startDate;
-      this.massEditEndDate = massEditState.endDate;
-      this.massEditQuantity = massEditState.quantity;
-      this.massEditIncludeInSpecSheet = massEditState.includeInSpecSheet;
-    } else {
-      this.massEditStartDate = '';
-      this.massEditEndDate = '';
-      this.massEditQuantity = null;
-      this.massEditIncludeInSpecSheet = '';
-    }
+    // Don't auto-show mass edit panel for any mode - use manual buttons instead
+    this.massEditMode = false;
+    
+    // Clear mass edit fields when selection changes (will be populated when user clicks Mass Edit button)
+    this.massEditStartDate = '';
+    this.massEditEndDate = '';
+    this.massEditQuantity = null;
+    this.massEditIncludeInSpecSheet = '';
   }
 
   applyMassEdit(): void {
@@ -4337,7 +4320,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.massEditIncludeInSpecSheet = '';
   }
 
-  openMassEditForSbom(): void {
+  openMassEdit(): void {
     if (this.selectedRows.size > 1) {
       this.massEditMode = true;
       const massEditState = this.massEditService.populateMassEditFields(

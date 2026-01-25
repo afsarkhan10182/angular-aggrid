@@ -63,10 +63,11 @@ function deleteFileSafe(filePath) {
 // Extract unique assets from HTML
 function extractAssets(html) {
   if (!html || typeof html !== 'string') {
-    return { styles: [], scripts: [] };
+    return { styles: [], preloads: [], scripts: [] };
   }
 
   const styles = new Set();
+  const preloads = new Set();
   const scripts = new Set();
 
   // Extract stylesheet links (including preload with as="style")
@@ -108,8 +109,22 @@ function extractAssets(html) {
     }
   }
 
-  // Extract script tags
-  const scriptPattern = /<script[^>]*><\/script>/gi;
+  // Extract modulepreload links (separate from scripts for proper ordering)
+  const modulepreloadPattern = /<link[^>]*rel\s*=\s*["']modulepreload["'][^>]*>/gi;
+  let modulepreloadMatch;
+  modulepreloadPattern.lastIndex = 0;
+  while ((modulepreloadMatch = modulepreloadPattern.exec(html)) !== null) {
+    if (modulepreloadMatch[0]) {
+      preloads.add(modulepreloadMatch[0].trim());
+    }
+    if (modulepreloadPattern.lastIndex === modulepreloadMatch.index) {
+      modulepreloadPattern.lastIndex++;
+    }
+  }
+
+  // Extract script tags - ONLY module scripts (Angular-specific)
+  // This prevents accidentally pulling in inline scripts or non-module scripts
+  const scriptPattern = /<script[^>]*type\s*=\s*["']module["'][^>]*><\/script>/gi;
   let scriptMatch;
   scriptPattern.lastIndex = 0;
   while ((scriptMatch = scriptPattern.exec(html)) !== null) {
@@ -121,21 +136,9 @@ function extractAssets(html) {
     }
   }
 
-  // Extract modulepreload links
-  const modulepreloadPattern = /<link[^>]*rel\s*=\s*["']modulepreload["'][^>]*>/gi;
-  let modulepreloadMatch;
-  modulepreloadPattern.lastIndex = 0;
-  while ((modulepreloadMatch = modulepreloadPattern.exec(html)) !== null) {
-    if (modulepreloadMatch[0]) {
-      scripts.add(modulepreloadMatch[0].trim());
-    }
-    if (modulepreloadPattern.lastIndex === modulepreloadMatch.index) {
-      modulepreloadPattern.lastIndex++;
-    }
-  }
-
   return {
     styles: Array.from(styles),
+    preloads: Array.from(preloads),
     scripts: Array.from(scripts)
   };
 }
@@ -178,8 +181,8 @@ try {
   // Validate template structure
   validateTemplate(jspTemplate);
 
-  // Extract assets (deduplicated)
-  const { styles, scripts } = extractAssets(indexHtml);
+  // Extract assets (deduplicated and properly categorized)
+  const { styles, preloads, scripts } = extractAssets(indexHtml);
 
   if (styles.length === 0) {
     console.warn('⚠️  Warning: No styles found in index.html');
@@ -189,22 +192,44 @@ try {
     console.warn('⚠️  Warning: No scripts found in index.html');
   }
 
-  // Build replacement strings
+  // Build replacement strings with proper ordering:
+  // 1. Styles first
+  // 2. Modulepreloads (for better browser optimization)
+  // 3. Scripts last
   const stylesHtml = styles.length > 0 ? styles.join('\n  ') : '';
+  const preloadsHtml = preloads.length > 0 ? preloads.join('\n  ') : '';
   const scriptsHtml = scripts.length > 0 ? scripts.join('\n  ') : '';
 
-  // Replace placeholders in template
+  // Combine preloads and scripts (preloads first, then scripts)
+  const allScriptsHtml = preloadsHtml 
+    ? (scriptsHtml ? `${preloadsHtml}\n  ${scriptsHtml}` : preloadsHtml)
+    : scriptsHtml;
+
+  // Replace placeholders in template (using global replace to handle duplicates)
   let finalJsp = jspTemplate;
   
+  // Count placeholders to warn if duplicates exist
+  const stylesPlaceholderCount = (finalJsp.match(/<!-- ANGULAR_STYLES -->/g) || []).length;
+  const scriptsPlaceholderCount = (finalJsp.match(/<!-- ANGULAR_SCRIPTS -->/g) || []).length;
+  
+  if (stylesPlaceholderCount > 1) {
+    console.warn(`⚠️  Warning: Found ${stylesPlaceholderCount} ANGULAR_STYLES placeholders. All will be replaced.`);
+  }
+  
+  if (scriptsPlaceholderCount > 1) {
+    console.warn(`⚠️  Warning: Found ${scriptsPlaceholderCount} ANGULAR_SCRIPTS placeholders. All will be replaced.`);
+  }
+
+  // Use global replace to handle any duplicate placeholders
   if (!finalJsp.includes('<!-- ANGULAR_STYLES -->')) {
     throw new Error('Template missing ANGULAR_STYLES placeholder');
   }
-  finalJsp = finalJsp.replace('<!-- ANGULAR_STYLES -->', stylesHtml);
+  finalJsp = finalJsp.replace(/<!-- ANGULAR_STYLES -->/g, stylesHtml);
 
   if (!finalJsp.includes('<!-- ANGULAR_SCRIPTS -->')) {
     throw new Error('Template missing ANGULAR_SCRIPTS placeholder');
   }
-  finalJsp = finalJsp.replace('<!-- ANGULAR_SCRIPTS -->', scriptsHtml);
+  finalJsp = finalJsp.replace(/<!-- ANGULAR_SCRIPTS -->/g, allScriptsHtml);
 
   // Validate output before writing
   if (!finalJsp || finalJsp.trim().length === 0) {
@@ -216,13 +241,14 @@ try {
 
   // Delete index.html from dist (no longer needed)
   if (deleteFileSafe(indexHtmlPath)) {
-    console.log('🗑️  Deleted index.html from dist (not needed for JSP deployment)');
+    console.log('Deleted index.html from dist (not needed for JSP deployment)');
   }
 
   // Success message
-  console.log('✅ Successfully injected Angular assets into BOMComposer.jsp');
+  console.log('Successfully injected Angular assets into BOMComposer.jsp');
   console.log(`   Output: ${outputJspPath}`);
   console.log(`   Styles: ${styles.length} file(s)`);
+  console.log(`   Modulepreloads: ${preloads.length} file(s)`);
   console.log(`   Scripts: ${scripts.length} file(s)`);
 
 } catch (error) {

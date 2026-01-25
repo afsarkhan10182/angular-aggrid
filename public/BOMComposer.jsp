@@ -7,7 +7,8 @@
                com.lcs.wc.foundation.LCSRevisableEntity,
                com.lcs.wc.util.LCSProperties,
                org.apache.logging.log4j.Logger,
-               org.apache.logging.log4j.LogManager"
+               org.apache.logging.log4j.LogManager,
+               com.lcs.wc.util.FormatHelper"
 %>
 
 <%!
@@ -19,8 +20,12 @@
     String ids = request.getParameter("ids");
 	System.out.println("ids = "+ids);
 	String refSKU = request.getParameter("referenceSKU");
+	String refSKUId = "";
+	if(FormatHelper.hasContent(refSKU))
+	{
 	LCSRevisableEntity sku = (LCSRevisableEntity) LCSQuery.findObjectById(refSKU);
-	String refSKUId= sku.getName();
+    refSKUId= sku.getName();
+	}
 	System.out.println("refSKUId = "+refSKUId);
     String bomType = request.getParameter("bomType");
 	WTUser wtUser = (WTUser) SessionHelper.manager.getPrincipal();

@@ -137,10 +137,9 @@
               <app-icon name="file-excel" size="14"></app-icon>
               <span>Export</span>
             </button>
-            <!-- Mass Edit - Enabled when more than 1 selected (SBOM only) -->
+            <!-- Mass Edit - Enabled when more than 1 selected -->
             <button
-              *ngIf="isSbomMode()"
-              (click)="openMassEditForSbom(); closeActionDropdown()"
+              (click)="openMassEdit(); closeActionDropdown()"
               class="action-dropdown-item"
               [class.disabled]="selectedRows.size <= 1"
               [disabled]="selectedRows.size <= 1"
