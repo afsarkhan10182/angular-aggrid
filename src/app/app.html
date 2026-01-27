@@ -562,7 +562,7 @@
     *ngIf="showMaterialModal"
     [partData]="selectedMaterialData"
     [skuData]="selectedMaterialSkuData"
-    (close)="closeMaterialModal()"
+    (modalClose)="closeMaterialModal()"
   >
   </app-part-modal>
 
@@ -570,7 +570,7 @@
   <app-parts-edit-modal
     *ngIf="showPartsEditModal"
     [partsData]="partsEditModalData"
-    (close)="closePartsEditModal()"
+    (modalClose)="closePartsEditModal()"
     (save)="savePartsEditModal($event)"
   >
   </app-parts-edit-modal>

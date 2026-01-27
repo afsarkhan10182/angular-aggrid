@@ -59,7 +59,7 @@
                 {
                   "glob": "**/*",
                   "input": "public",
-                  "ignore": ["**/generate_mock_data.js", "**/ResultsTable-FilteredData.csv"]
+                  "ignore": ["**/generate_mock_data.js"]
                 }
               ]
             }

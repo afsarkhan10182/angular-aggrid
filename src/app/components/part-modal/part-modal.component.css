@@ -310,12 +310,12 @@
 .part-icon {
   width: 48px;
   height: 48px;
-  background: #3b82f6;
+  background: #2563eb;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: #ffffff;
 }
 
 .header-left {
@@ -659,13 +659,13 @@
   border-bottom: none;
 }
 
-.detail-label {
+.sku-detail .detail-label {
   font-size: 13px;
   font-weight: 600;
   color: #64748b;
 }
 
-.detail-value {
+.sku-detail .detail-value {
   font-size: 14px;
   font-weight: 600;
   color: #1e293b;

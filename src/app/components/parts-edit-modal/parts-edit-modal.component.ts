@@ -4,16 +4,17 @@ import {
   Output,
   EventEmitter,
   OnInit,
-  OnDestroy,
   HostListener,
+  ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
 import { IconComponent } from '../icon/icon.component';
 import { AutocompleteCellEditorComponent } from '../autocomplete-cell-editor/autocomplete-cell-editor.component';
-import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
+import { ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
 import { DataService } from '../../services/data.service';
+import { GridConfigService } from '../../services/grid-config.service';
 
 @Component({
   selector: 'app-parts-edit-modal',
@@ -22,31 +23,35 @@ import { DataService } from '../../services/data.service';
   templateUrl: './parts-edit-modal.component.html',
   styleUrls: ['./parts-edit-modal.component.css'],
 })
-export class PartsEditModalComponent implements OnInit, OnDestroy {
+export class PartsEditModalComponent implements OnInit {
   @Input() partsData: any[] = [];
-  @Output() close = new EventEmitter<void>();
+  @Output() modalClose = new EventEmitter<void>();
   @Output() save = new EventEmitter<any[]>();
 
-  private gridApi!: GridApi;
-  public gridOptions: GridOptions = {};
-  public columnDefs: ColDef[] = [];
-  public rowData: any[] = [];
+  @ViewChild(AgGridAngular) agGrid!: AgGridAngular;
 
-  constructor(private readonly dataService: DataService) {}
+  public columnDefs: ColDef[] = [];
+  public gridOptions: GridOptions = {};
+  public defaultColDef: Partial<ColDef> = {};
+  public rowData: any[] = [];
+  private gridApi!: GridApi;
+
+  constructor(
+    private readonly dataService: DataService,
+    private readonly gridConfigService: GridConfigService
+  ) {}
 
   ngOnInit(): void {
-    this.initializeGrid();
     this.rowData = [...this.partsData];
+    this.initializeGrid();
   }
-
-  ngOnDestroy(): void {}
 
   @HostListener('document:keydown.escape')
   onEscapeKey(): void {
     this.closeModal();
   }
 
-  initializeGrid(): void {
+  private initializeGrid(): void {
     this.columnDefs = [
       {
         headerName: '',
@@ -179,28 +184,35 @@ export class PartsEditModalComponent implements OnInit, OnDestroy {
       },
     ];
 
+    this.defaultColDef = {
+      ...this.gridConfigService.getDefaultColDef(),
+    };
+
+    const commonOptions = this.gridConfigService.getCommonGridOptions(this);
     this.gridOptions = {
-      theme: 'legacy', // Use CSS-based theming (ag-theme-alpine)
-      defaultColDef: {
-        resizable: true,
-        sortable: true,
-        filter: true,
-      },
-      components: {
-        AutocompleteCellEditorComponent,
-      },
-      context: {
-        dataService: this.dataService,
-      },
-      rowSelection: 'multiple',
-      suppressRowClickSelection: true,
-      animateRows: true,
+      ...commonOptions,
+      components: commonOptions.components
+        ? {
+            ...commonOptions.components,
+            AutocompleteCellEditorComponent,
+          }
+        : {
+            AutocompleteCellEditorComponent,
+          },
+      context: commonOptions.context
+        ? {
+            ...commonOptions.context,
+            dataService: this.dataService,
+          }
+        : {
+            dataService: this.dataService,
+          },
       onGridReady: (params) => {
         this.gridApi = params.api;
-        this.gridApi.sizeColumnsToFit();
+        this.gridConfigService.sizeColumnsToFit(this.gridApi);
+        this.gridConfigService.forceHorizontalScrollbarVisibility(this.gridApi);
       },
       onCellValueChanged: (params) => {
-        // Update the row data when cell value changes
         if (params.data) {
           const rowIndex = this.rowData.findIndex(
             (row) => row.partNumber === params.data.partNumber
@@ -213,17 +225,17 @@ export class PartsEditModalComponent implements OnInit, OnDestroy {
     };
   }
 
-  onGridReady(params: any): void {
-    this.gridApi = params.api;
-    this.gridApi.sizeColumnsToFit();
+  onGridReady(event: GridReadyEvent): void {
+    // Grid is ready, gridApi is already set in gridOptions.onGridReady
   }
 
   closeModal(): void {
-    this.close.emit();
+    this.modalClose.emit();
   }
 
   saveModal(): void {
-    // Get all row data (including selected state)
+    if (!this.gridApi) return;
+
     const allRowData: any[] = [];
     this.gridApi.forEachNode((node) => {
       if (node.data) {
@@ -234,7 +246,6 @@ export class PartsEditModalComponent implements OnInit, OnDestroy {
   }
 
   getSelectedRowsCount(): number {
-    if (!this.gridApi) return 0;
-    return this.gridApi.getSelectedNodes().length;
+    return this.gridApi ? this.gridApi.getSelectedNodes().length : 0;
   }
 }

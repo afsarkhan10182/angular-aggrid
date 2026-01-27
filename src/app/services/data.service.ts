@@ -154,11 +154,6 @@ export class DataService {
    * @param materialId Material ID or part number
    * @returns Observable of material details in key-value format
    */
-  /**
-   * Get Complex BOM data for a specific material
-   * @param materialId Material ID or part number
-   * @returns Observable of material details in key-value format
-   */
   getComplexBOM(materialId: string): Observable<any> {
     const apiUrl = environment.useMockApi
       ? `/api/materialmodal.json`
@@ -166,12 +161,10 @@ export class DataService {
 
     return this.http.get<any>(apiUrl).pipe(
       map((data) => {
-        // Only accept data with instances/columns structure (expected API format)
         if (data?.instances && Array.isArray(data.instances)) {
           return data;
         }
 
-        // If data doesn't match expected format, throw error
         throw new Error('Invalid API response format: expected instances/columns structure');
       }),
       catchError(this.handleError),
@@ -204,18 +197,15 @@ export class DataService {
           if (queryLower.length > 0 && filteredResults.length > 0) {
             filteredResults = filteredResults.filter((result: any) => {
               if (isPartNumberSearch) {
-                // For part number search, check partNumber
                 const partNumber = result['material-color']?.partNumber || '';
                 return partNumber.includes(queryLower);
               } else {
-                // For material search, check ptcmaterialName
                 const materialName = (result.material?.ptcmaterialName || '').toLowerCase();
                 return materialName.includes(queryLower);
               }
             });
           }
 
-          // Apply pagination for mock data
           const resultCount = filteredResults.length;
           const paginatedResults = filteredResults.slice(fromIndex - 1, toIndex);
           const hasMore = resultCount > toIndex;
@@ -228,7 +218,6 @@ export class DataService {
         }),
       );
     } else {
-      // Production: Use real API with CSRF token
       const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/rfa/materials/search`;
 
       const attributeParameters: any[] = [];
@@ -282,7 +271,6 @@ export class DataService {
         );
     }
 
-    // Common transformation logic for both mock and real API
     return dataSource.pipe(
       map((data) => {
         const results = data.results || [];
@@ -290,37 +278,11 @@ export class DataService {
         const hasMore = data.hasMore || false;
 
         const transformedResults = results.map((result: any) => {
-          const material = result.material || {};
-          const supplier = result.supplier || {};
-          const materialColor = result['material-color'] || {};
-          const color = result.color || {};
-
-          const supplierName = supplier.supplierName || supplier.name || '';
-          const colorName = color.colorName || color.name || '';
-
-          return {
-            name: material.ptcmaterialName || '',
-            materialName: material.ptcmaterialName || '',
-            ptcmaterialName: material.ptcmaterialName || '',
-            versionId: material.versionId || '',
-            materialMaster: material.materialMaster || '',
-            materialVersionId: material.versionId || '',
-            supplier: supplierName,
-            supplierName: supplierName,
-            supplierVersionId: supplier.versionId || '',
-            partNumber: materialColor.partNumber || '',
-            colorName: colorName,
-            color: colorName,
-            materialSupplierVersionId: result['material-supplier']?.versionId || '',
-            fullResult: result,
-          };
+          return this.transformMaterialResult(result);
         });
 
-        // For material search, show all unique combinations (material + supplier + color)
-        // Don't group - each combination is unique
         let finalResults = transformedResults;
         if (!isPartNumberSearch) {
-          // Remove duplicates based on unique combination of material + supplier + color
           finalResults = this.getUniqueMaterialCombinations(transformedResults);
         }
 
@@ -433,15 +395,12 @@ export class DataService {
       const supplierName = item.supplier || item.supplierName || '';
       const colorName = item.colorName || item.color || '';
 
-      // Create a unique key for the combination
       const combinationKey = `${materialName}|${supplierName}|${colorName}`;
 
-      // Only add if we haven't seen this combination before
       if (!seen.has(combinationKey) && materialName) {
         seen.add(combinationKey);
         unique.push({
           ...item,
-          // Store single values (not arrays) since each entry is a unique combination
           color: colorName,
           colorName: colorName,
           supplier: supplierName,
@@ -453,9 +412,34 @@ export class DataService {
     return unique;
   }
 
+  private transformMaterialResult(result: any): any {
+    const material = result.material || {};
+    const supplier = result.supplier || {};
+    const materialColor = result['material-color'] || {};
+    const color = result.color || {};
+
+    const supplierName = supplier.supplierName || supplier.name || '';
+    const colorName = color.colorName || color.name || '';
+
+    return {
+      name: material.ptcmaterialName || '',
+      materialName: material.ptcmaterialName || '',
+      ptcmaterialName: material.ptcmaterialName || '',
+      versionId: material.versionId || '',
+      materialMaster: material.materialMaster || '',
+      materialVersionId: material.versionId || '',
+      supplier: supplierName,
+      supplierName: supplierName,
+      supplierVersionId: supplier.versionId || '',
+      partNumber: materialColor.partNumber || '',
+      colorName: colorName,
+      color: colorName,
+      materialSupplierVersionId: result['material-supplier']?.versionId || '',
+      fullResult: result,
+    };
+  }
+
   private handleError(error: HttpErrorResponse) {
-    // Preserve the original HttpErrorResponse so that error.error (response body) is accessible
-    // This allows getLoadErrorMessage to extract the actual API error message
     return throwError(() => error);
   }
 
@@ -529,11 +513,8 @@ export class DataService {
    */
   updateApiData(responseData: ApiData): void {
     if (responseData) {
-      // Backend returns complete updated dataset (similar to mock.json)
-      // Replace apiData with response data to ensure validation uses latest data
       this.apiData = {
         ...responseData,
-        // Preserve sectionDetails if not in response (fallback)
         sectionDetails: responseData.sectionDetails || this.apiData?.sectionDetails || {},
       };
     }
@@ -603,14 +584,13 @@ export class DataService {
     return this.apiData!.columns;
   }
 
-  // Get SKU metadata for a specific part
   getSkuDataForPart(partRow: any): any[] {
     if (!partRow || !this.apiData) return [];
 
     const skuInfo = this.getSkuInfo();
 
     return skuInfo
-      .filter((sku) => partRow[`sku${sku.skuId}`]) // only keep SKUs that have values
+      .filter((sku) => partRow[`sku${sku.skuId}`])
       .map((sku) => ({
         skuNumber: sku.skuId,
         product: sku.product,
@@ -622,22 +602,18 @@ export class DataService {
       }));
   }
 
-  // Get username from JSP data attribute (passed from FlexPLM session)
   getUserNameFromJsp(): string | null {
     return this.utilService.getJspDataAttribute('data-username');
   }
 
-  // Get bomType from JSP data attribute
   getBomType(): string | null {
     return this.utilService.getJspDataAttribute('data-bomtype') || 'SBOM';
   }
 
-  // Get refSKUId from JSP data attribute
   getRefSkuId(): string | null {
     return this.utilService.getJspDataAttribute('data-refskuid');
   }
 
-  // Get service host URL from JSP data attribute (passed from Windchill)
   getServiceHostUrl(): string {
     const hostFromJsp = this.utilService.getJspDataAttribute('data-host');
 
@@ -645,13 +621,11 @@ export class DataService {
       return '';
     }
 
-    // If host already includes protocol (http:// or https://), return as-is
     if (hostFromJsp.startsWith('http://') || hostFromJsp.startsWith('https://')) {
       return hostFromJsp;
     }
 
-    // Otherwise, use the current page's protocol (http or https)
-    const protocol = globalThis.location.protocol; // Returns "http:" or "https:"
+    const protocol = globalThis.location.protocol;
     return `${protocol}//${hostFromJsp}`;
   }
   /**
@@ -676,7 +650,6 @@ export class DataService {
   getIncludeInSpecSheetOptions(constraints: any): string[] {
     if (!constraints?.constraints) return [];
 
-    // Find the constraint that contains the enumeration definition (members)
     const constraintWithMembers = constraints.constraints.find(
       (c: any) => c.ruleData?.enumerationDefinition?.members,
     );
@@ -685,7 +658,6 @@ export class DataService {
 
     const members = constraintWithMembers.ruleData.enumerationDefinition.members;
 
-    // Filter by selectable and sort by sort_order
     const sortedMembers = members
       .filter((m: any) => m.entry?.properties?.selectable === true)
       .sort((a: any, b: any) => a.properties.sort_order - b.properties.sort_order);
@@ -700,7 +672,6 @@ export class DataService {
   getIncludeInSpecSheetMapping(constraints: any): { [key: string]: string } {
     if (!constraints?.constraints) return {};
 
-    // Find the constraint that contains the enumeration definition (members)
     const constraintWithMembers = constraints.constraints.find(
       (c: any) => c.ruleData?.enumerationDefinition?.members,
     );
@@ -719,10 +690,9 @@ export class DataService {
     return mapping;
   }
 
-  // SKU Filter Methods (merged from SkuFilterService)
   getMbomSkuFilterOptions(): Array<{
     label: string;
-    value: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource';
+    value: MbomSkuFilterOption;
   }> {
     return [
       { label: 'ALL - View only', value: 'all' },
@@ -732,7 +702,7 @@ export class DataService {
     ];
   }
 
-  getSbomSkuFilterOptions(): Array<{ label: string; value: 'all' | 'editableSkus' }> {
+  getSbomSkuFilterOptions(): Array<{ label: string; value: SbomSkuFilterOption }> {
     return [
       { label: 'ALL - View only', value: 'all' },
       { label: 'Editable SKUs', value: 'editableSkus' },
@@ -740,24 +710,24 @@ export class DataService {
   }
 
   getFilteredSkuInfo(
-    selectedFilter: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' | 'editableSkus',
+    selectedFilter: SkuFilterOption,
     isMbomMode: () => boolean,
   ): any[] {
     const skuInfo = this.getSkuInfo();
 
     if (isMbomMode()) {
       return this.filterSkuInfoByOption(
-        selectedFilter as 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource',
+        selectedFilter as MbomSkuFilterOption,
         skuInfo,
         'mbom',
       );
     } else {
-      return this.filterSkuInfoByOption(selectedFilter as 'all' | 'editableSkus', skuInfo, 'sbom');
+      return this.filterSkuInfoByOption(selectedFilter as SbomSkuFilterOption, skuInfo, 'sbom');
     }
   }
 
   filterSkuInfoByOption(
-    option: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' | 'editableSkus',
+    option: SkuFilterOption,
     skuInfo: any[],
     bomType: 'mbom' | 'sbom',
   ): any[] {
@@ -794,7 +764,7 @@ export class DataService {
   }
 
   isSkuFilterOptionDisabled(
-    option: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' | 'editableSkus',
+    option: SkuFilterOption,
     isMbomMode: () => boolean,
   ): boolean {
     if (option === 'all') {
@@ -807,7 +777,7 @@ export class DataService {
   }
 
   getSkuFilterOptionTooltip(
-    option: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' | 'editableSkus',
+    option: SkuFilterOption,
     isMbomMode: () => boolean,
   ): string {
     if (option === 'all') {
@@ -824,7 +794,7 @@ export class DataService {
   }
 
   getSkuFilterEmptyMessage(
-    option: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' | 'editableSkus',
+    option: SkuFilterOption,
     isMbomModeFn: () => boolean,
   ): string {
     const mbomMessages: Record<string, string> = {
@@ -845,7 +815,7 @@ export class DataService {
   }
 
   getSkuFilterLabel(
-    option: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource' | 'editableSkus',
+    option: SkuFilterOption,
     mbomOptions: Array<{
       label: string;
       value: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource';

@@ -1,5 +1,5 @@
-<div class="modal-overlay" (click)="closeModal()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
+<div class="modal-overlay" (click)="closeModal()" (keydown.enter)="closeModal()" (keydown.escape)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
     <!-- Modern Header -->
     <div class="modal-header">
       <div class="header-left">

@@ -3,10 +3,6 @@ import {
   Input,
   Output,
   EventEmitter,
-  OnInit,
-  OnDestroy,
-  OnChanges,
-  SimpleChanges,
   HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -19,12 +15,12 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './part-modal.component.html',
   styleUrls: ['./part-modal.component.css'],
 })
-export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
+export class PartModalComponent {
   @Input() partData: any = {};
   @Input() skuData: any[] = [];
-  @Output() close = new EventEmitter<void>();
+  @Output() modalClose = new EventEmitter<void>();
 
-  private displayedFields = new Set([
+  private readonly displayedFields = new Set([
     'supplier',
     'feature',
     'qty',
@@ -35,19 +31,13 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
 
   constructor() {}
 
-  ngOnInit(): void {}
-
-  ngOnChanges(changes: SimpleChanges): void {}
-
-  ngOnDestroy(): void {}
-
   @HostListener('document:keydown.escape')
   onEscapeKey(): void {
     this.closeModal();
   }
 
   closeModal(): void {
-    this.close.emit();
+    this.modalClose.emit();
   }
 
   /**
@@ -60,8 +50,29 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
 
     const keyValuePairs: Array<{ key: string; value: any }> = [];
     const seenKeys = new Set<string>();
+    const systemFields = this.getSystemFields();
 
-    const systemFields = new Set([
+    Object.keys(this.partData).forEach((key) => {
+      if (!this.isValidKey(key, systemFields, seenKeys)) {
+        return;
+      }
+
+      seenKeys.add(key);
+      const displayValue = this.processFieldValue(this.partData[key]);
+      
+      if (displayValue !== null) {
+        keyValuePairs.push({
+          key: key,
+          value: displayValue,
+        });
+      }
+    });
+
+    return keyValuePairs.sort((a, b) => a.key.localeCompare(b.key));
+  }
+
+  private getSystemFields(): Set<string> {
+    return new Set([
       '$',
       'isMaterialHeader',
       'isDirectRow',
@@ -81,60 +92,54 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
       'instances',
       'columns',
     ]);
+  }
 
-    Object.keys(this.partData).forEach((key) => {
-      if (!key || typeof key !== 'string' || key.trim() === '') {
-        return;
+  private isValidKey(key: string, systemFields: Set<string>, seenKeys: Set<string>): boolean {
+    if (!key || typeof key !== 'string' || key.trim() === '') {
+      return false;
+    }
+
+    return (
+      !systemFields.has(key) &&
+      !key.startsWith('$') &&
+      !key.startsWith('sku') &&
+      !seenKeys.has(key) &&
+      this.partData[key] !== null &&
+      this.partData[key] !== undefined
+    );
+  }
+
+  private processFieldValue(value: any): string | null {
+    if (typeof value === 'object' && value !== null) {
+      if (typeof value === 'function') {
+        return null;
       }
 
-      if (
-        !systemFields.has(key) &&
-        !key.startsWith('$') &&
-        !key.startsWith('sku') &&
-        !seenKeys.has(key) &&
-        this.partData[key] !== null &&
-        this.partData[key] !== undefined
-      ) {
-        seenKeys.add(key);
-
-        let displayValue = this.partData[key];
-
-        if (typeof displayValue === 'object' && displayValue !== null) {
-          if (typeof displayValue === 'function') {
-            return;
-          }
-
-          if (Array.isArray(displayValue)) {
-            if (displayValue.length === 0) return;
-            try {
-              displayValue = JSON.stringify(displayValue, null, 2);
-            } catch (e) {
-              return;
-            }
-          } else {
-            const objKeys = Object.keys(displayValue);
-            if (objKeys.length === 0) return;
-            try {
-              displayValue = JSON.stringify(displayValue, null, 2);
-            } catch (e) {
-              return;
-            }
-          }
-        }
-
-        const stringValue = String(displayValue).trim();
-
-        if (stringValue !== '' && stringValue !== 'null' && stringValue !== 'undefined') {
-          keyValuePairs.push({
-            key: key,
-            value: displayValue,
-          });
-        }
+      if (Array.isArray(value)) {
+        if (value.length === 0) return null;
+        return this.stringifyValue(value);
       }
-    });
 
-    // Sort fields alphabetically
-    return keyValuePairs.sort((a, b) => a.key.localeCompare(b.key));
+      const objKeys = Object.keys(value);
+      if (objKeys.length === 0) return null;
+      return this.stringifyValue(value);
+    }
+
+    const stringValue = String(value).trim();
+    if (stringValue === '' || stringValue === 'null' || stringValue === 'undefined') {
+      return null;
+    }
+
+    return stringValue;
+  }
+
+  private stringifyValue(value: any): string | null {
+    try {
+      return JSON.stringify(value, null, 2);
+    } catch (e) {
+      console.warn('Failed to stringify value:', e);
+      return null;
+    }
   }
 
   /**
@@ -150,49 +155,64 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
     const seenSkuIds = new Set<string>();
 
     Object.keys(this.partData).forEach((key) => {
-      if (
-        key &&
-        typeof key === 'string' &&
-        key.startsWith('sku') &&
-        key !== 'skus' &&
-        /^sku\d+$/.test(key)
-      ) {
-        const skuValue = this.partData[key];
+      if (!this.isValidSkuKey(key)) {
+        return;
+      }
 
-        if (skuValue !== null && skuValue !== undefined) {
-          if (typeof skuValue === 'object') {
-            return;
-          }
-
-          if (typeof skuValue === 'function') {
-            return;
-          }
-
-          const stringValue = String(skuValue).trim();
-
-          if (stringValue !== '' && stringValue !== 'null' && stringValue !== 'undefined') {
-            const skuNumber = key.replace('sku', '');
-
-            const skuNum = parseInt(skuNumber);
-            if (isNaN(skuNum) || skuNum <= 0) {
-              return;
-            }
-
-            if (!seenSkuIds.has(skuNumber)) {
-              seenSkuIds.add(skuNumber);
-              skuData.push({
-                id: skuNumber,
-                value: stringValue,
-              });
-            }
-          }
+      const skuValue = this.partData[key];
+      const processedValue = this.processSkuValue(skuValue);
+      
+      if (processedValue) {
+        const skuNumber = key.replaceAll('sku', '');
+        if (this.isValidSkuNumber(skuNumber) && !seenSkuIds.has(skuNumber)) {
+          seenSkuIds.add(skuNumber);
+          skuData.push({
+            id: skuNumber,
+            value: processedValue,
+          });
         }
       }
     });
 
+    return this.sortSkuData(skuData);
+  }
+
+  private isValidSkuKey(key: string): boolean {
+    if (!key || typeof key !== 'string') {
+      return false;
+    }
+    return key.startsWith('sku') && key !== 'skus' && /^sku\d+$/.test(key);
+  }
+
+  private processSkuValue(skuValue: any): string | null {
+    if (skuValue === null || skuValue === undefined) {
+      return null;
+    }
+
+    if (typeof skuValue === 'object' || typeof skuValue === 'function') {
+      return null;
+    }
+
+    const stringValue = String(skuValue).trim();
+    if (stringValue === '' || stringValue === 'null' || stringValue === 'undefined') {
+      return null;
+    }
+
+    return stringValue;
+  }
+
+  private isValidSkuNumber(skuNumber: string): boolean {
+    const skuNum = Number.parseInt(skuNumber, 10);
+    if (Number.isNaN(skuNum) || skuNum <= 0) {
+      return false;
+    }
+    return true;
+  }
+
+  private sortSkuData(skuData: Array<{ id: string; value: string }>): Array<{ id: string; value: string }> {
     return skuData.sort((a, b) => {
-      const numA = parseInt(a.id) || 0;
-      const numB = parseInt(b.id) || 0;
+      const numA = Number.parseInt(a.id, 10) || 0;
+      const numB = Number.parseInt(b.id, 10) || 0;
       return numA - numB;
     });
   }
@@ -203,8 +223,8 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
 
   formatKeyName(key: string): string {
     return key
-      .replace(/([A-Z])/g, ' $1')
-      .replace(/_/g, ' ')
+      .replaceAll(/([A-Z])/g, ' $1')
+      .replaceAll('_', ' ')
       .replace(/^./, (str) => str.toUpperCase())
       .trim();
   }
@@ -220,8 +240,6 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
   getInstances(): any[] {
     if (!this.hasInstances()) return [];
     
-    // Filter out instances with empty partNumber AND empty material
-    // Show row if either partNumber OR material has a value
     return this.partData.instances.filter((instance: any) => {
       const partNumber = instance['bom-link']?.partNumber || '';
       const material = instance['bom-link']?.material || '';
@@ -229,13 +247,12 @@ export class PartModalComponent implements OnInit, OnDestroy, OnChanges {
       const hasPartNumber = partNumber && String(partNumber).trim() !== '';
       const hasMaterial = material && String(material).trim() !== '';
       
-      // Show row if it has either partNumber or material
       return hasPartNumber || hasMaterial;
     });
   }
 
   getColumns(): { [key: string]: string } {
-    return this.partData && this.partData.columns ? this.partData.columns : {};
+    return this.partData?.columns ?? {};
   }
 
   getColumnKeys(): string[] {

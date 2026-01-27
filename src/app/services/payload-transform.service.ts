@@ -30,132 +30,32 @@ export class PayloadTransformService {
         return s !== '';
       };
 
-      // Resolve section: Use sectionDetails to map display name to internal ID
-      // This ensures we use the correct internal section ID from mock.json/API response
       let resolvedSection = row.section || '';
+      resolvedSection = this.resolveSectionFromRow(row, apiData, resolvedSection);
 
-      // Get sectionDetails from apiData if provided, otherwise try to get from dataService
-      let sectionDetails = apiData?.sectionDetails || {};
-      if (Object.keys(sectionDetails).length === 0 && this.dataService) {
-        const fullApiData = this.dataService.getApiData();
-        sectionDetails = fullApiData?.sectionDetails || {};
-      }
-
-      let sectionDisplayName = row.sectionDisplayName || '';
-
-      // If not found on row, check parent chain
-      if (!sectionDisplayName && row.parent) {
-        let currentParent: any = row.parent;
-        while (currentParent && !sectionDisplayName) {
-          if (currentParent.sectionDisplayName) {
-            sectionDisplayName = currentParent.sectionDisplayName;
-            break;
-          }
-          currentParent = currentParent.parent;
-        }
-      }
-
-      // Map display name to internal ID using sectionDetails
-      if (sectionDisplayName && Object.keys(sectionDetails).length > 0) {
-        const foundInternalId = Object.keys(sectionDetails).find(
-          (internalId) => sectionDetails[internalId] === sectionDisplayName
-        );
-        if (foundInternalId) {
-          resolvedSection = foundInternalId;
-        }
-      }
-
-      // PRIMARY SKU RESOLUTION: Match using Section + bomLinkFeature + partNumber + skuId
-      // This matches against ALL responses in mock.json/API, including hidden SKUs and same section
-      // Different sections can legally have the same bomLinkFeature, partNumber, and skuId
-      // Section is part of the uniqueness boundary
       let matchingRows: any[] = [];
-
-      // Get the feature value for matching (use display value, not ID)
-      // bomLinkFeature should contain the display value like "150 | Fuselage : Compliance Label 1"
-      // bomLinkFeatureId contains the ID like "bomLinkFeature-1" (used for payload only)
       const rowFeatureValue = row.bomLinkFeature || '';
       const rowPartNumber = String(row.partNumber || '').trim();
 
-      // Search for matching rows to find existing SKU objects
-      // MATCHING RULES:
-      // For SBOM: 
-      //   - If feature is present: Match by Section + Feature + PartNumber + SKU ID (all 4 must match)
-      //   - If feature is empty: Match by Section + PartNumber + SKU ID (ignore feature)
-      // For MBOM:
-      //   1. If existing row has partNumber NOT empty AND ptcbomPartMarkUp == 'enumMBOM001'
-      //      → Match by Section + Feature + SKU ID + PartNumber (all 4 must match)
-      //   2. Otherwise (empty partNumber OR ptcbomPartMarkUp != 'enumMBOM001')
-      //      → Match by Section + Feature + SKU ID only (no partNumber requirement)
-      const bomType = this.dataService.getBomType();
+      const bomType = this.dataService.getBomType() || 'SBOM';
       const isSbom = bomType === 'SBOM';
       const isEmptyFeature = !rowFeatureValue || rowFeatureValue.trim() === '';
       
-      // For MBOM: Preserve original behavior - require feature to be present
-      // For SBOM: Allow empty feature matching
       const shouldSearchForMatches = resolvedSection && (isSbom || rowFeatureValue);
       
       if (shouldSearchForMatches) {
-        // Search through rowData hierarchy for ALL matching rows
-        const findAllMatchingRows = (rows: any[]): any[] => {
-          let matches: any[] = [];
-          for (const r of rows) {
-            // OPTIMIZATION: Prune search if this branch belongs to a different section
-            if (r.section && r.section !== resolvedSection) {
-              continue;
-            }
-
-            // Check data rows (not headers)
-            if ((r.isDirectRow || r.isSubRow) && !r.isNewRow) {
-              const isSectionMatch = r.section === resolvedSection;
-              const existingFeature = String(r.bomLinkFeature || '').trim();
-              const isMbom = bomType === 'MBOM';
-
-              let isFeatureMatch = false;
-              let requiresPartMatch = false;
-
-              if (isSbom) {
-                // SBOM: Handle empty feature case
-                if (isEmptyFeature) {
-                  // SBOM with empty feature: Match records with empty feature
-                  isFeatureMatch = !existingFeature || existingFeature === '';
-                  requiresPartMatch = true;
-                } else {
-                  // SBOM with feature: Match by feature
-                  isFeatureMatch = existingFeature === rowFeatureValue.trim();
-                  requiresPartMatch = true;
-                }
-              } else if (isMbom) {
-                // MBOM: Original logic - match by feature (feature must be present)
-                isFeatureMatch = existingFeature === rowFeatureValue.trim();
-                const existingPart = String(r.partNumber || '').trim();
-                const existingHasPartNumber = existingPart !== '';
-                const existingIsEnumMBOM001 = r.ptcbomPartMarkUp === 'enumMBOM001';
-                requiresPartMatch = existingHasPartNumber && existingIsEnumMBOM001;
-              }
-
-              const existingPart = String(r.partNumber || '').trim();
-              const isPartMatch = requiresPartMatch ? existingPart === rowPartNumber : true;
-
-              // Match using Section + bomLinkFeature (+ PartNumber if required)
-              if (isSectionMatch && isFeatureMatch && isPartMatch) {
-                matches.push(r);
-              }
-            }
-            // Recursively check children
-            if (r.children && r.children.length > 0) {
-              const childMatches = findAllMatchingRows(r.children);
-              matches = matches.concat(childMatches);
-            }
-          }
-          return matches;
-        };
-
-        matchingRows = findAllMatchingRows(rowData);
+        matchingRows = this.findAllMatchingRows(
+          rowData,
+          resolvedSection,
+          rowFeatureValue,
+          rowPartNumber,
+          bomType,
+          isSbom,
+          isEmptyFeature
+        );
       }
 
       const hasMatchingRows = matchingRows.length > 0;
-      // Check if any entered SKU value exists unconditionally
       let hasAnySkuValue = false;
       skuInfo.forEach((sku) => {
         const skuFieldName = `sku${sku.skuId}`;
@@ -165,19 +65,13 @@ export class PayloadTransformService {
         }
       });
 
-      // Process SKUs from the skuInfo list based on input values
       skuInfo.forEach((sku) => {
         const skuFieldName = `sku${sku.skuId}`;
         const skuValue = row[skuFieldName];
 
-        // Apply standard logic: Include matches only if they have a value, OR if no values were entered at all
         if (!hasAnySkuValue || hasSkuValue(skuValue)) {
           let existingSku: any = null;
 
-          // Condition 4: SKU ID Match (Search in ALL matching rows)
-          // RULE: Hidden rows (ptcbomPartMarkUp === "enumMBOM001" OR empty partNumber) are backend-existing records
-          // Payload must reuse existing SKU object (matched by SKU ID) for hidden rows
-          // First check filtered rowData, then check original API data (including hidden rows)
           if (hasMatchingRows) {
             for (const matchRow of matchingRows) {
               if (matchRow.allSkus && Array.isArray(matchRow.allSkus)) {
@@ -189,20 +83,15 @@ export class PayloadTransformService {
             }
           }
 
-          // If not found in filtered rows, check ALL API instances (including hidden rows)
-          // Hidden rows represent existing backend records and must reuse SKU objects
           if (!existingSku && apiData?.instances && Array.isArray(apiData.instances)) {
             const section = resolvedSection || '';
             const partNumber = String(row.partNumber || '').trim();
             const bomLinkFeature = String(row.bomLinkFeature || '').trim();
             
-            // Get bomType to determine matching rules
-            const bomType = this.dataService.getBomType();
+            const bomType = this.dataService.getBomType() || 'SBOM';
             const isSbom = bomType === 'SBOM';
             const isEmptyFeature = !bomLinkFeature || bomLinkFeature === '';
 
-            // For MBOM: Preserve original behavior - require feature to be present
-            // For SBOM: Allow empty feature matching
             const shouldSearchApiInstances = section && (isSbom || bomLinkFeature);
 
             if (shouldSearchApiInstances) {
@@ -224,20 +113,14 @@ export class PayloadTransformService {
                 let requiresPartMatch = false;
 
                 if (isSbom) {
-                  // SBOM: Match by Section + PartNumber + SKU ID
-                  // If feature is empty, match records with empty feature
-                  // If feature is present, match by feature
                   if (isEmptyFeature) {
-                    // Match records with empty feature
                     isFeatureMatch = !instanceFeature || instanceFeature === '';
                     requiresPartMatch = true;
                   } else {
-                    // Match by feature
                     isFeatureMatch = instanceFeature === bomLinkFeature;
                     requiresPartMatch = true;
                   }
                 } else if (isMbom) {
-                  // MBOM: Original logic - match by feature (feature must be present)
                   isFeatureMatch = instanceFeature === bomLinkFeature;
                   const instanceIsEnumMBOM001 = instancePtcbomPartMarkUp === 'enumMBOM001';
                   requiresPartMatch = instanceHasPartNumber && Boolean(instanceIsEnumMBOM001);
@@ -247,10 +130,7 @@ export class PayloadTransformService {
                   ? String(instancePart).trim() === String(partNumber || '').trim()
                   : true;
 
-                // Match by Section + Feature (+ PartNumber if required)
                 if (isSectionMatch && isFeatureMatch && isPartMatch) {
-                  // Check if this instance has the SKU we're looking for
-                  // Include hidden rows (ptcbomPartMarkUp === "enumMBOM001" OR empty partNumber OR specSheetExtra: "No")
                   if (bomLink.skus && Array.isArray(bomLink.skus)) {
                     existingSku = bomLink.skus.find((s: any) => s.skuId === sku.skuId);
                     if (existingSku) {
@@ -276,9 +156,7 @@ export class PayloadTransformService {
         }
       });
     } else {
-      // For existing/edited rows: Use original SKUs from row.allSkus (from API/mock.json)
       if (!row.allSkus || !Array.isArray(row.allSkus) || row.allSkus.length === 0) {
-        // Fallback: Build from skuInfo if allSkus not available
         skuInfo.forEach((sku) => {
           const skuFieldName = `sku${sku.skuId}`;
           const skuValue = row[skuFieldName];
@@ -314,6 +192,148 @@ export class PayloadTransformService {
     return skus;
   }
 
+  private resolveSectionFromRow(row: any, apiData: any, defaultSection: string): string {
+    let resolvedSection = defaultSection;
+    const sectionDetails = this.getSectionDetails(apiData);
+    const sectionDisplayName = this.getSectionDisplayName(row);
+
+    if (sectionDisplayName && Object.keys(sectionDetails).length > 0) {
+      const foundInternalId = Object.keys(sectionDetails).find(
+        (internalId) => sectionDetails[internalId] === sectionDisplayName
+      );
+      if (foundInternalId) {
+        resolvedSection = foundInternalId;
+      }
+    }
+
+    return resolvedSection;
+  }
+
+  private getSectionDetails(apiData: any): { [key: string]: string } {
+    let sectionDetails = apiData?.sectionDetails || {};
+    if (Object.keys(sectionDetails).length === 0 && this.dataService) {
+      const fullApiData = this.dataService.getApiData();
+      sectionDetails = fullApiData?.sectionDetails || {};
+    }
+    return sectionDetails;
+  }
+
+  private getSectionDisplayName(row: any): string {
+    let sectionDisplayName = row.sectionDisplayName || '';
+
+    if (!sectionDisplayName && row.parent) {
+      let currentParent: any = row.parent;
+      while (currentParent && !sectionDisplayName) {
+        if (currentParent.sectionDisplayName) {
+          sectionDisplayName = currentParent.sectionDisplayName;
+          break;
+        }
+        currentParent = currentParent.parent;
+      }
+    }
+
+    return sectionDisplayName;
+  }
+
+  private findAllMatchingRows(
+    rows: any[],
+    resolvedSection: string,
+    rowFeatureValue: string,
+    rowPartNumber: string,
+    bomType: string,
+    isSbom: boolean,
+    isEmptyFeature: boolean
+  ): any[] {
+    const matches: any[] = [];
+    for (const r of rows) {
+      if (r.section && r.section !== resolvedSection) {
+        continue;
+      }
+
+      if ((r.isDirectRow || r.isSubRow) && !r.isNewRow) {
+        if (this.isRowMatch(r, resolvedSection, rowFeatureValue, rowPartNumber, bomType, isSbom, isEmptyFeature)) {
+          matches.push(r);
+        }
+      }
+
+      if (r.children?.length > 0) {
+        const childMatches = this.findAllMatchingRows(
+          r.children,
+          resolvedSection,
+          rowFeatureValue,
+          rowPartNumber,
+          bomType,
+          isSbom,
+          isEmptyFeature
+        );
+        matches.push(...childMatches);
+      }
+    }
+    return matches;
+  }
+
+  private isRowMatch(
+    r: any,
+    resolvedSection: string,
+    rowFeatureValue: string,
+    rowPartNumber: string,
+    bomType: string,
+    isSbom: boolean,
+    isEmptyFeature: boolean
+  ): boolean {
+    const isSectionMatch = r.section === resolvedSection;
+    const existingFeature = String(r.bomLinkFeature || '').trim();
+    const isMbom = bomType === 'MBOM';
+
+    const { isFeatureMatch, requiresPartMatch } = this.determineFeatureMatch(
+      existingFeature,
+      rowFeatureValue,
+      isSbom,
+      isMbom,
+      isEmptyFeature,
+      r
+    );
+
+    const existingPart = String(r.partNumber || '').trim();
+    const isPartMatch = requiresPartMatch ? existingPart === rowPartNumber : true;
+
+    return isSectionMatch && isFeatureMatch && isPartMatch;
+  }
+
+  private determineFeatureMatch(
+    existingFeature: string,
+    rowFeatureValue: string,
+    isSbom: boolean,
+    isMbom: boolean,
+    isEmptyFeature: boolean,
+    r: any
+  ): { isFeatureMatch: boolean; requiresPartMatch: boolean } {
+    if (isSbom) {
+      if (isEmptyFeature) {
+        return {
+          isFeatureMatch: !existingFeature || existingFeature === '',
+          requiresPartMatch: true,
+        };
+      }
+      return {
+        isFeatureMatch: existingFeature === rowFeatureValue.trim(),
+        requiresPartMatch: true,
+      };
+    }
+
+    if (isMbom) {
+      const existingPart = String(r.partNumber || '').trim();
+      const existingHasPartNumber = existingPart !== '';
+      const existingIsEnumMBOM001 = r.ptcbomPartMarkUp === 'enumMBOM001';
+      return {
+        isFeatureMatch: existingFeature === rowFeatureValue.trim(),
+        requiresPartMatch: existingHasPartNumber && existingIsEnumMBOM001,
+      };
+    }
+
+    return { isFeatureMatch: false, requiresPartMatch: false };
+  }
+
   /**
    * Transform grid row data to API payload format
    * Handles both new rows and edited rows with proper field mapping
@@ -346,20 +366,15 @@ export class PayloadTransformService {
     const allowedSkuIds = new Set<string>(skuInfo.map((sku: any) => String(sku.skuId)));
     const bomType = this.dataService.getBomTypeFromResponse() || this.dataService.getBomType();
 
-    // Get original API data to check ALL rows including hidden ones for SKU matching
     const originalApiData = this.dataService.getApiData();
-
-    // Get mapping for IncludeInSpecSheet (Display -> Internal)
     const includeInSpecSheetMap = this.dataService.getIncludeInSpecSheetMapping(constraintsData);
 
-    // Build a map of current row data from grid API (if available) for edited rows
     const currentRowDataMap = new Map<string | number, any>();
     if (gridApi) {
       gridApi.forEachNode((node: any) => {
         if (node.data) {
           const nodeRowId = node.data.materialKey || node.data.newRowId || node.data.partNumber || node.data.part || '';
           if (nodeRowId && editedRows.has(nodeRowId)) {
-            // Store the current data from grid (has latest edited values)
             currentRowDataMap.set(nodeRowId, node.data);
           }
         }
@@ -383,7 +398,6 @@ export class PayloadTransformService {
       const isNewRow = row.isNewRow === true;
       const isEdited = editedRows.has(rowId);
       
-      // For edited rows, get current data from grid API (has latest values)
       const currentRow = isEdited && currentRowDataMap.has(rowId) 
         ? currentRowDataMap.get(rowId) 
         : row;
@@ -391,34 +405,13 @@ export class PayloadTransformService {
       const bomLink: any = {};
 
       if (isNewRow) {
-        // NEW ROW: Include all required fields
-        // Resolve section: Use sectionDetails to map display name to internal ID for missing sections
-        // Backend provides sectionDetails specifically for frontend to map sectionDisplayName to internal section ID
         let resolvedSection = row.section || '';
 
         if (resolvedSection?.startsWith('__missing_section__')) {
-          // Missing section detected - resolve using sectionDetails from backend
           const apiData = this.dataService.getApiData();
           const sectionDetails = apiData?.sectionDetails ?? {};
+          const sectionDisplayName = this.getSectionDisplayName(row);
 
-          // Get sectionDisplayName from row, or traverse parent chain
-          let sectionDisplayName = row.sectionDisplayName || '';
-
-          // If not found on row, check parent chain
-          if (!sectionDisplayName && row.parent) {
-            let currentParent: any = row.parent;
-            while (currentParent && !sectionDisplayName) {
-              if (currentParent.sectionDisplayName) {
-                sectionDisplayName = currentParent.sectionDisplayName;
-                break;
-              }
-              currentParent = currentParent.parent;
-            }
-          }
-
-          // Map display name to internal ID using sectionDetails
-          // sectionDetails format: { "enumSection001": "Fuselage", "enumSection002": "Cockpit", ... }
-          // We need: displayName "Cockpit" -> internalId "enumSection002"
           if (sectionDisplayName) {
             const foundInternalId = Object.keys(sectionDetails).find(
               (internalId) => sectionDetails[internalId] === sectionDisplayName
@@ -433,7 +426,6 @@ export class PayloadTransformService {
           bomLink.section = resolvedSection;
         }
 
-        // For MBOM bomType, include ptcbomPartMarkUp field in payload
         if (bomType === 'MBOM') {
           bomLink.ptcbomPartMarkUp = 'enumMBOM001';
         }
@@ -495,13 +487,10 @@ export class PayloadTransformService {
           }
         }
 
-        // For SBOM: Don't send bomLinkIncludeInSpecSheet for new rows (defaulted to "Yes" via bomLinkSpecSheetExtra)
-        // Only include it if it's not a new row or if bomType is not SBOM
         if (row.bomLinkIncludeInSpecSheet) {
           const isSbom = bomType === 'SBOM';
           const isNewRow = row.isNewRow;
           
-          // Skip bomLinkIncludeInSpecSheet for new rows in SBOM
           if (!(isSbom && isNewRow)) {
             const val = String(row.bomLinkIncludeInSpecSheet);
             bomLink.bomLinkIncludeInSpecSheet = includeInSpecSheetMap[val] || val;
@@ -515,7 +504,6 @@ export class PayloadTransformService {
           originalApiData || undefined
         );
       } else if (isEdited) {
-        // EXISTING ROW WITH EDITS
         const compositeId =
           row.section && (row.partNumber || row.part)
             ? `${row.section}::${row.partNumber || row.part}`
@@ -611,7 +599,6 @@ export class PayloadTransformService {
           );
         }
       } else {
-        // Skip rows that are not new and not edited
         return;
       }
 
@@ -622,7 +609,6 @@ export class PayloadTransformService {
 
     rowData.forEach((row) => processRow(row));
 
-    // Process new rows from displayData not yet in hierarchy
     if (displayData && Array.isArray(displayData)) {
       displayData.forEach((flatRow: any) => {
         if (flatRow.isNewRow && flatRow.newRowId) {
@@ -645,7 +631,6 @@ export class PayloadTransformService {
       });
     }
 
-    // Build final payload
     const apiData = this.dataService.getApiData();
     const bomPartInfo = this.dataService.getBomPartInfo();
     const columnsRaw = this.dataService.getColumnMapping();

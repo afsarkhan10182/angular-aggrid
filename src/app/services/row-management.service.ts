@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { GridApi } from 'ag-grid-community';
 import { DataService } from './data.service';
-import { GridCommonService } from './grid-common.service';
+import { GridConfigService } from './grid-config.service';
 
 @Injectable({
   providedIn: 'root',
@@ -11,7 +11,7 @@ export class RowManagementService {
   private readonly newRows = new Map<number, any>();
   private lastSavedAt: Date | null = null;
 
-  constructor(private readonly gridCommonService: GridCommonService) {
+  constructor(private readonly gridConfigService: GridConfigService) {
     const savedTimestamp = localStorage.getItem('lastSavedAt');
     if (savedTimestamp) {
       this.lastSavedAt = new Date(savedTimestamp);
@@ -283,112 +283,147 @@ export class RowManagementService {
     originalRowValues?: Map<string | number, any>
   ): void {
     const fieldName: string | undefined = params?.colDef?.field;
-
-    // Use a truly unique row key for edit tracking.
-    // NOTE: partNumber/part can repeat (duplicates). To avoid wrong highlight,
-    // also track a composite key using section when we don't have a unique id.
     const partId =
       params.data.materialKey || params.data.newRowId || params.data.partNumber || params.data.part;
     if (!partId || !fieldName) return;
 
-    // Extra disambiguation key for duplicate part/partNumber across sections
-    // (keeps existing save logic intact because we still store the original partId).
-    const partValue = params.data.partNumber || params.data.part;
-    const sectionValue = params.data.section;
-    const compositeId =
-      !params.data.materialKey && !params.data.newRowId && sectionValue && partValue
-        ? `${sectionValue}::${partValue}`
-        : null;
-
-    const normalizeForField = (f: string, v: any): any => {
-      // Treat null/undefined/whitespace as the same "empty" value
-      if (v === null || v === undefined) return '';
-      if (typeof v === 'string') {
-        const s = v.trim();
-        if (s === '') return '';
-        if (f === 'quantity' || f === 'qty') {
-          const n = Number.parseFloat(s);
-          return Number.isNaN(n) ? s : n;
-        }
-        if (
-          f === 'bomLinkStartDate' ||
-          f === 'bomLinkEndDate' ||
-          f === 'startDate' ||
-          f === 'endDate'
-        ) {
-          const d = this.gridCommonService.parseDateString(s);
-          return d ? d.getTime() : s;
-        }
-        return s;
-      }
-      if (v instanceof Date) return v.getTime();
-      if (typeof v === 'number' && (f === 'quantity' || f === 'qty')) return v;
-      return v;
-    };
-
-    const getOriginalForField = (): any => {
-      if (!originalRowValues) return undefined;
-      const original =
-        originalRowValues.get(params.data.materialKey) ||
-        originalRowValues.get(partId) ||
-        (compositeId ? originalRowValues.get(compositeId) : null) ||
-        originalRowValues.get(params.data.partNumber) ||
-        originalRowValues.get(params.data.part) ||
-        null;
-      if (!original) return undefined;
-
-      // Map grid field -> stored snapshot field
-      if (fieldName === 'bomLinkStartDate' || fieldName === 'startDate')
-        return original.bomLinkStartDate;
-      if (fieldName === 'bomLinkEndDate' || fieldName === 'endDate') return original.bomLinkEndDate;
-      if (fieldName === 'quantity' || fieldName === 'qty') return original.quantity;
-      if (fieldName === 'bomLinkSpecSheetExtra') return original.bomLinkSpecSheetExtra;
-      if (fieldName === 'bomLinkIncludeInSpecSheet') return original.bomLinkIncludeInSpecSheet;
-
-      return undefined;
-    };
-
-    // New rows: keep the old behavior (any net change marks edited)
-    // Existing rows: only mark edited if value differs from the original snapshot.
+    const compositeId = this.getCompositeId(params.data);
     const isNewRow = !!params?.data?.isNewRow;
-    const changed = isNewRow
-      ? normalizeForField(fieldName, params.oldValue) !==
-        normalizeForField(fieldName, params.newValue)
-      : normalizeForField(fieldName, getOriginalForField()) !==
-        normalizeForField(fieldName, params.newValue);
+    const changed = this.isFieldChanged(params, fieldName, isNewRow, partId, compositeId, originalRowValues);
 
-    // Track which specific field is currently edited (relative to original)
-    if (editedFields) {
-      if (!editedFields.has(partId)) {
-        editedFields.set(partId, new Set<string>());
-      }
-      const set = editedFields.get(partId)!;
-      if (changed) {
-        set.add(fieldName);
-      } else {
-        set.delete(fieldName);
-      }
-      if (set.size === 0) {
-        editedFields.delete(partId);
-      }
+    this.updateEditedFields(editedFields, partId, fieldName, changed);
+    const wasRemoved = this.updateEditedRows(editedRows, params, partId, compositeId, editedFields, changed);
+
+    params.api.refreshCells({
+      rowNodes: [params.node],
+      force: true,
+    });
+
+    if (wasRemoved) {
+      this.scheduleRowRedraw(params);
     }
+  }
 
-    // Update editedRows set based on whether the row has any edited fields.
-    // Optimized: Generate all ID variants once, then bulk add/remove
-    let wasRemoved = false;
+  private getCompositeId(rowData: any): string | null {
+    const partValue = rowData.partNumber || rowData.part;
+    const sectionValue = rowData.section;
+    return !rowData.materialKey && !rowData.newRowId && sectionValue && partValue
+      ? `${sectionValue}::${partValue}`
+      : null;
+  }
 
-    // Helper: Generate all ID variants for a given ID (matching getRowClass logic)
-    const getIdVariants = (id: any): Set<string | number> => {
-      const variants = new Set<string | number>();
-      if (id === null || id === undefined || `${id}`.trim() === '') return variants;
-      variants.add(id);
-      variants.add(`${id}`);
-      const numId = Number(id);
-      if (!Number.isNaN(numId)) variants.add(numId);
-      return variants;
-    };
+  private normalizeForField(fieldName: string, value: any): any {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'string') {
+      return this.normalizeStringValue(fieldName, value);
+    }
+    if (value instanceof Date) return value.getTime();
+    if (typeof value === 'number' && (fieldName === 'quantity' || fieldName === 'qty')) return value;
+    return value;
+  }
 
-    // Collect all base IDs that getRowClass checks
+  private normalizeStringValue(fieldName: string, value: string): any {
+    const trimmed = value.trim();
+    if (trimmed === '') return '';
+    if (fieldName === 'quantity' || fieldName === 'qty') {
+      const num = Number.parseFloat(trimmed);
+      return Number.isNaN(num) ? trimmed : num;
+    }
+    if (this.isDateField(fieldName)) {
+      const date = this.gridConfigService.parseDateString(trimmed);
+      return date ? date.getTime() : trimmed;
+    }
+    return trimmed;
+  }
+
+  private isDateField(fieldName: string): boolean {
+    return (
+      fieldName === 'bomLinkStartDate' ||
+      fieldName === 'bomLinkEndDate' ||
+      fieldName === 'startDate' ||
+      fieldName === 'endDate'
+    );
+  }
+
+  private getOriginalForField(
+    params: any,
+    fieldName: string,
+    partId: any,
+    compositeId: string | null,
+    originalRowValues?: Map<string | number, any>
+  ): any {
+    if (!originalRowValues) return undefined;
+    const original =
+      originalRowValues.get(params.data.materialKey) ||
+      originalRowValues.get(partId) ||
+      (compositeId ? originalRowValues.get(compositeId) : null) ||
+      originalRowValues.get(params.data.partNumber) ||
+      originalRowValues.get(params.data.part) ||
+      null;
+    if (!original) return undefined;
+
+    if (fieldName === 'bomLinkStartDate' || fieldName === 'startDate') return original.bomLinkStartDate;
+    if (fieldName === 'bomLinkEndDate' || fieldName === 'endDate') return original.bomLinkEndDate;
+    if (fieldName === 'quantity' || fieldName === 'qty') return original.quantity;
+    if (fieldName === 'bomLinkSpecSheetExtra') return original.bomLinkSpecSheetExtra;
+    if (fieldName === 'bomLinkIncludeInSpecSheet') return original.bomLinkIncludeInSpecSheet;
+
+    return undefined;
+  }
+
+  private isFieldChanged(
+    params: any,
+    fieldName: string,
+    isNewRow: boolean,
+    partId: any,
+    compositeId: string | null,
+    originalRowValues?: Map<string | number, any>
+  ): boolean {
+    if (isNewRow) {
+      return (
+        this.normalizeForField(fieldName, params.oldValue) !==
+        this.normalizeForField(fieldName, params.newValue)
+      );
+    }
+    const originalValue = this.getOriginalForField(params, fieldName, partId, compositeId, originalRowValues);
+    return (
+      this.normalizeForField(fieldName, originalValue) !==
+      this.normalizeForField(fieldName, params.newValue)
+    );
+  }
+
+  private updateEditedFields(
+    editedFields: Map<string | number, Set<string>> | undefined,
+    partId: any,
+    fieldName: string,
+    changed: boolean
+  ): void {
+    if (!editedFields) return;
+    if (!editedFields.has(partId)) {
+      editedFields.set(partId, new Set<string>());
+    }
+    const set = editedFields.get(partId)!;
+    if (changed) {
+      set.add(fieldName);
+    } else {
+      set.delete(fieldName);
+    }
+    if (set.size === 0) {
+      editedFields.delete(partId);
+    }
+  }
+
+  private getIdVariants(id: any): Set<string | number> {
+    const variants = new Set<string | number>();
+    if (id === null || id === undefined || `${id}`.trim() === '') return variants;
+    variants.add(id);
+    variants.add(`${id}`);
+    const numId = Number(id);
+    if (!Number.isNaN(numId)) variants.add(numId);
+    return variants;
+  }
+
+  private getAllIdVariants(params: any, partId: any, compositeId: string | null): Set<string | number> {
     const baseIds = new Set([
       params.data.materialKey,
       params.data.newRowId,
@@ -404,47 +439,47 @@ export class RowManagementService {
     baseIds.delete(undefined);
     baseIds.delete('');
 
-    // Generate all ID variants once
     const allIdVariants = new Set<string | number>();
     baseIds.forEach((id) => {
-      getIdVariants(id).forEach((variant) => allIdVariants.add(variant));
+      this.getIdVariants(id).forEach((variant) => allIdVariants.add(variant));
     });
+    return allIdVariants;
+  }
 
+  private updateEditedRows(
+    editedRows: Set<string | number>,
+    params: any,
+    partId: any,
+    compositeId: string | null,
+    editedFields: Map<string | number, Set<string>> | undefined,
+    changed: boolean
+  ): boolean {
+    const allIdVariants = this.getAllIdVariants(params, partId, compositeId);
     if (editedFields) {
       const hasAnyEdits = editedFields.has(partId) && (editedFields.get(partId)?.size || 0) > 0;
       if (hasAnyEdits) {
-        // Bulk add all variants
         allIdVariants.forEach((id) => editedRows.add(id));
+        return false;
       } else {
-        // Bulk remove all variants
         allIdVariants.forEach((id) => editedRows.delete(id));
-        wasRemoved = true;
+        return true;
       }
     } else if (changed) {
-      // Bulk add all variants
       allIdVariants.forEach((id) => editedRows.add(id));
+      return false;
     }
+    return false;
+  }
 
-    params.api.refreshCells({
-      rowNodes: [params.node],
-      force: true,
-    });
-
-    // Force row class recompute when removing edit flag (highlight should disappear)
-    // Delay redrawRows to avoid flicker during active cell editing
-    if (wasRemoved) {
-      // Use a small timeout to delay until editing UI has settled
-      // This prevents flicker while user is still interacting with the cell
-      setTimeout(() => {
-        // Check if cell is still being edited before redrawing
-        const isEditing = params.api
-          .getEditingCells()
-          .some((cell: any) => cell.rowIndex === params.node.rowIndex);
-        if (!isEditing) {
-          params.api.redrawRows({ rowNodes: [params.node] });
-        }
-      }, 100);
-    }
+  private scheduleRowRedraw(params: any): void {
+    setTimeout(() => {
+      const isEditing = params.api
+        .getEditingCells()
+        .some((cell: any) => cell.rowIndex === params.node.rowIndex);
+      if (!isEditing) {
+        params.api.redrawRows({ rowNodes: [params.node] });
+      }
+    }, 100);
   }
 
   /**
@@ -484,7 +519,7 @@ export class RowManagementService {
             let valueToSet = existingPartData[fieldName];
 
             if (fieldName === 'bomLinkStartDate' || fieldName === 'bomLinkEndDate') {
-              valueToSet = this.gridCommonService.formatDateToMMDDYYYY(valueToSet);
+              valueToSet = this.gridConfigService.formatDateToMMDDYYYY(valueToSet);
             }
 
             if (oldData[fieldName] !== valueToSet) {
@@ -539,13 +574,11 @@ export class RowManagementService {
         return;
       }
 
-      // Transform grid data to API format with mixed edit/create support
       const apiPayload = componentInstance.transformGridDataToApiFormat
         ? componentInstance.transformGridDataToApiFormat(rowData)
         : null;
 
       if (apiPayload) {
-        // Call the API if payload exists and has instances
         if (
           apiPayload.instances &&
           apiPayload.instances.length > 0 &&
@@ -553,138 +586,10 @@ export class RowManagementService {
         ) {
           componentInstance.dataService.updateBomData(apiPayload).subscribe({
             next: (response: any) => {
-
-              // Update grid with API response if available
-              if (response && (response.instances || response.data)) {
-                // If API returns updated data, use it to refresh the grid
-                const responseData = response.instances ? response : response.data;
-
-                // CRITICAL: Update dataService.apiData with the save response
-                // This ensures validation and SKU matching use the latest data including newly saved rows
-                if (
-                  responseData &&
-                  componentInstance.dataService?.updateApiData
-                ) {
-                  componentInstance.dataService.updateApiData(responseData);
-                }
-
-                if (responseData && componentInstance.transformToHierarchicalData) {
-                  try {
-                    const updatedHierarchicalData =
-                      componentInstance.transformToHierarchicalData(responseData);
-                    componentInstance.rowData = updatedHierarchicalData;
-
-                    // FIX: Clear displayData to prevent applyGrouping from preserving the old local "new rows"
-                    // giving us duplicates (one real from API, one ghost from local state)
-                    componentInstance.displayData = [];
-
-                    // Update displayData if available
-                    if (componentInstance.applyHierarchicalSearch) {
-                      componentInstance.applyHierarchicalSearch();
-                    }
-                  } catch (error) {
-                    // Fall back to local update
-                    this.updateLocalRowDataAfterSave(rowData, componentInstance, editedRows);
-                  }
-                } else {
-                  // Fall back to local update
-                  this.updateLocalRowDataAfterSave(rowData, componentInstance, editedRows);
-                }
-              } else {
-                // No response data, use local update
-                this.updateLocalRowDataAfterSave(rowData, componentInstance, editedRows);
-              }
-
-              // CRITICAL: Always clear edited state on success so the next payload is fresh.
-              // Some success paths replace rowData from API and skip updateLocalRowDataAfterSave().
-              editedRows.clear();
-              if (componentInstance.editedFields) {
-                componentInstance.editedFields.clear();
-              }
-
-              // After successful save, update original values to match current state
-              // This ensures subsequent edits use the correct "old" values
-              // Note: Backend does NOT return old values in response - frontend must track them
-              if (componentInstance.storeOriginalValues) {
-                componentInstance.storeOriginalValues();
-              }
-
-              this.lastSavedAt = new Date();
-              localStorage.setItem('lastSavedAt', this.lastSavedAt.toISOString());
-              this.newRows.clear();
-
-              // Refresh grid to show updated icons (change - to + for saved new rows)
-              gridApi.refreshCells({
-                force: true,
-                suppressFlash: false,
-              });
-
-              // Also refresh the entire grid to ensure all changes are reflected
-              setTimeout(() => {
-                if (componentInstance.applyHierarchicalSearch) {
-                  componentInstance.applyHierarchicalSearch();
-                }
-                gridApi.refreshCells({ force: true });
-              }, 100);
-
-              resolve({
-                success: true,
-                message: `Successfully saved changes!`,
-                payload: apiPayload,
-              });
+              this.handleSaveSuccess(response, rowData, componentInstance, editedRows, gridApi, apiPayload, resolve);
             },
             error: (error: any) => {
-              const backendError =
-                (typeof error.error === 'string' ? error.error : null) ||
-                error.error?.error ||
-                error.error?.message ||
-                error.message ||
-                '';
-
-              let errorMessage = 'Failed to save changes.';
-
-              if (error.status) {
-                switch (error.status) {
-                  case 404:
-                    errorMessage = backendError
-                      ? `Failed to save: ${backendError}`
-                      : 'Failed to save: Resource not found (404). Please check your connection and try again.';
-                    break;
-                  case 500:
-                    errorMessage = backendError
-                      ? `Failed to save: ${backendError}`
-                      : 'Failed to save: Server error (500). Please try again later or contact support.';
-                    break;
-                  case 400:
-                    errorMessage = backendError
-                      ? `Failed to save: ${backendError}`
-                      : 'Failed to save: Bad request (400). Please check your data and try again.';
-                    break;
-                  case 401:
-                    errorMessage = backendError
-                      ? `Failed to save: ${backendError}`
-                      : 'Failed to save: Unauthorized (401). Please refresh the page and try again.';
-                    break;
-                  case 403:
-                    errorMessage = backendError
-                      ? `Failed to save: ${backendError}`
-                      : 'Failed to save: Forbidden (403). You do not have permission to perform this action.';
-                    break;
-                  default:
-                    errorMessage = backendError
-                      ? `Failed to save: ${backendError}`
-                      : `Failed to save: ${error.status} ${
-                          error.statusText || 'Error'
-                        }. Please try again.`;
-                }
-              } else if (error.message) {
-                errorMessage = `Failed to save: ${error.message}`;
-              }
-
-              // IMPORTANT: Do NOT update grid, icons, or state on error
-              // Keep UI exactly as it was before clicking save
-              // Only show error message to user
-
+              const errorMessage = this.getErrorMessage(error);
               resolve({
                 success: false,
                 message: errorMessage,
@@ -693,25 +598,7 @@ export class RowManagementService {
             },
           });
         } else {
-          // No API call needed, just update locally
-          setTimeout(() => {
-            this.updateLocalRowDataAfterSave(rowData, componentInstance, editedRows);
-
-            this.lastSavedAt = new Date();
-            localStorage.setItem('lastSavedAt', this.lastSavedAt.toISOString());
-            this.newRows.clear();
-
-            gridApi.refreshCells({
-              force: true,
-              suppressFlash: false,
-            });
-
-            resolve({
-              success: true,
-              message: `Successfully saved changes!`,
-              payload: apiPayload,
-            });
-          }, 100);
+          this.handleLocalSave(rowData, componentInstance, editedRows, gridApi, apiPayload, resolve);
         }
       } else {
         resolve({
@@ -720,6 +607,154 @@ export class RowManagementService {
         });
       }
     });
+  }
+
+  private handleSaveSuccess(
+    response: any,
+    rowData: any[],
+    componentInstance: any,
+    editedRows: Set<string | number>,
+    gridApi: GridApi,
+    apiPayload: any,
+    resolve: (value: { success: boolean; message: string; payload?: any }) => void
+  ): void {
+    if (response && (response.instances || response.data)) {
+      const responseData = response.instances ? response : response.data;
+      this.updateApiData(responseData, componentInstance);
+      this.updateGridData(responseData, rowData, componentInstance, editedRows);
+    } else {
+      this.updateLocalRowDataAfterSave(rowData, componentInstance, editedRows);
+    }
+
+    this.clearEditedState(editedRows, componentInstance);
+    this.updateOriginalValues(componentInstance);
+    this.updateSaveTimestamp();
+    this.refreshGridAfterSave(gridApi, componentInstance);
+
+    resolve({
+      success: true,
+      message: `Successfully saved changes!`,
+      payload: apiPayload,
+    });
+  }
+
+  private handleLocalSave(
+    rowData: any[],
+    componentInstance: any,
+    editedRows: Set<string | number>,
+    gridApi: GridApi,
+    apiPayload: any,
+    resolve: (value: { success: boolean; message: string; payload?: any }) => void
+  ): void {
+    setTimeout(() => {
+      this.updateLocalRowDataAfterSave(rowData, componentInstance, editedRows);
+      this.updateSaveTimestamp();
+      gridApi.refreshCells({
+        force: true,
+        suppressFlash: false,
+      });
+      resolve({
+        success: true,
+        message: `Successfully saved changes!`,
+        payload: apiPayload,
+      });
+    }, 100);
+  }
+
+  private updateApiData(responseData: any, componentInstance: any): void {
+    if (responseData && componentInstance.dataService?.updateApiData) {
+      componentInstance.dataService.updateApiData(responseData);
+    }
+  }
+
+  private updateGridData(
+    responseData: any,
+    rowData: any[],
+    componentInstance: any,
+    editedRows: Set<string | number>
+  ): void {
+    if (responseData && componentInstance.transformToHierarchicalData) {
+      try {
+        const updatedHierarchicalData = componentInstance.transformToHierarchicalData(responseData);
+        componentInstance.rowData = updatedHierarchicalData;
+        componentInstance.displayData = [];
+        if (componentInstance.applyHierarchicalSearch) {
+          componentInstance.applyHierarchicalSearch();
+        }
+      } catch (error) {
+        console.warn('Failed to apply hierarchical search after save, using local update:', error);
+        this.updateLocalRowDataAfterSave(rowData, componentInstance, editedRows);
+      }
+    } else {
+      this.updateLocalRowDataAfterSave(rowData, componentInstance, editedRows);
+    }
+  }
+
+  private clearEditedState(editedRows: Set<string | number>, componentInstance: any): void {
+    editedRows.clear();
+    if (componentInstance.editedFields) {
+      componentInstance.editedFields.clear();
+    }
+  }
+
+  private updateOriginalValues(componentInstance: any): void {
+    if (componentInstance.storeOriginalValues) {
+      componentInstance.storeOriginalValues();
+    }
+  }
+
+  private updateSaveTimestamp(): void {
+    this.lastSavedAt = new Date();
+    localStorage.setItem('lastSavedAt', this.lastSavedAt.toISOString());
+    this.newRows.clear();
+  }
+
+  private refreshGridAfterSave(gridApi: GridApi, componentInstance: any): void {
+    gridApi.refreshCells({
+      force: true,
+      suppressFlash: false,
+    });
+    setTimeout(() => {
+      if (componentInstance.applyHierarchicalSearch) {
+        componentInstance.applyHierarchicalSearch();
+      }
+      gridApi.refreshCells({ force: true });
+    }, 100);
+  }
+
+  private getErrorMessage(error: any): string {
+    const backendError =
+      (typeof error.error === 'string' ? error.error : null) ||
+      error.error?.error ||
+      error.error?.message ||
+      error.message ||
+      '';
+
+    if (error.status) {
+      return this.getErrorMessageForStatus(error.status, backendError, error.statusText);
+    }
+    if (error.message) {
+      return `Failed to save: ${error.message}`;
+    }
+    return 'Failed to save changes.';
+  }
+
+  private getErrorMessageForStatus(status: number, backendError: string, statusText?: string): string {
+    const errorMessages: Record<number, string> = {
+      404: backendError || 'Failed to save: Resource not found (404). Please check your connection and try again.',
+      500: backendError || 'Failed to save: Server error (500). Please try again later or contact support.',
+      400: backendError || 'Failed to save: Bad request (400). Please check your data and try again.',
+      401: backendError || 'Failed to save: Unauthorized (401). Please refresh the page and try again.',
+      403: backendError || 'Failed to save: Forbidden (403). You do not have permission to perform this action.',
+    };
+
+    if (errorMessages[status]) {
+      return backendError ? `Failed to save: ${backendError}` : errorMessages[status];
+    }
+
+    return backendError
+      ? `Failed to save: ${backendError}`
+      : `Failed to save: ${status} ${statusText || 'Error'}. Please try again.`;
   }
 
   /**

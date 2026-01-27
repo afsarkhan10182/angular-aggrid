@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { catchError, tap, map, mergeMap } from 'rxjs/operators';
+import { catchError, tap, map } from 'rxjs/operators';
 import { UtilService } from './util.service';
 
 export interface LoggedInUserModel {
@@ -31,7 +31,7 @@ export class SessionService {
     }
 
     // Otherwise, use the current page's protocol (http or https)
-    const protocol = window.location.protocol; // Returns "http:" or "https:"
+    const protocol = globalThis.location.protocol; // Returns "http:" or "https:"
     return `${protocol}//${hostFromJsp}`;
   }
 
@@ -47,15 +47,15 @@ export class SessionService {
       : `${this.getServiceHostUrl()}${environment.getUserUrl}`;
   }
 
-  private sessionSubject = new BehaviorSubject<LoggedInUserModel | null>(null);
+  private readonly sessionSubject = new BehaviorSubject<LoggedInUserModel | null>(null);
   public session$ = this.sessionSubject.asObservable();
 
-  private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
+  private readonly isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
   private csrfToken: string | null = null;
 
-  constructor(private http: HttpClient, private utilService: UtilService) {}
+  constructor(private readonly http: HttpClient, private readonly utilService: UtilService) {}
 
   getCsrfToken(): Observable<string> {
     return this.http.get<any>(this.getAuthUrl()).pipe(
@@ -105,27 +105,9 @@ export class SessionService {
     return this.http.post<any>(this.getUserApiUrl(), requestBody, { headers }).pipe(
       map((response: any) => {
         if (environment.useMockApi) {
-          const user: LoggedInUserModel = {
-            name: response.name || response.userName || 'wcadmin',
-            fullName: response.fullName || 'Administrator',
-            userName: response.userName || 'wcadmin',
-            last: response.last,
-            emailId: response.emailId,
-          };
-          return user;
+          return this.createUserFromMockResponse(response);
         } else {
-          if (!response.name || !response.fullName || !response.userName) {
-            throw new Error('Invalid user data received from backend - missing required fields');
-          }
-
-          const user: LoggedInUserModel = {
-            name: response.name,
-            fullName: response.fullName,
-            userName: response.userName,
-            last: response.last,
-            emailId: response.emailId,
-          };
-          return user;
+          return this.createUserFromApiResponse(response);
         }
       }),
       catchError((error) => {
@@ -159,5 +141,29 @@ export class SessionService {
   setAuthenticated(user: LoggedInUserModel): void {
     this.sessionSubject.next(user);
     this.isAuthenticatedSubject.next(true);
+  }
+
+  private createUserFromMockResponse(response: any): LoggedInUserModel {
+    return {
+      name: response.name || response.userName || 'wcadmin',
+      fullName: response.fullName || 'Administrator',
+      userName: response.userName || 'wcadmin',
+      last: response.last,
+      emailId: response.emailId,
+    };
+  }
+
+  private createUserFromApiResponse(response: any): LoggedInUserModel {
+    if (!response.name || !response.fullName || !response.userName) {
+      throw new Error('Invalid user data received from backend - missing required fields');
+    }
+
+    return {
+      name: response.name,
+      fullName: response.fullName,
+      userName: response.userName,
+      last: response.last,
+      emailId: response.emailId,
+    };
   }
 }

@@ -10,7 +10,7 @@ export interface GroupConfig {
 @Injectable({
   providedIn: 'root',
 })
-export class GridCommonService {
+export class GridConfigService {
   constructor(private readonly dataService: DataService) {}
 
   getDefaultColDef() {
@@ -33,7 +33,7 @@ export class GridCommonService {
         const baseStyle: any = {
           padding: '8px 12px',
         };
-        if (!params.data || !params.data.isSectionHeader) {
+        if (!params.data?.isSectionHeader) {
           baseStyle.borderRight = '1px solid #e2e8f0';
         }
         return baseStyle;
@@ -84,17 +84,17 @@ export class GridCommonService {
     if (!dateStr || dateStr === '') return null;
     const parts = dateStr.split('/');
     if (parts.length === 3) {
-      const month = parseInt(parts[0], 10) - 1;
-      const day = parseInt(parts[1], 10);
-      const year = parseInt(parts[2], 10);
+      const month = Number.parseInt(parts[0], 10) - 1;
+      const day = Number.parseInt(parts[1], 10);
+      const year = Number.parseInt(parts[2], 10);
       const date = new Date(year, month, day);
-      if (!isNaN(date.getTime())) {
+      if (!Number.isNaN(date.getTime())) {
         return date;
       }
     }
     // Fallback to standard Date parsing
     const date = new Date(dateStr);
-    return isNaN(date.getTime()) ? null : date;
+    return Number.isNaN(date.getTime()) ? null : date;
   }
 
   /**
@@ -133,7 +133,7 @@ export class GridCommonService {
     }
 
     const date = new Date(value);
-    if (isNaN(date.getTime())) return '';
+    if (Number.isNaN(date.getTime())) return '';
 
     return this.formatDateToString(date);
   }
@@ -161,7 +161,7 @@ export class GridCommonService {
     }
 
     const date = new Date(dateValue);
-    if (isNaN(date.getTime())) return '';
+    if (Number.isNaN(date.getTime())) return '';
 
     return this.formatDateToString(date);
   }
@@ -254,7 +254,7 @@ export class GridCommonService {
 
     for (let i = 0; i < clickableCount; i++) {
       const randomIndex = Math.floor(Math.random() * first20Parts.length);
-      clickableParts.add(parseInt(first20Parts[randomIndex]));
+      clickableParts.add(Number.parseInt(first20Parts[randomIndex], 10));
     }
 
     return clickableParts;
@@ -276,7 +276,7 @@ export class GridCommonService {
         features.add(row.feature);
       }
     });
-    return Array.from(features).sort();
+    return Array.from(features).sort((a, b) => a.localeCompare(b));
   }
 
   /**
@@ -333,7 +333,7 @@ export class GridCommonService {
         suppliers.add(row.supplier);
       }
     });
-    return Array.from(suppliers).sort();
+    return Array.from(suppliers).sort((a, b) => a.localeCompare(b));
   }
 
   /**
@@ -352,7 +352,7 @@ export class GridCommonService {
         colors.add(row.color);
       }
     });
-    return Array.from(colors).sort();
+    return Array.from(colors).sort((a, b) => a.localeCompare(b));
   }
 
   /**
@@ -435,92 +435,7 @@ export class GridCommonService {
       suppressClickEdit: false,
       singleClickEdit: true,
       getRowClass: (params) => {
-        let classes = [];
-
-        if (params.data && params.data.isSectionHeader) {
-          classes.push('section-header-row');
-        }
-        if (params.data && params.data.isGroupHeader) {
-          classes.push('group-header-row');
-          if (params.data.groupLevel === 0) {
-            classes.push('group-level-0');
-          } else if (params.data.groupLevel === 1) {
-            classes.push('group-level-1');
-          } else {
-            classes.push('group-level-2');
-          }
-        }
-        if (params.data && params.data.isExpired) {
-          classes.push('expired-row');
-        }
-        if (params.data && params.data.isNew) {
-          classes.push('new-row');
-        }
-        if (params.data && params.data.isEdited) {
-          classes.push('edited-row');
-        }
-        if (params.data && params.data.isParent) {
-          classes.push('parent-row');
-          if (params.data.isExpanded) {
-            classes.push('expanded');
-          }
-        }
-        if (params.data && params.data.isSubRow) {
-          classes.push('subrow');
-        }
-        // Highlight edited rows (persist highlight across scroll/re-render)
-        // IMPORTANT: editedRows may store different keys depending on row type:
-        // materialKey (existing), newRowId (new row), partNumber/part (fallback).
-        if (componentInstance.editedRows && params.data) {
-          const isNewRow = params.data.isNewRow === true;
-          
-          // For new rows, only check newRowId (unique identifier)
-          // For existing rows, prioritize materialKey (unique), then fallback to partNumber/part
-          let candidates: any[] = [];
-          
-          if (isNewRow) {
-            // New rows: only check newRowId (unique)
-            if (params.data.newRowId) {
-              candidates = [params.data.newRowId];
-            }
-          } else {
-            // Existing rows: check materialKey first (unique), then fallback to partNumber/part/composite
-            if (params.data.materialKey) {
-              candidates = [params.data.materialKey];
-            } else {
-              // Fallback: check partNumber, part, and composite ID
-              candidates = [
-                params.data.partNumber,
-                params.data.part,
-                params.data.section && (params.data.partNumber || params.data.part)
-                  ? `${params.data.section}::${params.data.partNumber || params.data.part}`
-                  : null,
-              ].filter((v) => v !== null && v !== undefined && `${v}`.trim() !== '');
-            }
-          }
-
-          const isEdited = candidates.some((id) => {
-            return (
-              componentInstance.editedRows.has(id) ||
-              componentInstance.editedRows.has(`${id}`) ||
-              componentInstance.editedRows.has(Number(id))
-            );
-          });
-
-          if (isEdited) {
-            classes.push('row-edited');
-          }
-        }
-
-        // Check for validation errors
-        if (params.data && componentInstance.invalidRowIds) {
-          const rowId = params.data.newRowId || params.data.partNumber || params.data.part;
-          if (rowId && componentInstance.invalidRowIds.has(rowId)) {
-            classes.push('validation-error-row');
-          }
-        }
-
-        return classes.join(' ');
+        return this.buildRowClasses(params, componentInstance);
       },
       suppressAnimationFrame: true,
       context: {
@@ -552,16 +467,16 @@ export class GridCommonService {
         }
 
         // Ensure rowClass updates immediately (AG Grid doesn't always recompute getRowClass on refreshCells)
-        if (params.data && params.data.isNewRow) {
+        if (params.data?.isNewRow) {
           params.api.redrawRows({ rowNodes: [params.node] });
         }
 
         // Live per-row validation for new rows (show row-specific errors before Save)
-        if (componentInstance.validateRowLive && params.data && params.data.isNewRow) {
+        if (componentInstance.validateRowLive && params.data?.isNewRow) {
           componentInstance.validateRowLive(params.data);
         }
 
-        if (params.data && params.data.isNewRow) {
+        if (params.data?.isNewRow) {
           if (
             componentInstance.rowManagementService &&
             componentInstance.dataService &&
@@ -583,14 +498,12 @@ export class GridCommonService {
         }
 
         if (
-          params.data &&
-          params.data.isNewRow &&
+          params.data?.isNewRow &&
           params.colDef.field &&
-          params.colDef.field !== 'part'
+          params.colDef.field !== 'part' &&
+          params.node.data
         ) {
-          if (params.node.data) {
-            (params.node.data as any)[params.colDef.field] = params.newValue;
-          }
+          params.node.data[params.colDef.field] = params.newValue;
         }
       },
       onCellEditingStarted: (params) => {},
@@ -601,7 +514,7 @@ export class GridCommonService {
           params.newValue !== undefined &&
           params.colDef.field &&
           params.newValue !== params.oldValue &&
-          !params.colDef.field.includes('Date') &&
+          !params.colDef.field?.includes('Date') &&
           params.colDef.field !== 'quantity'
         ) {
           params.data[params.colDef.field] = params.newValue;
@@ -635,25 +548,27 @@ export class GridCommonService {
         }
       },
       onCellKeyDown: (params) => {
+        if (!params.event) return;
+        
+        const event = params.event as KeyboardEvent;
+        const colDef = 'colDef' in params ? params.colDef : undefined;
         if (
-          params.event &&
-          (params.event as KeyboardEvent).ctrlKey &&
-          (params.event as KeyboardEvent).key === 'v' &&
-          (params as any).colDef?.field &&
-          (params as any).colDef.field.startsWith('sku') &&
-          params.data &&
-          params.data.isNewRow
+          event.ctrlKey &&
+          event.key === 'v' &&
+          (colDef?.field?.startsWith('sku') ?? false) &&
+          params.data?.isNewRow
         ) {
           // Prevent paste if SKU column is disabled (not editable)
-          if ((params as any).colDef?.isDisabled) {
-            params.event.preventDefault();
+          const colDefAny = colDef as any;
+          if (colDefAny?.isDisabled) {
+            event.preventDefault();
             return;
           }
           
           if (componentInstance.rowManagementService) {
             componentInstance.rowManagementService.pasteSkuValue(params as any, componentInstance);
           }
-          params.event.preventDefault();
+          event.preventDefault();
         }
       },
       onFilterChanged: (params) => {},
@@ -707,12 +622,10 @@ export class GridCommonService {
           } else {
             rowElement.classList.remove('ag-row-hover');
           }
+        } else if (add) {
+          rowElement.classList.add('ag-row-hover');
         } else {
-          if (add) {
-            rowElement.classList.add('ag-row-hover');
-          } else {
-            rowElement.classList.remove('ag-row-hover');
-          }
+          rowElement.classList.remove('ag-row-hover');
         }
       });
     };
@@ -728,8 +641,8 @@ export class GridCommonService {
         if (row) {
           const rowIndexAttr = row.getAttribute('row-index');
           if (rowIndexAttr !== null) {
-            const rowIndex = parseInt(rowIndexAttr, 10);
-            if (!isNaN(rowIndex)) {
+            const rowIndex = Number.parseInt(rowIndexAttr, 10);
+            if (!Number.isNaN(rowIndex)) {
               syncHover(rowIndex, true);
             }
           }
@@ -748,8 +661,8 @@ export class GridCommonService {
         if (row) {
           const rowIndexAttr = row.getAttribute('row-index');
           if (rowIndexAttr !== null) {
-            const rowIndex = parseInt(rowIndexAttr, 10);
-            if (!isNaN(rowIndex)) {
+            const rowIndex = Number.parseInt(rowIndexAttr, 10);
+            if (!Number.isNaN(rowIndex)) {
               syncHover(rowIndex, false);
             }
           }
@@ -790,8 +703,7 @@ export class GridCommonService {
     }
 
     if (!isSbomMode()) {
-      const mbomEditableFields = ['bomLinkStartDate', 'bomLinkEndDate', 'quantity'];
-      return mbomEditableFields.includes(field);
+      return ['bomLinkStartDate', 'bomLinkEndDate', 'quantity'].includes(field);
     }
 
     // For SBOM: Disable bomLinkIncludeInSpecSheet if bomLinkSpecSheetExtra exists
@@ -1088,10 +1000,10 @@ export class GridCommonService {
 
       const sectionWithExpanded = {
         ...section,
-        isExpanded: section.isExpanded !== undefined ? section.isExpanded : true
+        isExpanded: section.isExpanded ?? true
       };
 
-      if (!section.children || !Array.isArray(section.children) || section.children.length === 0) {
+      if (!Array.isArray(section.children) || section.children.length === 0) {
         return {
           ...sectionWithExpanded,
           children: []
@@ -1105,5 +1017,120 @@ export class GridCommonService {
         children: groupedChildren || []
       };
     });
+  }
+
+  /**
+   * Build row classes for AG Grid rows
+   * Extracted from getRowClass to reduce cognitive complexity
+   */
+  private buildRowClasses(params: any, componentInstance: any): string {
+    const classes: string[] = [];
+    const data = params.data;
+
+    if (!data) {
+      return classes.join(' ');
+    }
+
+    this.addHeaderRowClasses(classes, data);
+    this.addGroupRowClasses(classes, data);
+    this.addStatusRowClasses(classes, data);
+    this.addEditedRowClass(classes, data, componentInstance);
+    this.addValidationErrorClass(classes, data, componentInstance);
+
+    return classes.join(' ');
+  }
+
+  private addHeaderRowClasses(classes: string[], data: any): void {
+    if (data.isSectionHeader) {
+      classes.push('section-header-row');
+    }
+  }
+
+  private addGroupRowClasses(classes: string[], data: any): void {
+    if (data.isGroupHeader) {
+      classes.push('group-header-row');
+      if (data.groupLevel === 0) {
+        classes.push('group-level-0');
+      } else if (data.groupLevel === 1) {
+        classes.push('group-level-1');
+      } else {
+        classes.push('group-level-2');
+      }
+    }
+  }
+
+  private addStatusRowClasses(classes: string[], data: any): void {
+    if (data.isExpired) {
+      classes.push('expired-row');
+    }
+    if (data.isNew) {
+      classes.push('new-row');
+    }
+    if (data.isEdited) {
+      classes.push('edited-row');
+    }
+    if (data.isParent) {
+      classes.push('parent-row');
+      if (data.isExpanded) {
+        classes.push('expanded');
+      }
+    }
+    if (data.isSubRow) {
+      classes.push('subrow');
+    }
+  }
+
+  private addEditedRowClass(classes: string[], data: any, componentInstance: any): void {
+    if (!componentInstance.editedRows) {
+      return;
+    }
+
+    const candidates = this.getEditedRowCandidates(data);
+    const isEdited = this.isRowEdited(candidates, componentInstance.editedRows);
+
+    if (isEdited) {
+      classes.push('row-edited');
+    }
+  }
+
+  private getEditedRowCandidates(data: any): any[] {
+    const isNewRow = data.isNewRow === true;
+
+    if (isNewRow) {
+      return data.newRowId ? [data.newRowId] : [];
+    }
+
+    if (data.materialKey) {
+      return [data.materialKey];
+    }
+
+    return [
+      data.partNumber,
+      data.part,
+      data.section && (data.partNumber || data.part)
+        ? `${data.section}::${data.partNumber || data.part}`
+        : null,
+    ].filter((v) => v !== null && v !== undefined && `${v}`.trim() !== '');
+  }
+
+  private isRowEdited(candidates: any[], editedRows: Set<any>): boolean {
+    return candidates.some((id) => {
+      return (
+        editedRows.has(id) ||
+        editedRows.has(`${id}`) ||
+        editedRows.has(Number(id))
+      );
+    });
+  }
+
+  private addValidationErrorClass(classes: string[], data: any, componentInstance: any): void {
+    if (!componentInstance.invalidRowIds) {
+      return;
+    }
+
+    const rowId = data.newRowId || data.partNumber || data.part;
+    if (rowId && componentInstance.invalidRowIds.has(rowId)) {
+      classes.push('validation-error-row');
+    }
   }
 }
