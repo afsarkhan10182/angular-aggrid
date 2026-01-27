@@ -1,11 +1,9 @@
 import { Injectable } from '@angular/core';
 import { GridApi, ColDef } from 'ag-grid-community';
 
-// Extended ColDef interface for type safety (custom properties should use context)
 export interface ExtendedColDef extends ColDef {
-  // Custom properties should be placed in context property
-  isVirtual?: boolean; // Indicates if column is virtual (not a real grid column)
-  hide?: boolean; // Custom property to track column visibility state
+  isVirtual?: boolean;
+  hide?: boolean;
 }
 
 @Injectable({
@@ -21,12 +19,10 @@ export class UtilService {
   convertDateToApiFormat(dateStr: string): string {
     if (!dateStr) return '';
 
-    // If already in YYYY/M/D format, return as-is
     if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(dateStr)) {
       return dateStr;
     }
 
-    // Try to parse MM/DD/YYYY format
     const mmddyyyyPattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
     const match = mmddyyyyPattern.exec(dateStr);
     if (match) {
@@ -34,7 +30,6 @@ export class UtilService {
       return `${year}/${Number.parseInt(month, 10)}/${Number.parseInt(day, 10)}`;
     }
 
-    // Try to parse as Date object or ISO string
     const date = new Date(dateStr);
     if (!Number.isNaN(date.getTime())) {
       const year = date.getFullYear();
@@ -43,7 +38,6 @@ export class UtilService {
       return `${year}/${month}/${day}`;
     }
 
-    // Return as-is if can't parse
     return dateStr;
   }
 
@@ -58,16 +52,12 @@ export class UtilService {
       return null;
     }
 
-    // Convert to number
     const numValue = typeof quantity === 'string' ? Number.parseFloat(quantity) : Number(quantity);
 
-    // Check if valid number
     if (Number.isNaN(numValue)) {
       return null;
     }
 
-    // Format to 2 decimal places and return as float
-    // Using Number.parseFloat to ensure it's a number, not a string
     return Number.parseFloat(numValue.toFixed(2));
   }
 
@@ -82,15 +72,12 @@ export class UtilService {
       return '';
     }
 
-    // Convert to number
     const numValue = typeof quantity === 'string' ? Number.parseFloat(quantity) : Number(quantity);
 
-    // Check if valid number
     if (Number.isNaN(numValue)) {
       return '';
     }
 
-    // Format to 2 decimal places and return as string
     return numValue.toFixed(2);
   }
 
@@ -211,12 +198,6 @@ export class UtilService {
     return sortDirection === 'desc' ? -result : result;
   }
 
-  /**
-   * Get JSP data attribute value from angular-root element
-   * Used to retrieve data attributes passed from Windchill JSP pages
-   * @param attributeName - Name of the data attribute (e.g., 'data-bomid', 'data-host')
-   * @returns Attribute value or null if not found
-   */
   getJspDataAttribute(attributeName: string): string | null {
     const angularRoot = document.getElementById('angular-root');
     return angularRoot?.getAttribute(attributeName) || null;
@@ -253,46 +234,32 @@ export class UtilService {
           excludeHeaderRows = true,
         } = options;
 
-        // Get all visible columns (excluding hidden ones)
         const allColumns = gridApi.getColumns();
         if (!allColumns || allColumns.length === 0) {
           reject(new Error('No columns found for export'));
           return;
         }
 
-        // Filter out hidden columns and excluded columns
         const visibleColumns = this.getVisibleColumnsForExport(allColumns, excludedFields);
-
-        // Get row data - either selected nodes or all nodes
         const { rowData, rowNodes } = this.getRowDataForExport(gridApi, options, excludeHeaderRows);
 
-        // Prepare data for Excel export
         const excelData: any[] = [];
-
-        // Add header row with Section column as first column
         const headers: string[] = ['Section', ...this.getColumnHeaders(visibleColumns)];
         excelData.push(headers);
 
-        // Add data rows
         this.addDataRowsToExcel(excelData, rowData, rowNodes, visibleColumns);
 
-        // Dynamically import xlsx library only when needed (reduces initial bundle size)
         const XLSX = await import('xlsx');
-
-        // Create workbook and worksheet
         const worksheet = XLSX.utils.aoa_to_sheet(excelData);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
 
-        // Set column widths (include Section column)
         const colWidths = this.getColumnWidths(visibleColumns);
         worksheet['!cols'] = colWidths;
 
-        // Generate file name
         const exportFileName =
           fileName || `BOM_Composer_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
 
-        // Write file
         XLSX.writeFile(workbook, exportFileName);
 
           resolve();
@@ -303,10 +270,6 @@ export class UtilService {
     });
   }
 
-  /**
-   * Get excluded fields for search functionality
-   * @returns Set of field names that should be excluded from search
-   */
   getExcludedSearchFields(): Set<string> {
     return new Set([
       'isSectionHeader',
@@ -333,12 +296,6 @@ export class UtilService {
     ]);
   }
 
-  /**
-   * Check if an array value matches search text
-   * @param value - Value to check (should be an array)
-   * @param searchLower - Lowercase search text
-   * @returns True if any array item matches the search
-   */
   matchesArrayValue(value: any, searchLower: string): boolean {
     if (!Array.isArray(value)) {
       return false;
@@ -355,12 +312,6 @@ export class UtilService {
     return false;
   }
 
-  /**
-   * Get group header cell style
-   * @param groupBackgroundColor - Background color for the group level
-   * @param isActionsColumn - Whether this is the actions column
-   * @returns Style object for group header
-   */
   getGroupHeaderStyle(groupBackgroundColor: string, isActionsColumn: boolean): any {
     return {
       backgroundColor: groupBackgroundColor,
@@ -372,11 +323,6 @@ export class UtilService {
     };
   }
 
-  /**
-   * Get section header cell style
-   * @param isActionsColumn - Whether this is the actions column
-   * @returns Style object for section header
-   */
   getSectionHeaderStyle(isActionsColumn: boolean): any {
     return {
       backgroundColor: '#eff6ff',
@@ -388,11 +334,6 @@ export class UtilService {
     };
   }
 
-  /**
-   * Get material header cell style
-   * @param hasPartForRefSku - Whether row has part for reference SKU
-   * @returns Style object for material header
-   */
   getMaterialHeaderStyle(hasPartForRefSku: boolean): any {
     return {
       backgroundColor: '#e5e7eb',
@@ -402,11 +343,6 @@ export class UtilService {
     };
   }
 
-  /**
-   * Get parent row cell style
-   * @param hasPartForRefSku - Whether row has part for reference SKU
-   * @returns Style object for parent row
-   */
   getParentRowStyle(hasPartForRefSku: boolean): any {
     return {
       backgroundColor: '#eff6ff',
@@ -416,11 +352,6 @@ export class UtilService {
     };
   }
 
-  /**
-   * Get direct row cell style
-   * @param hasPartForRefSku - Whether row has part for reference SKU
-   * @returns Style object for direct row
-   */
   getDirectRowStyle(hasPartForRefSku: boolean): any {
     return {
       backgroundColor: '#ffffff',
@@ -430,11 +361,6 @@ export class UtilService {
     };
   }
 
-  /**
-   * Get default row cell style
-   * @param hasPartForRefSku - Whether row has part for reference SKU
-   * @returns Style object for default row
-   */
   getDefaultRowStyle(hasPartForRefSku: boolean): any {
     return {
       backgroundColor: '#ffffff',
@@ -460,11 +386,6 @@ export class UtilService {
     };
   }
 
-  /**
-   * Get data cell section header style
-   * @param isActionsColumn - Whether this is the actions column
-   * @returns Style object for data cell section header
-   */
   getDataSectionHeaderStyle(isActionsColumn: boolean): any {
     return {
       backgroundColor: '#fef3c7',
@@ -492,12 +413,6 @@ export class UtilService {
   }
 
 
-  /**
-   * Get data cell direct row style
-   * @param baseStyle - Base style object to extend
-   * @param hasPartForRefSku - Whether row has part for reference SKU
-   * @returns Style object for data cell direct row
-   */
   getDataDirectRowStyle(baseStyle: any, hasPartForRefSku: boolean): any {
     return {
       ...baseStyle,
@@ -523,14 +438,6 @@ export class UtilService {
     };
   }
 
-  /**
-   * Check if click is outside a panel (with toggle button exclusion)
-   * @param target - Click target element
-   * @param isOpen - Whether panel is currently open
-   * @param panel - Panel element reference
-   * @param toggleBtn - Toggle button element reference
-   * @param setter - Function to call to close the panel
-   */
   handlePanelClickOutside(
     target: Element,
     isOpen: boolean,
@@ -547,13 +454,6 @@ export class UtilService {
     }
   }
 
-  /**
-   * Check if click is outside a dropdown
-   * @param target - Click target element
-   * @param isOpen - Whether dropdown is currently open
-   * @param dropdown - Dropdown element reference
-   * @param setter - Function to call to close the dropdown
-   */
   handleDropdownClickOutside(
     target: Element,
     isOpen: boolean,
@@ -583,11 +483,6 @@ export class UtilService {
     );
   }
 
-  /**
-   * Extract row data into a structured format
-   * @param row - Row data object
-   * @returns Extracted row data with section, feature, and partNumber
-   */
   extractRowData(row: any): { section: string; feature: string; partNumber: string } {
     return {
       section: row.section || '',
@@ -596,11 +491,6 @@ export class UtilService {
     };
   }
 
-  /**
-   * Extract instance data from BOM link
-   * @param bomLink - BOM link object
-   * @returns Extracted instance data with section, feature, and partNumber
-   */
   extractInstanceData(bomLink: any): { section: string; feature: string; partNumber: string } {
     return {
       section: bomLink.sectionInternalName || bomLink.section || '',
@@ -630,12 +520,6 @@ export class UtilService {
     return false;
   }
 
-  /**
-   * Check if instance has target SKU IDs
-   * @param bomLink - BOM link object
-   * @param targetSkuIds - Set of target SKU IDs to check
-   * @returns True if instance has any target SKU ID
-   */
   instanceHasTargetSku(bomLink: any, targetSkuIds: Set<string>): boolean {
     if (!bomLink.skus || !Array.isArray(bomLink.skus)) {
       return false;
@@ -674,30 +558,16 @@ export class UtilService {
     return false;
   }
 
-  /**
-   * Check if column is the actions column
-   * @param params - AG Grid params object
-   * @returns True if column is actions column
-   */
   isActionsColumn(params: any): boolean {
     const fieldName = params.colDef?.field;
     const colId = params.column?.getColId() || params.colDef?.colId || fieldName;
     return fieldName === 'actions' || colId === 'actions';
   }
 
-  /**
-   * Extract row ID from row data
-   * @param row - Row data object
-   * @returns Row ID (materialKey, newRowId, partNumber, part, or null)
-   */
   getRowId(row: any): string | number | null {
     return row.materialKey || row.newRowId || row.partNumber || row.part || null;
   }
 
-  /**
-   * Create autocomplete filter function
-   * @returns Filter function for autocomplete
-   */
   createAutocompleteFilter(): (searchValue: string, options: string[]) => string[] {
     return (searchValue: string, options: string[]) => {
       if (!searchValue) return options;
@@ -706,11 +576,6 @@ export class UtilService {
     };
   }
 
-  /**
-   * Get all searchable fields from a row (excluding internal/metadata fields)
-   * @param row - Row data object
-   * @returns Array of searchable field names
-   */
   getAllSearchableFields(row: any): string[] {
     const fields: string[] = [];
     const excludedFields = this.getExcludedSearchFields();
@@ -724,16 +589,9 @@ export class UtilService {
     return fields;
   }
 
-  /**
-   * Recursively find all new rows in hierarchical data structure
-   * @param rowData - Hierarchical row data
-   * @param displayData - Optional flat display data
-   * @returns Array of new row objects
-   */
   findAllNewRows(rowData: any[], displayData?: any[]): any[] {
     const newRows: any[] = [];
 
-    // Recursively find new rows in hierarchical data
     const findInHierarchy = (rows: any[]) => {
       rows.forEach((row) => {
         if (row.isNewRow && !this.isHeaderRow(row)) {
@@ -747,11 +605,9 @@ export class UtilService {
 
     findInHierarchy(rowData);
 
-    // Also check displayData for new rows that might not be in hierarchical structure
     if (displayData && Array.isArray(displayData)) {
       displayData.forEach((row: any) => {
         if (row.isNewRow && !this.isHeaderRow(row)) {
-          // Check if already in newRows
           const exists = newRows.some((nr) => nr.newRowId === row.newRowId);
           if (!exists) {
             newRows.push(row);
@@ -763,12 +619,6 @@ export class UtilService {
     return newRows;
   }
 
-  /**
-   * Generate all possible ID variants for a given ID
-   * Used for matching row IDs in different formats (string, number, etc.)
-   * @param id - ID value (string, number, or any)
-   * @returns Set of ID variants
-   */
   getIdVariants(id: any): Set<string | number> {
     const variants = new Set<string | number>();
     if (id === null || id === undefined || `${id}`.trim() === '') return variants;
@@ -779,11 +629,6 @@ export class UtilService {
     return variants;
   }
 
-  /**
-   * Get feature value from row
-   * @param row - Row data object
-   * @returns Feature value
-   */
   getFeatureValue(row: any): string {
     return row.bomLinkFeature;
   }
@@ -797,12 +642,6 @@ export class UtilService {
     return row.partNumber;
   }
 
-  /**
-   * Get section value for a row, traversing parent nodes if needed
-   * @param row - Row data object
-   * @param node - Grid node for parent traversal
-   * @returns Section display name or internal name
-   */
   private getSectionValueForRow(row: any, node: any): string {
     if (!row) return '';
 

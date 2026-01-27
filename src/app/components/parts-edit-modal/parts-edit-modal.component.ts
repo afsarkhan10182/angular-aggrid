@@ -225,9 +225,7 @@ export class PartsEditModalComponent implements OnInit {
     };
   }
 
-  onGridReady(event: GridReadyEvent): void {
-    // Grid is ready, gridApi is already set in gridOptions.onGridReady
-  }
+  onGridReady(event: GridReadyEvent): void {}
 
   closeModal(): void {
     this.modalClose.emit();

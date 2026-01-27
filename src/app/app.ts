@@ -16,7 +16,6 @@ import { Subscription } from 'rxjs';
 import { AutocompleteCellEditorComponent } from './components/autocomplete-cell-editor/autocomplete-cell-editor.component';
 import { IconComponent } from './components/icon/icon.component';
 import { ColumnHeaderPinComponent } from './components/column-header-pin/column-header-pin.component';
-// Modals are lazy loaded via @defer blocks in template - Angular will code-split them
 import { PartModalComponent } from './components/part-modal/part-modal.component';
 import { PartsEditModalComponent } from './components/parts-edit-modal/parts-edit-modal.component';
 import { DataService } from './services/data.service';
@@ -100,17 +99,16 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
   public isLoading: boolean = true;
   public constraintsData: any = null;
-  public isSaving: boolean = false; // Track save operation state
-  public isMassEditing: boolean = false; // Track mass edit operation state
-  public readonly originalRowValues = new Map<string | number, any>(); // Store original values for existing rows
-  private readonly editedFields = new Map<string | number, Set<string>>(); // Track which specific fields were edited per row
-  public invalidRowIds = new Set<string | number>(); // Track rows with validation errors for highlighting
+  public isSaving: boolean = false;
+  public isMassEditing: boolean = false;
+  public readonly originalRowValues = new Map<string | number, any>();
+  private readonly editedFields = new Map<string | number, Set<string>>();
+  public invalidRowIds = new Set<string | number>();
   public selectedRows = new Set<any>();
   public massEditMode = false;
   public massEditStartDate: string = '';
   public massEditEndDate: string = '';
   public massEditQuantity: number | null = null;
-  // SBOM fields
   public massEditIncludeInSpecSheet: string = '';
 
   public gridOptions: GridOptions = {} as GridOptions;
@@ -144,9 +142,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.showExpiredData = false;
     try {
       localStorage.removeItem('showExpiredData');
-    } catch {
-      // ignore
-    }
+    } catch {}
 
     this.defaultColDef = {
       ...this.gridConfigService.getDefaultColDef(),
@@ -477,8 +473,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const columns: ExtendedColDef[] = [];
 
     const checkboxCol = this.gridService.createCheckboxColumn();
-    // Note: These properties are deprecated in ag-grid but still functional
-    // Consider migrating to isRowSelectable in gridOptions in future versions
     checkboxCol.headerCheckboxSelection = () => {
       return this.isAddRowEnabled();
     };
@@ -1095,10 +1089,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   public isSkuFilterReadOnly(): boolean {
     if (this.isMbomMode()) {
-      // MBOM: Only 'hdEditable' is editable, all others are view-only
       return this.selectedSkuFilter !== 'hdEditable';
     } else {
-      // SBOM: Only 'editableSkus' is editable, 'all' is view-only
       return this.selectedSkuFilter !== 'editableSkus';
     }
   }
@@ -1232,7 +1224,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   toggleExpiredData(): void {
-    // Do not persist across refresh; just apply for the current session.
     this.loadData();
   }
 
@@ -1692,8 +1683,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     // Apply SKU filter for editable view (only show rows with SKU in existing response)
     hierarchicalData = this.filterHierarchicalDataBySkuFilter(hierarchicalData);
-
-    // Apply grouping if active
     if (this.activeGroupFields.length > 0) {
       let groupedHierarchicalData = this.gridConfigService.groupHierarchicalData(
         hierarchicalData,
@@ -1919,7 +1908,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     // Only open modal if linkedBom is "1"
     if (materialData.linkedBom !== '1' && materialData.linkedBom !== 1) {
-      // no-op: material has no linked BOM, modal should not open
       return;
     }
 
@@ -1931,19 +1919,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     const bomSub = this.dataService.getComplexBOM(childId).subscribe({
       next: (bomData: any) => {
-        // bomData should have format: { materialMasterId: "...", instances: [...], columns: {...} }
         if (!bomData) {
           this.showNotification('Failed to load material BOM data.', 'error');
           return;
         }
 
-        // Ensure instances is an array (even if empty)
         if (!Array.isArray(bomData.instances)) {
           bomData.instances = [];
         }
 
-        // Preserve material name fields from materialData for modal title display
-        // Only merge display fields, not the full materialData object
         this.selectedMaterialData = {
           ...bomData,
           material: materialData.material || materialData.materialDescription || '',
@@ -1976,7 +1960,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    // Clear previous validation errors
     this.invalidRowIds.clear();
 
     // Validate new rows before saving (required fields)
@@ -1986,9 +1969,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     if (bomType === 'SBOM') {
       // For SBOM: Remove bomLinkFeature, bomLinkSpecSheetExtra, and bomLinkIncludeInSpecSheet from required fields
-      // bomLinkFeature is disabled
-      // bomLinkSpecSheetExtra is defaulted to "Yes" and non-editable
-      // bomLinkIncludeInSpecSheet is disabled for new rows and not sent in payload (defaulted via bomLinkSpecSheetExtra)
       requiredFields = requiredFields.filter(
         (field) =>
           !field.keys.includes('bomLinkFeature') &&
@@ -2056,15 +2036,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.rowManagementService
       .saveChanges(this.rowData, this.editedRows, this.gridApi, this)
       .then((result) => {
-        // Always clear loading state when response is received (success or error)
         this.isSaving = false;
 
         if (result.success) {
-          // Clear validation errors after successful save
           this.invalidRowIds.clear();
           this.rowManagementService.showSaveMessage(result.message, this, 'success');
         } else {
-          // Use error-persistent so message doesn't auto-clear
           this.rowManagementService.showSaveMessage(result.message, this, 'error');
         }
       })
@@ -2220,7 +2197,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   deleteRowById(newRowId: number): void {
-    // Find the row to get all possible IDs (matching trackFieldChange logic)
     const rowToDelete = this.displayData.find((row) => row.newRowId === newRowId);
 
     if (rowToDelete) {
@@ -2237,21 +2213,18 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       baseIds.delete(undefined);
       baseIds.delete('');
 
-      // Remove all ID variants from editedRows
       baseIds.forEach((id) => {
         this.utilService.getIdVariants(id).forEach((variant) => {
           this.editedRows.delete(variant);
         });
       });
 
-      // Remove from editedFields
       if (this.editedFields) {
         baseIds.forEach((id) => {
           this.editedFields.delete(id);
         });
       }
     } else {
-      // Fallback: remove common variants of newRowId
       this.editedRows.delete(newRowId);
       this.editedRows.delete(`${newRowId}`);
       if (this.editedFields) {
@@ -2260,23 +2233,18 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       }
     }
 
-    // Stop editing to avoid AG Grid keeping stale editor state
     try {
       this.gridApi?.stopEditing?.();
-    } catch {
-      // ignore
-    }
+    } catch {}
 
     this.rowManagementService.deleteRowById(newRowId, this.displayData, this.gridApi);
 
-    // Refresh Save button state & row classes immediately
     if (this.gridApi) {
       this.gridApi.refreshCells({ force: true });
     }
   }
 
   deleteRow(partId: string): void {
-    // Best-effort cleanup if this delete path is used for a new row id stored as string
     const maybeId = Number(partId);
     if (!Number.isNaN(maybeId)) {
       this.editedRows.delete(maybeId);
@@ -2718,10 +2686,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   private buildMbomHierarchy(data: any): any[] {
     const sections: Record<string, any[]> = {};
-    // Map to store section internal name -> display name mapping
     const sectionDisplayNameMap: Record<string, string> = {};
 
-    // Extract bom-link data from instances
     const processedItems = data.instances
       .filter((item: any) => {
         const bomLink = item['bom-link'];
@@ -2729,7 +2695,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
         const hasPartNumber = bomLink.partNumber && String(bomLink.partNumber).trim() !== '';
 
-        // Markup check only applies to MBOM
         let isCorrectMarkup = true;
         if (this.dataService.getBomType() === 'MBOM') {
           isCorrectMarkup = bomLink.ptcbomPartMarkUp === 'enumMBOM001';
@@ -2755,14 +2720,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           partNumber: bomLink.partNumber,
           skus: bomLink.skus,
           linkedBom: bomLink.linkedBom,
-          quantity: bomLink.quantity ? Number(bomLink.quantity).toFixed(1) : bomLink.quantity, // Format quantity
-          qty: bomLink.qty ? Number(bomLink.qty).toFixed(1) : bomLink.qty, // Format qty
-          section: sectionInternalName, // Keep internal name for payload + toggling
-          sectionDisplayName: sectionDisplayName, // Store display name for UI
+          quantity: bomLink.quantity ? Number(bomLink.quantity).toFixed(1) : bomLink.quantity,
+          qty: bomLink.qty ? Number(bomLink.qty).toFixed(1) : bomLink.qty,
+          section: sectionInternalName,
+          sectionDisplayName: sectionDisplayName,
         };
       });
 
-    // Group items by section (using internal name)
     processedItems.forEach((item: any, index: number) => {
       const sectionInternalName = item.section;
       if (!sections[sectionInternalName]) {
@@ -2777,8 +2741,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         part: item.partNumber,
         partNumber: item.partNumber,
         linkedBom: item.linkedBom,
-        section: sectionInternalName, // Internal name for payload
-        sectionDisplayName: item.sectionDisplayName, // Display name for UI
+        section: sectionInternalName,
+        sectionDisplayName: item.sectionDisplayName,
       };
       sections[sectionInternalName].push(material);
     });
@@ -2802,7 +2766,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
      * This ensures consistent ordering within each section
      */
     const sortMaterials = (a: any, b: any): number => {
-      // Primary sort: Feature (bomLinkFeature)
       const featureA = a.bomLinkFeature.toLowerCase().trim();
       const featureB = b.bomLinkFeature.toLowerCase().trim();
 
@@ -2810,7 +2773,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         return featureA.localeCompare(featureB);
       }
 
-      // Secondary sort: Part# (partNumber) when features are the same
       const partA = a.partNumber.toLowerCase().trim();
       const partB = b.partNumber.toLowerCase().trim();
 
@@ -2821,8 +2783,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     sectionOrder.forEach((sectionDisplayName, idx) => {
       const internalNames = displayToInternalMap.get(sectionDisplayName) ?? [];
 
-      // If mapping is missing, create a stable synthetic key so we don't end up with
-      // multiple sections using '' and toggling the "wrong" one.
       const resolvedInternalNames =
         internalNames.length > 0 ? internalNames : [`__missing_section__${idx}`];
 
@@ -2840,14 +2800,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     // Also include sections that are not in sectionOrder but exist in data
     Object.keys(sections).forEach((sectionInternalName) => {
       const sectionDisplayName = sectionDisplayNameMap[sectionInternalName] || sectionInternalName;
-      // Check if this section's display name is not in sectionOrder
       if (!sectionOrder.includes(sectionDisplayName)) {
         const sectionItems = sections[sectionInternalName];
         if (sectionItems && sectionItems.length > 0) {
           const sortedMaterials = [...sectionItems].sort(sortMaterials);
           const sectionObj = {
-            section: sectionInternalName, // Internal name for payload
-            sectionDisplayName: sectionDisplayName, // Display name from API
+            section: sectionInternalName,
+            sectionDisplayName: sectionDisplayName,
             materials: sortedMaterials,
           };
           result.push(sectionObj);
@@ -2868,7 +2827,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         section: section.section,
         sectionDisplayName: section.sectionDisplayName,
         isSectionHeader: true,
-        isExpanded: true, // Start expanded to show materials
+        isExpanded: true,
         children: [],
         level: 0,
       };
@@ -2879,8 +2838,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         if (hasChildren) {
           const materialRow: any = {
             ...material,
-            section: section.section, // Internal name for payload
-            sectionDisplayName: section.sectionDisplayName, // Display name for UI
+            section: section.section,
+            sectionDisplayName: section.sectionDisplayName,
             material: material.part,
             materialIndex: materialIndex,
             allSkus: material.allSkus,
@@ -2913,8 +2872,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         } else {
           const directRow = {
             ...material,
-            section: section.section, // Internal name for payload
-            sectionDisplayName: section.sectionDisplayName, // Display name for UI
+            section: section.section,
+            sectionDisplayName: section.sectionDisplayName,
             isDirectRow: true,
             level: 1,
             parent: sectionRow,
@@ -2960,8 +2919,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       const rowId = row.materialKey || row.newRowId || row.partNumber || row.part;
       if (!rowId) return;
 
-      // Store original values for editable fields
-      // IMPORTANT: Store these values ONCE at load time - they represent the frozen snapshot
       const originalValues: any = {
         bomLinkStartDate: String(row.bomLinkStartDate || row.startDate || ''),
         bomLinkEndDate: String(row.bomLinkEndDate || row.endDate || ''),
@@ -3019,7 +2976,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       this.constraintsData,
       {
         skuInfoOverride: skuInfo,
-        gridApi: this.gridApi, // Pass gridApi to get current values from grid
+        gridApi: this.gridApi,
       },
     );
   }
@@ -3050,7 +3007,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     this.massEditMode = false;
     
-    // Clear mass edit fields when selection changes (will be populated when user clicks Mass Edit button)
     this.massEditStartDate = '';
     this.massEditEndDate = '';
     this.massEditQuantity = null;
@@ -3103,7 +3059,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const selectedNodes = this.gridApi.getSelectedNodes();
     const hasSelectedRows = selectedNodes && selectedNodes.length > 0;
 
-    // If rows are selected, export only selected rows, otherwise export all
     const exportOptions: any = {
       excludedFields,
       fileName: `BOM_Composer_Export_${new Date().toISOString().split('T')[0]}.xlsx`,
@@ -3111,7 +3066,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       excludeHeaderRows: true,
     };
 
-    // If rows are selected, pass them to the export function
     if (hasSelectedRows) {
       exportOptions.selectedNodes = selectedNodes;
     }
@@ -3145,7 +3099,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     const rowId = rowData.newRowId || rowData.partNumber;
 
-    // Find the node and update it without full refresh
     let targetNode: any = null;
     this.gridApi.forEachNode((node: any) => {
       if (node.data === rowData) {
@@ -3154,7 +3107,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     });
 
     if (targetNode) {
-      // Clear the SKU value
       targetNode.setDataValue(skuField, '');
       rowData[skuField] = '';
 
@@ -3232,7 +3184,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    // Get unique partNumbers from selected rows
     const partNumberSet = new Set<string>();
     const rowsByPartNumber = new Map<string, any>();
 
@@ -3240,14 +3191,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       const partNumber = row.partNumber || row.part || '';
       if (partNumber && String(partNumber).trim() !== '') {
         partNumberSet.add(String(partNumber).trim());
-        // Store first occurrence of each partNumber
         if (!rowsByPartNumber.has(String(partNumber).trim())) {
           rowsByPartNumber.set(String(partNumber).trim(), row);
         }
       }
     });
 
-    // Create modal data with mock data for now (will be replaced with API call)
     this.partsEditModalData = Array.from(partNumberSet).map((partNumber) => {
       const row = rowsByPartNumber.get(partNumber);
       return {
@@ -3314,7 +3263,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       }
     });
 
-    // Refresh only affected cells to avoid flicker
     if (nodesToUpdate.length > 0 && skuFields.length > 0) {
       this.gridApi.refreshCells({
         rowNodes: nodesToUpdate,

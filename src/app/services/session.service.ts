@@ -17,7 +17,6 @@ export interface LoggedInUserModel {
   providedIn: 'root',
 })
 export class SessionService {
-  // Get service host URL from JSP data attribute (passed from Windchill)
   private getServiceHostUrl(): string {
     const hostFromJsp = this.utilService.getJspDataAttribute('data-host');
 
@@ -25,7 +24,6 @@ export class SessionService {
       return '';
     }
 
-    // If host already includes protocol (http:// or https://), return as-is
     if (hostFromJsp.startsWith('http://') || hostFromJsp.startsWith('https://')) {
       return hostFromJsp;
     }

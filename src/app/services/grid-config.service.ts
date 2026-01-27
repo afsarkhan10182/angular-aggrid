@@ -448,9 +448,7 @@ export class GridConfigService {
       onFirstDataRendered: (params) => {
         this.setupRowHoverSync(params.api);
       },
-      onRowSelected: (params) => {
-        // Allow multiple selection - do not enforce single selection here
-      },
+      onRowSelected: (params) => {},
       onSelectionChanged: (params) => {
         if (componentInstance.onSelectionChanged) {
           componentInstance.onSelectionChanged(params);
@@ -466,12 +464,10 @@ export class GridConfigService {
           );
         }
 
-        // Ensure rowClass updates immediately (AG Grid doesn't always recompute getRowClass on refreshCells)
         if (params.data?.isNewRow) {
           params.api.redrawRows({ rowNodes: [params.node] });
         }
 
-        // Live per-row validation for new rows (show row-specific errors before Save)
         if (componentInstance.validateRowLive && params.data?.isNewRow) {
           componentInstance.validateRowLive(params.data);
         }
@@ -526,12 +522,10 @@ export class GridConfigService {
         });
       },
       onCellClicked: (params) => {
-        // Don't interfere with checkbox column, actions column, or button clicks
         if (params.colDef.field === 'actions' || params.colDef.field === 'checkbox') {
           return;
         }
 
-        // Don't interfere with checkbox clicks anywhere
         if (params.event) {
           const target = params.event.target as HTMLElement;
           if (
@@ -710,7 +704,7 @@ export class GridConfigService {
     if (field === 'bomLinkIncludeInSpecSheet') {
       const specSheetExtra = rowData?.bomLinkSpecSheetExtra;
       if (specSheetExtra !== undefined && specSheetExtra !== null && String(specSheetExtra).trim() !== '') {
-        return false; // Disabled if bomLinkSpecSheetExtra exists
+        return false;
       }
     }
 

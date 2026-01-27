@@ -439,7 +439,6 @@ export class ColumnHeaderPinComponent
 
     const field = params.column?.getColDef()?.field;
     const colId = params.column?.getColId();
-    // Hide menu button for actions and checkbox columns
     this.showMenuButton = field !== 'actions' && field !== 'checkbox' && colId !== 'actions' && colId !== 'checkbox';
   }
 
@@ -450,7 +449,6 @@ export class ColumnHeaderPinComponent
     
     const field = params.column?.getColDef()?.field;
     const colId = params.column?.getColId();
-    // Hide menu button for actions and checkbox columns
     this.showMenuButton = field !== 'actions' && field !== 'checkbox' && colId !== 'actions' && colId !== 'checkbox';
     
     return true;

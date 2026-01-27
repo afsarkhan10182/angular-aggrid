@@ -5,10 +5,6 @@ import { GridConfigService } from './grid-config.service';
 import { UtilService, ExtendedColDef } from './util.service';
 import { AutocompleteCellEditorComponent } from '../components/autocomplete-cell-editor/autocomplete-cell-editor.component';
 
-// ============================================================================
-// Data Processing Interfaces
-// ============================================================================
-
 export interface HierarchicalDataConfig {
   getBomType: () => string;
   getFilteredSkuInfo: () => any[];
@@ -16,10 +12,6 @@ export interface HierarchicalDataConfig {
   hasSkuInExistingResponse: (row: any, targetSkuIds: Set<string>) => boolean;
   rowMatchesSearch: (row: any, searchText: string) => boolean;
 }
-
-// ============================================================================
-// Cell Rendering Interfaces
-// ============================================================================
 
 export interface CellRenderingConfig {
   shouldHighlightRow: (data: any) => boolean;
@@ -62,10 +54,6 @@ export class GridService {
     private readonly gridConfigService: GridConfigService,
     private readonly utilService: UtilService,
   ) {}
-
-  // ============================================================================
-  // Data Processing Methods
-  // ============================================================================
 
   flattenHierarchicalData(data: any[], config: HierarchicalDataConfig): any[] {
     const result: any[] = [];
@@ -243,10 +231,6 @@ export class GridService {
 
     return filterRows(data);
   }
-
-  // ============================================================================
-  // Cell Rendering Methods
-  // ============================================================================
 
   renderHierarchicalCell(params: any, config: CellRenderingConfig): string {
     const data = params.data;
@@ -467,10 +451,6 @@ export class GridService {
     if (groupLevel === 1) return '#dcfce7';
     return '#fde68a';
   }
-
-  // ============================================================================
-  // Column Definition Methods
-  // ============================================================================
 
   createCheckboxColumn(): ExtendedColDef {
     return {
@@ -796,10 +776,6 @@ export class GridService {
     });
   }
 
-  // ============================================================================
-  // Column Visibility Methods
-  // ============================================================================
-
   getVisibleColumnsForPanel(config: ColumnVisibilityConfig): ExtendedColDef[] {
     if (config.panelColumnOrder.length > 0) {
       return config.panelColumnOrder.filter(
@@ -935,7 +911,6 @@ export class GridService {
     try {
       config.gridApi.moveColumns([draggedColObj], newIndex);
     } catch (error) {
-      // Silently handle column move errors - log for debugging but don't interrupt user flow
       console.warn('Column move operation failed:', error);
     }
 
@@ -981,10 +956,6 @@ export class GridService {
   }
 
   private renderSkuCellWithDelete(htmlValue: string, textColor: string, skuField: string, canDisconnect: boolean): string {
-    // Temporarily hidden deleteIcon for existing rows
-    // const deleteIcon = canDisconnect
-    //   ? `<button type="button" class="sku-delete-btn-existing" data-action="disconnect-sku" data-sku-field="${skuField}" title="Disconnect part from SKU">✕</button>`
-    //   : '';
     const deleteIcon = '';
 
     return `<div style="white-space: pre-line; line-height: 1.5; padding: 4px 0; display: flex; align-items: center;">

@@ -73,12 +73,10 @@ export class ValidationService {
     for (const key of field.keys) {
       const value = row[key];
 
-      // Special handling for Quantity field: treat 0 as empty
       if (field.label === 'Quantity') {
         if (value === undefined || value === null || value === '' || value === 0 || value === '0') {
           continue;
         }
-        // If not empty/zero, ensure it's numeric (no alphabets like "12abc")
         if (typeof value === 'string') {
           const s = value.trim();
           const isNumericLike = /^\d*\.?\d*$/.test(s) && /\d/.test(s);
@@ -159,14 +157,11 @@ export class ValidationService {
   ): ValidationResult {
     const invalidRows: InvalidRow[] = [];
 
-    // Find all new rows from hierarchical data
     const newRows = this.findNewRows(rowData);
 
-    // Also check displayData for new rows that might not be in hierarchical structure
     if (displayData && Array.isArray(displayData)) {
       displayData.forEach((row: any) => {
         if (row.isNewRow && !row.isSectionHeader && !row.isGroupHeader && !row.isMaterialHeader) {
-          // Check if already in newRows
           const exists = newRows.some((nr) => nr.newRowId === row.newRowId);
           if (!exists) {
             newRows.push(row);
@@ -187,7 +182,6 @@ export class ValidationService {
       }
     });
 
-    // Build error message if validation failed
     if (invalidRows.length > 0) {
       const rowCount = invalidRows.length === 1 ? 'row' : 'rows';
       const missingFieldsList = invalidRows
@@ -303,11 +297,9 @@ export class ValidationService {
     const { count: selectedCount, skuIds: selectedSkuIds } = this.countSkusWithValues(row, skuInfo);
 
     if (selectedCount === 0) {
-      // This should have been caught by validateRowSkus, but double-check
       return { isValid: false, message: 'No SKUs selected in row' };
     }
 
-    // Get SKU IDs from payload
     const payloadSkuIds = payloadSkus
       .map((sku) => String(sku.skuId || sku.skuNumber || ''))
       .filter((id) => id !== '');
@@ -329,7 +321,6 @@ export class ValidationService {
         };
       }
     } else {
-      // Multiple SKUs selected - all selected SKUs must be in payload
       const missingSkus = selectedSkuIds.filter((id) => !payloadSkuIds.includes(id));
       if (missingSkus.length > 0) {
         const rowId = row.newRowId || row.partNumber || row.part || 'Unknown';
@@ -366,14 +357,11 @@ export class ValidationService {
   validateNewRowsSkus(rowData: any[], skuInfo: any[], displayData?: any[]): SkuValidationResult {
     const invalidRows: InvalidRow[] = [];
 
-    // Find all new rows from hierarchical data
     const newRows = this.findNewRows(rowData);
 
-    // Also check displayData for new rows that might not be in hierarchical structure
     if (displayData && Array.isArray(displayData)) {
       displayData.forEach((row: any) => {
         if (row.isNewRow && !row.isSectionHeader && !row.isGroupHeader && !row.isMaterialHeader) {
-          // Check if already in newRows
           const exists = newRows.some((nr) => nr.newRowId === row.newRowId);
           if (!exists) {
             newRows.push(row);
@@ -394,7 +382,6 @@ export class ValidationService {
       }
     });
 
-    // Build error message if validation failed
     if (invalidRows.length > 0) {
       const rowCount = invalidRows.length === 1 ? 'row' : 'rows';
       const rowIds = invalidRows.map((ir) => ir.rowId).join(', ');
@@ -421,7 +408,7 @@ export class ValidationService {
     rowData: any[],
     displayData: any[] = [],
     skuInfo: any[],
-    apiData?: any // Optional: Original API data to check ALL rows including hidden ones
+    apiData?: any
   ): ValidationResult {
     const newRows: any[] = [];
     const existingRows: any[] = [];
@@ -452,22 +439,18 @@ export class ValidationService {
         // Skip if missing required fields (section and feature are always required)
         if (!section || !bomLinkFeature) continue;
 
-        // For MBOM with ptcbomPartMarkUp === 'enumMBOM001': Skip rows with empty partNumber (requires partNumber)
-        // For MBOM with ptcbomPartMarkUp !== 'enumMBOM001': Include rows with empty partNumber (checks Section+Feature+SKU, no partNumber)
-        // For SBOM: Skip rows with empty partNumber (no duplicate check)
         if (isMbom && ptcbomPartMarkUp === 'enumMBOM001' && isEmptyPartNumber) {
-          continue; // Skip - requires partNumber for duplicate check
+          continue;
         }
         if (isSbom && isEmptyPartNumber) {
-          continue; // Skip - no duplicate validation for empty partNumber in SBOM
+          continue;
         }
 
-        // Build row-like object for SKU counting
         const rowLike: any = {
           section: section,
           partNumber: partNumber,
           bomLinkFeature: bomLinkFeature,
-          ptcbomPartMarkUp: ptcbomPartMarkUp, // Store for MBOM validation logic
+          ptcbomPartMarkUp: ptcbomPartMarkUp,
         };
 
         // Extract SKU IDs from bomLink.skus array

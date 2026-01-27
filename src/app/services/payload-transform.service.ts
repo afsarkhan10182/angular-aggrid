@@ -393,7 +393,6 @@ export class PayloadTransformService {
         return;
       }
 
-      // Use same ID resolution order as trackFieldChange
       const rowId = row.materialKey || row.newRowId || row.partNumber || row.part || '';
       const isNewRow = row.isNewRow === true;
       const isEdited = editedRows.has(rowId);

@@ -23,7 +23,6 @@ import { of, Subject, Subscription } from 'rxjs';
 export class AutocompleteCellEditorComponent
   implements ICellEditorAngularComp, OnInit, AfterViewInit, OnDestroy
 {
-  // Page size for pagination
   private readonly PAGE_SIZE: number = 20;
 
   @ViewChild('input') input!: ElementRef<HTMLInputElement>;
@@ -71,7 +70,6 @@ export class AutocompleteCellEditorComponent
       }
     }
 
-    // Normalize colorDescription to 'color' for consistent handling
     if (fieldName === 'colorDescription') {
       return 'color';
     }
@@ -192,7 +190,6 @@ export class AutocompleteCellEditorComponent
           this.showDropdown = shouldShow;
 
           if (this.showDropdown) {
-            // Use double requestAnimationFrame to ensure DOM is ready, especially for single-item dropdowns
             requestAnimationFrame(() => {
               requestAnimationFrame(() => {
                 this.positionDropdown();
@@ -220,7 +217,6 @@ export class AutocompleteCellEditorComponent
           this.searchSubject.next(this.value);
         }
       } else if (this.options.length > 0) {
-        // For ALL fields with static options, show all options when initialized
         this.filteredOptions = this.options.slice(0, 50);
         this.showDropdown = this.filteredOptions.length > 0;
         this.setInitialSelectedIndex();
@@ -273,7 +269,6 @@ export class AutocompleteCellEditorComponent
         : null) ||
       (params.api?.getContext ? params.api.getContext()?.dataService : null);
 
-    // Handle value - valueGetter already handles colorDescription mapping, so just use params.value
     this.value = params.value !== null && params.value !== undefined ? String(params.value) : '';
     this.originalValue = this.value;
     this.placeholder = params.placeholder || 'search materials...';
@@ -325,7 +320,6 @@ export class AutocompleteCellEditorComponent
       this.customFilterFunction = params.filterFunction;
     }
 
-    // For color and supplier fields, refresh options from node data
     const isColorOrSupplier = fieldName === 'color' || fieldName === 'supplier';
     if (isColorOrSupplier) {
       this.refreshOptionsFromNodeData();
@@ -354,7 +348,6 @@ export class AutocompleteCellEditorComponent
     const fieldName = this.getFieldName();
     const isColorOrSupplier = fieldName === 'color' || fieldName === 'supplier';
 
-    // Refresh options when value is cleared for color/supplier fields
     if (isColorOrSupplier && !this.value) {
       this.refreshOptionsFromNodeData();
     }
@@ -383,7 +376,6 @@ export class AutocompleteCellEditorComponent
     this.selectedIndex = -1;
 
     if (this.showDropdown) {
-      // Use double requestAnimationFrame to ensure DOM is ready, especially for single-item dropdowns
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           this.positionDropdown();
@@ -456,7 +448,6 @@ export class AutocompleteCellEditorComponent
     }
 
     if (this.showDropdown) {
-      // Use double requestAnimationFrame to ensure DOM is ready, especially for single-item dropdowns
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           this.positionDropdown();
@@ -479,7 +470,6 @@ export class AutocompleteCellEditorComponent
         this.searchSubject.next(this.value);
       }
     } else {
-      // For ALL fields with static options, show all items when focusing
       if (this.options.length > 0) {
         this.filteredOptions = this.options.slice(0, 50);
         this.showDropdown = this.filteredOptions.length > 0;
@@ -488,7 +478,6 @@ export class AutocompleteCellEditorComponent
     }
 
     if (this.showDropdown) {
-      // Use double requestAnimationFrame to ensure DOM is ready, especially for single-item dropdowns
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           this.positionDropdown();
@@ -505,7 +494,6 @@ export class AutocompleteCellEditorComponent
 
     if (fieldName !== 'supplier' && fieldName !== 'color') return;
 
-    // Get filtered values from node data if available
     const filteredValues =
       (fieldName === 'supplier' && Array.isArray(nodeData._availableSuppliers)
         ? nodeData._availableSuppliers
@@ -631,15 +619,12 @@ export class AutocompleteCellEditorComponent
           // Store display value for UI
           this.params.node.setDataValue('feature', option);
           if (this.params.node.data) {
-            this.params.node.data.feature = option;
-          }
+          this.params.node.data.feature = option;
+        }
 
-          // Store ID from API response for payload (production and dev)
-          // Find the selected option object to get its ID
-          let selectedFeatureId: string | null = null;
-          if (this.isBomFeatureSearch && this.genericOptions.length > 0) {
-            // Try to find by optionIndex first (more reliable)
-            if (
+        let selectedFeatureId: string | null = null;
+        if (this.isBomFeatureSearch && this.genericOptions.length > 0) {
+          if (
               optionIndex !== undefined &&
               optionIndex >= 0 &&
               optionIndex < this.genericOptions.length
@@ -647,18 +632,15 @@ export class AutocompleteCellEditorComponent
               const selectedFeature = this.genericOptions[optionIndex];
               selectedFeatureId = selectedFeature.id || selectedFeature.displayValue || option;
             } else {
-              // Fallback: find by matching displayValue/name
               const selectedFeature = this.genericOptions.find(
                 (feature: any) => (feature.displayValue || feature.name || '') === option
               );
               if (selectedFeature) {
-                // Use id field from API response (production) or mock id (dev)
                 selectedFeatureId = selectedFeature.id || selectedFeature.displayValue || option;
               }
             }
           }
 
-          // Store the ID separately for payload generation
           if (selectedFeatureId) {
             this.params.node.setDataValue('bomLinkFeatureId', selectedFeatureId);
             if (this.params.node.data) {
@@ -686,12 +668,9 @@ export class AutocompleteCellEditorComponent
         this.triggerFeatureAutoPopulation(option);
       }
 
-      // Stop editing after selection to allow immediate re-editing
       if (this.params.api) {
-        // Refresh the edited field and related fields (color, supplier, etc.)
         const columnsToRefresh = [fieldName];
         if (selectedMaterial && (this.isMaterialSearch || this.isPartNumberSearch)) {
-          // Add color and supplier columns to refresh list
           if (
             fieldName === 'material' ||
             fieldName === 'materialDescription' ||
@@ -708,7 +687,6 @@ export class AutocompleteCellEditorComponent
         });
       }
 
-      // Stop editing after selection to allow immediate re-editing (for supplier/color fields)
       setTimeout(() => {
         if (this.params && this.params.api) {
           this.params.api.stopEditing();
@@ -785,7 +763,6 @@ export class AutocompleteCellEditorComponent
           this.params.node.data.color = colorName;
         }
       }
-      // Also set colorDescription field (actual column field name)
       if (colorName && originalData.colorDescription !== colorName) {
         this.params.node.setDataValue('colorDescription', colorName);
         if (this.params.node.data) {
@@ -793,7 +770,6 @@ export class AutocompleteCellEditorComponent
         }
       }
 
-      // Store childId from material-supplier.materialSupplierMaster (take value after colon)
       const materialSupplier = fullResult['material-supplier'] || {};
       const materialSupplierMaster = materialSupplier.materialSupplierMaster || '';
       const childId = materialSupplierMaster
@@ -1149,7 +1125,6 @@ export class AutocompleteCellEditorComponent
       dropdownElement.style.width = `${inputRect.width}px`;
       dropdownElement.style.minWidth = `${inputRect.width}px`;
 
-      // Calculate actual dropdown height (important for single-item dropdowns)
       const actualDropdownHeight =
         dropdownElement.offsetHeight || dropdownElement.scrollHeight || 200;
       const viewportHeight = window.innerHeight;

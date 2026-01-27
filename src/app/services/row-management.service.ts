@@ -83,7 +83,6 @@ export class RowManagementService {
       newRow.section = section;
     }
 
-    // Assign sectionDisplayName if provided (inherited from reference row)
     if (sectionDisplayName) {
       newRow.sectionDisplayName = sectionDisplayName;
     }
@@ -93,7 +92,6 @@ export class RowManagementService {
       newRow[`sku${sku.skuId}`] = '';
     });
 
-    // For SBOM: Set default bomLinkSpecSheetExtra to "Yes"
     const bomType = dataService.getBomType();
     if (bomType === 'SBOM') {
       newRow.bomLinkSpecSheetExtra = 'Yes';
@@ -192,7 +190,6 @@ export class RowManagementService {
       return;
     }
 
-    // Check if this SKU column is disabled (not released in SBOM)
     if (params.colDef?.isDisabled) {
       return;
     }
@@ -203,18 +200,14 @@ export class RowManagementService {
       return;
     }
 
-    // Don't paste if the cell already has the same value
     if (params.value === valueToPaste) {
       return;
     }
 
-    // Stop any ongoing editing
     params.api.stopEditing();
 
-    // Set the value in the cell
     params.node.setDataValue(params.colDef.field, valueToPaste);
 
-    // Mark the row as edited
     if (params.data.newRowId) {
       componentInstance.editedRows.add(params.data.newRowId);
     }
@@ -768,20 +761,14 @@ export class RowManagementService {
     const updatedRowData = this.removeNewRowFlags(rowData);
     componentInstance.rowData = updatedRowData;
 
-    // FIX: Clear displayData here too, to prevent applyGrouping from preserving ghost new rows
-    // when we refresh the grid later
     componentInstance.displayData = [];
 
     editedRows.clear();
 
-    // Clear edited fields tracking
     if (componentInstance.editedFields) {
       componentInstance.editedFields.clear();
     }
 
-    // CRITICAL: After successful save, update original values to match current values
-    // This ensures that if user edits again, we have the correct "old" values
-    // The originalRowValues Map should reflect the current state after save
     if (componentInstance.storeOriginalValues) {
       componentInstance.storeOriginalValues();
     }
@@ -820,14 +807,11 @@ export class RowManagementService {
     componentInstance.saveMessage = message;
     componentInstance.saveMessageType = type;
 
-    // Auto-clear success, info, and error messages after 3 seconds
-    // error-persistent messages never auto-clear (user must close manually)
     if (type === 'success' || type === 'info' || type === 'error') {
       setTimeout(() => {
         this.clearSaveMessage(componentInstance);
       }, 3000);
     }
-    // error-persistent type does not auto-clear
   }
 
   /**
