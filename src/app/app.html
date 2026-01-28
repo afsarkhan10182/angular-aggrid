@@ -569,7 +569,7 @@
   <!-- Parts Edit Modal -->
   <app-parts-edit-modal
     *ngIf="showPartsEditModal"
-    [partsData]="partsEditModalData"
+    [materialColorIds]="partsEditModalMaterialColorIds"
     (modalClose)="closePartsEditModal()"
     (save)="savePartsEditModal($event)"
   >

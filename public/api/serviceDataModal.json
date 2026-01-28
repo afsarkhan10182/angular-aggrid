@@ -1,0 +1,41 @@
+{
+  "instances": {
+    "OR:com.lcs.wc.material.LCSMaterialColor:554762": {
+      "materialColorServiceDescription": "Bosch, PowerTube 625W Battery, \"Vertical\" Style, BOSCH P/N: 0275.007.546",
+      "materialColorServiceMessage": "Service Message11111111",
+      "materialColorServiceEquivalent": "10111",
+      "materialColorServiceSubstituteTwo": "10112",
+      "materialColorStatus": "Pending",
+      "materialColorSixtyCharacterDescription": "",
+      "materialColorManufacturersPartNumber": "0275.007.546",
+      "partNumber": "580317",
+      "materialColorThirtyCharacterDescription": "BTRY BSH BAT-625 POWERTUB-V-US",
+      "materialColorServiceSubstituteOne": "10113"
+    },
+    "OR:com.lcs.wc.material.LCSMaterialColor:243946": {
+      "materialColorServiceDescription": "TREK Material service Description",
+      "materialColorServiceMessage": "Service Message 22222222",
+      "materialColorServiceEquivalent": "10115",
+      "materialColorServiceSubstituteTwo": "10309",
+      "materialColorStatus": "",
+      "materialColorSixtyCharacterDescription": "60 Character Description",
+      "materialColorManufacturersPartNumber": "",
+      "partNumber": "7889544",
+      "materialColorThirtyCharacterDescription": "30 Character Description",
+      "materialColorServiceSubstituteOne": "10113"
+    }
+  },
+  "materialColorIds": "OR:com.lcs.wc.material.LCSMaterialColor:554762,OR:com.lcs.wc.material.LCSMaterialColor:243946",
+  "columns": {
+    "partNumber": "Part #",
+    "materialColorThirtyCharacterDescription": "30 Character Description",
+    "materialColorSixtyCharacterDescription": "60 Character Description",
+    "materialColorManufacturersPartNumber": "Manufacturers Part#",
+    "materialColorServiceDescription": "Service Description",
+    "materialColorServiceSubstituteOne": "Service Sub1",
+    "materialColorServiceSubstituteTwo": "Service Sub2",
+    "materialColorServiceMessage": "Service Message",
+    "materialColorServiceEquivalent": "Service Equivalent",
+    "materialColorStatus": "State"
+  }
+}

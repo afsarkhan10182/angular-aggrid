@@ -73,7 +73,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public selectedMaterialData: any = {};
   public selectedMaterialSkuData: any[] = [];
   public showPartsEditModal = false;
-  public partsEditModalData: any[] = [];
+  public partsEditModalMaterialColorIds: string[] = [];
   public searchText: string = '';
   public saveMessage: string = '';
   public saveMessageType: string = '';
@@ -3180,50 +3180,28 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   openPartsEditModal(): void {
-    if (this.selectedRows.size === 0) {
-      return;
-    }
+    if (this.selectedRows.size === 0) return;
 
-    const partNumberSet = new Set<string>();
-    const rowsByPartNumber = new Map<string, any>();
-
+    const ids = new Set<string>();
     this.selectedRows.forEach((row: any) => {
-      const partNumber = row.partNumber || row.part || '';
-      if (partNumber && String(partNumber).trim() !== '') {
-        partNumberSet.add(String(partNumber).trim());
-        if (!rowsByPartNumber.has(String(partNumber).trim())) {
-          rowsByPartNumber.set(String(partNumber).trim(), row);
-        }
+      const id = row?.materialColorId;
+      if (typeof id === 'string' && id.trim()) {
+        ids.add(id.trim());
       }
     });
 
-    this.partsEditModalData = Array.from(partNumberSet).map((partNumber) => {
-      const row = rowsByPartNumber.get(partNumber);
-      return {
-        partNumber: partNumber,
-        materialColorThirtyCharacterDescription: row?.materialColorThirtyCharacterDescription || '',
-        materialColorSixtyCharacterDescription: row?.materialColorSixtyCharacterDescription || '',
-        materialColorStatus: row?.materialColorStatus || '',
-        materialColorManufacturersPartNumber: row?.materialColorManufacturersPartNumber || '',
-        materialColorServiceDescription: row?.materialColorServiceDescription || '',
-        materialColorServiceSubstituteOne: row?.materialColorServiceSubstituteOne || '',
-        materialColorServiceSubstituteTwo: row?.materialColorServiceSubstituteTwo || '',
-        materialColorServiceMessage: row?.materialColorServiceMessage || '',
-        materialColorServiceEquivalent: row?.materialColorServiceEquivalent || '',
-        isSelected: false, // For checkbox
-      };
-    });
+    this.partsEditModalMaterialColorIds = Array.from(ids);
+    if (this.partsEditModalMaterialColorIds.length === 0) return;
 
     this.showPartsEditModal = true;
   }
 
   closePartsEditModal(): void {
     this.showPartsEditModal = false;
-    this.partsEditModalData = [];
+    this.partsEditModalMaterialColorIds = [];
   }
 
   savePartsEditModal(data: any[]): void {
-    this.partsEditModalData = data;
     this.closePartsEditModal();
   }
 

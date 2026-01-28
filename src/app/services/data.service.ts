@@ -554,6 +554,46 @@ export class DataService {
     );
   }
 
+  /**
+   * Search/Fetch Material Colors by IDs
+   * GET: /Windchill/servlet/rest/trek/searchMaterialColors/{materialColorIds}
+   * @param materialColorIds - Comma-separated list of material color IDs (e.g., "OR:com.lcs.wc.material.LCSMaterialColor:554762,OR:com.lcs.wc.material.LCSMaterialColor:243946")
+   */
+  searchMaterialColors(materialColorIds: string): Observable<any> {
+    if (environment.useMockApi) {
+      // Mock response for development
+      return this.http.get<any>('/api/serviceDataModal.json', { headers: this.buildHttpHeaders() });
+    }
+
+    const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/searchMaterialColors/${encodeURIComponent(materialColorIds)}`;
+
+    return this.http.get<any>(apiUrl, { headers: this.buildHttpHeaders() });
+  }
+
+  /**
+   * Save Material Colors
+   * PUT: /Windchill/servlet/rest/trek/saveMaterialColors
+   * @param payload - Object with instances containing material color updates
+   */
+  saveMaterialColors(payload: { instances: { [key: string]: any } }): Observable<any> {
+    if (environment.useMockApi) {
+      // Return mock success for development
+      return of({ success: true, message: 'Material colors saved (mock)' });
+    }
+
+    const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/saveMaterialColors`;
+    
+    return this.http.put<any>(apiUrl, payload, { headers: this.buildHttpHeaders() }).pipe(
+      map((response) => {
+        return response || { success: true };
+      }),
+      catchError((error: HttpErrorResponse) => {
+        console.error('Error saving material colors:', error);
+        return throwError(() => error);
+      }),
+    );
+  }
+
   getSkuInfo(): SkuInfo[] {
     const info = this.apiData?.skuInfo;
     return Array.isArray(info) ? info : [];

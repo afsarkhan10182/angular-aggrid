@@ -382,7 +382,8 @@ export class AutocompleteCellEditorComponent
       this.isMaterialSearch ||
       this.isPartNumberSearch ||
       this.isBomFeatureSearch ||
-      this.isCountrySearch;
+      this.isCountrySearch ||
+      this.isServiceSearch;
 
     if (usesApiSearch) {
       if (this.dataService) {

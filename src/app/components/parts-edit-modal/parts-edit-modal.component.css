@@ -126,11 +126,7 @@
   border: none;
 }
 
-.modal-grid-container ::ng-deep .ag-theme-alpine .ag-cell[col-id="partNumber"]::before,
-.modal-grid-container ::ng-deep .ag-theme-alpine .ag-cell[col-id="partNumber"] .ag-icon,
-.modal-grid-container ::ng-deep .ag-theme-alpine .ag-cell[col-id="partNumber"] span:first-child:not(.ag-cell-value) {
-  display: none !important;
-}
+
 
 .modal-grid-container ::ng-deep .ag-theme-alpine .ag-cell[col-id="partNumber"] {
   display: flex;
@@ -174,13 +170,20 @@
   border-color: #2563eb;
 }
 
-.save-btn:hover {
-  background: #2563eb;
-  border-color: #2563eb;
+.save-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
 }
 
-.save-btn:active {
-  background: #1d4ed8;
+.save-btn:active:not(:disabled) {
+  background: #1e40af;
+}
+
+.save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #9ca3af;
+  border-color: #9ca3af;
 }
 
 /* Mass Edit Panel Styles */
@@ -313,4 +316,90 @@
 .apply-mass-edit-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Error Panel Styles */
+.error-panel {
+  background: #fee2e2;
+  border: 2px solid #ef4444;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.error-panel-header {
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #fca5a5;
+}
+
+.error-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.error-item {
+  background: white;
+  border-left: 4px solid #ef4444;
+  padding: 12px;
+  border-radius: 4px;
+  position: relative;
+  padding-right: 32px;
+}
+
+.error-row-info {
+  font-size: 12px;
+  color: #7f1d1d;
+  margin-bottom: 4px;
+}
+
+.error-row-info strong {
+  color: #991b1b;
+}
+
+.error-message {
+  font-size: 13px;
+  color: #991b1b;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.clear-error-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.clear-error-btn:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+/* Error Row Styling in Grid */
+::ng-deep .ag-theme-alpine .ag-row.error-row {
+  background-color: #fee2e2 !important;
+}
+
+::ng-deep .ag-theme-alpine .ag-row.error-row:hover {
+  background-color: #fecaca !important;
+}
+
+::ng-deep .ag-theme-alpine .ag-row.error-row .ag-cell {
+  border-left: 3px solid #ef4444;
 }

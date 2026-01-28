@@ -64,6 +64,26 @@
         </div>
       </div>
 
+      <!-- Error Messages Panel -->
+      <div *ngIf="hasErrors()" class="error-panel">
+        <div class="error-panel-header">
+          <h4 style="margin: 0; color: #dc2626;">
+            <span style="color: #ef4444; margin-right: 6px;">⚠</span> Errors Found
+          </h4>
+        </div>
+        <div class="error-list">
+          <div *ngFor="let errorEntry of getErrorEntries()" class="error-item">
+            <div class="error-row-info">
+              <strong>Material Color ID:</strong> {{ errorEntry.materialColorId }}
+            </div>
+            <div class="error-message">{{ errorEntry.message }}</div>
+            <button (click)="clearRowError(errorEntry.materialColorId)" class="clear-error-btn" title="Clear error">
+              ×
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="modal-grid-container">
         <ag-grid-angular
           [style.width]="'100%'"
@@ -79,7 +99,7 @@
     </div>
     <div class="modal-footer">
       <button (click)="closeModal()" class="cancel-btn">Cancel</button>
-      <button (click)="saveModal()" class="save-btn">
+      <button (click)="saveModal()" class="save-btn" [disabled]="!hasEditedRows" [title]="hasEditedRows ? 'Save changes' : 'No changes to save'">
         <app-icon name="save" size="14"></app-icon> Save
       </button>
     </div>
