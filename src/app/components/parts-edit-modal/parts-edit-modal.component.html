@@ -1,8 +1,8 @@
-<div class="modal-overlay" (click)="closeModal()" (keydown.enter)="closeModal()" (keydown.escape)="closeModal()" tabindex="0" aria-label="Close modal">
+<div class="modal-overlay" tabindex="0" aria-label="Modal overlay">
   <div class="modal-container" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>Service - DataManager</h3>
-      <button (click)="closeModal()" class="close-btn" title="Close">
+      <button (click)="handleCloseClick()" class="close-btn" title="Close">
         <app-icon name="times" size="16"></app-icon>
       </button>
     </div>
@@ -98,7 +98,7 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button (click)="closeModal()" class="cancel-btn">Cancel</button>
+      <button (click)="handleCloseClick()" class="cancel-btn">Cancel</button>
       <button (click)="saveModal()" class="save-btn" [disabled]="!hasEditedRows" [title]="hasEditedRows ? 'Save changes' : 'No changes to save'">
         <app-icon name="save" size="14"></app-icon> Save
       </button>

@@ -10,6 +10,8 @@
   justify-content: center;
   z-index: 10000;
   backdrop-filter: blur(2px);
+  /* Overlay is not clickable - prevents accidental data loss */
+  pointer-events: auto;
 }
 
 .modal-container {

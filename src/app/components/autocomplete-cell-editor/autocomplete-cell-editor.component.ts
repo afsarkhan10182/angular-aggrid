@@ -121,7 +121,6 @@ export class AutocompleteCellEditorComponent
             }
 
             if (this.isServiceSearch) {
-              console.log('Service search triggered:', { effectiveQuery, isServiceSearch: this.isServiceSearch });
               if (effectiveQuery.length >= 1) {
                 this.currentQuery = effectiveQuery;
                 this.isLoadingMore = false;
@@ -306,8 +305,6 @@ export class AutocompleteCellEditorComponent
       fieldName === 'materialColorServiceSubstituteOne' ||
       fieldName === 'materialColorServiceSubstituteTwo' ||
       fieldName === 'materialColorServiceEquivalent';
-
-    console.log('Autocomplete agInit:', { fieldName, isServiceSearch: this.isServiceSearch, params: params.isServiceSearch });
 
     this.isMaterialSearch =
       !this.isPartNumberSearch &&
@@ -674,6 +671,36 @@ export class AutocompleteCellEditorComponent
             this.params.node.setDataValue('bomLinkFeatureId', selectedFeatureId);
             if (this.params.node.data) {
               this.params.node.data.bomLinkFeatureId = selectedFeatureId;
+            }
+          }
+        }
+
+        // Handle service search fields (similar to bomLinkFeature pattern)
+        if (this.isServiceSearch && this.genericOptions.length > 0) {
+          let selectedServiceId: string | null = null;
+          
+          if (
+            optionIndex !== undefined &&
+            optionIndex >= 0 &&
+            optionIndex < this.genericOptions.length
+          ) {
+            const selectedService = this.genericOptions[optionIndex];
+            selectedServiceId = selectedService.id || selectedService.displayValue || option;
+          } else {
+            const selectedService = this.genericOptions.find(
+              (service: any) => (service.displayValue || service.name || '') === option
+            );
+            if (selectedService) {
+              selectedServiceId = selectedService.id || selectedService.displayValue || option;
+            }
+          }
+
+          if (selectedServiceId && fieldName) {
+            // Store ID in a separate field (e.g., materialColorServiceEquivalentId)
+            const idFieldName = `${fieldName}Id`;
+            this.params.node.setDataValue(idFieldName, selectedServiceId);
+            if (this.params.node.data) {
+              this.params.node.data[idFieldName] = selectedServiceId;
             }
           }
         }

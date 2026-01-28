@@ -155,7 +155,7 @@ export class PartsEditModalComponent implements OnInit {
 
   @HostListener('document:keydown.escape')
   onEscapeKey(): void {
-    this.closeModal();
+    this.handleCloseClick();
   }
 
   private initializeGrid(): void {
@@ -248,10 +248,17 @@ export class PartsEditModalComponent implements OnInit {
             }
           }
 
-          // Update row data
+          // Update row data - ensure we preserve materialColorId and all fields
           const rowIndex = this.rowData.findIndex((row) => row.materialColorId === materialColorId);
           if (rowIndex >= 0) {
-            this.rowData[rowIndex] = { ...params.data };
+            // Merge with existing data to preserve all fields, ensuring materialColorId is preserved
+            // Use params.newValue directly for the changed field to ensure we have the latest value
+            this.rowData[rowIndex] = {
+              ...this.rowData[rowIndex],
+              ...params.data,
+              [fieldName]: newValue, // Explicitly set the new value
+              materialColorId, // Ensure materialColorId is always preserved
+            };
           }
 
           // Clear error when user edits the row
@@ -270,6 +277,28 @@ export class PartsEditModalComponent implements OnInit {
 
   onGridReady(event: GridReadyEvent): void {}
 
+  /**
+   * Handle close button/ESC key clicks
+   * Shows confirmation if there are unsaved changes
+   */
+  handleCloseClick(): void {
+    // Warn if there are unsaved changes
+    if (this.hasEditedRows) {
+      const confirmed = confirm(
+        'You have unsaved changes. Are you sure you want to close without saving?'
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    this.closeModal();
+  }
+
+  /**
+   * Close the modal (called after confirmation)
+   * Clears all tracking data and emits close event
+   */
   closeModal(): void {
     // Clear edited tracking when closing
     this.editedRows.clear();
@@ -286,18 +315,41 @@ export class PartsEditModalComponent implements OnInit {
     const instances: { [key: string]: any } = {};
     
     this.editedRows.forEach((materialColorId) => {
-      // Find the current row data
-      const currentRow = this.rowData.find((row) => row.materialColorId === materialColorId);
-      if (!currentRow) return;
+      // Get the latest row data directly from the grid API to ensure we have current values
+      let currentRow: any = null;
+      this.gridApi.forEachNode((node) => {
+        if (node.data?.materialColorId === materialColorId) {
+          currentRow = node.data;
+        }
+      });
 
-      // Build instance with all editable fields for this row
-      // API expects all fields, so we include all editable fields for edited rows
+      // Fallback to rowData if not found in grid
+      if (!currentRow) {
+        currentRow = this.rowData.find((row) => row.materialColorId === materialColorId);
+      }
+
+      if (!currentRow) {
+        return;
+      }
+
+      // Build instance with ALL fields for this row (including disabled fields)
+      // For service dropdowns, send ID if available (like bomLinkFeature pattern), otherwise send display value
       instances[materialColorId] = {
+        // Editable fields
         materialColorServiceDescription: currentRow.materialColorServiceDescription || '',
         materialColorServiceMessage: currentRow.materialColorServiceMessage || '',
-        materialColorServiceEquivalent: currentRow.materialColorServiceEquivalent || '',
-        materialColorServiceSubstituteOne: currentRow.materialColorServiceSubstituteOne || '',
-        materialColorServiceSubstituteTwo: currentRow.materialColorServiceSubstituteTwo || '',
+        materialColorServiceEquivalent: currentRow.materialColorServiceEquivalentId || currentRow.materialColorServiceEquivalent || '',
+        materialColorServiceSubstituteOne: currentRow.materialColorServiceSubstituteOneId || currentRow.materialColorServiceSubstituteOne || '',
+        materialColorServiceSubstituteTwo: currentRow.materialColorServiceSubstituteTwoId || currentRow.materialColorServiceSubstituteTwo || '',
+        
+        // Disabled/read-only fields (include them in payload)
+        partNumber: currentRow.partNumber || '',
+        materialColorManufacturersPartNumber: currentRow.materialColorManufacturersPartNumber || '',
+        materialColorStatus: currentRow.materialColorStatus || '',
+        
+        // Other fields that might be present
+        materialColorSixtyCharacterDescription: currentRow.materialColorSixtyCharacterDescription || '',
+        materialColorThirtyCharacterDescription: currentRow.materialColorThirtyCharacterDescription || '',
       };
     });
 
@@ -306,25 +358,84 @@ export class PartsEditModalComponent implements OnInit {
     // Clear previous errors
     this.rowErrors = {};
 
-    this.dataService.saveMaterialColors({ instances }).subscribe({
+    // Build the payload
+    const payload = { instances };
+
+    this.dataService.saveMaterialColors(payload).subscribe({
       next: (response: any) => {
+        
         // Handle errors from response
-        if (response?.errors && typeof response.errors === 'object') {
+        const hasErrors = response?.errors && typeof response.errors === 'object' && Object.keys(response.errors).length > 0;
+        
+        if (hasErrors) {
+          // Set errors for failed rows
           Object.keys(response.errors).forEach((materialColorId) => {
             const errorObj = response.errors[materialColorId];
             const errorMessage = errorObj?.errorMessage || errorObj?.message || 'Unknown error occurred';
             this.rowErrors[materialColorId] = errorMessage;
           });
 
-          // Refresh grid to show error indicators
+          // Update row data with successfully saved instances (if any)
+          if (response?.instances && typeof response.instances === 'object') {
+            Object.keys(response.instances).forEach((materialColorId) => {
+              // Only update if this row doesn't have an error
+              if (!this.rowErrors[materialColorId]) {
+                const updatedData = response.instances[materialColorId];
+                const rowIndex = this.rowData.findIndex((row) => row.materialColorId === materialColorId);
+                if (rowIndex >= 0) {
+                  this.rowData[rowIndex] = {
+                    ...this.rowData[rowIndex],
+                    ...updatedData,
+                    materialColorId, // Ensure materialColorId is preserved
+                  };
+                  // Remove from edited rows since it was successfully saved
+                  this.editedRows.delete(materialColorId);
+                  this.editedFields.delete(materialColorId);
+                }
+              }
+            });
+          }
+
+          // Refresh grid to show error indicators and updated data
           if (this.gridApi) {
+            this.gridApi.setGridOption('rowData', [...this.rowData]);
             this.gridApi.refreshCells({ force: true });
             this.gridApi.redrawRows();
           }
+
+          // Scroll to first error row if possible
+          const firstErrorId = Object.keys(this.rowErrors)[0];
+          if (firstErrorId && this.gridApi) {
+            let targetNode: any = null;
+            this.gridApi.forEachNode((node) => {
+              if (node.data?.materialColorId === firstErrorId) {
+                targetNode = node;
+              }
+            });
+            if (targetNode) {
+              this.gridApi.ensureNodeVisible(targetNode, 'middle');
+            }
+          }
         } else {
-          // No errors - clear edited rows and close modal
+          // No errors - update row data with saved instances and close modal
+          if (response?.instances && typeof response.instances === 'object') {
+            Object.keys(response.instances).forEach((materialColorId) => {
+              const updatedData = response.instances[materialColorId];
+              const rowIndex = this.rowData.findIndex((row) => row.materialColorId === materialColorId);
+              if (rowIndex >= 0) {
+                this.rowData[rowIndex] = {
+                  ...this.rowData[rowIndex],
+                  ...updatedData,
+                  materialColorId, // Ensure materialColorId is preserved
+                };
+              }
+            });
+          }
+
+          // Clear edited rows
           this.editedRows.clear();
           this.editedFields.clear();
+          
           // Get all current row data for emit
           const allRowData: any[] = [];
           this.gridApi.forEachNode((node) => {
@@ -333,7 +444,7 @@ export class PartsEditModalComponent implements OnInit {
             }
           });
           this.save.emit(allRowData);
-          this.closeModal();
+          // Don't auto-close after successful save - user can close manually via close icon, cancel button, or ESC
         }
       },
       error: (error: any) => {

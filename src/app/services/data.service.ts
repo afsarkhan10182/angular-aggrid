@@ -382,7 +382,6 @@ export class DataService {
       fetchLimit,
     };
 
-    console.log('searchFlexInstances API call:', { apiUrl, requestBody });
 
     return this.http.post<any>(apiUrl, requestBody, { headers: this.buildHttpHeaders() }).pipe(
       map((response) => {
