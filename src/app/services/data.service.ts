@@ -320,6 +320,22 @@ export class DataService {
     return this.searchFlexInstances('Country', 'name', query, fetchLimit, 'bomLinkCountryOfOrigin');
   }
 
+  /**
+   * Search Parts/Services using Windchill API
+   */
+  searchServices(
+    query: string,
+    fetchLimit: number = 20,
+  ): Observable<{ results: any[]; resultCount: number; hasMore: boolean }> {
+    return this.searchFlexInstances(
+      String.raw`Revisable Entity\sku\sKUTrekBicycleCorp\parts`,
+      'name',
+      query,
+      fetchLimit,
+      'partNumber',
+    );
+  }
+
   private searchFlexInstances(
     flexTypeName: string,
     attributeName: string,
@@ -365,6 +381,8 @@ export class DataService {
       attributeValue: searchTerm.length > 0 ? `${searchTerm}*` : '*',
       fetchLimit,
     };
+
+    console.log('searchFlexInstances API call:', { apiUrl, requestBody });
 
     return this.http.post<any>(apiUrl, requestBody, { headers: this.buildHttpHeaders() }).pipe(
       map((response) => {

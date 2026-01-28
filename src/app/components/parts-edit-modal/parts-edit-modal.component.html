@@ -7,20 +7,68 @@
       </button>
     </div>
     <div class="modal-body">
-      <div class="modal-info">
-        <span *ngIf="partsData.length > 0">
-          {{ partsData.length }} unique part{{ partsData.length > 1 ? 's' : '' }} selected
-        </span>
-        <span *ngIf="getSelectedRowsCount() > 0" class="selected-count">
-          ({{ getSelectedRowsCount() }} row{{ getSelectedRowsCount() > 1 ? 's' : '' }} selected in
-          grid)
-        </span>
+      <!-- Mass Edit Button positioned above checkbox -->
+      <div class="mass-edit-button-container">
+        <button
+          (click)="openMassEdit()"
+          class="mass-edit-toggle-btn"
+          [class.disabled]="getSelectedRowsCount() <= 1"
+          [disabled]="getSelectedRowsCount() <= 1 || massEditMode"
+          [title]="
+            getSelectedRowsCount() <= 1
+              ? 'Select more than 1 row to enable Mass Edit'
+              : 'Mass Edit Selected Rows'
+          "
+        >
+          <app-icon name="edit" size="14"></app-icon> Mass Edit
+        </button>
       </div>
+
+      <!-- Mass Edit Panel -->
+      <div *ngIf="massEditMode && getSelectedRowsCount() > 1" class="mass-edit-panel">
+        <div class="mass-edit-header">
+          <h4>Mass Edit ({{ getSelectedRowsCount() }} rows selected)</h4>
+          <button (click)="closeMassEditMode()" class="close-mass-edit-btn" title="Close">
+            <span class="close-icon">×</span>
+          </button>
+        </div>
+        <div class="mass-edit-fields">
+          <div class="mass-edit-field">
+            <label for="mass-edit-service-description">Service Description:</label>
+            <input
+              id="mass-edit-service-description"
+              type="text"
+              [(ngModel)]="massEditServiceDescription"
+              class="mass-edit-input"
+              placeholder="Enter service description"
+            />
+          </div>
+          <div class="mass-edit-field">
+            <label for="mass-edit-service-message">Service Message:</label>
+            <input
+              id="mass-edit-service-message"
+              type="text"
+              [(ngModel)]="massEditServiceMessage"
+              class="mass-edit-input"
+              placeholder="Enter service message"
+            />
+          </div>
+          <div class="mass-edit-actions">
+            <button (click)="applyMassEdit()" class="apply-mass-edit-btn" [disabled]="isMassEditing">
+              <app-icon *ngIf="!isMassEditing" name="check" size="14"></app-icon>
+              <app-icon *ngIf="isMassEditing" name="spinner" size="14"></app-icon>
+              <span *ngIf="!isMassEditing">Apply</span>
+              <span *ngIf="isMassEditing">Applying...</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="modal-grid-container">
         <ag-grid-angular
           [style.width]="'100%'"
-          [style.height]="'500px'"
-          class="ag-theme-legacy"
+          [style.height]="massEditMode ? '400px' : '500px'"
+          class="ag-theme-alpine"
           [gridOptions]="gridOptions"
           [columnDefs]="columnDefs"
           [defaultColDef]="defaultColDef"

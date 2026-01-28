@@ -18,9 +18,9 @@
   box-shadow:
     0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  width: 95%;
-  max-width: 1600px;
-  max-height: 90vh;
+  width: 90%;
+  max-width: 1200px;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -67,16 +67,42 @@
   min-height: 0;
 }
 
-.modal-info {
-  margin-bottom: 16px;
-  font-size: 14px;
-  color: #6b7280;
+.mass-edit-button-container {
+  margin-bottom: 12px;
+  padding-left: 0;
+  display: flex;
+  align-items: center;
 }
 
-.selected-count {
-  margin-left: 8px;
-  color: #3b82f6;
+.mass-edit-toggle-btn {
+  padding: 6px 12px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
   font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.mass-edit-toggle-btn:hover:not(.disabled):not(:disabled) {
+  background: #2563eb;
+}
+
+.mass-edit-toggle-btn.disabled,
+.mass-edit-toggle-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #9ca3af;
+}
+
+.mass-edit-toggle-btn.disabled:hover,
+.mass-edit-toggle-btn:disabled:hover {
+  background: #9ca3af;
 }
 
 .modal-grid-container {
@@ -100,37 +126,15 @@
   border: none;
 }
 
-.modal-grid-container ::ng-deep .ag-theme-alpine .ag-header {
-  background: #f3f4f6;
-  border-bottom: 1px solid #d1d5db;
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-cell[col-id="partNumber"]::before,
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-cell[col-id="partNumber"] .ag-icon,
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-cell[col-id="partNumber"] span:first-child:not(.ag-cell-value) {
+  display: none !important;
 }
 
-.modal-grid-container ::ng-deep .ag-theme-alpine .ag-header-cell {
-  background: #f3f4f6;
-  border-right: 1px solid #d1d5db;
-  font-weight: 700;
-  color: #374151;
-}
-
-.modal-grid-container ::ng-deep .ag-theme-alpine .ag-cell {
-  border-right: 1px solid #e5e7eb;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.modal-grid-container ::ng-deep .ag-theme-alpine .ag-row {
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.modal-grid-container ::ng-deep .ag-theme-alpine .ag-row:hover {
-  background-color: #f9fafb;
-}
-
-.modal-grid-container ::ng-deep .ag-theme-alpine .ag-row-selected {
-  background-color: #dbeafe;
-}
-
-.modal-grid-container ::ng-deep .ag-theme-alpine .ag-row-selected:hover {
-  background-color: #bfdbfe;
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-cell[col-id="partNumber"] {
+  display: flex;
+  align-items: center;
 }
 
 .modal-footer {
@@ -177,4 +181,136 @@
 
 .save-btn:active {
   background: #1d4ed8;
+}
+
+/* Mass Edit Panel Styles */
+.mass-edit-panel {
+  background: #f8fafc;
+  border: 2px solid #3b82f6;
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.mass-edit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e5e7eb;
+  width: 100%;
+}
+
+.mass-edit-header h4 {
+  margin: 0;
+  color: #1e293b;
+  font-size: 16px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.close-mass-edit-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  width: 32px;
+  height: 32px;
+  margin-left: auto;
+  line-height: 1;
+}
+
+.close-mass-edit-btn .close-icon {
+  font-size: 24px;
+  line-height: 1;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: white;
+}
+
+.close-mass-edit-btn:hover {
+  background: #dc2626;
+  transform: scale(1.05);
+}
+
+.mass-edit-fields {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+}
+
+.mass-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 200px;
+  flex: 1;
+  max-width: 300px;
+}
+
+.mass-edit-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.mass-edit-input {
+  padding: 10px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 13px;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.mass-edit-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.mass-edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.apply-mass-edit-btn {
+  padding: 8px 16px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.apply-mass-edit-btn:hover:not(:disabled) {
+  background: #059669;
+}
+
+.apply-mass-edit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

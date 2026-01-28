@@ -41,6 +41,7 @@ export class AutocompleteCellEditorComponent
   public isPartNumberSearch: boolean = false;
   public isBomFeatureSearch: boolean = false;
   public isCountrySearch: boolean = false;
+  public isServiceSearch: boolean = false;
   public isLoadingMore: boolean = false;
 
   private params: any;
@@ -90,7 +91,8 @@ export class AutocompleteCellEditorComponent
             (this.isMaterialSearch ||
               this.isPartNumberSearch ||
               this.isBomFeatureSearch ||
-              this.isCountrySearch) &&
+              this.isCountrySearch ||
+              this.isServiceSearch) &&
             this.dataService;
 
           if (usesApiSearch) {
@@ -111,6 +113,19 @@ export class AutocompleteCellEditorComponent
                 this.currentQuery = effectiveQuery;
                 this.isLoadingMore = false;
                 return this.dataService.searchCountriesOfOrigin(this.currentQuery, this.PAGE_SIZE);
+              }
+
+              this.hasMore = false;
+              this.genericOptions = [];
+              return of({ results: [], resultCount: 0, hasMore: false });
+            }
+
+            if (this.isServiceSearch) {
+              console.log('Service search triggered:', { effectiveQuery, isServiceSearch: this.isServiceSearch });
+              if (effectiveQuery.length >= 1) {
+                this.currentQuery = effectiveQuery;
+                this.isLoadingMore = false;
+                return this.dataService.searchServices(this.currentQuery, this.PAGE_SIZE);
               }
 
               this.hasMore = false;
@@ -156,7 +171,7 @@ export class AutocompleteCellEditorComponent
           const results = response.results || [];
           const resultCount = response.resultCount || 0;
 
-          if (this.isBomFeatureSearch || this.isCountrySearch) {
+          if (this.isBomFeatureSearch || this.isCountrySearch || this.isServiceSearch) {
             this.genericOptions = Array.isArray(results) ? results : [];
             this.hasMore = response.hasMore || false;
 
@@ -210,7 +225,8 @@ export class AutocompleteCellEditorComponent
         this.isMaterialSearch ||
         this.isPartNumberSearch ||
         this.isBomFeatureSearch ||
-        this.isCountrySearch;
+        this.isCountrySearch ||
+        this.isServiceSearch;
 
       if (usesApiSearch) {
         if (this.dataService && this.value && this.value.length >= 1) {
@@ -251,6 +267,7 @@ export class AutocompleteCellEditorComponent
     this.isPartNumberSearch = false;
     this.isBomFeatureSearch = false;
     this.isCountrySearch = false;
+    this.isServiceSearch = false;
     this.isLoadingMore = false;
     this.currentQuery = '';
     this.fromIndex = 1;
@@ -284,11 +301,19 @@ export class AutocompleteCellEditorComponent
     this.isBomFeatureSearch = params.isBomFeatureSearch === true || fieldName === 'bomLinkFeature';
     this.isCountrySearch =
       params.isCountrySearch === true || fieldName === 'bomLinkCountryOfOrigin';
+    this.isServiceSearch =
+      params.isServiceSearch === true ||
+      fieldName === 'materialColorServiceSubstituteOne' ||
+      fieldName === 'materialColorServiceSubstituteTwo' ||
+      fieldName === 'materialColorServiceEquivalent';
+
+    console.log('Autocomplete agInit:', { fieldName, isServiceSearch: this.isServiceSearch, params: params.isServiceSearch });
 
     this.isMaterialSearch =
       !this.isPartNumberSearch &&
       !this.isBomFeatureSearch &&
       !this.isCountrySearch &&
+      !this.isServiceSearch &&
       (params.useApiSearch === true ||
         (this.dataService &&
           (this.placeholder.includes('material') || this.placeholder.includes('Material'))) ||
@@ -328,7 +353,8 @@ export class AutocompleteCellEditorComponent
       !this.isMaterialSearch &&
       !this.isPartNumberSearch &&
       !this.isBomFeatureSearch &&
-      !this.isCountrySearch
+      !this.isCountrySearch &&
+      !this.isServiceSearch
     ) {
       this.filterOptions();
     }
@@ -432,14 +458,14 @@ export class AutocompleteCellEditorComponent
       this.isMaterialSearch ||
       this.isPartNumberSearch ||
       this.isBomFeatureSearch ||
-      this.isCountrySearch;
+      this.isCountrySearch ||
+      this.isServiceSearch;
 
     if (usesApiSearch) {
       if (this.dataService && this.value && this.value.length >= 1) {
         this.searchSubject.next(this.value);
       }
     } else {
-      // For ALL fields with static options, show all items when clicking
       if (this.options.length > 0) {
         this.filteredOptions = this.options.slice(0, 50);
         this.showDropdown = this.filteredOptions.length > 0;
@@ -463,7 +489,8 @@ export class AutocompleteCellEditorComponent
       this.isMaterialSearch ||
       this.isPartNumberSearch ||
       this.isBomFeatureSearch ||
-      this.isCountrySearch;
+      this.isCountrySearch ||
+      this.isServiceSearch;
 
     if (usesApiSearch) {
       if (this.dataService && this.value && this.value.length >= 1) {
@@ -540,6 +567,7 @@ export class AutocompleteCellEditorComponent
     if (
       this.isBomFeatureSearch ||
       this.isCountrySearch ||
+      this.isServiceSearch ||
       this.isLoadingMore ||
       !this.hasMore ||
       !this.dataService ||
