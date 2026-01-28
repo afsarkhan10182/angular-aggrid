@@ -3201,10 +3201,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.partsEditModalMaterialColorIds = [];
   }
 
-  savePartsEditModal(data: any[]): void {
-    this.closePartsEditModal();
-  }
-
   bulkDisconnectFromSkus(): void {
     if (this.isSkuFilterReadOnly()) {
       return;

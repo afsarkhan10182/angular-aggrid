@@ -47,8 +47,9 @@ export class PartsEditModalComponent implements OnInit {
   private readonly originalRowValues = new Map<string | number, any>();
   private columnsMapping: { [key: string]: string } = {};
   public rowErrors: { [materialColorId: string]: string } = {};
-  
-  // Track if any rows have been edited
+  public successMessage: string = '';
+  public showSuccessMessage: boolean = false;
+
   public get hasEditedRows(): boolean {
     return this.editedRows.size > 0;
   }
@@ -73,9 +74,9 @@ export class PartsEditModalComponent implements OnInit {
         headerName: '',
         field: 'isSelected',
         colId: 'checkbox',
-        width: 50,
-        minWidth: 50,
-        maxWidth: 50,
+        width: 60,
+        minWidth: 60,
+        maxWidth: 60,
         pinned: 'left',
         resizable: false,
         sortable: false,
@@ -83,6 +84,24 @@ export class PartsEditModalComponent implements OnInit {
         checkboxSelection: true,
         headerCheckboxSelection: true,
         headerCheckboxSelectionFilteredOnly: false,
+        cellRenderer: (params: any) => {
+          // Show error icon next to checkbox if row has error
+          // AG Grid renders checkbox automatically, we just add error icon
+          const hasError = params.data?.materialColorId && this.rowErrors[params.data.materialColorId];
+          if (hasError) {
+            const errorMessage = this.rowErrors[params.data.materialColorId];
+            const escapedMessage = this.escapeHtml(errorMessage);
+            return `<span title="${escapedMessage}" style="color: #ef4444; cursor: help; font-size: 18px; display: inline-block;" aria-label="Error">⚠</span>`;
+          }
+          return '';
+        },
+        tooltipValueGetter: (params: any) => {
+          // Show raw error message from backend in tooltip for checkbox column
+          if (params.data?.materialColorId && this.rowErrors[params.data.materialColorId]) {
+            return this.rowErrors[params.data.materialColorId];
+          }
+          return null;
+        },
       },
     ];
 
@@ -111,16 +130,7 @@ export class PartsEditModalComponent implements OnInit {
         sortable: true,
         filter: true,
         cellRenderer: (params: any) => {
-          // Show error icon in first column (partNumber) if row has error
-          if (field === 'partNumber' && params.data?.materialColorId && this.rowErrors[params.data.materialColorId]) {
-            const errorMessage = this.rowErrors[params.data.materialColorId];
-            const escapedMessage = this.escapeHtml(errorMessage);
-            const value = params.value || '';
-            return `<div style="display: flex; align-items: center; gap: 6px;">
-              <span title="${escapedMessage}" style="color: #ef4444; cursor: help; font-size: 16px;" aria-label="Error">⚠</span>
-              <span>${this.escapeHtml(String(value))}</span>
-            </div>`;
-          }
+          // Simple cell renderer - no error icon here anymore
           return params.value || '';
         },
       };
@@ -305,6 +315,8 @@ export class PartsEditModalComponent implements OnInit {
     this.editedFields.clear();
     this.originalRowValues.clear();
     this.rowErrors = {};
+    this.showSuccessMessage = false;
+    this.successMessage = '';
     this.modalClose.emit();
   }
 
@@ -315,18 +327,12 @@ export class PartsEditModalComponent implements OnInit {
     const instances: { [key: string]: any } = {};
     
     this.editedRows.forEach((materialColorId) => {
-      // Get the latest row data directly from the grid API to ensure we have current values
       let currentRow: any = null;
       this.gridApi.forEachNode((node) => {
         if (node.data?.materialColorId === materialColorId) {
           currentRow = node.data;
         }
       });
-
-      // Fallback to rowData if not found in grid
-      if (!currentRow) {
-        currentRow = this.rowData.find((row) => row.materialColorId === materialColorId);
-      }
 
       if (!currentRow) {
         return;
@@ -355,10 +361,10 @@ export class PartsEditModalComponent implements OnInit {
 
     if (Object.keys(instances).length === 0) return;
 
-    // Clear previous errors
+    // Clear previous errors and success message
     this.rowErrors = {};
+    this.showSuccessMessage = false;
 
-    // Build the payload
     const payload = { instances };
 
     this.dataService.saveMaterialColors(payload).subscribe({
@@ -371,9 +377,12 @@ export class PartsEditModalComponent implements OnInit {
           // Set errors for failed rows
           Object.keys(response.errors).forEach((materialColorId) => {
             const errorObj = response.errors[materialColorId];
-            const errorMessage = errorObj?.errorMessage || errorObj?.message || 'Unknown error occurred';
-            this.rowErrors[materialColorId] = errorMessage;
+            const rawErrorMessage = errorObj?.errorMessage || errorObj?.message || 'Unknown error occurred';
+            this.rowErrors[materialColorId] = rawErrorMessage;
           });
+          
+          // Hide success message if errors exist
+          this.showSuccessMessage = false;
 
           // Update row data with successfully saved instances (if any)
           if (response?.instances && typeof response.instances === 'object') {
@@ -394,6 +403,18 @@ export class PartsEditModalComponent implements OnInit {
                 }
               }
             });
+          }
+
+          // Show success message for partial saves if some rows succeeded
+          const successCount = response?.instances ? Object.keys(response.instances).length : 0;
+          if (successCount > 0) {
+            this.successMessage = `${successCount} row${successCount > 1 ? 's' : ''} saved successfully.`;
+            this.showSuccessMessage = true;
+            setTimeout(() => {
+              this.showSuccessMessage = false;
+            }, 5000);
+          } else {
+            this.showSuccessMessage = false;
           }
 
           // Refresh grid to show error indicators and updated data
@@ -417,7 +438,7 @@ export class PartsEditModalComponent implements OnInit {
             }
           }
         } else {
-          // No errors - update row data with saved instances and close modal
+          // No errors - update row data with saved instances (modal stays open)
           if (response?.instances && typeof response.instances === 'object') {
             Object.keys(response.instances).forEach((materialColorId) => {
               const updatedData = response.instances[materialColorId];
@@ -435,6 +456,18 @@ export class PartsEditModalComponent implements OnInit {
           // Clear edited rows
           this.editedRows.clear();
           this.editedFields.clear();
+          
+          // Show success message
+          const savedCount = Object.keys(response.instances || {}).length;
+          this.successMessage = savedCount === 1 
+            ? 'Material color saved successfully!' 
+            : `${savedCount} material colors saved successfully!`;
+          this.showSuccessMessage = true;
+          
+          // Auto-hide success message after 5 seconds
+          setTimeout(() => {
+            this.showSuccessMessage = false;
+          }, 5000);
           
           // Get all current row data for emit
           const allRowData: any[] = [];
@@ -629,7 +662,13 @@ export class PartsEditModalComponent implements OnInit {
     }));
   }
 
+  getPartNumberForError(materialColorId: string): string {
+    const row = this.rowData.find((r) => r.materialColorId === materialColorId);
+    return row?.partNumber || materialColorId;
+  }
+
   hasErrors(): boolean {
     return Object.keys(this.rowErrors).length > 0;
   }
+
 }

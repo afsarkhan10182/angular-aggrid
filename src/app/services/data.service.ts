@@ -576,7 +576,6 @@ export class DataService {
    */
   saveMaterialColors(payload: { instances: { [key: string]: any } }): Observable<any> {
     if (environment.useMockApi) {
-      // Return mock success for development
       return of({ success: true, message: 'Material colors saved (mock)' });
     }
 

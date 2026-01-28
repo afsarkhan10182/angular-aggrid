@@ -64,22 +64,29 @@
         </div>
       </div>
 
+      <!-- Success Message -->
+      <div *ngIf="showSuccessMessage" class="success-panel">
+        <div class="success-content">
+          <span class="success-icon">✓</span>
+          <span class="success-text">{{ successMessage }}</span>
+          <button (click)="showSuccessMessage = false" class="close-success-btn" title="Dismiss">
+            ×
+          </button>
+        </div>
+      </div>
+
       <!-- Error Messages Panel -->
       <div *ngIf="hasErrors()" class="error-panel">
         <div class="error-panel-header">
-          <h4 style="margin: 0; color: #dc2626;">
-            <span style="color: #ef4444; margin-right: 6px;">⚠</span> Errors Found
-          </h4>
+          <span class="error-icon">⚠</span>
+          <span class="error-header-text">Errors ({{ getErrorEntries().length }})</span>
         </div>
         <div class="error-list">
           <div *ngFor="let errorEntry of getErrorEntries()" class="error-item">
             <div class="error-row-info">
-              <strong>Material Color ID:</strong> {{ errorEntry.materialColorId }}
+              <strong>Part # {{ getPartNumberForError(errorEntry.materialColorId) }}:</strong>
             </div>
             <div class="error-message">{{ errorEntry.message }}</div>
-            <button (click)="clearRowError(errorEntry.materialColorId)" class="clear-error-btn" title="Clear error">
-              ×
-            </button>
           </div>
         </div>
       </div>
