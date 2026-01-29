@@ -3192,6 +3192,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onPartsEditModalDataSaved(): void {
+    this.editedRows.clear();
+    this.editedFields.clear();
+    this.originalRowValues.clear();
     this.loadData();
   }
 

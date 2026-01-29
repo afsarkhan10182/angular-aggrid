@@ -681,6 +681,31 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   /**
+   * Handle mass edit input click - ensure input gets focused
+   */
+  onMassEditInputClick(field: string, event: MouseEvent): void {
+    // Stop propagation to prevent any parent handlers from interfering
+    event.stopPropagation();
+    
+    const inputElement = event.target as HTMLInputElement;
+    if (inputElement) {
+      // Store input element reference
+      this.massEditInputElements[field] = inputElement;
+      
+      // Ensure input is focused and cursor is positioned
+      setTimeout(() => {
+        if (inputElement !== document.activeElement) {
+          inputElement.focus();
+        }
+        // Position cursor at end of text if there's a value
+        if (inputElement.value) {
+          inputElement.setSelectionRange(inputElement.value.length, inputElement.value.length);
+        }
+      }, 0);
+    }
+  }
+
+  /**
    * Handle mass edit input focus
    */
   onMassEditInputFocus(field: string, event?: FocusEvent): void {

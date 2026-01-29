@@ -31,6 +31,7 @@
                   type="text"
                   [(ngModel)]="massEditValues[field]"
                   (input)="onMassEditInputChange(field, $any($event.target).value, $event)"
+                  (click)="onMassEditInputClick(field, $event)"
                   (focus)="onMassEditInputFocus(field, $event)"
                   (keydown)="onMassEditInputKeyDown(field, $event)"
                   (blur)="closeMassEditDropdown(field)"
