@@ -32,13 +32,20 @@
 	String userName = wtUser.getFullName();
 	WTProperties wtproperties = WTProperties.getLocalProperties();
     String  windchillHost = wtproperties.getProperty("wt.rmi.server.hostname","");
+
+    String pageTitle = "Product BOM Composer";
+	if ("SBOM".equals(bomType) || "EBOM".equals(bomType)) {
+		pageTitle = bomType + " Composer";
+	} else if ("MATERIALMBOM".equals(bomType)) {
+		pageTitle = "Material BOM Composer";
+	}
 %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><%= bomType %> Composer</title>
+  <title><%= pageTitle %></title>
   <base href="./">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <style>*{box-sizing:border-box;margin:0;padding:0}html,body{height:100%;margin:0;padding:0;overflow:hidden}body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background-color:#f8fafc;color:#1e293b}</style>

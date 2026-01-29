@@ -378,9 +378,15 @@ export class MassEditService {
     if (!isSbomMode() || !state.includeInSpecSheet) return false;
     if (rowData.isNewRow) return false;
 
-    const specSheetExtra = rowData?.bomLinkSpecSheetExtra;
-    const hasSpecSheetExtra = specSheetExtra !== undefined && specSheetExtra !== null && String(specSheetExtra).trim() !== '';
-    if (hasSpecSheetExtra) return false;
+    const isMbomRow = rowData?.ptcbomPartMarkUp === 'enumMBOM001';
+    
+    // For MBOM line items, apply regardless of specSheetExtra value
+    // For non-MBOM rows, skip if specSheetExtra exists
+    if (!isMbomRow) {
+      const specSheetExtra = rowData?.bomLinkSpecSheetExtra;
+      const hasSpecSheetExtra = specSheetExtra !== undefined && specSheetExtra !== null && String(specSheetExtra).trim() !== '';
+      if (hasSpecSheetExtra) return false;
+    }
 
     const targetField = this.findTargetField(['bomLinkIncludeInSpecSheet'], columnFields, rowData);
     const currentValue = rowData[targetField] || '';

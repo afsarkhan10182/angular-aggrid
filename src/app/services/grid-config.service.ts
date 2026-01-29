@@ -700,6 +700,13 @@ export class GridConfigService {
       return ['bomLinkStartDate', 'bomLinkEndDate', 'quantity'].includes(field);
     }
 
+    const isMbomLineItem = rowData?.ptcbomPartMarkUp === 'enumMBOM001';
+
+    // For MBOM line items: bomLinkIncludeInSpecSheet is always editable
+    if (isMbomLineItem) {
+      return field === 'bomLinkIncludeInSpecSheet';
+    }
+
     // For SBOM: Disable bomLinkIncludeInSpecSheet if bomLinkSpecSheetExtra exists
     if (field === 'bomLinkIncludeInSpecSheet') {
       const specSheetExtra = rowData?.bomLinkSpecSheetExtra;
@@ -708,14 +715,9 @@ export class GridConfigService {
       }
     }
 
-    const isMbomLineItem = rowData?.ptcbomPartMarkUp === 'enumMBOM001';
-
-    if (isMbomLineItem) {
-      return field === 'bomLinkIncludeInSpecSheet';
-    } else {
-      const editableFields = ['bomLinkIncludeInSpecSheet', 'quantity', 'bomLinkStartDate', 'bomLinkEndDate'];
-      return editableFields.includes(field);
-    }
+    // For regular SBOM rows
+    const editableFields = ['bomLinkIncludeInSpecSheet', 'quantity', 'bomLinkStartDate', 'bomLinkEndDate'];
+    return editableFields.includes(field);
   }
 
   isFieldEditableForNewRow(

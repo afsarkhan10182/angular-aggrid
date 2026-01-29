@@ -57,6 +57,7 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
   public rowErrors: { [materialColorId: string]: string } = {};
   public successMessage: string = '';
   public showSuccessMessage: boolean = false;
+  public isSaving: boolean = false;
 
   public massEditAutocomplete: { [field: string]: { showDropdown: boolean; options: string[]; selectedIndex: number; top?: string; left?: string; width?: string } } = {};
   private massEditSearchSubjects: { [field: string]: Subject<string> } = {};
@@ -397,6 +398,7 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
 
     this.rowErrors = {};
     this.showSuccessMessage = false;
+    this.isSaving = true;
 
     const payload = { instances };
 
@@ -523,8 +525,10 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
           this.dataSaved.emit();
           // Don't auto-close after successful save - user can close manually via close icon, cancel button, or ESC
         }
+        this.isSaving = false;
       },
       error: (error: any) => {
+        this.isSaving = false;
         const errorMessage = error?.error?.message || error?.message || 'Failed to save material colors';
         alert(`Error: ${errorMessage}`);
         this.dataSaved.emit();

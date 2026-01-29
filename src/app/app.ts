@@ -1059,16 +1059,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public getBomComposerTitle(): string {
     const bomType = this.dataService.getBomType();
     
-    if (bomType === 'MBOM') {
-      return 'MBOM Composer';
-    }
-    
-    if (bomType === 'SBOM') {
-      return 'SBOM Composer';
-    }
-    
-    if (bomType === 'EBOM') {
-      return 'EBOM Composer';
+    if (bomType === 'EBOM' || bomType === 'SBOM') {
+      return `${bomType} Composer`;
     }
     
     if (bomType === 'MATERIALMBOM') {
@@ -3166,6 +3158,19 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   openPartsEditModal(): void {
     if (this.selectedRows.size === 0) return;
+
+    // Check for unsaved changes in the main grid
+    const hasEditedRows = this.editedRows.size > 0;
+    const hasNewRows = this.rowData.some((row: any) => row?.isNewRow === true && !row?.isSectionHeader && !row?.isGroupHeader && !row?.isMaterialHeader);
+    
+    if (hasEditedRows || hasNewRows) {
+      const message = 'You have unsaved changes in the main grid. Do you want to proceed anyway?';
+      
+      const proceed = confirm(message);
+      if (!proceed) {
+        return;
+      }
+    }
 
     const ids = new Set<string>();
     this.selectedRows.forEach((row: any) => {

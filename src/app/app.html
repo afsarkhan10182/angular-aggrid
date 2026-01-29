@@ -248,25 +248,8 @@
             placeholder="Enter quantity"
           />
         </div>
-        <!-- SBOM Fields - MBOM Line Items (only IncludeInSpecSheet) -->
-        <div class="mass-edit-field" *ngIf="isSbomMode() && hasMbomLineItemsInSelection()">
-          <label for="sbom-mbom-mass-edit-include-in-spec-sheet">Include In Spec Sheet:</label>
-          <select
-            id="sbom-mbom-mass-edit-include-in-spec-sheet"
-            [(ngModel)]="massEditIncludeInSpecSheet"
-            class="mass-edit-input"
-          >
-            <option value="">-- Select --</option>
-            <option
-              *ngFor="let option of getIncludeInSpecSheetOptionsForMassEdit()"
-              [value]="option"
-            >
-              {{ option }}
-            </option>
-          </select>
-        </div>
-        <!-- SBOM Non-MBOM Fields (dates, quantity, IncludeInSpecSheet) -->
-        <div class="mass-edit-field" *ngIf="isSbomMode() && !hasMbomLineItemsInSelection()">
+        <!-- SBOM Fields (all fields shown) -->
+        <div class="mass-edit-field" *ngIf="isSbomMode()">
           <label for="sbom-mass-edit-start-date">Start Date:</label>
           <input
             id="sbom-mass-edit-start-date"
@@ -276,7 +259,7 @@
             placeholder="MM/DD/YYYY"
           />
         </div>
-        <div class="mass-edit-field" *ngIf="isSbomMode() && !hasMbomLineItemsInSelection()">
+        <div class="mass-edit-field" *ngIf="isSbomMode()">
           <label for="sbom-mass-edit-end-date">End Date:</label>
           <input
             id="sbom-mass-edit-end-date"
@@ -286,7 +269,7 @@
             placeholder="MM/DD/YYYY"
           />
         </div>
-        <div class="mass-edit-field" *ngIf="isSbomMode() && !hasMbomLineItemsInSelection()">
+        <div class="mass-edit-field" *ngIf="isSbomMode()">
           <label for="sbom-mass-edit-quantity">Quantity:</label>
           <input
             id="sbom-mass-edit-quantity"
@@ -298,7 +281,7 @@
             placeholder="Enter quantity"
           />
         </div>
-        <div class="mass-edit-field" *ngIf="isSbomMode() && !hasMbomLineItemsInSelection()">
+        <div class="mass-edit-field" *ngIf="isSbomMode()">
           <label for="sbom-mass-edit-include-in-spec-sheet">Include In Spec Sheet:</label>
           <select
             id="sbom-mass-edit-include-in-spec-sheet"
@@ -318,7 +301,7 @@
           <button (click)="applyMassEdit()" class="apply-mass-edit-btn" [disabled]="isMassEditing">
             <app-icon *ngIf="!isMassEditing" name="check" size="14"></app-icon>
             <app-icon *ngIf="isMassEditing" name="spinner" size="14"></app-icon>
-            <span *ngIf="!isMassEditing">Apply</span>
+            <span *ngIf="!isMassEditing">Apply All</span>
             <span *ngIf="isMassEditing">Applying...</span>
           </button>
         </div>
