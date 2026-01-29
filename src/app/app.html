@@ -571,6 +571,7 @@
     *ngIf="showPartsEditModal"
     [materialColorIds]="partsEditModalMaterialColorIds"
     (modalClose)="closePartsEditModal()"
+    (dataSaved)="onPartsEditModalDataSaved()"
   >
   </app-parts-edit-modal>
 </div>

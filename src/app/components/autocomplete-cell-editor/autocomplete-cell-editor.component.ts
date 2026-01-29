@@ -719,7 +719,8 @@ export class AutocompleteCellEditorComponent
         !this.isMaterialSearch &&
         !this.isPartNumberSearch &&
         !this.isBomFeatureSearch &&
-        !this.isCountrySearch
+        !this.isCountrySearch &&
+        !this.isServiceSearch
       ) {
         this.triggerFeatureAutoPopulation(option);
       }

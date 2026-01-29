@@ -6,6 +6,9 @@ import {
   OnInit,
   HostListener,
   ViewChild,
+  ElementRef,
+  AfterViewInit,
+  OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -17,6 +20,10 @@ import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { DataService } from '../../services/data.service';
 import { GridConfigService } from '../../services/grid-config.service';
 import { MassEditService } from '../../services/mass-edit.service';
+import { UtilService } from '../../services/util.service';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'app-parts-edit-modal',
@@ -25,12 +32,16 @@ import { MassEditService } from '../../services/mass-edit.service';
   templateUrl: './parts-edit-modal.component.html',
   styleUrls: ['./parts-edit-modal.component.css'],
 })
-export class PartsEditModalComponent implements OnInit {
+export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() materialColorIds: string[] = [];
   @Output() modalClose = new EventEmitter<void>();
   @Output() save = new EventEmitter<any[]>();
+  @Output() dataSaved = new EventEmitter<void>();
 
   @ViewChild(AgGridAngular) agGrid!: AgGridAngular;
+  @ViewChild('massEditHeaderRow') massEditHeaderRow?: ElementRef<HTMLDivElement>;
+  @ViewChild('massEditHeaderContent') massEditHeaderContent?: ElementRef<HTMLDivElement>;
+  @ViewChild('modalGridContainer') modalGridContainer?: ElementRef<HTMLDivElement>;
 
   public columnDefs: ColDef[] = [];
   public gridOptions: GridOptions = {};
@@ -38,9 +49,7 @@ export class PartsEditModalComponent implements OnInit {
   public rowData: any[] = [];
   private gridApi!: GridApi;
   public massEditMode = false;
-  public massEditServiceDescription: string = '';
-  public massEditServiceMessage: string = '';
-  public selectedRows = new Set<any>();
+  public massEditValues: { [field: string]: string } = {};
   public isMassEditing = false;
   private readonly editedRows = new Set<string | number>();
   private readonly editedFields = new Map<string | number, Set<string>>();
@@ -49,6 +58,11 @@ export class PartsEditModalComponent implements OnInit {
   public successMessage: string = '';
   public showSuccessMessage: boolean = false;
 
+  public massEditAutocomplete: { [field: string]: { showDropdown: boolean; options: string[]; selectedIndex: number; top?: string; left?: string; width?: string } } = {};
+  private massEditSearchSubjects: { [field: string]: Subject<string> } = {};
+  private massEditSubscriptions: Subscription[] = [];
+  private massEditInputElements: { [field: string]: HTMLInputElement } = {};
+
   public get hasEditedRows(): boolean {
     return this.editedRows.size > 0;
   }
@@ -56,7 +70,8 @@ export class PartsEditModalComponent implements OnInit {
   constructor(
     private readonly dataService: DataService,
     private readonly gridConfigService: GridConfigService,
-    private readonly massEditService: MassEditService
+    private readonly massEditService: MassEditService,
+    private readonly utilService: UtilService
   ) {}
 
   ngOnInit(): void {
@@ -64,38 +79,45 @@ export class PartsEditModalComponent implements OnInit {
     this.loadMaterialColors();
   }
 
-  /**
-   * Build column definitions dynamically based on API response columns
-   */
+  private notifyGridLayoutChange(): void {
+    if (this.gridApi) {
+      setTimeout(() => {
+        this.gridApi.refreshHeader();
+      }, 50);
+    }
+  }
+
+
+  private getDisabledFields(): Set<string> {
+    return new Set(['partNumber', 'materialColorManufacturersPartNumber', 'materialColorStatus']);
+  }
+
   private buildColumnDefs(columns: { [key: string]: string }): ColDef[] {
     const columnDefs: ColDef[] = [
       {
         headerName: '',
-        field: 'isSelected',
-        colId: 'checkbox',
-        width: 60,
-        minWidth: 60,
-        maxWidth: 60,
+        field: 'errorIndicator',
+        colId: 'errorIndicator',
+        width: 50,
+        minWidth: 50,
+        maxWidth: 50,
         pinned: 'left',
         resizable: false,
         sortable: false,
         filter: false,
-        checkboxSelection: true,
-        headerCheckboxSelection: true,
-        headerCheckboxSelectionFilteredOnly: false,
+        headerComponent: undefined, // Don't show pin icon on error indicator column
         cellRenderer: (params: any) => {
-          // Show error icon next to checkbox if row has error
-          // AG Grid renders checkbox automatically, we just add error icon
+          // Show error icon if row has error
           const hasError = params.data?.materialColorId && this.rowErrors[params.data.materialColorId];
           if (hasError) {
             const errorMessage = this.rowErrors[params.data.materialColorId];
             const escapedMessage = this.escapeHtml(errorMessage);
-            return `<span title="${escapedMessage}" style="color: #ef4444; cursor: help; font-size: 18px; display: inline-block;" aria-label="Error">⚠</span>`;
+            return `<span title="${escapedMessage}" style="color: #ef4444; cursor: help; font-size: 18px; display: inline-block; padding: 4px;" aria-label="Error">⚠</span>`;
           }
           return '';
         },
         tooltipValueGetter: (params: any) => {
-          // Show raw error message from backend in tooltip for checkbox column
+          // Show raw error message from backend in tooltip
           if (params.data?.materialColorId && this.rowErrors[params.data.materialColorId]) {
             return this.rowErrors[params.data.materialColorId];
           }
@@ -104,10 +126,10 @@ export class PartsEditModalComponent implements OnInit {
       },
     ];
 
-    // Non-editable fields
-    const disabledFields = new Set(['partNumber', 'materialColorManufacturersPartNumber', 'materialColorStatus']);
+    const disabledFields = this.getDisabledFields();
     
-    // Dropdown fields (use AutocompleteCellEditorComponent)
+    // Dropdown fields (use AutocompleteCellEditorComponent with isServiceSearch: true)
+    // These are configured here - mass edit will dynamically find fields with isServiceSearch: true
     const dropdownFields = new Set([
       'materialColorServiceSubstituteOne',
       'materialColorServiceSubstituteTwo',
@@ -123,18 +145,35 @@ export class PartsEditModalComponent implements OnInit {
       const colDef: ColDef = {
         headerName: headerName,
         field: field,
-        width: 200,
-        minWidth: 150,
+        width: field === 'partNumber' || field === 'materialColorStatus' ? 120 : 200,
+        minWidth: field === 'partNumber' || field === 'materialColorStatus' ? 100 : 150,
         editable: !isDisabled,
         sortable: true,
         filter: true,
         cellRenderer: (params: any) => {
-          // Simple cell renderer - no error icon here anymore
-          return params.value || '';
+          // Get column width - try multiple methods for reliability
+          let columnWidth = 150; // default fallback
+          if (params.column) {
+            columnWidth = params.column.getActualWidth() || params.column.getWidth() || colDef.width || 150;
+          } else {
+            columnWidth = colDef.width || 150;
+          }
+          
+          // Ensure we're using the correct value from params
+          const cellValue = params.value;
+          
+          return this.utilService.createCellContentWithTooltip(
+            cellValue,
+            columnWidth
+          );
+        },
+        tooltipValueGetter: (params: any) => {
+          if (params.value === null || params.value === undefined) return null;
+          return String(params.value);
         },
       };
 
-      // Add cell editor for dropdown fields
+      // Add cell editor for dropdown fieldsparams.column?.getActualWidth() || colDef.width || 
       if (isDropdown) {
         colDef.cellEditor = AutocompleteCellEditorComponent;
         colDef.cellEditorParams = () => ({
@@ -179,8 +218,8 @@ export class PartsEditModalComponent implements OnInit {
     const commonOptions = this.gridConfigService.getCommonGridOptions(this);
     this.gridOptions = {
       ...commonOptions,
-      suppressRowClickSelection: false,
-      enableRangeSelection: true,
+      suppressRowClickSelection: true,
+      rowSelection: 'single',
       components: commonOptions.components
         ? {
             ...commonOptions.components,
@@ -205,11 +244,10 @@ export class PartsEditModalComponent implements OnInit {
         if (this.columnDefs.length > 0) {
           this.gridApi.setGridOption('columnDefs', this.columnDefs);
         }
-        this.gridConfigService.sizeColumnsToFit(this.gridApi);
         this.gridConfigService.forceHorizontalScrollbarVisibility(this.gridApi);
-      },
-      onSelectionChanged: () => {
-        this.updateSelectedRows();
+        this.setupMassEditScrollSync();
+        // Notify grid to recalculate layout
+        this.notifyGridLayoutChange();
       },
       onCellValueChanged: (params) => {
         if (params.data) {
@@ -219,9 +257,7 @@ export class PartsEditModalComponent implements OnInit {
           const fieldName = params.colDef?.field;
           if (!fieldName) return;
 
-          // Store original value if not already stored
           if (!this.originalRowValues.has(materialColorId)) {
-            // Find original row data
             const originalRow = this.rowData.find((row) => row.materialColorId === materialColorId);
             if (originalRow) {
               this.originalRowValues.set(materialColorId, { ...originalRow });
@@ -229,27 +265,38 @@ export class PartsEditModalComponent implements OnInit {
           }
 
           const originalRow = this.originalRowValues.get(materialColorId);
-          const originalValue = originalRow?.[fieldName];
-          const newValue = params.newValue;
+          
+          const normalizeValue = (val: any): string => {
+            if (val === null || val === undefined) return '';
+            return String(val).trim();
+          };
 
-          // Check if value actually changed
-          const hasChanged = String(originalValue || '') !== String(newValue || '');
+          let originalValue: any;
+          let newValue: any;
+          
+          if (fieldName === 'materialColorServiceEquivalent' || 
+              fieldName === 'materialColorServiceSubstituteOne' || 
+              fieldName === 'materialColorServiceSubstituteTwo') {
+            originalValue = originalRow?.[fieldName] || '';
+            newValue = params.newValue || '';
+          } else {
+            originalValue = originalRow?.[fieldName];
+            newValue = params.newValue;
+          }
+
+          const normalizedOriginal = normalizeValue(originalValue);
+          const normalizedNew = normalizeValue(newValue);
+          const hasChanged = normalizedOriginal !== normalizedNew;
 
           if (hasChanged) {
-            // Add to edited rows
             this.editedRows.add(materialColorId);
-
-            // Track edited fields
             if (!this.editedFields.has(materialColorId)) {
               this.editedFields.set(materialColorId, new Set());
             }
             this.editedFields.get(materialColorId)!.add(fieldName);
           } else {
-            // Value reverted to original - check if all fields are back to original
             if (this.editedFields.has(materialColorId)) {
               this.editedFields.get(materialColorId)!.delete(fieldName);
-              
-              // If no fields are edited, remove from edited rows
               if (this.editedFields.get(materialColorId)!.size === 0) {
                 this.editedRows.delete(materialColorId);
                 this.editedFields.delete(materialColorId);
@@ -257,26 +304,25 @@ export class PartsEditModalComponent implements OnInit {
             }
           }
 
-          // Update row data - ensure we preserve materialColorId and all fields
           const rowIndex = this.rowData.findIndex((row) => row.materialColorId === materialColorId);
           if (rowIndex >= 0) {
-            // Merge with existing data to preserve all fields, ensuring materialColorId is preserved
-            // Use params.newValue directly for the changed field to ensure we have the latest value
             this.rowData[rowIndex] = {
               ...this.rowData[rowIndex],
               ...params.data,
-              [fieldName]: newValue, // Explicitly set the new value
-              materialColorId, // Ensure materialColorId is always preserved
+              [fieldName]: newValue,
+              materialColorId,
             };
           }
 
-          // Clear error when user edits the row
           if (this.rowErrors[materialColorId]) {
             this.clearRowError(materialColorId);
           }
         }
       },
       rowClassRules: {
+        'edited-row': (params: any) => {
+          return params.data?.materialColorId && this.editedRows.has(params.data.materialColorId);
+        },
         'error-row': (params: any) => {
           return params.data?.materialColorId && this.rowErrors[params.data.materialColorId];
         },
@@ -284,12 +330,7 @@ export class PartsEditModalComponent implements OnInit {
     };
   }
 
-  /**
-   * Handle close button/ESC key clicks
-   * Shows confirmation if there are unsaved changes
-   */
   handleCloseClick(): void {
-    // Warn if there are unsaved changes
     if (this.hasEditedRows) {
       const confirmed = confirm(
         'You have unsaved changes. Are you sure you want to close without saving?'
@@ -298,16 +339,10 @@ export class PartsEditModalComponent implements OnInit {
         return;
       }
     }
-
     this.closeModal();
   }
 
-  /**
-   * Close the modal (called after confirmation)
-   * Clears all tracking data and emits close event
-   */
   closeModal(): void {
-    // Clear edited tracking when closing
     this.editedRows.clear();
     this.editedFields.clear();
     this.originalRowValues.clear();
@@ -320,7 +355,6 @@ export class PartsEditModalComponent implements OnInit {
   saveModal(): void {
     if (!this.gridApi || this.editedRows.size === 0) return;
 
-    // Build payload ONLY for edited rows
     const instances: { [key: string]: any } = {};
     
     this.editedRows.forEach((materialColorId) => {
@@ -335,30 +369,32 @@ export class PartsEditModalComponent implements OnInit {
         return;
       }
 
-      // Build instance with ALL fields for this row (including disabled fields)
-      // For service dropdowns, send ID if available (like bomLinkFeature pattern), otherwise send display value
-      instances[materialColorId] = {
-        // Editable fields
-        materialColorServiceDescription: currentRow.materialColorServiceDescription || '',
-        materialColorServiceMessage: currentRow.materialColorServiceMessage || '',
-        materialColorServiceEquivalent: currentRow.materialColorServiceEquivalentId || currentRow.materialColorServiceEquivalent || '',
-        materialColorServiceSubstituteOne: currentRow.materialColorServiceSubstituteOneId || currentRow.materialColorServiceSubstituteOne || '',
-        materialColorServiceSubstituteTwo: currentRow.materialColorServiceSubstituteTwoId || currentRow.materialColorServiceSubstituteTwo || '',
-        
-        // Disabled/read-only fields (include them in payload)
-        partNumber: currentRow.partNumber || '',
-        materialColorManufacturersPartNumber: currentRow.materialColorManufacturersPartNumber || '',
-        materialColorStatus: currentRow.materialColorStatus || '',
-        
-        // Other fields that might be present
-        materialColorSixtyCharacterDescription: currentRow.materialColorSixtyCharacterDescription || '',
-        materialColorThirtyCharacterDescription: currentRow.materialColorThirtyCharacterDescription || '',
-      };
+      const editedFieldsForRow = this.editedFields.get(materialColorId);
+      if (!editedFieldsForRow || editedFieldsForRow.size === 0) {
+        return;
+      }
+
+      const instanceData: { [key: string]: any } = {};
+      
+      editedFieldsForRow.forEach((fieldName) => {
+        if (fieldName === 'materialColorServiceEquivalent') {
+          instanceData[fieldName] = currentRow.materialColorServiceEquivalentId || currentRow.materialColorServiceEquivalent || '';
+        } else if (fieldName === 'materialColorServiceSubstituteOne') {
+          instanceData[fieldName] = currentRow.materialColorServiceSubstituteOneId || currentRow.materialColorServiceSubstituteOne || '';
+        } else if (fieldName === 'materialColorServiceSubstituteTwo') {
+          instanceData[fieldName] = currentRow.materialColorServiceSubstituteTwoId || currentRow.materialColorServiceSubstituteTwo || '';
+        } else {
+          instanceData[fieldName] = currentRow[fieldName] || '';
+        }
+      });
+
+      if (Object.keys(instanceData).length > 0) {
+        instances[materialColorId] = instanceData;
+      }
     });
 
     if (Object.keys(instances).length === 0) return;
 
-    // Clear previous errors and success message
     this.rowErrors = {};
     this.showSuccessMessage = false;
 
@@ -371,20 +407,16 @@ export class PartsEditModalComponent implements OnInit {
         const hasErrors = response?.errors && typeof response.errors === 'object' && Object.keys(response.errors).length > 0;
         
         if (hasErrors) {
-          // Set errors for failed rows
           Object.keys(response.errors).forEach((materialColorId) => {
             const errorObj = response.errors[materialColorId];
             const rawErrorMessage = errorObj?.errorMessage || errorObj?.message || 'Unknown error occurred';
             this.rowErrors[materialColorId] = rawErrorMessage;
           });
           
-          // Hide success message if errors exist
           this.showSuccessMessage = false;
 
-          // Update row data with successfully saved instances (if any)
           if (response?.instances && typeof response.instances === 'object') {
             Object.keys(response.instances).forEach((materialColorId) => {
-              // Only update if this row doesn't have an error
               if (!this.rowErrors[materialColorId]) {
                 const updatedData = response.instances[materialColorId];
                 const rowIndex = this.rowData.findIndex((row) => row.materialColorId === materialColorId);
@@ -392,9 +424,8 @@ export class PartsEditModalComponent implements OnInit {
                   this.rowData[rowIndex] = {
                     ...this.rowData[rowIndex],
                     ...updatedData,
-                    materialColorId, // Ensure materialColorId is preserved
+                    materialColorId,
                   };
-                  // Remove from edited rows since it was successfully saved
                   this.editedRows.delete(materialColorId);
                   this.editedFields.delete(materialColorId);
                 }
@@ -402,26 +433,30 @@ export class PartsEditModalComponent implements OnInit {
             });
           }
 
-          // Show success message for partial saves if some rows succeeded
           const successCount = response?.instances ? Object.keys(response.instances).length : 0;
           if (successCount > 0) {
             this.successMessage = `${successCount} row${successCount > 1 ? 's' : ''} saved successfully.`;
             this.showSuccessMessage = true;
+            this.notifyGridLayoutChange();
             setTimeout(() => {
               this.showSuccessMessage = false;
+              this.notifyGridLayoutChange();
             }, 5000);
           } else {
             this.showSuccessMessage = false;
           }
 
-          // Refresh grid to show error indicators and updated data
           if (this.gridApi) {
             this.gridApi.setGridOption('rowData', [...this.rowData]);
-            this.gridApi.refreshCells({ force: true });
+            this.gridApi.refreshCells({ 
+              force: true,
+              columns: ['errorIndicator']
+            });
             this.gridApi.redrawRows();
           }
 
-          // Scroll to first error row if possible
+          this.notifyGridLayoutChange();
+
           const firstErrorId = Object.keys(this.rowErrors)[0];
           if (firstErrorId && this.gridApi) {
             let targetNode: any = null;
@@ -434,6 +469,8 @@ export class PartsEditModalComponent implements OnInit {
               this.gridApi.ensureNodeVisible(targetNode, 'middle');
             }
           }
+
+          this.dataSaved.emit();
         } else {
           // No errors - update row data with saved instances (modal stays open)
           if (response?.instances && typeof response.instances === 'object') {
@@ -454,16 +491,22 @@ export class PartsEditModalComponent implements OnInit {
           this.editedRows.clear();
           this.editedFields.clear();
           
+          // Close mass edit mode after successful save
+          if (this.massEditMode) {
+            this.closeMassEditMode();
+          }
+          
           // Show success message
           const savedCount = Object.keys(response.instances || {}).length;
           this.successMessage = savedCount === 1 
             ? 'Material color saved successfully!' 
             : `${savedCount} material colors saved successfully!`;
           this.showSuccessMessage = true;
+          this.notifyGridLayoutChange();
           
-          // Auto-hide success message after 5 seconds
           setTimeout(() => {
             this.showSuccessMessage = false;
+            this.notifyGridLayoutChange();
           }, 5000);
           
           // Get all current row data for emit
@@ -474,22 +517,21 @@ export class PartsEditModalComponent implements OnInit {
             }
           });
           this.save.emit(allRowData);
+          
+          // Emit dataSaved event to trigger parent refresh
+          // This ensures parent page updates with checkbox selections
+          this.dataSaved.emit();
           // Don't auto-close after successful save - user can close manually via close icon, cancel button, or ESC
         }
       },
       error: (error: any) => {
-        // Handle HTTP errors
         const errorMessage = error?.error?.message || error?.message || 'Failed to save material colors';
         alert(`Error: ${errorMessage}`);
+        this.dataSaved.emit();
       },
     });
   }
 
-  /**
-   * Load material colors by comma-separated unique materialColorIds.
-   * Modal rows come ONLY from the API response.
-   * Columns are built dynamically from the API response columns object.
-   */
   private loadMaterialColors(): void {
     if (!Array.isArray(this.materialColorIds) || this.materialColorIds.length === 0) return;
 
@@ -500,114 +542,303 @@ export class PartsEditModalComponent implements OnInit {
       
       if (!instances || typeof instances !== 'object') return;
 
-      // Build column definitions based on API columns order
       if (columns && typeof columns === 'object') {
         this.columnDefs = this.buildColumnDefs(columns);
-        
-        // Update grid columns if grid is already initialized
         if (this.gridApi) {
           this.gridApi.setGridOption('columnDefs', this.columnDefs);
         }
       }
 
-      // Build row data from instances and store original values
       this.rowData = Object.keys(instances).map((materialColorId) => {
         const rowData = {
           materialColorId,
           ...instances[materialColorId],
           isSelected: false,
         };
-        // Store original values for comparison
         this.originalRowValues.set(materialColorId, { ...rowData });
         return rowData;
       });
 
-      // Clear edited rows when loading new data
       this.editedRows.clear();
       this.editedFields.clear();
 
       if (this.gridApi) {
         this.gridApi.setGridOption('rowData', this.rowData);
       }
-    });
-  }
 
-  getSelectedRowsCount(): number {
-    return this.gridApi ? this.gridApi.getSelectedNodes().length : 0;
-  }
-
-  private updateSelectedRows(): void {
-    if (!this.gridApi) return;
-    this.selectedRows.clear();
-    this.gridApi.getSelectedNodes().forEach((node) => {
-      if (node.data) {
-        this.selectedRows.add(node.data);
-      }
+      setTimeout(() => this.notifyGridLayoutChange(), 100);
     });
-    // Close mass edit mode if less than 2 rows are selected
-    if (this.selectedRows.size <= 1) {
-      this.massEditMode = false;
-      this.massEditServiceDescription = '';
-      this.massEditServiceMessage = '';
-    }
   }
 
   openMassEdit(): void {
-    if (this.selectedRows.size > 1) {
-      this.massEditMode = true;
-      this.massEditServiceDescription = '';
-      this.massEditServiceMessage = '';
-    }
+    this.massEditMode = true;
+    this.massEditValues = {};
+    this.initializeMassEditAutocomplete();
+    setTimeout(() => {
+      this.setupMassEditScrollSync();
+      this.notifyGridLayoutChange();
+    }, 150);
   }
 
   closeMassEditMode(): void {
     this.massEditMode = false;
-    if (this.gridApi) {
-      this.gridApi.deselectAll();
+    this.massEditValues = {};
+    this.cleanupMassEditAutocomplete();
+    this.notifyGridLayoutChange();
+  }
+
+  private initializeMassEditAutocomplete(): void {
+    const editableFields = this.getEditableFields();
+    
+    editableFields.forEach((field) => {
+      // Initialize autocomplete state
+      if (!this.massEditAutocomplete[field]) {
+        this.massEditAutocomplete[field] = {
+          showDropdown: false,
+          options: [],
+          selectedIndex: -1,
+          top: undefined,
+          left: undefined,
+          width: undefined,
+        };
+      }
+
+      // Create search subject if it doesn't exist
+      if (!this.massEditSearchSubjects[field]) {
+        this.massEditSearchSubjects[field] = new Subject<string>();
+        
+        // Subscribe to search with debounce
+        const searchSub = this.massEditSearchSubjects[field]
+          .pipe(
+            debounceTime(300),
+            distinctUntilChanged(),
+            switchMap((query) => {
+              const effectiveQuery = query ?? '';
+              if (effectiveQuery.length >= 1) {
+                return this.dataService.searchServices(effectiveQuery, 20);
+              }
+              return of({ results: [], resultCount: 0, hasMore: false });
+            }),
+            catchError(() => {
+              return of({ results: [], resultCount: 0, hasMore: false });
+            })
+          )
+          .subscribe((response) => {
+            const results = response.results || [];
+            if (this.massEditAutocomplete[field]) {
+              this.massEditAutocomplete[field].options = results
+                .map((service: any) => service.displayValue || service.name || '')
+                .filter((name: string) => name.length > 0);
+              this.massEditAutocomplete[field].showDropdown = this.massEditAutocomplete[field].options.length > 0;
+              this.massEditAutocomplete[field].selectedIndex = -1;
+              
+              // Position dropdown when it shows
+              if (this.massEditAutocomplete[field].showDropdown) {
+                setTimeout(() => this.positionMassEditDropdown(field), 0);
+              }
+            }
+          });
+        
+        this.massEditSubscriptions.push(searchSub);
+      }
+    });
+  }
+
+  private cleanupMassEditAutocomplete(): void {
+    this.massEditSubscriptions.forEach((sub) => sub.unsubscribe());
+    this.massEditSubscriptions = [];
+    
+    Object.keys(this.massEditSearchSubjects).forEach((field) => {
+      this.massEditSearchSubjects[field].complete();
+    });
+    this.massEditSearchSubjects = {};
+    
+    this.massEditAutocomplete = {};
+  }
+
+  onMassEditInputChange(field: string, value: string, event?: Event): void {
+    this.massEditValues[field] = value;
+    
+    // Store input element reference
+    if (event && event.target) {
+      this.massEditInputElements[field] = event.target as HTMLInputElement;
     }
-    this.massEditServiceDescription = '';
-    this.massEditServiceMessage = '';
+    
+    if (this.massEditSearchSubjects[field]) {
+      this.massEditSearchSubjects[field].next(value);
+    }
+    
+    // Close dropdown if value is cleared
+    if (!value && this.massEditAutocomplete[field]) {
+      this.massEditAutocomplete[field].showDropdown = false;
+      this.massEditAutocomplete[field].selectedIndex = -1;
+    } else if (value && this.massEditAutocomplete[field]) {
+      // Position dropdown when it shows
+      setTimeout(() => this.positionMassEditDropdown(field), 0);
+    }
+  }
+
+  /**
+   * Handle mass edit input focus
+   */
+  onMassEditInputFocus(field: string, event?: FocusEvent): void {
+    // Store input element reference
+    if (event && event.target) {
+      this.massEditInputElements[field] = event.target as HTMLInputElement;
+    }
+    
+    const value = this.massEditValues[field] || '';
+    if (value && this.massEditSearchSubjects[field]) {
+      this.massEditSearchSubjects[field].next(value);
+    }
+  }
+
+  private positionMassEditDropdown(field: string): void {
+    const inputElement = this.massEditInputElements[field];
+    if (!inputElement || !this.massEditAutocomplete[field]) return;
+
+    const inputRect = inputElement.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+    const dropdownHeight = 200; // max-height
+
+    // Calculate position below input
+    let top = inputRect.bottom + 2;
+    let left = inputRect.left;
+    let width = inputRect.width;
+
+    // If dropdown would go below viewport, show above input
+    if (top + dropdownHeight > viewportHeight) {
+      if (inputRect.top - dropdownHeight > 0) {
+        top = inputRect.top - dropdownHeight - 2;
+      }
+    }
+
+    // Adjust if dropdown would go off right edge
+    if (left + width > viewportWidth) {
+      left = Math.max(0, viewportWidth - width - 10);
+    }
+
+    // Update dropdown position
+    this.massEditAutocomplete[field].top = `${top}px`;
+    this.massEditAutocomplete[field].left = `${left}px`;
+    this.massEditAutocomplete[field].width = `${width}px`;
+  }
+
+  onMassEditInputKeyDown(field: string, event: KeyboardEvent): void {
+    const autocomplete = this.massEditAutocomplete[field];
+    if (!autocomplete) return;
+
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        autocomplete.selectedIndex = Math.min(
+          autocomplete.selectedIndex + 1,
+          autocomplete.options.length - 1
+        );
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        autocomplete.selectedIndex = Math.max(autocomplete.selectedIndex - 1, -1);
+        break;
+      case 'Enter':
+        event.preventDefault();
+        if (autocomplete.selectedIndex >= 0 && autocomplete.selectedIndex < autocomplete.options.length) {
+          this.selectMassEditOption(field, autocomplete.options[autocomplete.selectedIndex]);
+        } else if (autocomplete.options.length === 1) {
+          this.selectMassEditOption(field, autocomplete.options[0]);
+        } else {
+          this.closeMassEditDropdown(field);
+        }
+        break;
+      case 'Escape':
+        event.preventDefault();
+        this.closeMassEditDropdown(field);
+        break;
+    }
+  }
+
+  selectMassEditOption(field: string, option: string): void {
+    this.massEditValues[field] = option;
+    this.closeMassEditDropdown(field);
+  }
+
+  /**
+   * Close mass edit dropdown
+   */
+  closeMassEditDropdown(field: string): void {
+    // Use setTimeout to allow click events to fire before closing
+    setTimeout(() => {
+      if (this.massEditAutocomplete[field]) {
+        this.massEditAutocomplete[field].showDropdown = false;
+        this.massEditAutocomplete[field].selectedIndex = -1;
+      }
+    }, 200);
+  }
+
+  getMassEditAutocomplete(field: string): { showDropdown: boolean; options: string[]; selectedIndex: number; top?: string; left?: string; width?: string } {
+    return this.massEditAutocomplete[field] || { showDropdown: false, options: [], selectedIndex: -1 };
   }
 
   applyMassEdit(): void {
-    if (this.selectedRows.size === 0 || !this.gridApi || this.isMassEditing) return;
+    if (!this.gridApi || this.isMassEditing || this.rowData.length === 0) return;
+
+    // Check if any mass edit values are set
+    const hasValues = Object.values(this.massEditValues).some((val) => val && val.trim() !== '');
+    if (!hasValues) {
+      return;
+    }
 
     this.isMassEditing = true;
     setTimeout(() => {
       try {
-        const selectedNodes = this.gridApi.getSelectedNodes();
         const nodesToUpdate: any[] = [];
         const columnsToUpdate: Set<string> = new Set();
 
-        selectedNodes.forEach((node: any) => {
+        // Apply mass edit to ALL rows
+        this.gridApi.forEachNode((node: any) => {
           if (!node.data) return;
 
           const rowData = node.data;
+          const materialColorId = rowData.materialColorId;
+          if (!materialColorId) return;
+
           let hasChanges = false;
 
-          const serviceDescription = this.massEditServiceDescription?.trim();
-          if (serviceDescription) {
-            rowData.materialColorServiceDescription = serviceDescription;
-            hasChanges = true;
-            columnsToUpdate.add('materialColorServiceDescription');
-          }
-
-          const serviceMessage = this.massEditServiceMessage?.trim();
-          if (serviceMessage) {
-            rowData.materialColorServiceMessage = serviceMessage;
-            hasChanges = true;
-            columnsToUpdate.add('materialColorServiceMessage');
-          }
+          // Apply each mass edit value that was set
+          // Only fields returned by getEditableFields() should be in massEditValues,
+          // but we validate here as well for safety
+          Object.keys(this.massEditValues).forEach((field) => {
+            const value = this.massEditValues[field]?.trim();
+            if (value) {
+              // Verify field is editable (not in disabled fields)
+              const disabledFields = this.getDisabledFields();
+              if (!disabledFields.has(field)) {
+                rowData[field] = value;
+                hasChanges = true;
+                columnsToUpdate.add(field);
+              }
+            }
+          });
 
           if (hasChanges) {
-            const rowId = rowData.partNumber || node.id;
-            this.editedRows.add(rowId);
-            if (!this.editedFields.has(rowId)) {
-              this.editedFields.set(rowId, new Set());
+            // Store original value if not already stored
+            if (!this.originalRowValues.has(materialColorId)) {
+              const originalRow = this.rowData.find((row) => row.materialColorId === materialColorId);
+              if (originalRow) {
+                this.originalRowValues.set(materialColorId, { ...originalRow });
+              }
+            }
+
+            // Track edited rows and fields
+            this.editedRows.add(materialColorId);
+            if (!this.editedFields.has(materialColorId)) {
+              this.editedFields.set(materialColorId, new Set());
             }
             columnsToUpdate.forEach((col) => {
-              this.editedFields.get(rowId)!.add(col);
+              this.editedFields.get(materialColorId)!.add(col);
             });
+
             nodesToUpdate.push(node);
           }
         });
@@ -621,12 +852,61 @@ export class PartsEditModalComponent implements OnInit {
           this.gridApi.redrawRows({ rowNodes: nodesToUpdate });
         }
 
-        this.massEditServiceDescription = '';
-        this.massEditServiceMessage = '';
+        // Clear mass edit values after applying (but keep mass edit mode open)
+        this.massEditValues = {};
       } finally {
         this.isMassEditing = false;
       }
     }, 0);
+  }
+
+  getEditableFields(): string[] {
+    const disabledFields = this.getDisabledFields();
+    
+    return this.columnDefs
+      .filter((col) => {
+        // Must have a field name
+        if (!col.field) return false;
+        
+        // Must be editable (not in disabled fields)
+        if (disabledFields.has(col.field)) return false;
+        
+        // Must use AutocompleteCellEditorComponent
+        if (col.cellEditor !== AutocompleteCellEditorComponent) return false;
+        
+        // Must have isServiceSearch: true in cellEditorParams
+        const cellEditorParams = typeof col.cellEditorParams === 'function' 
+          ? col.cellEditorParams({} as any) 
+          : col.cellEditorParams;
+        
+        return cellEditorParams?.isServiceSearch === true;
+      })
+      .map((col) => col.field!);
+  }
+
+  isDropdownField(field: string): boolean {
+    const colDef = this.columnDefs.find((col) => col.field === field);
+    if (!colDef) return false;
+    
+    // Must use AutocompleteCellEditorComponent
+    if (colDef.cellEditor !== AutocompleteCellEditorComponent) return false;
+    
+    // Must have isServiceSearch: true in cellEditorParams
+    const cellEditorParams = typeof colDef.cellEditorParams === 'function' 
+      ? colDef.cellEditorParams({} as any) 
+      : colDef.cellEditorParams;
+    
+    return cellEditorParams?.isServiceSearch === true;
+  }
+
+  getColumnHeaderName(field: string): string {
+    const colDef = this.columnDefs.find((col) => col.field === field);
+    return colDef?.headerName || field;
+  }
+
+  getColumnWidth(field: string): number {
+    const colDef = this.columnDefs.find((col) => col.field === field);
+    return colDef?.width || 200;
   }
 
   private escapeHtml(text: string): string {
@@ -643,8 +923,14 @@ export class PartsEditModalComponent implements OnInit {
     if (this.rowErrors[materialColorId]) {
       delete this.rowErrors[materialColorId];
       if (this.gridApi) {
-        this.gridApi.refreshCells({ force: true });
+        this.gridApi.refreshCells({ 
+          force: true,
+          columns: ['errorIndicator'] // Refresh error indicator column
+        });
         this.gridApi.redrawRows();
+      }
+      if (!this.hasErrors()) {
+        this.notifyGridLayoutChange();
       }
     }
   }
@@ -652,9 +938,13 @@ export class PartsEditModalComponent implements OnInit {
   clearAllErrors(): void {
     this.rowErrors = {};
     if (this.gridApi) {
-      this.gridApi.refreshCells({ force: true });
+      this.gridApi.refreshCells({ 
+        force: true,
+        columns: ['errorIndicator'] // Refresh error indicator column
+      });
       this.gridApi.redrawRows();
     }
+    this.notifyGridLayoutChange();
   }
 
   getErrorEntries(): Array<{ materialColorId: string; message: string }> {
@@ -671,6 +961,42 @@ export class PartsEditModalComponent implements OnInit {
 
   hasErrors(): boolean {
     return Object.keys(this.rowErrors).length > 0;
+  }
+
+  ngAfterViewInit(): void {
+    if (this.massEditMode) {
+      setTimeout(() => this.setupMassEditScrollSync(), 100);
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.cleanupMassEditAutocomplete();
+    
+    // Cleanup ResizeObserver
+    if ((this as any)._resizeObserver) {
+      (this as any)._resizeObserver.disconnect();
+    }
+  }
+
+  private setupMassEditScrollSync(): void {
+    if (!this.gridApi || !this.massEditHeaderRow) return;
+
+    const gridContainer = document.querySelector('.modal-grid-container .ag-body-viewport');
+    const headerRow = this.massEditHeaderRow.nativeElement;
+
+    if (!gridContainer) return;
+
+    // Sync grid scroll to header row
+    gridContainer.addEventListener('scroll', () => {
+      headerRow.scrollLeft = gridContainer.scrollLeft;
+    });
+
+    // Sync header row scroll to grid
+    headerRow.addEventListener('scroll', () => {
+      if (gridContainer.scrollLeft !== headerRow.scrollLeft) {
+        gridContainer.scrollLeft = headerRow.scrollLeft;
+      }
+    });
   }
 
 }

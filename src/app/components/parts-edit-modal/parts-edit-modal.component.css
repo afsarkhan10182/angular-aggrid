@@ -22,7 +22,7 @@
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
   width: 90%;
   max-width: 1200px;
-  max-height: 85vh;
+  height: 85vh; /* Fixed height for stable layout */
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -63,10 +63,10 @@
 .modal-body {
   flex: 1;
   padding: 20px 24px;
-  overflow: hidden;
+  overflow: hidden; /* Critical: prevents body from scrolling */
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  min-height: 0; /* Critical: allows flex children to shrink */
 }
 
 .mass-edit-button-container {
@@ -74,6 +74,7 @@
   padding-left: 0;
   display: flex;
   align-items: center;
+  flex-shrink: 0; /* Do NOT shrink - maintain size */
 }
 
 .mass-edit-toggle-btn {
@@ -107,38 +108,224 @@
   background: #9ca3af;
 }
 
+.mass-edit-toggle-btn.active {
+  background: #10b981;
+}
+
+.mass-edit-toggle-btn.active:hover {
+  background: #059669;
+}
+
+
 .modal-grid-container {
-  flex: 1;
-  min-height: 400px;
-  height: 0; /* Allow flex to control height */
+  flex: 1; /* Take remaining space */
+  min-height: 0; /* CRITICAL: allows grid container to shrink below content size */
+  display: flex;
+  flex-direction: column;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   overflow: hidden;
   background: white;
   position: relative;
+  z-index: 1;
 }
 
-/* Ensure modal grid matches main grid styling */
+/* AG Grid fills container - uses flexbox layout */
 .modal-grid-container ::ng-deep .ag-theme-alpine {
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* CRITICAL: allows grid to shrink */
 }
 
 .modal-grid-container ::ng-deep .ag-theme-alpine .ag-root-wrapper {
   border: none;
+  flex: 1;
+  min-height: 0; /* CRITICAL: allows grid to shrink */
+  display: flex;
+  flex-direction: column;
 }
 
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-root {
+  flex: 1;
+  min-height: 0; /* CRITICAL: allows grid to shrink */
+  display: flex;
+  flex-direction: column;
+}
 
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-body-viewport {
+  flex: 1;
+  min-height: 0; /* CRITICAL: allows grid to shrink */
+  overflow: auto; /* Grid scrolls internally */
+}
 
-.modal-grid-container ::ng-deep .ag-theme-alpine .ag-cell[col-id="checkbox"] {
+/* Error indicator column styling */
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-cell[col-id="errorIndicator"] {
   display: flex;
   align-items: center;
-  padding-left: 8px;
+  justify-content: center;
+  padding: 0;
 }
 
-.modal-grid-container ::ng-deep .ag-theme-alpine .ag-cell[col-id="checkbox"] .error-icon-in-checkbox {
-  display: inline-block;
-  vertical-align: middle;
+
+
+/* Mass Edit Header Row - FlexPLM Style (positioned above grid headers) */
+.mass-edit-header-row {
+  background: #f0f9ff;
+  border: 2px solid #3b82f6;
+  border-radius: 6px 6px 0 0;
+  padding: 12px 0;
+  margin-bottom: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  position: relative;
+  z-index: 10010;
+  flex-shrink: 0; /* Do NOT shrink - maintain size */
+}
+
+.mass-edit-header-row-content {
+  display: flex;
+  gap: 0;
+  min-width: fit-content;
+}
+
+.mass-edit-header-cell {
+  flex-shrink: 0;
+  padding: 0 8px;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.mass-edit-header-cell:last-child {
+  border-right: none;
+}
+
+.mass-edit-apply-cell {
+  flex-shrink: 0;
+  padding: 0 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-end;
+  min-width: 100px;
+}
+
+.mass-edit-apply-cell .apply-mass-edit-btn {
+  margin-top: 20px; /* Align with input fields below label */
+  width: 100%;
+  padding: 6px 12px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.mass-edit-apply-cell .apply-mass-edit-btn:hover:not(:disabled) {
+  background: #059669;
+}
+
+.mass-edit-apply-cell .apply-mass-edit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mass-edit-field-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mass-edit-field-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.mass-edit-header-input {
+  padding: 6px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  width: 100%;
+  background: white;
+}
+
+.mass-edit-header-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.mass-edit-header-input::placeholder {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* Mass Edit Autocomplete Styles */
+.mass-edit-autocomplete-container {
+  position: relative;
+  width: 100%;
+  z-index: 10011;
+}
+
+.mass-edit-autocomplete-dropdown {
+  position: fixed !important;
+  z-index: 999999 !important;
+  background: white !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 4px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  max-height: 200px !important;
+  overflow-y: auto !important;
+  min-width: 200px !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.mass-edit-autocomplete-dropdown .dropdown-header {
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mass-edit-autocomplete-dropdown .dropdown-option {
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #1e293b;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.mass-edit-autocomplete-dropdown .dropdown-option:last-child {
+  border-bottom: none;
+}
+
+.mass-edit-autocomplete-dropdown .dropdown-option:hover,
+.mass-edit-autocomplete-dropdown .dropdown-option.selected {
+  background: #eff6ff;
+  color: #1e40af;
 }
 
 .modal-footer {
@@ -194,137 +381,6 @@
   border-color: #9ca3af;
 }
 
-/* Mass Edit Panel Styles */
-.mass-edit-panel {
-  background: #f8fafc;
-  border: 2px solid #3b82f6;
-  border-radius: 8px;
-  padding: 20px 24px;
-  margin-bottom: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.mass-edit-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #e5e7eb;
-  width: 100%;
-}
-
-.mass-edit-header h4 {
-  margin: 0;
-  color: #1e293b;
-  font-size: 16px;
-  font-weight: 600;
-  flex: 1;
-}
-
-.close-mass-edit-btn {
-  background: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 0;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  width: 32px;
-  height: 32px;
-  margin-left: auto;
-  line-height: 1;
-}
-
-.close-mass-edit-btn .close-icon {
-  font-size: 24px;
-  line-height: 1;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  color: white;
-}
-
-.close-mass-edit-btn:hover {
-  background: #dc2626;
-  transform: scale(1.05);
-}
-
-.mass-edit-fields {
-  display: flex;
-  align-items: center;
-  gap: 32px;
-  flex-wrap: wrap;
-  padding: 8px 0;
-}
-
-.mass-edit-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 200px;
-  flex: 1;
-  max-width: 300px;
-}
-
-.mass-edit-field label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #374151;
-}
-
-.mass-edit-input {
-  padding: 10px 16px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  font-size: 13px;
-  transition: all 0.2s ease;
-  width: 100%;
-}
-
-.mass-edit-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.mass-edit-actions {
-  display: flex;
-  gap: 8px;
-  margin-left: auto;
-}
-
-.apply-mass-edit-btn {
-  padding: 8px 16px;
-  background: #10b981;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s;
-}
-
-.apply-mass-edit-btn:hover:not(:disabled) {
-  background: #059669;
-}
-
-.apply-mass-edit-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
 
 /* Success Panel Styles */
 .success-panel {
@@ -334,6 +390,7 @@
   padding: 12px 16px;
   margin-bottom: 16px;
   animation: slideDown 0.3s ease-out;
+  flex-shrink: 0; /* Do NOT shrink - maintain size */
 }
 
 .success-content {
@@ -396,9 +453,11 @@
   border-radius: 4px;
   padding: 12px;
   margin-bottom: 10px;
-  max-height: 180px;
+  max-height: 200px; /* Reasonable max height for error panel */
+  min-height: 60px; /* Minimum height to show at least header */
   display: flex;
   flex-direction: column;
+  flex-shrink: 0; /* Do NOT shrink - maintain size */
 }
 
 .error-panel-header {
