@@ -78,8 +78,13 @@
       <!-- Error Messages Panel -->
       <div *ngIf="hasErrors()" class="error-panel">
         <div class="error-panel-header">
-          <span class="error-icon">⚠</span>
-          <span class="error-header-text">Errors ({{ getErrorEntries().length }})</span>
+          <div class="error-header-left">
+            <span class="error-icon">⚠</span>
+            <span class="error-header-text">Errors ({{ getErrorEntries().length }})</span>
+          </div>
+          <button (click)="clearAllErrors()" class="close-error-panel-btn" title="Dismiss all errors">
+            ×
+          </button>
         </div>
         <div class="error-list">
           <div *ngFor="let errorEntry of getErrorEntries()" class="error-item">
@@ -94,13 +99,12 @@
       <div class="modal-grid-container">
         <ag-grid-angular
           [style.width]="'100%'"
-          [style.height]="massEditMode ? '400px' : '500px'"
+          [style.height]="hasErrors() ? (massEditMode ? '400px' : '350px') : (massEditMode ? '345px' : '400px')"
           class="ag-theme-alpine"
           [gridOptions]="gridOptions"
           [columnDefs]="columnDefs"
           [defaultColDef]="defaultColDef"
           [rowData]="rowData"
-          (gridReady)="onGridReady($event)"
         ></ag-grid-angular>
       </div>
     </div>

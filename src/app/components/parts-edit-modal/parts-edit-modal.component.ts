@@ -13,7 +13,7 @@ import { AgGridAngular } from 'ag-grid-angular';
 import { IconComponent } from '../icon/icon.component';
 import { AutocompleteCellEditorComponent } from '../autocomplete-cell-editor/autocomplete-cell-editor.component';
 import { ColumnHeaderPinComponent } from '../column-header-pin/column-header-pin.component';
-import { ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
+import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { DataService } from '../../services/data.service';
 import { GridConfigService } from '../../services/grid-config.service';
 import { MassEditService } from '../../services/mass-edit.service';
@@ -45,7 +45,6 @@ export class PartsEditModalComponent implements OnInit {
   private readonly editedRows = new Set<string | number>();
   private readonly editedFields = new Map<string | number, Set<string>>();
   private readonly originalRowValues = new Map<string | number, any>();
-  private columnsMapping: { [key: string]: string } = {};
   public rowErrors: { [materialColorId: string]: string } = {};
   public successMessage: string = '';
   public showSuccessMessage: boolean = false;
@@ -285,8 +284,6 @@ export class PartsEditModalComponent implements OnInit {
     };
   }
 
-  onGridReady(event: GridReadyEvent): void {}
-
   /**
    * Handle close button/ESC key clicks
    * Shows confirmation if there are unsaved changes
@@ -504,10 +501,8 @@ export class PartsEditModalComponent implements OnInit {
       
       if (!instances || typeof instances !== 'object') return;
 
-      // Store columns mapping
+      // Build column definitions based on API columns order
       if (columns && typeof columns === 'object') {
-        this.columnsMapping = columns;
-        // Build column definitions based on API columns order
         this.columnDefs = this.buildColumnDefs(columns);
         
         // Update grid columns if grid is already initialized
@@ -652,6 +647,14 @@ export class PartsEditModalComponent implements OnInit {
         this.gridApi.refreshCells({ force: true });
         this.gridApi.redrawRows();
       }
+    }
+  }
+
+  clearAllErrors(): void {
+    this.rowErrors = {};
+    if (this.gridApi) {
+      this.gridApi.refreshCells({ force: true });
+      this.gridApi.redrawRows();
     }
   }
 
