@@ -478,7 +478,6 @@ export class PartsEditModalComponent implements OnInit {
         }
       },
       error: (error: any) => {
-        console.error('Error saving material colors:', error);
         // Handle HTTP errors
         const errorMessage = error?.error?.message || error?.message || 'Failed to save material colors';
         alert(`Error: ${errorMessage}`);

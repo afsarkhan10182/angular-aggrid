@@ -12,7 +12,115 @@
       "materialColorThirtyCharacterDescription": "BTRY BSH BAT-625 POWERTUB-V-US",
       "materialColorServiceSubstituteOne": "10113"
     },
+    "OR:com.lcs.wc.material.LCSMaterialColor:2439s46": {
+      "materialColorServiceDescription": "TREK Material service Description",
+      "materialColorServiceMessage": "Service Message 22222222",
+      "materialColorServiceEquivalent": "10115",
+      "materialColorServiceSubstituteTwo": "10309",
+      "materialColorStatus": "",
+      "materialColorSixtyCharacterDescription": "60 Character Description",
+      "materialColorManufacturersPartNumber": "",
+      "partNumber": "7889544",
+      "materialColorThirtyCharacterDescription": "30 Character Description",
+      "materialColorServiceSubstituteOne": "10113"
+    },
+    "OR:com.lcs.wc.material.LCSMaterialColor:243942": {
+      "materialColorServiceDescription": "TREK Material service Description",
+      "materialColorServiceMessage": "Service Message 22222222",
+      "materialColorServiceEquivalent": "10115",
+      "materialColorServiceSubstituteTwo": "10309",
+      "materialColorStatus": "",
+      "materialColorSixtyCharacterDescription": "60 Character Description",
+      "materialColorManufacturersPartNumber": "",
+      "partNumber": "7889544",
+      "materialColorThirtyCharacterDescription": "30 Character Description",
+      "materialColorServiceSubstituteOne": "10113"
+    },
+    "OR:com.lcs.wc.material.LCSMaterialColor:243943": {
+      "materialColorServiceDescription": "TREK Material service Description",
+      "materialColorServiceMessage": "Service Message 22222222",
+      "materialColorServiceEquivalent": "10115",
+      "materialColorServiceSubstituteTwo": "10309",
+      "materialColorStatus": "",
+      "materialColorSixtyCharacterDescription": "60 Character Description",
+      "materialColorManufacturersPartNumber": "",
+      "partNumber": "7889544",
+      "materialColorThirtyCharacterDescription": "30 Character Description",
+      "materialColorServiceSubstituteOne": "10113"
+    },
+      "OR:com.lcs.wc.material.LCSMaterialColor:243944": {
+      "materialColorServiceDescription": "TREK Material service Description",
+      "materialColorServiceMessage": "Service Message 22222222",
+      "materialColorServiceEquivalent": "10115",
+      "materialColorServiceSubstituteTwo": "10309",
+      "materialColorStatus": "",
+      "materialColorSixtyCharacterDescription": "60 Character Description",
+      "materialColorManufacturersPartNumber": "",
+      "partNumber": "7889544",
+      "materialColorThirtyCharacterDescription": "30 Character Description",
+      "materialColorServiceSubstituteOne": "10113"
+    },
+    "OR:com.lcs.wc.material.LCSMaterialColor:243945": {
+      "materialColorServiceDescription": "TREK Material service Description",
+      "materialColorServiceMessage": "Service Message 22222222",
+      "materialColorServiceEquivalent": "10115",
+      "materialColorServiceSubstituteTwo": "10309",
+      "materialColorStatus": "",
+      "materialColorSixtyCharacterDescription": "60 Character Description",
+      "materialColorManufacturersPartNumber": "",
+      "partNumber": "7889544",
+      "materialColorThirtyCharacterDescription": "30 Character Description",
+      "materialColorServiceSubstituteOne": "10113"
+    },
     "OR:com.lcs.wc.material.LCSMaterialColor:243946": {
+      "materialColorServiceDescription": "TREK Material service Description",
+      "materialColorServiceMessage": "Service Message 22222222",
+      "materialColorServiceEquivalent": "10115",
+      "materialColorServiceSubstituteTwo": "10309",
+      "materialColorStatus": "",
+      "materialColorSixtyCharacterDescription": "60 Character Description",
+      "materialColorManufacturersPartNumber": "",
+      "partNumber": "7889544",
+      "materialColorThirtyCharacterDescription": "30 Character Description",
+      "materialColorServiceSubstituteOne": "10113"
+    },
+    "OR:com.lcs.wc.material.LCSMaterialColor:243947": {
+      "materialColorServiceDescription": "TREK Material service Description",
+      "materialColorServiceMessage": "Service Message 22222222",
+      "materialColorServiceEquivalent": "10115",
+      "materialColorServiceSubstituteTwo": "10309",
+      "materialColorStatus": "",
+      "materialColorSixtyCharacterDescription": "60 Character Description",
+      "materialColorManufacturersPartNumber": "",
+      "partNumber": "7889544",
+      "materialColorThirtyCharacterDescription": "30 Character Description",
+      "materialColorServiceSubstituteOne": "10113"
+    },
+    "OR:com.lcs.wc.material.LCSMaterialColor:243948": {
+      "materialColorServiceDescription": "TREK Material service Description",
+      "materialColorServiceMessage": "Service Message 22222222",
+      "materialColorServiceEquivalent": "10115",
+      "materialColorServiceSubstituteTwo": "10309",
+      "materialColorStatus": "",
+      "materialColorSixtyCharacterDescription": "60 Character Description",
+      "materialColorManufacturersPartNumber": "",
+      "partNumber": "7889544",
+      "materialColorThirtyCharacterDescription": "30 Character Description",
+      "materialColorServiceSubstituteOne": "10113"
+    },
+    "OR:com.lcs.wc.material.LCSMaterialColor:243949": {
+      "materialColorServiceDescription": "TREK Material service Description",
+      "materialColorServiceMessage": "Service Message 22222222",
+      "materialColorServiceEquivalent": "10115",
+      "materialColorServiceSubstituteTwo": "10309",
+      "materialColorStatus": "",
+      "materialColorSixtyCharacterDescription": "60 Character Description",
+      "materialColorManufacturersPartNumber": "",
+      "partNumber": "7889544",
+      "materialColorThirtyCharacterDescription": "30 Character Description",
+      "materialColorServiceSubstituteOne": "10113"
+    },
+    "OR:com.lcs.wc.material.LCSMaterialColor:243950": {
       "materialColorServiceDescription": "TREK Material service Description",
       "materialColorServiceMessage": "Service Message 22222222",
       "materialColorServiceEquivalent": "10115",
@@ -25,7 +133,7 @@
       "materialColorServiceSubstituteOne": "10113"
     }
   },
-  "materialColorIds": "OR:com.lcs.wc.material.LCSMaterialColor:554762,OR:com.lcs.wc.material.LCSMaterialColor:243946",
+  "materialColorIds": "OR:com.lcs.wc.material.LCSMaterialColor:554762,OR:com.lcs.wc.material.LCSMaterialColor:243942,OR:com.lcs.wc.material.LCSMaterialColor:243943,OR:com.lcs.wc.material.LCSMaterialColor:243944,OR:com.lcs.wc.material.LCSMaterialColor:243945,OR:com.lcs.wc.material.LCSMaterialColor:243946,OR:com.lcs.wc.material.LCSMaterialColor:243947,OR:com.lcs.wc.material.LCSMaterialColor:243948,OR:com.lcs.wc.material.LCSMaterialColor:243949,OR:com.lcs.wc.material.LCSMaterialColor:243950",
   "columns": {
     "partNumber": "Part #",
     "materialColorThirtyCharacterDescription": "30 Character Description",

@@ -77,7 +77,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public searchText: string = '';
   public saveMessage: string = '';
   public saveMessageType: string = '';
-  public editedRows = new Set<string | number>();
+  public readonly editedRows = new Set<string | number>();
   public currentUser: any = null;
   public bomName: string = '';
   public bomNamesDisplay: string = '';
@@ -103,8 +103,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public isMassEditing: boolean = false;
   public readonly originalRowValues = new Map<string | number, any>();
   private readonly editedFields = new Map<string | number, Set<string>>();
-  public invalidRowIds = new Set<string | number>();
-  public selectedRows = new Set<any>();
+  public readonly invalidRowIds = new Set<string | number>();
+  public readonly selectedRows = new Set<any>();
   public massEditMode = false;
   public massEditStartDate: string = '';
   public massEditEndDate: string = '';
@@ -2088,19 +2088,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       timeoutsArray: ReturnType<typeof setTimeout>[],
     ) => {
       if (obs) {
-        try {
-          obs.disconnect();
-        } catch (e) {
-          console.warn('Observer cleanup failed:', e);
-        }
+        obs.disconnect();
       }
-      timeoutsArray.forEach((t) => {
-        try {
-          clearTimeout(t);
-        } catch (e) {
-          console.warn('Timeout cleanup failed:', e);
-        }
-      });
+      timeoutsArray.forEach((t) => clearTimeout(t));
       timeoutsArray.length = 0;
     };
 
@@ -2471,21 +2461,16 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       const autocompleteInput = editingCell.querySelector('input') as HTMLInputElement;
       if (!autocompleteInput) return false;
 
-      try {
-        autocompleteInput.focus();
-        const triggerClick = () => {
-          if (!cleanedUpRef.current) {
-            autocompleteInput.click();
-          }
-        };
-        requestAnimationFrame(() => {
-          requestAnimationFrame(triggerClick);
-        });
-        return true;
-      } catch (e) {
-        console.warn('Autocomplete interaction failed:', e);
-        return false;
-      }
+      autocompleteInput.focus();
+      const triggerClick = () => {
+        if (!cleanedUpRef.current) {
+          autocompleteInput.click();
+        }
+      };
+      requestAnimationFrame(() => {
+        requestAnimationFrame(triggerClick);
+      });
+      return true;
     };
 
     if (focusAutocompleteEditor()) {

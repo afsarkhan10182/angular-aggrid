@@ -908,11 +908,7 @@ export class GridService {
         ? targetIndexInGrid + 1
         : targetIndexInGrid;
 
-    try {
-      config.gridApi.moveColumns([draggedColObj], newIndex);
-    } catch (error) {
-      console.warn('Column move operation failed:', error);
-    }
+    config.gridApi.moveColumns([draggedColObj], newIndex);
 
     const newPanelOrder = [...config.panelColumnOrder];
     const draggedItem = newPanelOrder[draggedIndex];

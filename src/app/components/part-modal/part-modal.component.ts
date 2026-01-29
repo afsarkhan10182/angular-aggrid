@@ -117,12 +117,20 @@ export class PartModalComponent {
 
       if (Array.isArray(value)) {
         if (value.length === 0) return null;
-        return this.stringifyValue(value);
+        try {
+          return this.stringifyValue(value);
+        } catch {
+          return null;
+        }
       }
 
       const objKeys = Object.keys(value);
       if (objKeys.length === 0) return null;
-      return this.stringifyValue(value);
+      try {
+        return this.stringifyValue(value);
+      } catch {
+        return null;
+      }
     }
 
     const stringValue = String(value).trim();
@@ -134,12 +142,7 @@ export class PartModalComponent {
   }
 
   private stringifyValue(value: any): string | null {
-    try {
-      return JSON.stringify(value, null, 2);
-    } catch (e) {
-      console.warn('Failed to stringify value:', e);
-      return null;
-    }
+    return JSON.stringify(value, null, 2);
   }
 
   /**

@@ -586,7 +586,6 @@ export class DataService {
         return response || { success: true };
       }),
       catchError((error: HttpErrorResponse) => {
-        console.error('Error saving material colors:', error);
         return throwError(() => error);
       }),
     );
