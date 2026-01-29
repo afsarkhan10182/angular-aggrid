@@ -437,6 +437,7 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
 
           const successCount = response?.instances ? Object.keys(response.instances).length : 0;
           if (successCount > 0) {
+            this.dataSaved.emit();
             this.successMessage = `${successCount} row${successCount > 1 ? 's' : ''} saved successfully.`;
             this.showSuccessMessage = true;
             this.notifyGridLayoutChange();
@@ -471,8 +472,6 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
               this.gridApi.ensureNodeVisible(targetNode, 'middle');
             }
           }
-
-          this.dataSaved.emit();
         } else {
           // No errors - update row data with saved instances (modal stays open)
           if (response?.instances && typeof response.instances === 'object') {
@@ -531,7 +530,6 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
         this.isSaving = false;
         const errorMessage = error?.error?.message || error?.message || 'Failed to save material colors';
         alert(`Error: ${errorMessage}`);
-        this.dataSaved.emit();
       },
     });
   }

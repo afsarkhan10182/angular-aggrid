@@ -662,7 +662,7 @@ export class DataService {
   }
 
   getBomType(): string | null {
-    return this.utilService.getJspDataAttribute('data-bomtype') || 'MBOM';
+    return this.utilService.getJspDataAttribute('data-bomtype') || 'SBOM';
   }
 
   getRefSkuId(): string | null {
