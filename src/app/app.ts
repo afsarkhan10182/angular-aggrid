@@ -74,6 +74,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public selectedMaterialSkuData: any[] = [];
   public showPartsEditModal = false;
   public partsEditModalMaterialColorIds: string[] = [];
+  public partsEditModalData: any[] = [];
   public searchText: string = '';
   public saveMessage: string = '';
   public saveMessageType: string = '';
@@ -1946,13 +1947,31 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.selectedMaterialSkuData = [];
   }
 
-  saveChanges(): void {
+ saveChanges(): void {
     if (this.isSkuFilterReadOnly()) {
       this.showNotification('Save is disabled in view-only mode.', 'info');
       return;
     }
 
+    const rowValidationMap = new Map<any, { missingFields: string[], skuErrors: string[] }>();
+
     this.invalidRowIds.clear();
+    // clear previous errors
+    [this.rowData, this.displayData].forEach(list => {
+      list?.forEach(row => {
+        if (row.validation) {
+          row.validation = {
+            isValid: true,
+            missingFields: [],
+            skuErrors: [],
+          };
+        }
+      });
+    });
+    this.gridApi.refreshCells({
+      force: true,
+      columns: ['actions'],
+    });
 
     // Validate new rows before saving (required fields)
     let requiredFields = this.validationService.getDefaultRequiredFields();
@@ -1981,9 +2000,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       this.displayData,
       requiredFields,
     );
-    if (this.handleValidationError(validationResult)) {
-      return;
-    }
+
+    validationResult.invalidRows?.forEach(ir => {
+      rowValidationMap.set(ir.row, {
+        missingFields: Array.isArray(ir.missingFields) ? ir.missingFields : [],
+        skuErrors: [],
+      });
+    });
 
     const skuInfo = this.getFilteredSkuInfo();
     const skuValidationResult = this.validationService.validateNewRowsSkus(
@@ -1991,11 +2014,24 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       skuInfo,
       this.displayData,
     );
-    if (this.handleValidationError(skuValidationResult)) {
-      return;
-    }
+    skuValidationResult.invalidRows?.forEach(ir => {
+      const existing = rowValidationMap.get(ir.row);
+      if (existing) {
+        existing.skuErrors = Array.isArray(ir.skuErrors)
+        ? ir.skuErrors
+        : ['SKU selection missing'];
+      } else {
+        rowValidationMap.set(ir.row, {
+          missingFields: [],
+          skuErrors: Array.isArray(ir.skuErrors)
+            ? ir.skuErrors
+            : ['SKU selection missing'],
+        });
+      }
+    });
 
     const allNewRows = this.utilService.findAllNewRows(this.rowData, this.displayData);
+    let hasPayloadErrors = false;
     for (const newRow of allNewRows) {
       const payloadSkus = this.buildSkusArrayFromRow(newRow, skuInfo);
       const payloadValidation = this.validationService.validateSkuPayload(
@@ -2003,11 +2039,23 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         skuInfo,
         payloadSkus,
       );
+
       if (!payloadValidation.isValid) {
+        hasPayloadErrors = true;
+        const existing = rowValidationMap.get(newRow);
+        const skuErrorMessage = payloadValidation.message || 'No SKUs selected in row';
+
+        if (existing) {
+          existing.skuErrors.push(skuErrorMessage);
+        } else {
+          rowValidationMap.set(newRow, {
+            missingFields: [],
+            skuErrors: [skuErrorMessage],
+          });
+        }
+
         const rowId = this.utilService.getRowId(newRow) || 'Unknown';
         this.invalidRowIds.add(rowId);
-        this.handleValidationError(payloadValidation);
-        return;
       }
     }
 
@@ -2018,9 +2066,48 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       skuInfo,
       apiData || undefined,
     );
-    if (this.handleValidationError(duplicateValidation)) {
+
+    duplicateValidation.invalidRows?.forEach(ir => {
+    const existing = rowValidationMap.get(ir.row);
+    const duplicateMsg = duplicateValidation.message || 'Duplicate Feature-SKU combination';
+
+    if (existing) {
+      existing.skuErrors.push(duplicateMsg);
+    } else {
+      rowValidationMap.set(ir.row, {
+        missingFields: [],
+        skuErrors: [duplicateMsg],
+      });
+    }
+  });
+
+  if (rowValidationMap.size > 0) {
+    rowValidationMap.forEach((validation, row) => {
+      row.validation = {
+        isValid: false,
+        missingFields: validation.missingFields,
+        skuErrors: validation.skuErrors,
+      };
+    });
+
+    this.gridApi.refreshCells({
+      force: true,
+      columns: ['actions'],
+    });
+    if (this.handleValidationError(validationResult)) {
+        return;
+    } else if (this.handleValidationError(skuValidationResult)) {
+        return;
+    } else if (hasPayloadErrors) {
+      this.handleValidationError({
+        isValid: false,
+        message: 'Please fix validation errors before saving.',
+      } as any);
+      return;
+    } else if (this.handleValidationError(duplicateValidation)) {
       return;
     }
+  }
 
     // All validations passed, proceed with save
     this.isSaving = true;

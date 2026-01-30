@@ -10,6 +10,7 @@ export interface InvalidRow {
   row: any;
   missingFields: string[];
   rowId: string | number;
+  skuErrors?: string[];
   duplicateType?:
     | 'enumMBOM001'
     | 'notEnumMBOM001'
@@ -193,7 +194,7 @@ export class ValidationService {
 
       return {
         isValid: false,
-        message: `Cannot save: ${invalidRows.length} new ${rowCount} have missing required fields. ${missingFieldsList}. Please fill all required fields or remove the row(s) if added by mistake.`,
+        message: `Cannot save: Some rows have missing required fields`,
         invalidRows,
       };
     }
@@ -388,7 +389,7 @@ export class ValidationService {
 
       return {
         isValid: false,
-        message: `Cannot save: ${invalidRows.length} new ${rowCount} (${rowIds}) have no SKU selected. At least 1 SKU must be selected before submit.`,
+        message: `Cannot save: no SKU selected.`,
         invalidRows,
       };
     }

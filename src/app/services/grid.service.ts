@@ -503,6 +503,22 @@ export class GridService {
         }
 
         const partId = params.data.partNumber;
+        const row = params.data;
+        if (row.isNewRow && row.validation && !row.validation.isValid) {
+          const missing = row.validation.missingFields.join(', ');
+          const skuErrors = (row.validation.skuErrors || []).join(', ');
+          const tooltipParts = [
+            missing ? `Missing: ${missing}` : null,
+            skuErrors ? `SKU Error: ${skuErrors}` : null,
+          ].filter(Boolean);
+
+          return `
+            <span class="validation-error-icon"
+                  style="width:40px; display:inline-block; color:#ef4444; position:absolute; left:-18px; top:0px; cursor: pointer; font-size: 20px"
+                  title="${tooltipParts.join('\n')}">&#8505;</span>
+            <span class="delete-row-btn" data-new-row-id="${row.newRowId}" title="Delete">−</span>
+          `;
+        }
 
         if (params.data.isNewRow) {
           const newRowId = params.data.newRowId;
