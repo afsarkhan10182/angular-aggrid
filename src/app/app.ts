@@ -3164,7 +3164,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const hasNewRows = this.rowData.some((row: any) => row?.isNewRow === true && !row?.isSectionHeader && !row?.isGroupHeader && !row?.isMaterialHeader);
     
     if (hasEditedRows || hasNewRows) {
-      const message = 'You have unsaved changes in the main grid. Do you want to proceed anyway?';
+      const message = 'Any unsaved changes in the BOM Composer will be lost. Do you want to continue?';
       
       const proceed = confirm(message);
       if (!proceed) {

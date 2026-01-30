@@ -51,15 +51,14 @@
                   <div class="dropdown-header">
                     Select service ({{ getMassEditAutocomplete(field).options.length }} available)
                   </div>
-                  <div
-                    *ngFor="let option of getMassEditAutocomplete(field).options; let i = index"
-                    [class.selected]="i === getMassEditAutocomplete(field).selectedIndex"
-                    class="dropdown-option"
-                    (click)="selectMassEditOption(field, option); $event.stopPropagation()"
-                    (mouseenter)="getMassEditAutocomplete(field).selectedIndex = i"
-                  >
-                    {{ option }}
-                  </div>
+                 <div *ngFor="let option of getMassEditAutocomplete(field).options; let i = index"
+                      class="dropdown-option"
+                      [class.selected]="i === getMassEditAutocomplete(field).selectedIndex"
+                      (mousedown)="selectMassEditOption(field, option); $event.preventDefault(); $event.stopPropagation()"
+                      (mouseenter)="getMassEditAutocomplete(field).selectedIndex = i"
+                    >
+                      {{ option }}
+                    </div>
                 </div>
               </div>
             </div>
