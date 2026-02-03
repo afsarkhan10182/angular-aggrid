@@ -950,11 +950,11 @@ export class AutocompleteCellEditorComponent
         });
 
         const skuInfo = dataService.getSkuInfo();
-        const isEbom = dataService.getBomType() === BOM_TYPE_EBOM;
+        const skuAutoFillWithPartNumber = dataService.getBomType() === BOM_TYPE_EBOM;
         const partNumberForSkus = partData.partNumber ?? '';
         skuInfo.forEach((sku: any) => {
           const skuFieldName = `sku${sku.skuId}`;
-          const newSkuValue = isEbom
+          const newSkuValue = skuAutoFillWithPartNumber
             ? partNumberForSkus
             : (() => {
                 const matchingSku = partData.skus?.find((s: any) => s.skuId === sku.skuId);
