@@ -1,3 +1,4 @@
+import { BOM_LINK_KEY, BOM_TYPE_EBOM, DEFAULT_BOM_TYPE } from '../constants';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, map, catchError, throwError, of } from 'rxjs';
@@ -92,6 +93,21 @@ export interface ApiData {
 export type MbomSkuFilterOption = 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource';
 export type SbomSkuFilterOption = 'all' | 'editableSkus';
 export type SkuFilterOption = MbomSkuFilterOption | SbomSkuFilterOption;
+
+/** Payload for attribute search on material-colors/search (part number or material name; only attribute differs). */
+export interface MaterialColorsSearchPayload {
+  searchParameter: {
+    typeName: string;
+    parameters: Array<{ name: string; value: string }>;
+    attributeParameters: Array<{ name: string; typeId: string; value: string }>;
+    viewParameters: Array<{ name: string }>;
+  };
+}
+
+/** Payload for fetch-by-IDs on material-colors/search (single endpoint). */
+export interface ByIdsPayload {
+  materialColorIds: string;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -188,109 +204,56 @@ export class DataService {
     let dataSource: Observable<any>;
 
     if (environment.useMockApi) {
-      const mockApiUrl = environment.mockApiEndpoints.material;
+      const mockApiUrl = environment.mockApiEndpoints.materialColorsSearch ?? '/api/serviceDataModal.json';
       dataSource = this.http.get<any>(mockApiUrl).pipe(
         map((mockResponse) => {
-          const queryLower = query.trim().toLowerCase();
-          let filteredResults = mockResponse.results || [];
+          const instances = mockResponse?.instances ?? {};
+          const queryLower = (query || '').trim().toLowerCase();
+          const filteredInstances: { [key: string]: any } = {};
 
-          if (queryLower.length > 0 && filteredResults.length > 0) {
-            filteredResults = filteredResults.filter((result: any) => {
-              if (isPartNumberSearch) {
-                const partNumber = result['material-color']?.partNumber || '';
-                return partNumber.includes(queryLower);
-              } else {
-                const materialName = (result.material?.ptcmaterialName || '').toLowerCase();
-                return materialName.includes(queryLower);
-              }
-            });
-          }
+          Object.entries(instances).forEach(([id, instance]: [string, any]) => {
+            const match =
+              queryLower.length === 0
+                ? true
+                : isPartNumberSearch
+                  ? (instance.partNumber || '').toLowerCase().includes(queryLower)
+                  : (instance.material || '').toLowerCase().includes(queryLower);
+            if (match) filteredInstances[id] = instance;
+          });
 
-          const resultCount = filteredResults.length;
-          const paginatedResults = filteredResults.slice(fromIndex - 1, toIndex);
-          const hasMore = resultCount > toIndex;
-
-          return {
-            results: paginatedResults,
-            resultCount,
-            hasMore,
+          const payload: any = {
+            instances: filteredInstances,
+            columns: mockResponse?.columns,
           };
+          if (queryLower.length === 0 && mockResponse?.resultCount != null) {
+            payload.resultCount = mockResponse.resultCount;
+            if (mockResponse.from != null) payload.from = mockResponse.from;
+            if (mockResponse.to != null) payload.to = mockResponse.to;
+          }
+          return this.mapMaterialColorsResponseToResults(payload, fromIndex, toIndex);
         }),
       );
     } else {
-      const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/rfa/materials/search`;
-
-      const attributeParameters: any[] = [];
-      if (isPartNumberSearch) {
-        attributeParameters.push({
-          name: 'partNumber',
-          typeId: 'com.lcs.wc.material.LCSMaterialColor',
-          value: query.trim().length > 0 ? `${query.trim()}*` : '*',
-        });
-      } else {
-        attributeParameters.push({
-          name: 'ptcmaterialName',
-          typeId: 'com.lcs.wc.material.LCSMaterial',
-          value: query.trim().length > 0 ? `${query.trim()}*` : '*',
-        });
-      }
-
-      const requestBody = {
-        typeName: 'com.lcs.wc.material.LCSMaterial',
-        parameters: [
-          { name: 'fromIndex', value: fromIndex.toString() },
-          { name: 'toIndex', value: toIndex.toString() },
-          { name: 'includeSupplier', value: true },
-          { name: 'includeColor', value: true },
-        ],
-        attributeParameters: attributeParameters,
-        viewParameters: [
-          { name: 'material.ptcmaterialName' },
-          { name: 'material.versionId' },
-          { name: 'material-color.partNumber' },
-        ],
-      };
-
-      dataSource = this.http
-        .post<any>(apiUrl, requestBody, { headers: this.buildHttpHeaders() })
-        .pipe(
-          map((response) => {
-            if (!response?.results || !Array.isArray(response.results)) {
-              return { results: [], resultCount: 0, hasMore: false };
-            }
-
-            const resultCount = response.resultCount || 0;
-            const hasMore = resultCount > toIndex;
-
-            return {
-              results: response.results,
-              resultCount,
-              hasMore,
-            };
-          }),
-        );
+      const attributeName = isPartNumberSearch ? 'partNumber' : 'ptcmaterialName';
+      const typeId = isPartNumberSearch
+        ? 'com.lcs.wc.material.LCSMaterialColor'
+        : 'com.lcs.wc.material.LCSMaterial';
+      dataSource = this.materialColorsSearchByAttribute(
+        attributeName,
+        typeId,
+        query,
+        fromIndex,
+        toIndex,
+      );
     }
 
     return dataSource.pipe(
-      map((data) => {
-        const results = data.results || [];
-        const resultCount = data.resultCount || 0;
-        const hasMore = data.hasMore || false;
-
-        const transformedResults = results.map((result: any) => {
-          return this.transformMaterialResult(result);
-        });
-
-        let finalResults = transformedResults;
-        if (!isPartNumberSearch) {
-          finalResults = this.getUniqueMaterialCombinations(transformedResults);
-        }
-
-        return { results: finalResults, resultCount, hasMore };
-      }),
-      catchError((error) => {
-        return of({ results: [], resultCount: 0, hasMore: false });
-      }),
+      map((data) => ({
+        results: data.results || [],
+        resultCount: data.resultCount || 0,
+        hasMore: data.hasMore || false,
+      })),
+      catchError(() => of({ results: [], resultCount: 0, hasMore: false })),
     );
   }
 
@@ -349,7 +312,7 @@ export class DataService {
       const items = this.apiData!.instances;
       const allValues = items
         .map((item: BomInstance) => {
-          const bomLink = item['bom-link'];
+          const bomLink = item[BOM_LINK_KEY];
           const value = bomLink[mockFieldName as keyof BomLink];
           return typeof value === 'string' ? value : '';
         })
@@ -397,63 +360,6 @@ export class DataService {
         return of({ results: [], resultCount: 0, hasMore: false });
       }),
     );
-  }
-
-  /**
-   * Get unique material combinations (material + supplier + color)
-   * Each combination is shown as a separate option in the dropdown
-   */
-  private getUniqueMaterialCombinations(materials: any[]): any[] {
-    const seen = new Set<string>();
-    const unique: any[] = [];
-
-    for (const item of materials) {
-      const materialName = item.ptcmaterialName || item.materialName || item.name || '';
-      const supplierName = item.supplier || item.supplierName || '';
-      const colorName = item.colorName || item.color || '';
-
-      const combinationKey = `${materialName}|${supplierName}|${colorName}`;
-
-      if (!seen.has(combinationKey) && materialName) {
-        seen.add(combinationKey);
-        unique.push({
-          ...item,
-          color: colorName,
-          colorName: colorName,
-          supplier: supplierName,
-          supplierName: supplierName,
-        });
-      }
-    }
-
-    return unique;
-  }
-
-  private transformMaterialResult(result: any): any {
-    const material = result.material || {};
-    const supplier = result.supplier || {};
-    const materialColor = result['material-color'] || {};
-    const color = result.color || {};
-
-    const supplierName = supplier.supplierName || supplier.name || '';
-    const colorName = color.colorName || color.name || '';
-
-    return {
-      name: material.ptcmaterialName || '',
-      materialName: material.ptcmaterialName || '',
-      ptcmaterialName: material.ptcmaterialName || '',
-      versionId: material.versionId || '',
-      materialMaster: material.materialMaster || '',
-      materialVersionId: material.versionId || '',
-      supplier: supplierName,
-      supplierName: supplierName,
-      supplierVersionId: supplier.versionId || '',
-      partNumber: materialColor.partNumber || '',
-      colorName: colorName,
-      color: colorName,
-      materialSupplierVersionId: result['material-supplier']?.versionId || '',
-      fullResult: result,
-    };
   }
 
   private handleError(error: HttpErrorResponse) {
@@ -542,7 +448,13 @@ export class DataService {
    * Sends the payload with bomCheckIn, bomType, bomPartInfo, instances, columns, sectionOrder, skuInfo
    */
   updateBomData(payload: any): Observable<any> {
-    let apiUrl = environment.useMockApi
+    if (this.getBomType() === BOM_TYPE_EBOM) {
+      console.log('[EBOM] Save BOM payload (API call commented out):', payload);
+      console.log('[EBOM] Payload JSON:', JSON.stringify(payload));
+      return of({});
+    }
+
+    const apiUrl = environment.useMockApi
       ? '/api/updateBom'
       : `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/saveBOMLinks`;
 
@@ -554,19 +466,125 @@ export class DataService {
   }
 
   /**
+   * Single material-colors search endpoint (single source of truth).
+   * POST: /Windchill/servlet/rest/trek/material-colors/search
+   * Payloads: attribute search (part number or material name; only attribute differs), or fetch by IDs (materialColorIds).
+   * Response shape: { instances, columns, materialColorIds? }.
+   */
+  private postMaterialColorsSearch(
+    payload: MaterialColorsSearchPayload | ByIdsPayload
+  ): Observable<any> {
+    const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/material-colors/search`;
+    return this.http.post<any>(apiUrl, payload, { headers: this.buildHttpHeaders() });
+  }
+
+  /**
+   * Part/material search: same endpoint and payload shape; only attribute name and typeId differ.
+   * Part: attributeName 'partNumber', typeId 'com.lcs.wc.material.LCSMaterialColor'
+   * Material: attributeName 'ptcmaterialName', typeId 'com.lcs.wc.material.LCSMaterial'
+   */
+  private materialColorsSearchByAttribute(
+    attributeName: string,
+    typeId: string,
+    query: string,
+    fromIndex: number,
+    toIndex: number
+  ): Observable<{ results: any[]; resultCount: number; hasMore: boolean }> {
+    const value = (query || '').trim().length > 0 ? `${(query || '').trim()}*` : '*';
+    const payload: MaterialColorsSearchPayload = {
+      searchParameter: {
+        typeName: 'com.lcs.wc.material.LCSMaterial',
+        parameters: [
+          { name: 'fromIndex', value: String(fromIndex) },
+          { name: 'toIndex', value: String(toIndex) },
+        ],
+        attributeParameters: [{ name: attributeName, typeId, value }],
+        viewParameters: [{ name: 'material-color.iterationId' }],
+      },
+    };
+    return this.postMaterialColorsSearch(payload).pipe(
+      map((response) => this.mapMaterialColorsResponseToResults(response, fromIndex, toIndex)),
+      catchError(() => of({ results: [], resultCount: 0, hasMore: false }))
+    );
+  }
+
+  /**
+   * Map API response (serviceDataModal.json shape) to { results, resultCount, hasMore }.
+   * Uses response.resultCount, response.from, response.to when present for pagination/count.
+   * Each result: { flatInstance, responseColumns, partNumber, material } for dropdown and row population.
+   */
+  private mapMaterialColorsResponseToResults(
+    response: any,
+    fromIndex: number,
+    toIndex: number
+  ): { results: any[]; resultCount: number; hasMore: boolean } {
+    const instances = response?.instances ?? {};
+    const columns = response?.columns ?? {};
+    const entries = Object.entries(instances) as [string, any][];
+    const totalCount = response?.resultCount ?? entries.length;
+    const pageStart = response?.from ?? fromIndex;
+    const pageEnd = response?.to ?? toIndex;
+    const pageEntries = entries.slice(pageStart - 1, pageEnd);
+
+    const results = pageEntries.map(([materialColorId, instance]) => ({
+      materialColorId,
+      flatInstance: instance,
+      responseColumns: columns,
+      partNumber: instance.partNumber ?? '',
+      material: instance.material ?? '',
+      supplier: instance.supplier ?? '',
+      color: instance.color ?? '',
+    }));
+
+    const hasMore = totalCount > pageEnd;
+    return { results, resultCount: totalCount, hasMore };
+  }
+
+  /**
+   * Fetch material colors by IDs: same endpoint, materialColorIds payload. Returns raw { instances, columns, materialColorIds }.
+   */
+  private materialColorsSearchByIds(materialColorIds: string): Observable<any> {
+    const payload: ByIdsPayload = { materialColorIds };
+    return this.postMaterialColorsSearch(payload);
+  }
+
+  /**
    * Search/Fetch Material Colors by IDs
-   * GET: /Windchill/servlet/rest/trek/searchMaterialColors/{materialColorIds}
-   * @param materialColorIds - Comma-separated list of material color IDs (e.g., "OR:com.lcs.wc.material.LCSMaterialColor:554762,OR:com.lcs.wc.material.LCSMaterialColor:243946")
+   * Uses single endpoint: POST .../material-colors/search with payload { materialColorIds }.
+   * @param materialColorIds - Comma-separated list of material color IDs
    */
   searchMaterialColors(materialColorIds: string): Observable<any> {
     if (environment.useMockApi) {
-      // Mock response for development
-      return this.http.get<any>('/api/serviceDataModal.json', { headers: this.buildHttpHeaders() });
+      const mockUrl =
+        environment.mockApiEndpoints.materialColorsSearch ?? '/api/serviceDataModal.json';
+      return this.http.get<any>(mockUrl, { headers: this.buildHttpHeaders() });
     }
+    return this.materialColorsSearchByIds(materialColorIds);
+  }
 
-    const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/searchMaterialColors/${encodeURIComponent(materialColorIds)}`;
-
-    return this.http.get<any>(apiUrl, { headers: this.buildHttpHeaders() });
+  /**
+   * Build instance data for one row for Material Color Save.
+   * @param row - Row data (current values)
+   * @param editedFieldsForRow - Set of field names that were touched for this row
+   * @returns Object with only touched fields; autocomplete fields use Id || value
+   */
+  buildMaterialColorInstanceData(
+    row: any,
+    editedFieldsForRow: Set<string>
+  ): { [key: string]: any } {
+    const instanceData: { [key: string]: any } = {};
+    editedFieldsForRow.forEach((fieldName) => {
+      if (fieldName === 'materialColorServiceEquivalent') {
+        instanceData[fieldName] = row.materialColorServiceEquivalentId || row.materialColorServiceEquivalent || '';
+      } else if (fieldName === 'materialColorServiceSubstituteOne') {
+        instanceData[fieldName] = row.materialColorServiceSubstituteOneId || row.materialColorServiceSubstituteOne || '';
+      } else if (fieldName === 'materialColorServiceSubstituteTwo') {
+        instanceData[fieldName] = row.materialColorServiceSubstituteTwoId || row.materialColorServiceSubstituteTwo || '';
+      } else {
+        instanceData[fieldName] = row[fieldName] ?? '';
+      }
+    });
+    return instanceData;
   }
 
   /**
@@ -575,12 +593,13 @@ export class DataService {
    * @param payload - Object with instances containing material color updates
    */
   saveMaterialColors(payload: { instances: { [key: string]: any } }): Observable<any> {
+    console.log('saveMaterialColors payload', payload);
     if (environment.useMockApi) {
       return of({ success: true, message: 'Material colors saved (mock)' });
     }
 
     const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/saveMaterialColors`;
-    
+
     return this.http.put<any>(apiUrl, payload, { headers: this.buildHttpHeaders() }).pipe(
       map((response) => {
         return response || { success: true };
@@ -662,7 +681,7 @@ export class DataService {
   }
 
   getBomType(): string | null {
-    return this.utilService.getJspDataAttribute('data-bomtype') || 'SBOM';
+    return this.utilService.getJspDataAttribute('data-bomtype') || DEFAULT_BOM_TYPE;
   }
 
   getRefSkuId(): string | null {
@@ -769,7 +788,10 @@ export class DataService {
     isMbomMode: () => boolean,
   ): any[] {
     const skuInfo = this.getSkuInfo();
-
+    const bomType = this.getBomType();
+    if (bomType === BOM_TYPE_EBOM) {
+      return skuInfo;
+    }
     if (isMbomMode()) {
       return this.filterSkuInfoByOption(
         selectedFilter as MbomSkuFilterOption,

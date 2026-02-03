@@ -53,7 +53,7 @@
             <tbody>
               <tr *ngFor="let instance of getInstances()">
                 <td *ngFor="let key of getColumnKeys()" class="value-cell" [attr.data-column]="key">
-                  {{ instance['bom-link'][key] }}
+                  {{ instance[bomLinkKey][key] }}
                 </td>
               </tr>
             </tbody>

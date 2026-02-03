@@ -5,6 +5,7 @@ import {
   EventEmitter,
   HostListener,
 } from '@angular/core';
+import { BOM_LINK_KEY } from '../../constants';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -16,6 +17,7 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./part-modal.component.css'],
 })
 export class PartModalComponent {
+  readonly bomLinkKey = BOM_LINK_KEY;
   @Input() partData: any = {};
   @Input() skuData: any[] = [];
   @Output() modalClose = new EventEmitter<void>();
@@ -244,8 +246,8 @@ export class PartModalComponent {
     if (!this.hasInstances()) return [];
     
     return this.partData.instances.filter((instance: any) => {
-      const partNumber = instance['bom-link']?.partNumber || '';
-      const material = instance['bom-link']?.material || '';
+      const partNumber = instance[BOM_LINK_KEY]?.partNumber || '';
+      const material = instance[BOM_LINK_KEY]?.material || '';
       
       const hasPartNumber = partNumber && String(partNumber).trim() !== '';
       const hasMaterial = material && String(material).trim() !== '';

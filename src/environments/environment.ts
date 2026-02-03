@@ -17,5 +17,7 @@ export const environment = {
     csrf: '/api/csrf.json',
     getUser: '/api/getUser.json',
     material: '/api/material.json',
+    /** Single source for material-colors search: part search, material search, and search by IDs (same response structure). */
+    materialColorsSearch: '/api/serviceDataModal.json',
   },
 };

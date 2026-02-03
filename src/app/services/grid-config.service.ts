@@ -1,5 +1,10 @@
 import { Injectable } from '@angular/core';
 import { GridApi, GridOptions, IRowNode } from 'ag-grid-community';
+import {
+  EBOM_CORE_FIELDS,
+  EBOM_SERVICE_FIELDS,
+  EDITABLE_AUTOPOPULATED_FIELDS,
+} from '../constants';
 import { DataService } from './data.service';
 
 export interface GroupConfig {
@@ -455,6 +460,7 @@ export class GridConfigService {
         }
       },
       onCellValueChanged: (params) => {
+        if (componentInstance.rowManagementService?.isSkipEditTracking()) return;
         if (componentInstance.rowManagementService && componentInstance.editedRows) {
           componentInstance.rowManagementService.trackFieldChange(
             params,
@@ -686,14 +692,25 @@ export class GridConfigService {
     };
   }
 
+  getEbomServiceFieldNames(): string[] {
+    return [...EBOM_SERVICE_FIELDS];
+  }
+
   isFieldEditableInSbom(
     field: string,
     rowData: any,
     isSkuFilterReadOnly: () => boolean,
-    isSbomMode: () => boolean
+    isSbomMode: () => boolean,
+    isEbomMode?: () => boolean
   ): boolean {
     if (isSkuFilterReadOnly()) {
       return false;
+    }
+
+    if (isEbomMode?.()) {
+      const core = EBOM_CORE_FIELDS.includes(field);
+      const serviceField = EBOM_SERVICE_FIELDS.includes(field);
+      return core || serviceField;
     }
 
     if (!isSbomMode()) {
@@ -723,10 +740,18 @@ export class GridConfigService {
   isFieldEditableForNewRow(
     field: string,
     isSkuFilterReadOnly: () => boolean,
-    isSbomMode: () => boolean
+    isSbomMode: () => boolean,
+    isEbomMode?: () => boolean
   ): boolean {
     if (isSkuFilterReadOnly()) {
       return false;
+    }
+
+    if (isEbomMode?.()) {
+      const core = EBOM_CORE_FIELDS.includes(field) || field === 'bomLinkFeature';
+      const autopopulated = EDITABLE_AUTOPOPULATED_FIELDS.includes(field);
+      const serviceField = EBOM_SERVICE_FIELDS.includes(field);
+      return core || autopopulated || serviceField;
     }
 
     if (isSbomMode() && field === 'bomLinkSpecSheetExtra') {
@@ -1124,8 +1149,16 @@ export class GridConfigService {
       return;
     }
 
-    const rowId = data.newRowId || data.partNumber || data.part;
-    if (rowId && componentInstance.invalidRowIds.has(rowId)) {
+    const rowId =
+      data.materialKey || data.newRowId || data.partNumber || data.part;
+    const compositeId =
+      data.section && (data.partNumber || data.part)
+        ? `${data.section}::${data.partNumber || data.part}`
+        : null;
+    const hasError =
+      (rowId && componentInstance.invalidRowIds.has(rowId)) ||
+      (compositeId && componentInstance.invalidRowIds.has(compositeId));
+    if (hasError) {
       classes.push('validation-error-row');
     }
   }

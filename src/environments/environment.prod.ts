@@ -13,5 +13,6 @@ export const environment = {
     csrf: '/api/csrf.json',
     getUser: '/api/getUser.json',
     material: '/api/material.json',
+    materialColorsSearch: '/api/serviceDataModal.json',
   },
 };

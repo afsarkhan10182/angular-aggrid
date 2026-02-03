@@ -1,3 +1,4 @@
+import { BOM_TYPE_SBOM } from '../constants';
 import { Injectable } from '@angular/core';
 import { ColDef, GridApi } from 'ag-grid-community';
 import { DataService } from './data.service';
@@ -17,6 +18,7 @@ export interface CellRenderingConfig {
   shouldHighlightRow: (data: any) => boolean;
   getPartNumberValue: (row: any) => string;
   isSkuFilterReadOnly: () => boolean;
+  isEbomMode?: () => boolean;
   utilService: UtilService;
   gridConfigService: GridConfigService;
 }
@@ -26,6 +28,7 @@ export interface ColumnDefinitionConfig {
   constraintsData?: any;
   isSkuFilterReadOnly: () => boolean;
   isSbomMode: () => boolean;
+  isEbomMode?: () => boolean;
   getDataCellStyle: (params: any) => any;
   getFeatureValue: (data: any) => any;
   renderHierarchicalCell: (params: any) => string;
@@ -58,7 +61,7 @@ export class GridService {
   flattenHierarchicalData(data: any[], config: HierarchicalDataConfig): any[] {
     const result: any[] = [];
     const bomType = config.getBomType();
-    const isSbom = bomType === 'SBOM';
+    const isSbom = bomType === BOM_TYPE_SBOM;
 
     const processNode = (node: any) => {
       if (node.isSectionHeader) {
@@ -381,11 +384,26 @@ export class GridService {
 
     const rowData = params.data || {};
     const partNumber = config.getPartNumberValue(rowData);
+    const hasValue = params.value !== null && params.value !== undefined && params.value !== '';
+    const isEbom = config.isEbomMode?.();
+
+    if (isEbom) {
+      if (!partNumber) return '';
+      if (hasValue) {
+        const valueText = config.utilService.escapeHtml(String(params.value));
+        return `
+          <div class="sku-cell-action-wrapper filled">
+            <span class="sku-cell-value" title="${valueText}">${valueText}</span>
+          </div>
+        `;
+      }
+      return '';
+    }
+
     if (!partNumber) {
       return '';
     }
 
-    const hasValue = params.value !== null && params.value !== undefined && params.value !== '';
     const partLabel = config.utilService.escapeHtml(partNumber);
     const isReadOnly = config.isSkuFilterReadOnly();
 
@@ -504,20 +522,33 @@ export class GridService {
 
         const partId = params.data.partNumber;
         const row = params.data;
-        if (row.isNewRow && row.validation && !row.validation.isValid) {
-          const missing = row.validation.missingFields.join(', ');
+
+        const renderValidationIcon = () => {
+          if (!row.validation || row.validation.isValid) return '';
+          const missing = (row.validation.missingFields || []).join(', ');
           const skuErrors = (row.validation.skuErrors || []).join(', ');
           const tooltipParts = [
             missing ? `Missing: ${missing}` : null,
             skuErrors ? `SKU Error: ${skuErrors}` : null,
           ].filter(Boolean);
+          const escaped = (tooltipParts.join('\n') || 'Required field error').replace(/"/g, '&quot;');
+          return `<span class="validation-error-icon" style="width:40px; display:inline-block; color:#ef4444; position:absolute; left:-18px; top:0px; cursor: pointer; font-size: 20px" title="${escaped}" aria-label="Required field">&#8505;</span>`;
+        };
 
-          return `
-            <span class="validation-error-icon"
-                  style="width:40px; display:inline-block; color:#ef4444; position:absolute; left:-18px; top:0px; cursor: pointer; font-size: 20px"
-                  title="${tooltipParts.join('\n')}">&#8505;</span>
-            <span class="delete-row-btn" data-new-row-id="${row.newRowId}" title="Delete">−</span>
-          `;
+        if (row.validation && !row.validation.isValid) {
+          const icon = renderValidationIcon();
+          if (row.isNewRow) {
+            return `${icon}<span class="delete-row-btn" data-new-row-id="${row.newRowId}" title="Delete">−</span>`;
+          }
+          if (
+            (params.data.isMaterialHeader && params.data.hasLinkedBom) ||
+            params.data.isDirectRow ||
+            (params.data.isSectionHeader && !hasVisibleChildren(params))
+          ) {
+            const addBtn = isAddRowEnabled() ? `<span class="add-row-btn" data-part-id="${partId || ''}" title="Add">+</span>` : '';
+            return `${icon}${addBtn}`;
+          }
+          return icon;
         }
 
         if (params.data.isNewRow) {
@@ -580,6 +611,7 @@ export class GridService {
             'bomLinkFeature',
             config.isSkuFilterReadOnly,
             config.isSbomMode,
+            config.isEbomMode,
           );
         }
         return this.gridConfigService.isFieldEditableInSbom(
@@ -587,6 +619,7 @@ export class GridService {
           params.data,
           config.isSkuFilterReadOnly,
           config.isSbomMode,
+          config.isEbomMode,
         );
       },
       cellEditor: AutocompleteCellEditorComponent,
@@ -647,6 +680,7 @@ export class GridService {
             field,
             config.isSkuFilterReadOnly,
             config.isSbomMode,
+            config.isEbomMode,
           );
         }
         return this.gridConfigService.isFieldEditableInSbom(
@@ -654,6 +688,7 @@ export class GridService {
           params.data,
           config.isSkuFilterReadOnly,
           config.isSbomMode,
+          config.isEbomMode,
         );
       },
     };

@@ -1,4 +1,11 @@
 import { Injectable } from '@angular/core';
+import {
+  BOM_LINK_KEY,
+  BOM_TYPE_EBOM,
+  BOM_TYPE_MBOM,
+  BOM_TYPE_SBOM,
+  REQUIRED_FIELDS_FOR_SAVE,
+} from '../constants';
 import { DataService } from './data.service';
 
 export interface RequiredField {
@@ -209,6 +216,42 @@ export class ValidationService {
     return [...this.defaultRequiredFields];
   }
 
+  getRequiredFieldsForSave(bomType: string): RequiredField[] {
+    const fields = [...REQUIRED_FIELDS_FOR_SAVE];
+    if (bomType === BOM_TYPE_SBOM) {
+      return fields.filter((f) => f.label !== 'Feature');
+    }
+    return fields;
+  }
+
+  /**
+   * Validate a list of rows against required fields (reuses validateRow).
+   */
+  validateRows(
+    rows: any[],
+    requiredFields: RequiredField[]
+  ): ValidationResult {
+    const invalidRows: InvalidRow[] = [];
+    rows.forEach((row) => {
+      const validation = this.validateRow(row, requiredFields);
+      if (!validation.isValid) {
+        invalidRows.push({
+          row,
+          missingFields: validation.missingFields,
+          rowId: row.newRowId ?? row.materialKey ?? row.partNumber ?? row.part ?? 'Unknown',
+        });
+      }
+    });
+    if (invalidRows.length > 0) {
+      return {
+        isValid: false,
+        message: 'Cannot save: Some rows have missing required fields.',
+        invalidRows,
+      };
+    }
+    return { isValid: true, message: '' };
+  }
+
   /**
    * Create custom required fields configuration
    */
@@ -411,24 +454,33 @@ export class ValidationService {
     skuInfo: any[],
     apiData?: any
   ): ValidationResult {
-    const newRows: any[] = [];
-    const existingRows: any[] = [];
+    const bomType = this.dataService.getBomType();
+    const isEbom = bomType === BOM_TYPE_EBOM;
 
-    if (displayData && displayData.length > 0) {
-      for (const row of displayData) {
-        if (row.isNewRow || row.newRowId !== undefined) {
-          newRows.push(row);
-        }
-      }
+    // EBOM: same rule as MBOM (duplicate Part + Feature not allowed). Reuse this method with Part+Feature-only logic; no SKU/section/ptcBomPartMarkUp.
+    if (isEbom) {
+      return this.validateDuplicatePartAndFeatureOnly(rowData, displayData, apiData);
     }
 
-    const bomType = this.dataService.getBomType();
-    const isMbom = bomType === 'MBOM';
-    const isSbom = bomType === 'SBOM';
+    const newRows = this.findNewRows(rowData);
+    if (displayData && Array.isArray(displayData)) {
+      displayData.forEach((row: any) => {
+        if (row.isNewRow && !row.isSectionHeader && !row.isGroupHeader && !row.isMaterialHeader) {
+          const exists = newRows.some((nr) => nr.newRowId === row.newRowId);
+          if (!exists) {
+            newRows.push(row);
+          }
+        }
+      });
+    }
+
+    const existingRows: any[] = [];
+    const isMbom = bomType === BOM_TYPE_MBOM;
+    const isSbom = bomType === BOM_TYPE_SBOM;
 
     if (apiData && apiData.instances && Array.isArray(apiData.instances)) {
       for (const instance of apiData.instances) {
-        const bomLink = instance['bom-link'];
+        const bomLink = instance[BOM_LINK_KEY];
         if (!bomLink) continue;
 
         const section = bomLink.sectionInternalName || bomLink.section || '';
@@ -738,7 +790,7 @@ export class ValidationService {
 
     if (apiData && apiData.instances && Array.isArray(apiData.instances)) {
       for (const instance of apiData.instances) {
-        const bomLink = instance['bom-link'];
+        const bomLink = instance[BOM_LINK_KEY];
         if (!bomLink) continue;
 
         const section = bomLink.sectionInternalName || bomLink.section || '';
@@ -834,7 +886,7 @@ export class ValidationService {
             const matchingRecords: any[] = [];
             if (apiData && apiData.instances && Array.isArray(apiData.instances)) {
               for (const instance of apiData.instances) {
-                const bomLink = instance['bom-link'];
+                const bomLink = instance[BOM_LINK_KEY];
                 if (!bomLink) continue;
 
                 const instanceSection = bomLink.sectionInternalName || bomLink.section || '';
@@ -890,7 +942,7 @@ export class ValidationService {
             const matchingRecords: any[] = [];
             if (apiData && apiData.instances && Array.isArray(apiData.instances)) {
               for (const instance of apiData.instances) {
-                const bomLink = instance['bom-link'];
+                const bomLink = instance[BOM_LINK_KEY];
                 if (!bomLink) continue;
 
                 const instanceSection = bomLink.sectionInternalName || bomLink.section || '';
@@ -931,7 +983,7 @@ export class ValidationService {
           const matchingRecords: any[] = [];
           if (apiData && apiData.instances && Array.isArray(apiData.instances)) {
             for (const instance of apiData.instances) {
-              const bomLink = instance['bom-link'];
+              const bomLink = instance[BOM_LINK_KEY];
               if (!bomLink) continue;
 
               const instanceSection = bomLink.sectionInternalName || bomLink.section || '';
@@ -1038,5 +1090,88 @@ export class ValidationService {
     };
 
     return result;
+  }
+
+  private validateDuplicatePartAndFeatureOnly(
+    rowData: any[],
+    displayData: any[] = [],
+    apiData?: any
+  ): ValidationResult {
+    const newRows: any[] = [];
+    const existingCombinations = new Set<string>();
+
+    if (displayData && displayData.length > 0) {
+      for (const row of displayData) {
+        if (row.isNewRow || row.newRowId !== undefined) {
+          newRows.push(row);
+        }
+      }
+    }
+
+    if (apiData?.instances && Array.isArray(apiData.instances)) {
+      for (const instance of apiData.instances) {
+        const bomLink = instance[BOM_LINK_KEY];
+        if (!bomLink) continue;
+        const partNumber = String(bomLink.partNumber || '').trim();
+        const feature = String(bomLink.bomLinkFeature || '').trim();
+        if (partNumber && partNumber !== '') {
+          existingCombinations.add(`${partNumber.toLowerCase()}|${feature.toLowerCase()}`);
+        }
+      }
+    } else {
+      const collectRows = (rows: any[]) => {
+        for (const row of rows) {
+          if ((row.isDirectRow || row.isSubRow) && !row.isNewRow) {
+            const partNumber = String(row.partNumber || '').trim();
+            const feature = String(row.bomLinkFeature || '').trim();
+            if (partNumber && partNumber !== '') {
+              existingCombinations.add(`${partNumber.toLowerCase()}|${feature.toLowerCase()}`);
+            }
+          }
+          if (row.children?.length > 0) collectRows(row.children);
+        }
+      };
+      collectRows(rowData);
+    }
+
+    const newCombinationCounts = new Map<string, any[]>();
+    for (const row of newRows) {
+      const partNumber = String(row.partNumber || '').trim();
+      const feature = String(row.bomLinkFeature || '').trim();
+      if (!partNumber || partNumber === '') continue;
+      const key = `${partNumber.toLowerCase()}|${feature.toLowerCase()}`;
+      if (!newCombinationCounts.has(key)) newCombinationCounts.set(key, []);
+      newCombinationCounts.get(key)!.push(row);
+    }
+
+    const invalidRows: InvalidRow[] = [];
+    for (const [key, rows] of newCombinationCounts.entries()) {
+      if (rows.length > 1) {
+        rows.forEach((r) =>
+          invalidRows.push({
+            row: r,
+            missingFields: [],
+            rowId: r.newRowId ?? r.partNumber ?? 'Unknown',
+            duplicateType: 'duplicate-part',
+          })
+        );
+      } else if (existingCombinations.has(key)) {
+        invalidRows.push({
+          row: rows[0],
+          missingFields: [],
+          rowId: rows[0].newRowId ?? rows[0].partNumber ?? 'Unknown',
+          duplicateType: 'duplicate-part',
+        });
+      }
+    }
+
+    return {
+      isValid: invalidRows.length === 0,
+      message:
+        invalidRows.length > 0
+          ? 'Duplicate Part + Feature combination found. Each Part + Feature must be unique.'
+          : 'No duplicate Part + Feature combinations found.',
+      invalidRows: invalidRows.length > 0 ? invalidRows : undefined,
+    };
   }
 }

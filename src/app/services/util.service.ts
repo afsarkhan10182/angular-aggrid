@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { GridApi, ColDef } from 'ag-grid-community';
+import { BOM_TYPE_MBOM, BOM_TYPE_SBOM } from '../constants';
 
 export interface ExtendedColDef extends ColDef {
   isVirtual?: boolean;
@@ -507,11 +508,11 @@ export class UtilService {
    * @returns True if part matching is required
    */
   shouldRequirePartMatch(bomType: string, rowPartNumber: string, instancePartNumber: string): boolean {
-    if (bomType === 'SBOM') {
+    if (bomType === BOM_TYPE_SBOM) {
       return true;
     }
 
-    if (bomType === 'MBOM') {
+    if (bomType === BOM_TYPE_MBOM) {
       const rowHasPartNumber = !!(rowPartNumber && String(rowPartNumber).trim() !== '');
       const instanceHasPartNumber = !!(instancePartNumber && String(instancePartNumber).trim() !== '');
       return rowHasPartNumber && instanceHasPartNumber;
@@ -617,6 +618,47 @@ export class UtilService {
     }
 
     return newRows;
+  }
+
+  /**
+   * Find all data rows (existing + new) for validation on save.
+   * Excludes section/group/material/branch headers.
+   */
+  findAllDataRows(rowData: any[], displayData?: any[]): any[] {
+    const dataRows: any[] = [];
+
+    const collect = (rows: any[]) => {
+      if (!Array.isArray(rows)) return;
+      rows.forEach((row) => {
+        if (this.isHeaderRow(row)) return;
+        const hasBomFields =
+          row.partNumber !== undefined ||
+          row.bomLinkPart !== undefined ||
+          row.bomLinkFeature !== undefined ||
+          row.quantity !== undefined ||
+          row.qty !== undefined;
+        const isDataRow =
+          row.isDirectRow ||
+          row.isSubRow ||
+          row.isNewRow ||
+          (row.materialKey && !row.isSectionHeader && !row.isMaterialHeader) ||
+          (hasBomFields && !row.isSectionHeader && !row.isMaterialHeader && !row.isGroupHeader);
+        if (isDataRow) {
+          dataRows.push(row);
+        }
+        if (row.children?.length) collect(row.children);
+      });
+    };
+    collect(rowData);
+
+    if (displayData?.length) {
+      displayData.forEach((row) => {
+        if (row.isNewRow && !this.isHeaderRow(row) && !dataRows.some((r) => r === row || (r.newRowId !== undefined && r.newRowId === row.newRowId))) {
+          dataRows.push(row);
+        }
+      });
+    }
+    return dataRows;
   }
 
   getIdVariants(id: any): Set<string | number> {

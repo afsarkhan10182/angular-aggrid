@@ -28,6 +28,14 @@ import { UtilService, ExtendedColDef } from './services/util.service';
 import { PayloadTransformService } from './services/payload-transform.service';
 import { MassEditService, MassEditState } from './services/mass-edit.service';
 import { environment } from '../environments/environment';
+import {
+  BOM_LINK_KEY,
+  BOM_TYPE_EBOM,
+  BOM_TYPE_MBOM,
+  BOM_TYPE_SBOM,
+  DEFAULT_BOM_TYPE,
+  EBOM_SERVICE_FIELDS,
+} from './constants';
 import type {
   SkuFilterOption,
   MbomSkuFilterOption,
@@ -138,6 +146,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   ) {
     this.gridOptions.context = {
       dataService: this.dataService,
+      setSkipEditTracking: (skip: boolean) => this.rowManagementService.setSkipEditTracking(skip),
     };
 
     this.showExpiredData = false;
@@ -166,9 +175,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         ? {
             ...commonOptions.context,
             dataService: this.dataService,
+            setSkipEditTracking: (skip: boolean) => this.rowManagementService.setSkipEditTracking(skip),
           }
         : {
             dataService: this.dataService,
+            setSkipEditTracking: (skip: boolean) => this.rowManagementService.setSkipEditTracking(skip),
           },
       isFullWidthRow: (params: any) => {
         return params.rowNode.data.isGroupHeader;
@@ -266,7 +277,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   private flattenHierarchicalData(data: any[]): any[] {
     return this.gridService.flattenHierarchicalData(data, {
-      getBomType: () => this.dataService.getBomType() || 'SBOM',
+      getBomType: () => this.dataService.getBomType() || DEFAULT_BOM_TYPE,
       getFilteredSkuInfo: () => this.getFilteredSkuInfo(),
       selectedSkuFilter: this.selectedSkuFilter,
       hasSkuInExistingResponse: (row, ids) => this.hasSkuInExistingResponse(row, ids),
@@ -361,7 +372,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    if (this.dataService.getBomType() !== 'SBOM') {
+    if (this.dataService.getBomType() !== BOM_TYPE_SBOM) {
       return;
     }
 
@@ -507,7 +518,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         }
 
         const bomType = this.dataService.getBomType();
-        const isSbom = bomType === 'SBOM';
+        const isSbom = bomType === BOM_TYPE_SBOM;
 
         return params.data.children.some((child: any) => {
           if (child.isMaterialHeader) return true;
@@ -529,7 +540,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           return true;
         });
       },
-      () => this.dataService.getBomType() || 'SBOM',
+      () => this.dataService.getBomType() || DEFAULT_BOM_TYPE,
     );
     columns.push(actionsCol);
 
@@ -538,6 +549,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       constraintsData: this.constraintsData,
       isSkuFilterReadOnly: () => this.isSkuFilterReadOnly(),
       isSbomMode: () => this.isSbomMode(),
+      isEbomMode: () => this.isEbomMode(),
       getDataCellStyle: (params) => this.getDataCellStyle(params),
       getFeatureValue: (data) => this.utilService.getFeatureValue(data),
       renderHierarchicalCell: (params) => this.renderHierarchicalCell(params),
@@ -593,6 +605,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
                 field,
                 () => this.isSkuFilterReadOnly(),
                 () => this.isSbomMode(),
+                () => this.isEbomMode(),
               );
             }
             return this.gridConfigService.isFieldEditableInSbom(
@@ -600,6 +613,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               params.data,
               () => this.isSkuFilterReadOnly(),
               () => this.isSbomMode(),
+              () => this.isEbomMode(),
             );
           },
           cellEditor: AutocompleteCellEditorComponent,
@@ -653,6 +667,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
                 field,
                 () => this.isSkuFilterReadOnly(),
                 () => this.isSbomMode(),
+                () => this.isEbomMode(),
               );
             }
             return this.gridConfigService.isFieldEditableInSbom(
@@ -660,6 +675,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               params.data,
               () => this.isSkuFilterReadOnly(),
               () => this.isSbomMode(),
+              () => this.isEbomMode(),
             );
           },
           cellEditor: AutocompleteCellEditorComponent,
@@ -715,6 +731,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
                 field,
                 () => this.isSkuFilterReadOnly(),
                 () => this.isSbomMode(),
+                () => this.isEbomMode(),
               );
             }
             return this.gridConfigService.isFieldEditableInSbom(
@@ -722,6 +739,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               params.data,
               () => this.isSkuFilterReadOnly(),
               () => this.isSbomMode(),
+              () => this.isEbomMode(),
             );
           },
           cellEditor: AutocompleteCellEditorComponent,
@@ -781,6 +799,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               field,
               () => this.isSkuFilterReadOnly(),
               () => this.isSbomMode(),
+              () => this.isEbomMode(),
             );
           }
           return this.gridConfigService.isFieldEditableInSbom(
@@ -788,6 +807,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             params.data,
             () => this.isSkuFilterReadOnly(),
             () => this.isSbomMode(),
+            () => this.isEbomMode(),
           );
         },
       };
@@ -801,6 +821,35 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           context: {
             dataService: this.dataService,
           },
+        });
+        columnDef.valueSetter = (params: any) => {
+          if (!params.data || !params.colDef?.field) return false;
+          const fieldName = params.colDef.field;
+          const newVal = params.newValue == null || params.newValue === '' ? '' : String(params.newValue).trim();
+          params.data[fieldName] = newVal;
+          if (fieldName === 'partNumber') {
+            params.data.part = newVal;
+            params.data.bomLinkPart = newVal;
+          } else {
+            params.data.part = newVal;
+            params.data.partNumber = newVal;
+          }
+          if (newVal === '') {
+            this.clearAutopopulateFieldsForRow(params.data);
+            params.api?.refreshCells({ rowNodes: [params.node], force: true });
+          }
+          return true;
+        };
+      } else if (
+        field === 'materialColorServiceSubstituteOne' ||
+        field === 'materialColorServiceSubstituteTwo' ||
+        field === 'materialColorServiceEquivalent'
+      ) {
+        columnDef.cellEditor = AutocompleteCellEditorComponent;
+        columnDef.cellEditorParams = () => ({
+          placeholder: 'search services...',
+          isServiceSearch: true,
+          context: { dataService: this.dataService },
         });
       } else if (field === 'material' || field === 'materialDescription') {
         columnDef.cellEditor = AutocompleteCellEditorComponent;
@@ -834,6 +883,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               field,
               () => this.isSkuFilterReadOnly(),
               () => this.isSbomMode(),
+              () => this.isEbomMode(),
             );
           }
           return this.gridConfigService.isFieldEditableInSbom(
@@ -841,6 +891,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             params.data,
             () => this.isSkuFilterReadOnly(),
             () => this.isSbomMode(),
+            () => this.isEbomMode(),
           );
         };
         columnDef.valueSetter = (params: any) => {
@@ -992,6 +1043,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       constraintsData: this.constraintsData,
       isSkuFilterReadOnly: () => this.isSkuFilterReadOnly(),
       isSbomMode: () => this.isSbomMode(),
+      isEbomMode: () => this.isEbomMode(),
       getDataCellStyle: (params) => this.getDataCellStyle(params),
       getFeatureValue: (data) => this.utilService.getFeatureValue(data),
       renderHierarchicalCell: (params) => this.renderHierarchicalCell(params),
@@ -1049,18 +1101,23 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
    */
   public isSbomMode(): boolean {
     const bomType = this.dataService.getBomType();
-    return bomType === 'SBOM';
+    return bomType === BOM_TYPE_SBOM;
   }
 
   public isMbomMode(): boolean {
     const bomType = this.dataService.getBomType();
-    return bomType === 'MBOM';
+    return bomType === BOM_TYPE_MBOM;
+  }
+
+  public isEbomMode(): boolean {
+    const bomType = this.dataService.getBomType();
+    return bomType === BOM_TYPE_EBOM;
   }
 
   public getBomComposerTitle(): string {
     const bomType = this.dataService.getBomType();
     
-    if (bomType === 'EBOM' || bomType === 'SBOM') {
+    if (bomType === BOM_TYPE_EBOM || bomType === BOM_TYPE_SBOM) {
       return `${bomType} Composer`;
     }
     
@@ -1073,7 +1130,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   public getCriteriaLabel(): string {
     const bomType = this.dataService.getBomType();
-    if (bomType === 'EBOM' || bomType === 'MATERIALMBOM') {
+    if (bomType === BOM_TYPE_EBOM || bomType === 'MATERIALMBOM') {
       return 'Material of SKUs chosen - ';
     }
     // For MBOM and SBOM
@@ -1081,11 +1138,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   public isSkuFilterReadOnly(): boolean {
+    if (this.isEbomMode()) {
+      return false;
+    }
     if (this.isMbomMode()) {
       return this.selectedSkuFilter !== 'hdEditable';
-    } else {
-      return this.selectedSkuFilter !== 'editableSkus';
     }
+    return this.selectedSkuFilter !== 'editableSkus';
   }
 
   /**
@@ -1136,6 +1195,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       shouldHighlightRow: (data) => this.shouldHighlightRow(data),
       getPartNumberValue: (row) => this.utilService.getPartNumberValue(row),
       isSkuFilterReadOnly: () => this.isSkuFilterReadOnly(),
+      isEbomMode: () => this.isEbomMode(),
       utilService: this.utilService,
       gridConfigService: this.gridConfigService,
     });
@@ -1596,7 +1656,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const bomType = this.dataService.getBomType() ?? '';
 
     for (const instance of instances) {
-      const bomLink = instance['bom-link'];
+      const bomLink = instance[BOM_LINK_KEY];
       if (!bomLink) continue;
 
       if (!this.matchesRowCriteria(bomLink, rowData, bomType)) {
@@ -1649,7 +1709,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
    */
   private filterHierarchicalDataBySkuFilter(data: any[]): any[] {
     return this.gridService.filterHierarchicalDataBySkuFilter(data, {
-      getBomType: () => this.dataService.getBomType() || 'SBOM',
+      getBomType: () => this.dataService.getBomType() || DEFAULT_BOM_TYPE,
       getFilteredSkuInfo: () => this.getFilteredSkuInfo(),
       selectedSkuFilter: this.selectedSkuFilter,
       hasSkuInExistingResponse: (row, ids) => this.hasSkuInExistingResponse(row, ids),
@@ -1761,6 +1821,87 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     return false;
   }
 
+  private hasAnyServiceFieldTouched(): boolean {
+    const serviceSet = new Set(EBOM_SERVICE_FIELDS);
+    for (const rowId of this.editedRows) {
+      const fields = this.editedFields.get(rowId);
+      if (fields && [...fields].some((f) => serviceSet.has(f))) return true;
+    }
+    return false;
+  }
+
+  private buildMaterialColorSavePayload(): { instances: { [key: string]: any } } {
+    const instances: { [key: string]: any } = {};
+    const serviceSet = new Set(EBOM_SERVICE_FIELDS);
+    if (!this.gridApi) return { instances };
+
+    this.gridApi.forEachNode((node: any) => {
+      const row = node?.data;
+      if (!row?.materialColorId) return;
+      const rowId = row.materialKey ?? row.newRowId ?? row.partNumber ?? row.part ?? '';
+      const compositeId = row.section && (row.partNumber || row.part) ? `${row.section}::${row.partNumber || row.part}` : null;
+      const isEdited =
+        this.editedRows.has(rowId) ||
+        (compositeId && this.editedRows.has(compositeId)) ||
+        this.editedRows.has(row.materialColorId);
+      if (!isEdited) return;
+      const editedFieldsForRow =
+        this.editedFields.get(rowId) ??
+        this.editedFields.get(compositeId ?? '') ??
+        this.editedFields.get(row.materialColorId) ??
+        new Set<string>();
+      const touchedService = new Set([...editedFieldsForRow].filter((f) => serviceSet.has(f)));
+      if (touchedService.size === 0) return;
+
+      const instanceData = this.dataService.buildMaterialColorInstanceData(row, touchedService);
+      if (Object.keys(instanceData).length > 0) {
+        instances[row.materialColorId] = instanceData;
+      }
+    });
+    return { instances };
+  }
+
+  private runBomSaveStep(): void {
+    this.rowManagementService
+      .saveChanges(this.rowData, this.editedRows, this.gridApi, this)
+      .then((result) => {
+        this.isSaving = false;
+        if (result.success) {
+          this.invalidRowIds.clear();
+          this.rowManagementService.showSaveMessage(result.message, this, 'success');
+        } else {
+          this.rowManagementService.showSaveMessage(result.message, this, 'error');
+        }
+      })
+      .catch(() => {
+        this.isSaving = false;
+        this.rowManagementService.showSaveMessage(
+          'An unexpected error occurred while saving. Please try again.',
+          this,
+          'error-persistent',
+        );
+      });
+  }
+
+  private clearAutopopulateFieldsForRow(data: any): void {
+    if (!data) return;
+    const fieldsToClear = [
+      'material',
+      'materialDescription',
+      'supplier',
+      'color',
+      'colorDescription',
+      'colorId',
+      'materialSupplierMasterId',
+      '_availablePartNumbers',
+    ];
+    fieldsToClear.forEach((f) => {
+      if (Object.prototype.hasOwnProperty.call(data, f)) {
+        data[f] = f === '_availablePartNumbers' ? [] : '';
+      }
+    });
+  }
+
   private handlePartNumberFieldClick(event: any): boolean {
     if (event.colDef.field === 'bomLinkPart' || event.colDef.field === 'partNumber') {
       event.api.startEditingCell({
@@ -1791,6 +1932,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     event.event.preventDefault();
     event.event.stopPropagation();
+    if (this.isEbomMode()) return true;
     if (isReadOnlySkuFilter || event.colDef?.isDisabled) {
       return true;
     }
@@ -1806,6 +1948,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     event.event.preventDefault();
     event.event.stopPropagation();
+    if (this.isEbomMode()) return true;
     if (isReadOnlySkuFilter) {
       return true;
     }
@@ -1849,6 +1992,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           event.data,
           () => this.isSkuFilterReadOnly(),
           () => this.isSbomMode(),
+          () => this.isEbomMode(),
         ));
 
     if (isDateColumn && isEditable) {
@@ -1956,106 +2100,82 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const rowValidationMap = new Map<any, { missingFields: string[], skuErrors: string[] }>();
 
     this.invalidRowIds.clear();
-    // clear previous errors
-    [this.rowData, this.displayData].forEach(list => {
-      list?.forEach(row => {
-        if (row.validation) {
-          row.validation = {
-            isValid: true,
-            missingFields: [],
-            skuErrors: [],
-          };
-        }
-      });
+    const allDataRows = this.collectDataRowsFromGrid();
+    allDataRows.forEach((row) => {
+      row.validation = { isValid: true, missingFields: [], skuErrors: [] };
     });
-    this.gridApi.refreshCells({
-      force: true,
-      columns: ['actions'],
-    });
+    this.gridApi.refreshCells({ force: true, columns: ['actions'] });
 
-    // Validate new rows before saving (required fields)
-    let requiredFields = this.validationService.getDefaultRequiredFields();
+    const bomType = this.dataService.getBomType() ?? '';
+    const requiredFields = this.validationService.getRequiredFieldsForSave(bomType);
+    const touchedRows = allDataRows.filter((row) => this.isRowTouched(row));
+    const validationResult = this.validationService.validateRows(touchedRows, requiredFields);
 
-    const bomType = this.dataService.getBomType();
-
-    if (bomType === 'SBOM') {
-      // For SBOM: Remove bomLinkFeature, bomLinkSpecSheetExtra, and bomLinkIncludeInSpecSheet from required fields
-      requiredFields = requiredFields.filter(
-        (field) =>
-          !field.keys.includes('bomLinkFeature') &&
-          !field.keys.includes('bomLinkSpecSheetExtra') &&
-          !field.keys.includes('bomLinkIncludeInSpecSheet'),
-      );
-    } else {
-      // For MBOM: Remove SBOM-specific fields
-      requiredFields = requiredFields.filter(
-        (field) =>
-          !field.keys.includes('bomLinkSpecSheetExtra') &&
-          !field.keys.includes('bomLinkIncludeInSpecSheet'),
-      );
-    }
-
-    const validationResult = this.validationService.validateNewRows(
-      this.rowData,
-      this.displayData,
-      requiredFields,
-    );
-
-    validationResult.invalidRows?.forEach(ir => {
+    validationResult.invalidRows?.forEach((ir) => {
       rowValidationMap.set(ir.row, {
         missingFields: Array.isArray(ir.missingFields) ? ir.missingFields : [],
         skuErrors: [],
       });
-    });
-
-    const skuInfo = this.getFilteredSkuInfo();
-    const skuValidationResult = this.validationService.validateNewRowsSkus(
-      this.rowData,
-      skuInfo,
-      this.displayData,
-    );
-    skuValidationResult.invalidRows?.forEach(ir => {
-      const existing = rowValidationMap.get(ir.row);
-      if (existing) {
-        existing.skuErrors = Array.isArray(ir.skuErrors)
-        ? ir.skuErrors
-        : ['SKU selection missing'];
-      } else {
-        rowValidationMap.set(ir.row, {
-          missingFields: [],
-          skuErrors: Array.isArray(ir.skuErrors)
-            ? ir.skuErrors
-            : ['SKU selection missing'],
-        });
+      this.invalidRowIds.add(ir.rowId);
+      const row = ir.row;
+      if (row?.section && (row.partNumber || row.part)) {
+        this.invalidRowIds.add(`${row.section}::${row.partNumber || row.part}`);
       }
     });
 
-    const allNewRows = this.utilService.findAllNewRows(this.rowData, this.displayData);
+    const skuInfo = this.getFilteredSkuInfo();
+    let skuValidationResult: { isValid: boolean; message: string; invalidRows?: any[] } = { isValid: true, message: '' };
     let hasPayloadErrors = false;
-    for (const newRow of allNewRows) {
-      const payloadSkus = this.buildSkusArrayFromRow(newRow, skuInfo);
-      const payloadValidation = this.validationService.validateSkuPayload(
-        newRow,
+
+    if (!this.isEbomMode()) {
+      skuValidationResult = this.validationService.validateNewRowsSkus(
+        this.rowData,
         skuInfo,
-        payloadSkus,
+        this.displayData,
       );
-
-      if (!payloadValidation.isValid) {
-        hasPayloadErrors = true;
-        const existing = rowValidationMap.get(newRow);
-        const skuErrorMessage = payloadValidation.message || 'No SKUs selected in row';
-
+      skuValidationResult.invalidRows?.forEach(ir => {
+        if (!this.isRowTouched(ir.row)) return;
+        const existing = rowValidationMap.get(ir.row);
         if (existing) {
-          existing.skuErrors.push(skuErrorMessage);
+          existing.skuErrors = Array.isArray(ir.skuErrors)
+            ? ir.skuErrors
+            : ['SKU selection missing'];
         } else {
-          rowValidationMap.set(newRow, {
+          rowValidationMap.set(ir.row, {
             missingFields: [],
-            skuErrors: [skuErrorMessage],
+            skuErrors: Array.isArray(ir.skuErrors)
+              ? ir.skuErrors
+              : ['SKU selection missing'],
           });
         }
+      });
 
-        const rowId = this.utilService.getRowId(newRow) || 'Unknown';
-        this.invalidRowIds.add(rowId);
+      const allNewRows = this.utilService.findAllNewRows(this.rowData, this.displayData);
+      for (const newRow of allNewRows) {
+        const payloadSkus = this.buildSkusArrayFromRow(newRow, skuInfo);
+        const payloadValidation = this.validationService.validateSkuPayload(
+          newRow,
+          skuInfo,
+          payloadSkus,
+        );
+
+        if (!payloadValidation.isValid) {
+          hasPayloadErrors = true;
+          if (this.isRowTouched(newRow)) {
+            const existing = rowValidationMap.get(newRow);
+            const skuErrorMessage = payloadValidation.message || 'No SKUs selected in row';
+            if (existing) {
+              existing.skuErrors.push(skuErrorMessage);
+            } else {
+              rowValidationMap.set(newRow, {
+                missingFields: [],
+                skuErrors: [skuErrorMessage],
+              });
+            }
+          }
+          const rowId = this.utilService.getRowId(newRow) || 'Unknown';
+          this.invalidRowIds.add(rowId);
+        }
       }
     }
 
@@ -2068,72 +2188,89 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     );
 
     duplicateValidation.invalidRows?.forEach(ir => {
-    const existing = rowValidationMap.get(ir.row);
-    const duplicateMsg = duplicateValidation.message || 'Duplicate Feature-SKU combination';
+      if (!this.isRowTouched(ir.row)) return;
+      const existing = rowValidationMap.get(ir.row);
+      const duplicateMsg = duplicateValidation.message || (this.isEbomMode() ? 'Duplicate Part + Feature combination' : 'Duplicate Feature-SKU combination');
+      if (existing) {
+        existing.skuErrors.push(duplicateMsg);
+      } else {
+        rowValidationMap.set(ir.row, {
+          missingFields: [],
+          skuErrors: [duplicateMsg],
+        });
+      }
+    });
 
-    if (existing) {
-      existing.skuErrors.push(duplicateMsg);
-    } else {
-      rowValidationMap.set(ir.row, {
-        missingFields: [],
-        skuErrors: [duplicateMsg],
+    if (rowValidationMap.size > 0) {
+      rowValidationMap.forEach((validation, row) => {
+        row.validation = {
+          isValid: false,
+          missingFields: validation.missingFields,
+          skuErrors: validation.skuErrors,
+        };
+      });
+      this.gridApi.refreshCells({
+        force: true,
+        columns: ['actions'],
       });
     }
-  });
 
-  if (rowValidationMap.size > 0) {
-    rowValidationMap.forEach((validation, row) => {
-      row.validation = {
-        isValid: false,
-        missingFields: validation.missingFields,
-        skuErrors: validation.skuErrors,
-      };
-    });
-
-    this.gridApi.refreshCells({
-      force: true,
-      columns: ['actions'],
-    });
     if (this.handleValidationError(validationResult)) {
-        return;
-    } else if (this.handleValidationError(skuValidationResult)) {
-        return;
-    } else if (hasPayloadErrors) {
-      this.handleValidationError({
-        isValid: false,
-        message: 'Please fix validation errors before saving.',
-      } as any);
-      return;
-    } else if (this.handleValidationError(duplicateValidation)) {
       return;
     }
-  }
+    if (!this.isEbomMode()) {
+      if (this.handleValidationError(skuValidationResult)) {
+        return;
+      }
+      if (hasPayloadErrors) {
+        this.handleValidationError({
+          isValid: false,
+          message: 'Please fix validation errors before saving.',
+        } as any);
+        return;
+      }
+    }
+    if (this.handleValidationError(duplicateValidation)) {
+      return;
+    }
 
-    // All validations passed, proceed with save
     this.isSaving = true;
 
-    this.rowManagementService
-      .saveChanges(this.rowData, this.editedRows, this.gridApi, this)
-      .then((result) => {
-        this.isSaving = false;
-
-        if (result.success) {
-          this.invalidRowIds.clear();
-          this.rowManagementService.showSaveMessage(result.message, this, 'success');
-        } else {
-          this.rowManagementService.showSaveMessage(result.message, this, 'error');
-        }
-      })
-      .catch((error) => {
-        this.isSaving = false;
-        this.rowManagementService.showSaveMessage(
-          'An unexpected error occurred while saving. Please try again.',
-          this,
-          'error-persistent',
-        );
+    if (this.isEbomMode() && this.hasAnyServiceFieldTouched()) {
+      const step1Payload = this.buildMaterialColorSavePayload();
+      if (Object.keys(step1Payload.instances).length === 0) {
+        this.runBomSaveStep();
+        return;
+      }
+      this.dataService.saveMaterialColors(step1Payload).subscribe({
+        next: () => this.runBomSaveStep(),
+        error: (err: any) => {
+          this.isSaving = false;
+          const errors = err?.error?.errors ?? err?.error;
+          if (errors && typeof errors === 'object') {
+            Object.keys(errors).forEach((materialColorId) => {
+              this.invalidRowIds.add(materialColorId);
+              this.gridApi?.forEachNode((node: any) => {
+                const row = node?.data;
+                if (row?.materialColorId === materialColorId) {
+                  const rid = row.materialKey ?? row.newRowId ?? row.partNumber ?? row.part;
+                  if (rid) this.invalidRowIds.add(rid);
+                  if (row.section && (row.partNumber || row.part)) {
+                    this.invalidRowIds.add(`${row.section}::${row.partNumber || row.part}`);
+                  }
+                }
+              });
+            });
+          }
+          this.refreshGridForValidationErrors();
+          const msg = err?.error?.message ?? err?.message ?? 'Material color save failed.';
+          this.showNotification(msg, 'error');
+        },
       });
+    } else {
+      this.runBomSaveStep();
+    }
   }
-
 
   private handleValidationError(
     validationResult: { isValid: boolean; message: string; invalidRows?: Array<{ rowId: string | number }> },
@@ -2156,6 +2293,69 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  /**
+   * Collect all data rows from the grid (exact node.data the grid displays) for validation.
+   * Ensures existing rows show validation because we validate the same objects the grid renders.
+   */
+  private collectDataRowsFromGrid(): any[] {
+    const dataRows: any[] = [];
+    if (!this.gridApi) return this.utilService.findAllDataRows(this.rowData, this.displayData);
+
+    this.gridApi.forEachNode((node: any) => {
+      const data = node?.data;
+      if (!data || this.utilService.isHeaderRow(data)) return;
+      const hasBomFields =
+        data.partNumber !== undefined ||
+        data.bomLinkPart !== undefined ||
+        data.bomLinkFeature !== undefined ||
+        data.quantity !== undefined ||
+        data.qty !== undefined;
+      const isDataRow =
+        data.isDirectRow ||
+        data.isSubRow ||
+        data.isNewRow ||
+        (data.materialKey && !data.isSectionHeader && !data.isMaterialHeader) ||
+        (hasBomFields && !data.isSectionHeader && !data.isMaterialHeader && !data.isGroupHeader);
+      if (isDataRow) dataRows.push(data);
+    });
+
+    if (this.displayData?.length) {
+      this.displayData.forEach((row) => {
+        if (row.isNewRow && !this.utilService.isHeaderRow(row) && !dataRows.some((r) => r === row || (r.newRowId !== undefined && r.newRowId === row.newRowId))) {
+          dataRows.push(row);
+        }
+      });
+    }
+    return dataRows;
+  }
+
+  /**
+   * True if this specific row was touched (edited). Only touched rows get required-field and duplicate validation errors.
+   * Uses the row's unique id (materialKey or newRowId) so another row with same Part/Section but different SKU is not considered touched.
+   */
+  private isRowTouched(row: any): boolean {
+    if (row?.isNewRow) return true;
+    const uniqueId = row?.materialKey ?? row?.newRowId;
+    if (uniqueId != null) {
+      const variants = this.utilService.getIdVariants(uniqueId);
+      for (const id of variants) {
+        if (this.editedRows.has(id)) return true;
+      }
+      return false;
+    }
+    const rowId = row?.partNumber ?? row?.part;
+    if (rowId == null) return false;
+    const variants = this.utilService.getIdVariants(rowId);
+    for (const id of variants) {
+      if (this.editedRows.has(id)) return true;
+    }
+    const compositeId =
+      row?.section && (row.partNumber ?? row.part)
+        ? `${row.section}::${row.partNumber ?? row.part}`
+        : null;
+    if (compositeId && this.editedRows.has(compositeId)) return true;
+    return false;
+  }
 
   private createEditorCleanup(
     observerRef: { current: MutationObserver | null },
@@ -2616,7 +2816,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   private filterHierarchicalData(data: any[], searchText: string): any[] {
     return this.gridService.filterHierarchicalData(data, searchText, {
-      getBomType: () => this.dataService.getBomType() || 'SBOM',
+      getBomType: () => this.dataService.getBomType() || DEFAULT_BOM_TYPE,
       getFilteredSkuInfo: () => this.getFilteredSkuInfo(),
       selectedSkuFilter: this.selectedSkuFilter,
       hasSkuInExistingResponse: (row, ids) => this.hasSkuInExistingResponse(row, ids),
@@ -2754,20 +2954,20 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     const processedItems = data.instances
       .filter((item: any) => {
-        const bomLink = item['bom-link'];
+        const bomLink = item[BOM_LINK_KEY];
         if (!bomLink) return false;
 
         const hasPartNumber = bomLink.partNumber && String(bomLink.partNumber).trim() !== '';
 
         let isCorrectMarkup = true;
-        if (this.dataService.getBomType() === 'MBOM') {
+        if (this.dataService.getBomType() === BOM_TYPE_MBOM) {
           isCorrectMarkup = bomLink.ptcbomPartMarkUp === 'enumMBOM001';
         }
 
         return hasPartNumber && isCorrectMarkup;
       })
       .map((item: any) => {
-        const bomLink = item['bom-link'];
+        const bomLink = item[BOM_LINK_KEY];
         // Prefer the true internal name if provided by API. Using display text as a key
         // can cause non-unique matches and "wrong section toggles".
         const sectionInternalName = bomLink.sectionInternalName || bomLink.section; // e.g., "enumSection001"
@@ -2984,6 +3184,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       if (!rowId) return;
 
       const originalValues: any = {
+        partNumber: String(row.partNumber || row.part || row.bomLinkPart || ''),
+        bomLinkPart: String(row.bomLinkPart || row.partNumber || row.part || ''),
+        bomLinkFeature: String(row.bomLinkFeature || row.feature || ''),
         bomLinkStartDate: String(row.bomLinkStartDate || row.startDate || ''),
         bomLinkEndDate: String(row.bomLinkEndDate || row.endDate || ''),
         quantity: String(row.quantity || row.qty || ''),
@@ -3098,6 +3301,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           state: massEditState,
           isMbomMode: () => this.isMbomMode(),
           isSbomMode: () => this.isSbomMode(),
+          isEbomMode: () => this.isEbomMode(),
           editedRows: this.editedRows,
           editedFields: this.editedFields,
           originalRowValues: this.originalRowValues,
@@ -3235,6 +3439,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         Array.from(this.selectedRows),
         () => this.isMbomMode(),
         () => this.isSbomMode(),
+        () => this.isEbomMode(),
       );
       this.massEditStartDate = massEditState.startDate;
       this.massEditEndDate = massEditState.endDate;

@@ -1,3 +1,4 @@
+import { BOM_LINK_KEY, BOM_TYPE_EBOM, BOM_TYPE_SBOM } from '../constants';
 import { Injectable } from '@angular/core';
 import { GridApi } from 'ag-grid-community';
 import { DataService } from './data.service';
@@ -93,7 +94,7 @@ export class RowManagementService {
     });
 
     const bomType = dataService.getBomType();
-    if (bomType === 'SBOM') {
+    if (bomType === BOM_TYPE_SBOM) {
       newRow.bomLinkSpecSheetExtra = 'Yes';
       newRow.bomLinkIncludeInSpecSheet = '';
     }
@@ -266,6 +267,16 @@ export class RowManagementService {
     });
   }
 
+  private _skipEditTracking = false;
+
+  setSkipEditTracking(skip: boolean): void {
+    this._skipEditTracking = skip;
+  }
+
+  isSkipEditTracking(): boolean {
+    return this._skipEditTracking;
+  }
+
   /**
    * Track field changes
    */
@@ -275,6 +286,8 @@ export class RowManagementService {
     editedFields?: Map<string | number, Set<string>>,
     originalRowValues?: Map<string | number, any>
   ): void {
+    if (this._skipEditTracking) return;
+
     const fieldName: string | undefined = params?.colDef?.field;
     const partId =
       params.data.materialKey || params.data.newRowId || params.data.partNumber || params.data.part;
@@ -355,6 +368,10 @@ export class RowManagementService {
       null;
     if (!original) return undefined;
 
+    if (fieldName === 'partNumber' || fieldName === 'part' || fieldName === 'bomLinkPart')
+      return original.partNumber ?? original.bomLinkPart ?? original.part;
+    if (fieldName === 'bomLinkFeature' || fieldName === 'feature')
+      return original.bomLinkFeature ?? original.feature;
     if (fieldName === 'bomLinkStartDate' || fieldName === 'startDate') return original.bomLinkStartDate;
     if (fieldName === 'bomLinkEndDate' || fieldName === 'endDate') return original.bomLinkEndDate;
     if (fieldName === 'quantity' || fieldName === 'qty') return original.quantity;
@@ -488,12 +505,12 @@ export class RowManagementService {
 
       const items = apiData!.instances;
       const existingPart = items.find((item) => {
-        const bomLink = item['bom-link'];
+        const bomLink = item[BOM_LINK_KEY];
         return bomLink.partNumber === params.newValue;
       });
 
       if (existingPart) {
-        const bomLink = existingPart['bom-link'];
+        const bomLink = existingPart[BOM_LINK_KEY];
         const existingPartData = bomLink as any;
 
         const fieldsToPopulate = [
@@ -525,10 +542,15 @@ export class RowManagementService {
         });
 
         const skuInfo = dataService.getSkuInfo();
+        const isEbom = dataService.getBomType() === BOM_TYPE_EBOM;
         skuInfo.forEach((sku) => {
           const skuFieldName = `sku${sku.skuId}`;
-          const matchingSku = existingPartData.skus.find((s: any) => s.skuId === sku.skuId);
-          const newSkuValue = matchingSku ? matchingSku.value : '';
+          const newSkuValue = isEbom
+            ? (params.newValue ?? '')
+            : (() => {
+                const matchingSku = existingPartData.skus?.find((s: any) => s.skuId === sku.skuId);
+                return matchingSku ? matchingSku.value : '';
+              })();
 
           if (oldData[skuFieldName] !== newSkuValue) {
             params.node.setDataValue(skuFieldName, newSkuValue);

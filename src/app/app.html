@@ -55,7 +55,7 @@
               <app-icon name="search" size="14"></app-icon>
             </button>
           </div>
-          <div class="sku-filter-container" *ngIf="isMbomMode() || isSbomMode()">
+          <div class="sku-filter-container" *ngIf="(isMbomMode() || isSbomMode()) && !isEbomMode()">
             <label class="sku-filter-label" for="sku-filter-trigger">SKU Views:</label>
             <div #skuFilterDropdown class="sku-filter-dropdown">
               <button
@@ -215,8 +215,8 @@
         </button>
       </div>
       <div class="mass-edit-fields">
-        <!-- MBOM Fields -->
-        <div class="mass-edit-field" *ngIf="isMbomMode()">
+        <!-- Shared core fields for EBOM, MBOM, SBOM: Start Date, End Date, Quantity -->
+        <div class="mass-edit-field">
           <label for="mass-edit-start-date">Start Date:</label>
           <input
             id="mass-edit-start-date"
@@ -226,7 +226,7 @@
             placeholder="MM/DD/YYYY"
           />
         </div>
-        <div class="mass-edit-field" *ngIf="isMbomMode()">
+        <div class="mass-edit-field">
           <label for="mass-edit-end-date">End Date:</label>
           <input
             id="mass-edit-end-date"
@@ -236,7 +236,7 @@
             placeholder="MM/DD/YYYY"
           />
         </div>
-        <div class="mass-edit-field" *ngIf="isMbomMode()">
+        <div class="mass-edit-field">
           <label for="mass-edit-quantity">Quantity:</label>
           <input
             id="mass-edit-quantity"
@@ -248,43 +248,11 @@
             placeholder="Enter quantity"
           />
         </div>
-        <!-- SBOM Fields (all fields shown) -->
+        <!-- SBOM-only: Include In Spec Sheet -->
         <div class="mass-edit-field" *ngIf="isSbomMode()">
-          <label for="sbom-mass-edit-start-date">Start Date:</label>
-          <input
-            id="sbom-mass-edit-start-date"
-            type="date"
-            [(ngModel)]="massEditStartDate"
-            class="mass-edit-input"
-            placeholder="MM/DD/YYYY"
-          />
-        </div>
-        <div class="mass-edit-field" *ngIf="isSbomMode()">
-          <label for="sbom-mass-edit-end-date">End Date:</label>
-          <input
-            id="sbom-mass-edit-end-date"
-            type="date"
-            [(ngModel)]="massEditEndDate"
-            class="mass-edit-input"
-            placeholder="MM/DD/YYYY"
-          />
-        </div>
-        <div class="mass-edit-field" *ngIf="isSbomMode()">
-          <label for="sbom-mass-edit-quantity">Quantity:</label>
-          <input
-            id="sbom-mass-edit-quantity"
-            type="number"
-            [(ngModel)]="massEditQuantity"
-            class="mass-edit-input"
-            min="0"
-            step="any"
-            placeholder="Enter quantity"
-          />
-        </div>
-        <div class="mass-edit-field" *ngIf="isSbomMode()">
-          <label for="sbom-mass-edit-include-in-spec-sheet">Include In Spec Sheet:</label>
+          <label for="mass-edit-include-in-spec-sheet">Include In Spec Sheet:</label>
           <select
-            id="sbom-mass-edit-include-in-spec-sheet"
+            id="mass-edit-include-in-spec-sheet"
             [(ngModel)]="massEditIncludeInSpecSheet"
             class="mass-edit-input"
           >

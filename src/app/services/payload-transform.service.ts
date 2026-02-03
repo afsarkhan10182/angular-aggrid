@@ -1,12 +1,25 @@
 import { Injectable } from '@angular/core';
+import {
+  BOM_LINK_KEY,
+  BOM_TYPE_EBOM,
+  BOM_TYPE_MBOM,
+  BOM_TYPE_SBOM,
+  COLUMN_RENAME_FOR_API,
+  DEFAULT_BOM_TYPE,
+} from '../constants';
 import { DataService } from './data.service';
+import { GridConfigService } from './grid-config.service';
 import { UtilService } from './util.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class PayloadTransformService {
-  constructor(private readonly dataService: DataService, private readonly utilService: UtilService) {}
+  constructor(
+    private readonly dataService: DataService,
+    private readonly utilService: UtilService,
+    private readonly gridConfigService: GridConfigService,
+  ) {}
 
   /**
    * Build SKUs array from a row for the API payload
@@ -37,8 +50,8 @@ export class PayloadTransformService {
       const rowFeatureValue = row.bomLinkFeature || '';
       const rowPartNumber = String(row.partNumber || '').trim();
 
-      const bomType = this.dataService.getBomType() || 'SBOM';
-      const isSbom = bomType === 'SBOM';
+      const bomType = this.dataService.getBomType() || DEFAULT_BOM_TYPE;
+      const isSbom = bomType === BOM_TYPE_SBOM;
       const isEmptyFeature = !rowFeatureValue || rowFeatureValue.trim() === '';
       
       const shouldSearchForMatches = resolvedSection && (isSbom || rowFeatureValue);
@@ -88,15 +101,15 @@ export class PayloadTransformService {
             const partNumber = String(row.partNumber || '').trim();
             const bomLinkFeature = String(row.bomLinkFeature || '').trim();
             
-            const bomType = this.dataService.getBomType() || 'SBOM';
-            const isSbom = bomType === 'SBOM';
+            const bomType = this.dataService.getBomType() || DEFAULT_BOM_TYPE;
+            const isSbom = bomType === BOM_TYPE_SBOM;
             const isEmptyFeature = !bomLinkFeature || bomLinkFeature === '';
 
             const shouldSearchApiInstances = section && (isSbom || bomLinkFeature);
 
             if (shouldSearchApiInstances) {
               for (const instance of apiData.instances) {
-                const bomLink = instance['bom-link'];
+                const bomLink = instance[BOM_LINK_KEY];
                 if (!bomLink) continue;
 
                 const instanceSection = bomLink.sectionInternalName || bomLink.section || '';
@@ -107,7 +120,7 @@ export class PayloadTransformService {
                 const isSectionMatch = instanceSection === section;
                 const instanceHasPartNumber = Boolean(instancePart && String(instancePart).trim() !== '');
 
-                const isMbom = bomType === 'MBOM';
+                const isMbom = bomType === BOM_TYPE_MBOM;
 
                 let isFeatureMatch = false;
                 let requiresPartMatch = false;
@@ -283,7 +296,7 @@ export class PayloadTransformService {
   ): boolean {
     const isSectionMatch = r.section === resolvedSection;
     const existingFeature = String(r.bomLinkFeature || '').trim();
-    const isMbom = bomType === 'MBOM';
+    const isMbom = bomType === BOM_TYPE_MBOM;
 
     const { isFeatureMatch, requiresPartMatch } = this.determineFeatureMatch(
       existingFeature,
@@ -365,6 +378,9 @@ export class PayloadTransformService {
       : this.dataService.getSkuInfo();
     const allowedSkuIds = new Set<string>(skuInfo.map((sku: any) => String(sku.skuId)));
     const bomType = this.dataService.getBomTypeFromResponse() || this.dataService.getBomType();
+    const isEbom = bomType === BOM_TYPE_EBOM;
+
+    const ebomServiceFieldsSet = new Set(this.gridConfigService.getEbomServiceFieldNames());
 
     const originalApiData = this.dataService.getApiData();
     const includeInSpecSheetMap = this.dataService.getIncludeInSpecSheetMapping(constraintsData);
@@ -425,7 +441,7 @@ export class PayloadTransformService {
           bomLink.section = resolvedSection;
         }
 
-        if (bomType === 'MBOM') {
+        if (bomType === BOM_TYPE_MBOM) {
           bomLink.ptcbomPartMarkUp = 'enumMBOM001';
         }
 
@@ -487,7 +503,7 @@ export class PayloadTransformService {
         }
 
         if (row.bomLinkIncludeInSpecSheet) {
-          const isSbom = bomType === 'SBOM';
+          const isSbom = bomType === BOM_TYPE_SBOM;
           const isNewRow = row.isNewRow;
           
           if (!(isSbom && isNewRow)) {
@@ -521,6 +537,25 @@ export class PayloadTransformService {
         }
 
         const editedFieldsForRow = editedFields.get(rowId) || new Set<string>();
+
+        const partEdited =
+          editedFieldsForRow.has('partNumber') ||
+          editedFieldsForRow.has('bomLinkPart') ||
+          editedFieldsForRow.has('part');
+        if (partEdited) {
+          if (currentRow.materialSupplierMasterId) {
+            bomLink.childId = this.utilService.extractIdAfterLastColon(
+              currentRow.materialSupplierMasterId,
+            );
+          } else if (currentRow.materialSupplierVersionId) {
+            bomLink.childId = this.utilService.extractIdAfterLastColon(
+              currentRow.materialSupplierVersionId,
+            );
+          }
+          if (currentRow.colorId) {
+            bomLink.colorId = this.utilService.extractIdAfterLastColon(currentRow.colorId);
+          }
+        }
 
         if (editedFieldsForRow.has('bomLinkSpecSheetExtra')) {
           const currentVal = String(originalValues.bomLinkSpecSheetExtra || '');
@@ -601,8 +636,14 @@ export class PayloadTransformService {
         return;
       }
 
+      if (isEbom && isEdited) {
+        const editedFieldsForRow = editedFields.get(rowId) || new Set<string>();
+        const hasNonServiceEdit = [...editedFieldsForRow].some((f) => !ebomServiceFieldsSet.has(f));
+        if (!hasNonServiceEdit) return;
+      }
+
       instances.push({
-        'bom-link': bomLink,
+        [BOM_LINK_KEY]: bomLink,
       });
     };
 
@@ -639,13 +680,8 @@ export class PayloadTransformService {
     const columns: { [key: string]: string } = {};
     if (columnsRaw) {
       Object.keys(columnsRaw).forEach((key) => {
-        if (key === 'materialColorThirtyCharacterDescription') {
-          columns['partThirtyCharacterDescription'] = columnsRaw[key];
-        } else if (key === 'materialColorSixtyCharacterDescription') {
-          columns['partSixtyCharacterDescription'] = columnsRaw[key];
-        } else {
-          columns[key] = columnsRaw[key];
-        }
+        const apiKey = COLUMN_RENAME_FOR_API[key] ?? key;
+        columns[apiKey] = columnsRaw[key];
       });
     }
 
@@ -658,7 +694,7 @@ export class PayloadTransformService {
     });
 
     instances.forEach((instance) => {
-      const bomLink = instance['bom-link'];
+      const bomLink = instance[BOM_LINK_KEY];
       if (bomLink.skus && Array.isArray(bomLink.skus)) {
         bomLink.skus.forEach((sku: any) => {
           if (sku.skuId && allowedSkuIds.has(String(sku.skuId))) {

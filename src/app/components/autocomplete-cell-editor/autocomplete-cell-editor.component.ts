@@ -2,6 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } fr
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ICellEditorAngularComp } from 'ag-grid-angular';
+import { BOM_LINK_KEY, BOM_TYPE_EBOM } from '../../constants';
 import { DataService } from '../../services/data.service';
 import { UtilService } from '../../services/util.service';
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
@@ -55,6 +56,8 @@ export class AutocompleteCellEditorComponent
   private fromIndex: number = 1;
   private toIndex: number = this.PAGE_SIZE;
   private hasMore: boolean = false;
+  /** Total count from API (serviceDataModal resultCount) for part/material search pagination display */
+  totalResultCount: number = 0;
 
   constructor(private utilService: UtilService) {
     this.dataService = null as any;
@@ -182,7 +185,8 @@ export class AutocompleteCellEditorComponent
               this.filteredOptions = [];
             }
           } else {
-            this.hasMore = resultCount > this.toIndex;
+            this.totalResultCount = resultCount;
+            this.hasMore = response.hasMore ?? resultCount > this.toIndex;
 
             if (Array.isArray(results) && results.length > 0) {
               if (this.fromIndex === 1) {
@@ -195,6 +199,7 @@ export class AutocompleteCellEditorComponent
               this.materialOptions = [];
               this.filteredOptions = [];
               this.filteredMaterialOptions = [];
+              this.totalResultCount = 0;
               this.hasMore = false;
             }
           }
@@ -272,6 +277,7 @@ export class AutocompleteCellEditorComponent
     this.fromIndex = 1;
     this.toIndex = this.PAGE_SIZE;
     this.hasMore = false;
+    this.totalResultCount = 0;
     this.isDestroyed = false;
     this.originalValue = '';
 
@@ -623,11 +629,9 @@ export class AutocompleteCellEditorComponent
         selectedMaterial = this.materialOptions.find((material) => {
           if (this.isPartNumberSearch) {
             return (material.partNumber || '') === option;
-          } else {
-            return (
-              (material.ptcmaterialName || material.materialName || material.name || '') === option
-            );
           }
+          const matLabel = material.material || material.ptcmaterialName || material.materialName || material.name || '';
+          return matLabel === option;
         });
       }
     }
@@ -710,6 +714,9 @@ export class AutocompleteCellEditorComponent
           if (this.params.node.data) {
             this.params.node.data.part = option;
           }
+          if (!option || String(option).trim() === '') {
+            this.clearAutopopulatedFieldsWhenPartCleared();
+          }
         }
       }
 
@@ -761,203 +768,134 @@ export class AutocompleteCellEditorComponent
     return this.options.filter((option) => option.toLowerCase().includes(searchTerm));
   }
 
+  private clearAutopopulatedFieldsWhenPartCleared(): void {
+    if (!this.params?.node?.data) return;
+    const node = this.params.node;
+    const data = node.data;
+    const fieldsToClear = [
+      'material',
+      'materialDescription',
+      'supplier',
+      'color',
+      'colorDescription',
+      'colorId',
+      'materialSupplierMasterId',
+      '_availablePartNumbers',
+    ];
+    fieldsToClear.forEach((field) => {
+      if (data.hasOwnProperty(field)) {
+        node.setDataValue(field, field === '_availablePartNumbers' ? [] : '');
+        (data as any)[field] = field === '_availablePartNumbers' ? [] : '';
+      }
+    });
+    if (this.params.api) {
+      this.params.api.refreshCells({ rowNodes: [node], force: true });
+    }
+  }
+
+  /**
+   * Populate row from dropdown selection using only serviceDataModal.json / API structure:
+   * - responseColumns: which fields exist in the response (single source of truth)
+   * - flatInstance: flat key-value for the selected row (partNumber, material, supplier, color, colorId, childId, etc.)
+   * For each column in responseColumns, set row[key] = flatInstance[key]. If a column is in the grid but not in
+   * responseColumns, it is not filled (no error). Internal IDs (colorId, materialSupplierMasterId) are set for save.
+   */
   private autoPopulateFields(material: any): void {
     if (!this.params || !this.params.node) return;
 
     const originalData = { ...this.params.node.data };
-    const fieldName = this.getFieldName();
+    const flatInstance = material?.flatInstance;
+    const responseColumns = material?.responseColumns;
 
-    if (this.isPartNumberSearch) {
-      const fullResult = material.fullResult || {};
-      const materialColor = fullResult['material-color'] || {};
-      const supplierObj = fullResult.supplier || {};
-      const colorObj = fullResult.color || {};
-      const materialObj = fullResult.material || {};
+    if (!flatInstance || typeof flatInstance !== 'object') return;
 
-      const partValue = materialColor.partNumber || material.partNumber || '';
-      if (partValue) {
-        this.setPartIdentifiers(partValue);
-      }
-
-      let materialValue =
-        materialObj.ptcmaterialName || material.ptcmaterialName || material.materialName || '';
-      if (!materialValue && partValue) {
-        materialValue = partValue;
-      }
-
-      if (materialValue && originalData.material !== materialValue) {
-        this.params.node.setDataValue('material', materialValue);
-        if (this.params.node.data) {
-          this.params.node.data.material = materialValue;
-        }
-      }
-      // Also set materialDescription field (used in grid columns)
-      if (materialValue && originalData.materialDescription !== materialValue) {
-        this.params.node.setDataValue('materialDescription', materialValue);
-        if (this.params.node.data) {
-          this.params.node.data.materialDescription = materialValue;
-        }
-      }
-
-      const supplierName =
-        supplierObj.supplierName ||
-        supplierObj.name ||
-        material.supplier ||
-        material.supplierName ||
-        '';
-      if (supplierName && originalData.supplier !== supplierName) {
-        this.params.node.setDataValue('supplier', supplierName);
-        if (this.params.node.data) {
-          this.params.node.data.supplier = supplierName;
-        }
-      }
-
-      const colorName =
-        colorObj.colorName || colorObj.name || material.color || material.colorName || '';
-      if (colorName && originalData.color !== colorName) {
-        this.params.node.setDataValue('color', colorName);
-        if (this.params.node.data) {
-          this.params.node.data.color = colorName;
-        }
-      }
-      if (colorName && originalData.colorDescription !== colorName) {
-        this.params.node.setDataValue('colorDescription', colorName);
-        if (this.params.node.data) {
-          this.params.node.data.colorDescription = colorName;
-        }
-      }
-
-      const materialSupplier = fullResult['material-supplier'] || {};
-      const materialSupplierMaster = materialSupplier.materialSupplierMaster || '';
-      const childId = materialSupplierMaster
-        ? this.utilService.extractIdAfterLastColon(materialSupplierMaster)
-        : '';
-      if (childId && originalData.materialSupplierMasterId !== childId) {
-        this.params.node.setDataValue('materialSupplierMasterId', childId);
-        if (this.params.node.data) {
-          this.params.node.data.materialSupplierMasterId = childId;
-        }
-      }
-
-      // Store colorId from color.iterationId (take value after LAST colon)
-      const colorIterationId = colorObj.iterationId || '';
-      const colorId = colorIterationId
-        ? this.utilService.extractIdAfterLastColon(colorIterationId)
-        : '';
-      if (colorId && originalData.colorId !== colorId) {
-        this.params.node.setDataValue('colorId', colorId);
-        if (this.params.node.data) {
-          this.params.node.data.colorId = colorId;
-        }
-      }
-
-      if (partValue && this.dataService) {
-        this.fetchAllPartsForDropdowns(partValue, material);
-      }
-    } else {
-      let materialValue = material.ptcmaterialName || material.materialName || '';
-
-      if (materialValue && originalData.material !== materialValue) {
-        this.params.node.setDataValue('material', materialValue);
-        if (this.params.node.data) {
-          this.params.node.data.material = materialValue;
-        }
-      }
-      // Also set materialDescription field (used in grid columns)
-      if (materialValue && originalData.materialDescription !== materialValue) {
-        this.params.node.setDataValue('materialDescription', materialValue);
-        if (this.params.node.data) {
-          this.params.node.data.materialDescription = materialValue;
-        }
-      }
-
-      const fullResult = material.fullResult || {};
-      const materialColor = fullResult['material-color'] || {};
-      const partNumberFromMaterial = materialColor.partNumber || material.partNumber || '';
-
-      if (!materialValue && partNumberFromMaterial) {
-        this.params.node.setDataValue('material', partNumberFromMaterial);
-        if (this.params.node.data) {
-          this.params.node.data.material = partNumberFromMaterial;
-        }
-        // Also set materialDescription when using partNumber as fallback
-        this.params.node.setDataValue('materialDescription', partNumberFromMaterial);
-        if (this.params.node.data) {
-          this.params.node.data.materialDescription = partNumberFromMaterial;
-        }
-      }
-
-      if (partNumberFromMaterial) {
-        this.setPartIdentifiers(partNumberFromMaterial);
-      }
-
-      // Store childId from material-supplier.materialSupplierMaster (take value after LAST colon)
-      const materialSupplier = fullResult['material-supplier'] || {};
-      const materialSupplierMaster = materialSupplier.materialSupplierMaster || '';
-      const childId = materialSupplierMaster
-        ? this.utilService.extractIdAfterLastColon(materialSupplierMaster)
-        : '';
-      if (childId && originalData.materialSupplierMasterId !== childId) {
-        this.params.node.setDataValue('materialSupplierMasterId', childId);
-        if (this.params.node.data) {
-          this.params.node.data.materialSupplierMasterId = childId;
-        }
-      }
-
-      // Store colorId from color.iterationId (take value after LAST colon)
-      const colorObj = fullResult.color || {};
-      const colorIterationId = colorObj.iterationId || '';
-      const colorId = colorIterationId
-        ? this.utilService.extractIdAfterLastColon(colorIterationId)
-        : '';
-      if (colorId && originalData.colorId !== colorId) {
-        this.params.node.setDataValue('colorId', colorId);
-        if (this.params.node.data) {
-          this.params.node.data.colorId = colorId;
-        }
-      }
-
-      if (materialValue) {
-        this.fetchAllMaterialsForDropdowns(materialValue, material);
-      }
+    if (material?.materialColorId && this.params.node?.data) {
+      this.params.node.data.materialColorId = material.materialColorId;
     }
 
-    const fieldsToPopulate = [
-      'feature',
-      'startDate',
-      'endDate',
-      'qty',
-      'description',
-      'shortDesc',
-      'longDesc',
-    ];
+    const ctx = (this.params?.context as any) ?? this.params?.api?.getGridOption?.('context');
+    const setSkip = ctx?.setSkipEditTracking;
+    try {
+      setSkip?.(true);
 
-    fieldsToPopulate.forEach((field) => {
-      const value = material[field];
-      if (value !== undefined && value !== null && originalData[field] !== value) {
-        this.params.node.setDataValue(field, value);
-        if (this.params.node.data) {
-          this.params.node.data[field] = value;
-        }
+    const columnKeys =
+      responseColumns && typeof responseColumns === 'object'
+        ? Object.keys(responseColumns)
+        : Object.keys(flatInstance);
+
+    columnKeys.forEach((key) => {
+      if (!(key in flatInstance)) return;
+      const value = flatInstance[key];
+      if (originalData[key] === value) return;
+      this.params.node.setDataValue(key, value);
+      if (this.params.node.data) {
+        this.params.node.data[key] = value;
       }
     });
 
-    if (material.skus && Array.isArray(material.skus)) {
-      const skuInfo = this.dataService?.getSkuInfo();
-      if (skuInfo && skuInfo.length > 0) {
-        skuInfo.forEach((sku) => {
-          const skuFieldName = `sku${sku.skuId}`;
-          const matchingSku = material.skus.find((s: any) => s.skuId === sku.skuId);
-          const skuValue = matchingSku ? matchingSku.value : '';
-
-          if (originalData[skuFieldName] !== skuValue) {
-            this.params.node.setDataValue(skuFieldName, skuValue);
-            if (this.params.node.data) {
-              this.params.node.data[skuFieldName] = skuValue;
-            }
-          }
-        });
+    if (flatInstance.colorId != null && String(flatInstance.colorId) !== '') {
+      const colorId = String(flatInstance.colorId);
+      if (originalData.colorId !== colorId) {
+        this.params.node.setDataValue('colorId', colorId);
+        if (this.params.node.data) this.params.node.data.colorId = colorId;
       }
+    }
+    if (flatInstance.childId != null && String(flatInstance.childId) !== '') {
+      const childId = String(flatInstance.childId);
+      if (originalData.materialSupplierMasterId !== childId) {
+        this.params.node.setDataValue('materialSupplierMasterId', childId);
+        if (this.params.node.data) this.params.node.data.materialSupplierMasterId = childId;
+      }
+    }
+
+    const partValue = flatInstance.partNumber != null ? String(flatInstance.partNumber) : '';
+    const materialValue = flatInstance.material != null ? String(flatInstance.material) : '';
+
+    if (partValue) {
+      this.setPartIdentifiers(partValue);
+    }
+    if (partValue && originalData.part !== partValue) {
+      this.params.node.setDataValue('part', partValue);
+      if (this.params.node.data) this.params.node.data.part = partValue;
+    }
+    if (materialValue && originalData.materialDescription !== materialValue) {
+      this.params.node.setDataValue('materialDescription', materialValue);
+      if (this.params.node.data) this.params.node.data.materialDescription = materialValue;
+    }
+    if (flatInstance.color != null && originalData.colorDescription !== flatInstance.color) {
+      this.params.node.setDataValue('colorDescription', String(flatInstance.color));
+      if (this.params.node.data) this.params.node.data.colorDescription = flatInstance.color;
+    }
+
+    if (this.isPartNumberSearch && partValue && this.dataService) {
+      this.fetchAllPartsForDropdowns(partValue, material);
+    }
+    if (!this.isPartNumberSearch && materialValue) {
+      this.fetchAllMaterialsForDropdowns(materialValue, material);
+    }
+
+    const skuInfoPart = this.dataService?.getSkuInfo();
+    if (skuInfoPart?.length > 0 && this.dataService?.getBomType() === BOM_TYPE_EBOM && partValue) {
+      skuInfoPart.forEach((sku) => {
+        const skuFieldName = `sku${sku.skuId}`;
+        if (originalData[skuFieldName] !== partValue) {
+          this.params.node.setDataValue(skuFieldName, partValue);
+          if (this.params.node.data) this.params.node.data[skuFieldName] = partValue;
+        }
+      });
+    } else if (material.skus && Array.isArray(material.skus) && skuInfoPart?.length > 0) {
+      skuInfoPart.forEach((sku) => {
+        const skuFieldName = `sku${sku.skuId}`;
+        const matchingSku = material.skus.find((s: any) => s.skuId === sku.skuId);
+        const skuValue = matchingSku ? matchingSku.value : '';
+        if (originalData[skuFieldName] !== skuValue) {
+          this.params.node.setDataValue(skuFieldName, skuValue);
+          if (this.params.node.data) this.params.node.data[skuFieldName] = skuValue;
+        }
+      });
+    }
+    } finally {
+      setTimeout(() => setSkip?.(false), 0);
     }
   }
 
@@ -982,11 +920,11 @@ export class AutocompleteCellEditorComponent
 
     const items = apiData!.instances;
     const existingPart = items.find((item: any) => {
-      const bomLink = item['bom-link'];
+      const bomLink = item[BOM_LINK_KEY];
       return bomLink.partNumber === partNumber;
     });
     if (existingPart) {
-      const partData = existingPart['bom-link'];
+      const partData = existingPart[BOM_LINK_KEY];
       if (this.params && this.params.node) {
         const fieldsToPopulate = [
           'supplier',
@@ -1012,10 +950,16 @@ export class AutocompleteCellEditorComponent
         });
 
         const skuInfo = dataService.getSkuInfo();
+        const isEbom = dataService.getBomType() === BOM_TYPE_EBOM;
+        const partNumberForSkus = partData.partNumber ?? '';
         skuInfo.forEach((sku: any) => {
           const skuFieldName = `sku${sku.skuId}`;
-          const matchingSku = partData.skus.find((s: any) => s.skuId === sku.skuId);
-          const newSkuValue = matchingSku ? matchingSku.value : '';
+          const newSkuValue = isEbom
+            ? partNumberForSkus
+            : (() => {
+                const matchingSku = partData.skus?.find((s: any) => s.skuId === sku.skuId);
+                return matchingSku ? matchingSku.value : '';
+              })();
 
           if (oldData[skuFieldName] !== newSkuValue) {
             this.params.node.setDataValue(skuFieldName, newSkuValue);
@@ -1102,10 +1046,10 @@ export class AutocompleteCellEditorComponent
 
     this.materialOptions.forEach((material: any) => {
       const label = this.isPartNumberSearch
-        ? material.partNumber || ''
-        : material.ptcmaterialName || material.materialName || material.name || '';
+        ? (material.partNumber || '')
+        : (material.material || material.ptcmaterialName || material.materialName || material.name || '');
 
-      if (label && label.length > 0) {
+      if (label.length > 0) {
         labels.push(label);
         materials.push(material);
       }
@@ -1225,26 +1169,12 @@ export class AutocompleteCellEditorComponent
   }
 
   private fetchAllMaterialsForDropdowns(materialName: string, selectedMaterial: any): void {
-    if (!this.params || !this.params.node || !selectedMaterial) return;
+    if (!this.params || !this.params.node || !selectedMaterial?.flatInstance) return;
 
-    const fullResult = selectedMaterial.fullResult || {};
-    const colorObj = fullResult.color || {};
-    const supplierObj = fullResult.supplier || {};
-    const materialColor = fullResult['material-color'] || {};
-
-    const colorName =
-      colorObj.colorName ||
-      colorObj.name ||
-      selectedMaterial.colorName ||
-      selectedMaterial.color ||
-      '';
-    const supplierName =
-      supplierObj.supplierName ||
-      supplierObj.name ||
-      selectedMaterial.supplier ||
-      selectedMaterial.supplierName ||
-      '';
-    const partNumber = materialColor.partNumber || selectedMaterial.partNumber || '';
+    const fi = selectedMaterial.flatInstance;
+    const colorName = fi.color ?? '';
+    const supplierName = fi.supplier ?? '';
+    const partNumber = fi.partNumber ?? selectedMaterial.partNumber ?? '';
 
     const availableColors = colorName ? [colorName] : [];
     const availableSuppliers = supplierName ? [supplierName] : [];
@@ -1321,22 +1251,9 @@ export class AutocompleteCellEditorComponent
     if (!this.params || !this.params.node || !selectedMaterial || !this.dataService || !partNumber)
       return;
 
-    const fullResult = selectedMaterial.fullResult || {};
-    const colorObj = fullResult.color || {};
-    const supplierObj = fullResult.supplier || {};
-
-    const initialColorValue =
-      colorObj.colorName ||
-      colorObj.name ||
-      selectedMaterial.colorName ||
-      selectedMaterial.color ||
-      '';
-    const initialSupplierValue =
-      supplierObj.supplierName ||
-      supplierObj.name ||
-      selectedMaterial.supplier ||
-      selectedMaterial.supplierName ||
-      '';
+    const fi = selectedMaterial.flatInstance;
+    const initialColorValue = fi?.color ?? selectedMaterial.color ?? '';
+    const initialSupplierValue = fi?.supplier ?? selectedMaterial.supplier ?? '';
 
     if (initialColorValue) {
       this.params.node.setDataValue('_availableColors', [initialColorValue]);
@@ -1361,25 +1278,11 @@ export class AutocompleteCellEditorComponent
           const uniqueSuppliers = new Set<string>();
 
           allParts.forEach((part: any) => {
-            const fullResult = part.fullResult || {};
-            const colorObj = fullResult.color || {};
-            const supplierObj = fullResult.supplier || {};
-
-            const colorName =
-              colorObj.colorName || colorObj.name || part.colorName || part.color || '';
-            const supplierName =
-              supplierObj.supplierName ||
-              supplierObj.name ||
-              part.supplier ||
-              part.supplierName ||
-              '';
-
-            if (colorName) {
-              uniqueColors.add(colorName);
-            }
-            if (supplierName) {
-              uniqueSuppliers.add(supplierName);
-            }
+            const fi = part.flatInstance;
+            const colorName = fi?.color ?? part.color ?? '';
+            const supplierName = fi?.supplier ?? part.supplier ?? '';
+            if (colorName) uniqueColors.add(colorName);
+            if (supplierName) uniqueSuppliers.add(supplierName);
           });
 
           if (initialColorValue && !uniqueColors.has(initialColorValue)) {

@@ -17,6 +17,10 @@ import { IconComponent } from '../icon/icon.component';
 import { AutocompleteCellEditorComponent } from '../autocomplete-cell-editor/autocomplete-cell-editor.component';
 import { ColumnHeaderPinComponent } from '../column-header-pin/column-header-pin.component';
 import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
+import {
+  PARTS_EDIT_MODAL_DISABLED_FIELDS,
+  PARTS_EDIT_MODAL_DROPDOWN_FIELDS,
+} from '../../constants';
 import { DataService } from '../../services/data.service';
 import { GridConfigService } from '../../services/grid-config.service';
 import { MassEditService } from '../../services/mass-edit.service';
@@ -90,7 +94,7 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
 
 
   private getDisabledFields(): Set<string> {
-    return new Set(['partNumber', 'materialColorManufacturersPartNumber', 'materialColorStatus']);
+    return new Set(PARTS_EDIT_MODAL_DISABLED_FIELDS);
   }
 
   private buildColumnDefs(columns: { [key: string]: string }): ColDef[] {
@@ -129,13 +133,7 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
 
     const disabledFields = this.getDisabledFields();
     
-    // Dropdown fields (use AutocompleteCellEditorComponent with isServiceSearch: true)
-    // These are configured here - mass edit will dynamically find fields with isServiceSearch: true
-    const dropdownFields = new Set([
-      'materialColorServiceSubstituteOne',
-      'materialColorServiceSubstituteTwo',
-      'materialColorServiceEquivalent',
-    ]);
+    const dropdownFields = new Set(PARTS_EDIT_MODAL_DROPDOWN_FIELDS);
 
     // Build columns in the order they appear in the API response
     Object.keys(columns).forEach((field) => {
@@ -375,20 +373,7 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
         return;
       }
 
-      const instanceData: { [key: string]: any } = {};
-      
-      editedFieldsForRow.forEach((fieldName) => {
-        if (fieldName === 'materialColorServiceEquivalent') {
-          instanceData[fieldName] = currentRow.materialColorServiceEquivalentId || currentRow.materialColorServiceEquivalent || '';
-        } else if (fieldName === 'materialColorServiceSubstituteOne') {
-          instanceData[fieldName] = currentRow.materialColorServiceSubstituteOneId || currentRow.materialColorServiceSubstituteOne || '';
-        } else if (fieldName === 'materialColorServiceSubstituteTwo') {
-          instanceData[fieldName] = currentRow.materialColorServiceSubstituteTwoId || currentRow.materialColorServiceSubstituteTwo || '';
-        } else {
-          instanceData[fieldName] = currentRow[fieldName] || '';
-        }
-      });
-
+      const instanceData = this.dataService.buildMaterialColorInstanceData(currentRow, editedFieldsForRow);
       if (Object.keys(instanceData).length > 0) {
         instances[materialColorId] = instanceData;
       }

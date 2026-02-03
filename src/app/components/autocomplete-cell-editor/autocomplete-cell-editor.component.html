@@ -26,8 +26,11 @@
           ? 'Select part number'
           : 'Select option'
       }}
-      ({{ filteredOptions.length }}
-      available)
+      @if (isMaterialSearch || isPartNumberSearch) {
+        ({{ totalResultCount }} available)
+      } @else {
+        ({{ filteredOptions.length }} available)
+      }
     </div>
     <div
       *ngFor="let option of filteredOptions; let i = index"
@@ -50,6 +53,9 @@
           </div>
         </div>
         <div class="material-details" *ngIf="isPartNumberSearch">
+          <div *ngIf="filteredMaterialOptions[i].material" class="detail-line">
+            Material: {{ filteredMaterialOptions[i].material }}
+          </div>
           <div *ngIf="filteredMaterialOptions[i].supplier" class="detail-line">
             Supplier: {{ filteredMaterialOptions[i].supplier }}
           </div>

@@ -17,6 +17,7 @@ export interface ApplyMassEditOptions {
   state: MassEditState;
   isMbomMode: () => boolean;
   isSbomMode: () => boolean;
+  isEbomMode: () => boolean;
   editedRows: Set<string | number>;
   editedFields: Map<string | number, Set<string>>;
   originalRowValues: Map<string | number, any>;
@@ -28,6 +29,7 @@ interface UpdateFieldParams {
   state: MassEditState;
   isMbomMode: () => boolean;
   isSbomMode: () => boolean;
+  isEbomMode: () => boolean;
   isMbomRow: boolean;
   columnFields: Set<string>;
   columnsToUpdate: Set<string>;
@@ -38,6 +40,7 @@ interface TrackEditedFieldsParams {
   state: MassEditState;
   isMbomMode: () => boolean;
   isSbomMode: () => boolean;
+  isEbomMode: () => boolean;
   isMbomRow: boolean;
   columnFields: Set<string>;
   editedRows: Set<string | number>;
@@ -56,7 +59,8 @@ export class MassEditService {
   populateMassEditFields(
     selectedRows: any[],
     isMbomMode: () => boolean,
-    isSbomMode: () => boolean
+    isSbomMode: () => boolean,
+    isEbomMode: () => boolean
   ): MassEditState {
     if (selectedRows.length === 0) {
       return {
@@ -76,7 +80,7 @@ export class MassEditService {
 
     this.populateStartDate(selectedRows, state);
     this.populateEndDate(selectedRows, state);
-    this.populateQuantity(selectedRows, state, isMbomMode, isSbomMode);
+    this.populateQuantity(selectedRows, state, isMbomMode, isSbomMode, isEbomMode);
     this.populateIncludeInSpecSheet(selectedRows, state, isSbomMode);
 
     return state;
@@ -114,9 +118,10 @@ export class MassEditService {
     selectedRows: any[],
     state: MassEditState,
     isMbomMode: () => boolean,
-    isSbomMode: () => boolean
+    isSbomMode: () => boolean,
+    isEbomMode: () => boolean
   ): void {
-    if (isMbomMode()) {
+    if (isMbomMode() || isEbomMode()) {
       this.setQuantityIfSame(selectedRows, state);
     } else if (isSbomMode()) {
       const hasMbomRows = selectedRows.some(
@@ -207,6 +212,7 @@ export class MassEditService {
       state,
       isMbomMode,
       isSbomMode,
+      isEbomMode,
       editedRows,
       editedFields,
     } = options;
@@ -231,6 +237,7 @@ export class MassEditService {
         state,
         isMbomMode,
         isSbomMode,
+        isEbomMode,
         isMbomRow,
         columnFields,
         columnsToUpdate,
@@ -247,6 +254,7 @@ export class MassEditService {
           state,
           isMbomMode,
           isSbomMode,
+          isEbomMode,
           isMbomRow,
           columnFields,
           editedRows,
@@ -330,8 +338,8 @@ export class MassEditService {
     fields: string[],
     formatter: (dateStr: string) => string
   ): boolean {
-    const { node, rowData, isMbomMode, isSbomMode, isMbomRow, columnFields, columnsToUpdate } = params;
-    const shouldUpdate = dateValue && (isMbomMode() || (isSbomMode() && !isMbomRow));
+    const { node, rowData, isMbomMode, isSbomMode, isEbomMode, isMbomRow, columnFields, columnsToUpdate } = params;
+    const shouldUpdate = dateValue && (isMbomMode() || isEbomMode() || (isSbomMode() && !isMbomRow));
     if (!shouldUpdate) return false;
 
     const formattedDate = formatter(dateValue);
@@ -348,9 +356,9 @@ export class MassEditService {
   }
 
   private updateQuantity(params: UpdateFieldParams): boolean {
-    const { node, rowData, state, isMbomMode, isSbomMode, isMbomRow, columnFields, columnsToUpdate } = params;
+    const { node, rowData, state, isMbomMode, isSbomMode, isEbomMode, isMbomRow, columnFields, columnsToUpdate } = params;
     const shouldUpdate =
-      (isMbomMode() || (isSbomMode() && !isMbomRow)) &&
+      (isMbomMode() || isEbomMode() || (isSbomMode() && !isMbomRow)) &&
       state.quantity !== null &&
       state.quantity !== undefined;
     if (!shouldUpdate) return false;
@@ -401,7 +409,7 @@ export class MassEditService {
   }
 
   private trackEditedFields(params: TrackEditedFieldsParams): void {
-    const { rowData, state, isMbomMode, isSbomMode, isMbomRow, columnFields, editedRows, editedFields } = params;
+    const { rowData, state, isMbomMode, isSbomMode, isEbomMode, isMbomRow, columnFields, editedRows, editedFields } = params;
     const primaryKey = rowData.materialKey || rowData.newRowId || rowData.partNumber || rowData.part;
     const compositeKey =
       rowData.section && (rowData.partNumber || rowData.part)
@@ -419,7 +427,7 @@ export class MassEditService {
     }
     const editedFieldsForRow = editedFields.get(editKey)!;
 
-    if (isMbomMode()) {
+    if (isMbomMode() || isEbomMode()) {
       this.addFieldIfExists(editedFieldsForRow, ['bomLinkStartDate'], columnFields, rowData, state.startDate);
       this.addFieldIfExists(editedFieldsForRow, ['bomLinkEndDate'], columnFields, rowData, state.endDate);
       this.addFieldIfExists(editedFieldsForRow, ['quantity'], columnFields, rowData, state.quantity !== null && state.quantity !== undefined);
