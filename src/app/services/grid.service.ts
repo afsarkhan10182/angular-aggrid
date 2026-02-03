@@ -29,6 +29,7 @@ export interface ColumnDefinitionConfig {
   isSkuFilterReadOnly: () => boolean;
   isSbomMode: () => boolean;
   isEbomMode?: () => boolean;
+  isMaterialMbomMode?: () => boolean;
   getDataCellStyle: (params: any) => any;
   getFeatureValue: (data: any) => any;
   renderHierarchicalCell: (params: any) => string;
@@ -612,6 +613,7 @@ export class GridService {
             config.isSkuFilterReadOnly,
             config.isSbomMode,
             config.isEbomMode,
+            config.isMaterialMbomMode,
           );
         }
         return this.gridConfigService.isFieldEditableInSbom(
@@ -620,6 +622,7 @@ export class GridService {
           config.isSkuFilterReadOnly,
           config.isSbomMode,
           config.isEbomMode,
+          config.isMaterialMbomMode,
         );
       },
       cellEditor: AutocompleteCellEditorComponent,
@@ -681,6 +684,7 @@ export class GridService {
             config.isSkuFilterReadOnly,
             config.isSbomMode,
             config.isEbomMode,
+            config.isMaterialMbomMode,
           );
         }
         return this.gridConfigService.isFieldEditableInSbom(
@@ -689,6 +693,7 @@ export class GridService {
           config.isSkuFilterReadOnly,
           config.isSbomMode,
           config.isEbomMode,
+          config.isMaterialMbomMode,
         );
       },
     };

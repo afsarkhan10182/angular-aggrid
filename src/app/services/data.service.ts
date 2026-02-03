@@ -1,4 +1,4 @@
-import { BOM_LINK_KEY, BOM_TYPE_EBOM, DEFAULT_BOM_TYPE } from '../constants';
+import { BOM_LINK_KEY, BOM_TYPE_EBOM, BOM_TYPE_MATERIALMBOM, DEFAULT_BOM_TYPE } from '../constants';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, map, catchError, throwError, of } from 'rxjs';
@@ -448,12 +448,6 @@ export class DataService {
    * Sends the payload with bomCheckIn, bomType, bomPartInfo, instances, columns, sectionOrder, skuInfo
    */
   updateBomData(payload: any): Observable<any> {
-    if (this.getBomType() === BOM_TYPE_EBOM) {
-      console.log('[EBOM] Save BOM payload (API call commented out):', payload);
-      console.log('[EBOM] Payload JSON:', JSON.stringify(payload));
-      return of({});
-    }
-
     const apiUrl = environment.useMockApi
       ? '/api/updateBom'
       : `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/saveBOMLinks`;
@@ -593,7 +587,6 @@ export class DataService {
    * @param payload - Object with instances containing material color updates
    */
   saveMaterialColors(payload: { instances: { [key: string]: any } }): Observable<any> {
-    console.log('saveMaterialColors payload', payload);
     if (environment.useMockApi) {
       return of({ success: true, message: 'Material colors saved (mock)' });
     }
@@ -681,7 +674,17 @@ export class DataService {
   }
 
   getBomType(): string | null {
-    return this.utilService.getJspDataAttribute('data-bomtype') || DEFAULT_BOM_TYPE;
+    const fromJsp = this.utilService.getJspDataAttribute('data-bomtype');
+    if (fromJsp != null && String(fromJsp).trim() !== '') {
+      return fromJsp;
+    }
+    const fromUrl = typeof window !== 'undefined' && window.location?.search
+      ? new URLSearchParams(window.location.search).get('bomType')
+      : null;
+    if (fromUrl != null && String(fromUrl).trim() !== '') {
+      return fromUrl;
+    }
+    return DEFAULT_BOM_TYPE;
   }
 
   getRefSkuId(): string | null {
@@ -789,7 +792,7 @@ export class DataService {
   ): any[] {
     const skuInfo = this.getSkuInfo();
     const bomType = this.getBomType();
-    if (bomType === BOM_TYPE_EBOM) {
+    if (bomType === BOM_TYPE_EBOM || bomType === BOM_TYPE_MATERIALMBOM) {
       return skuInfo;
     }
     if (isMbomMode()) {

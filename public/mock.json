@@ -428,7 +428,7 @@
                 "section": "enumSection001",
                 "materialSupplierPrimaryUOM": "",
                 "materialColorServiceDescription": "Bontrager road front hub, 100mm OLD, 12mm TA, 24h, centerlock",
-                "bomLinkStartDate": "01/29/2026",
+                "bomLinkStartDate": "",
                 "supplier": "DT-Swiss Asia DT",
                 "materialColorId": "OR:com.lcs.wc.material.LCSMaterialColor:589894",
                 "materialColorThirtyCharacterDescription": "HBFT DTA AEO 12T 24H CL BK",
@@ -438,10 +438,10 @@
                 "bomLinkCountryOfOrigin": "",
                 "materialColorServiceSubstituteOne": "10113",
                 "materialSupplierMasterId": "com.lcs.wc.material.LCSMaterialSupplierMaster:589882",
-                "quantity": "7.0",
+                "quantity": "",
                 "bomLinkSpecSheetExtra": "No",
                 "materialColorServiceEquivalent": "",
-                "bomLinkEndDate": "02/07/2026",
+                "bomLinkEndDate": "",
                 "childId": "589648",
                 "material": "BONTRAGER, ROAD, 2021, AEOLUS DISC, FRONT, 24H, T-HEAD DS, T",
                 "materialMasterId": "com.lcs.wc.material.LCSMaterialMaster:589648",
@@ -2417,5 +2417,5 @@
             "skuId": "10454"
         }
     ],
-    "bomType": "MBOM"
+    "bomType": "SBOM"
 }

@@ -4,6 +4,7 @@ import {
   BOM_TYPE_EBOM,
   BOM_TYPE_MBOM,
   BOM_TYPE_SBOM,
+  BOM_TYPE_MATERIALMBOM,
   COLUMN_RENAME_FOR_API,
   DEFAULT_BOM_TYPE,
 } from '../constants';
@@ -378,7 +379,7 @@ export class PayloadTransformService {
       : this.dataService.getSkuInfo();
     const allowedSkuIds = new Set<string>(skuInfo.map((sku: any) => String(sku.skuId)));
     const bomType = this.dataService.getBomTypeFromResponse() || this.dataService.getBomType();
-    const isEbom = bomType === BOM_TYPE_EBOM;
+    const isEbom = bomType === BOM_TYPE_EBOM || bomType === BOM_TYPE_MATERIALMBOM;
 
     const ebomServiceFieldsSet = new Set(this.gridConfigService.getEbomServiceFieldNames());
 

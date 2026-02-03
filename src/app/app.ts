@@ -33,6 +33,7 @@ import {
   BOM_TYPE_EBOM,
   BOM_TYPE_MBOM,
   BOM_TYPE_SBOM,
+  BOM_TYPE_MATERIALMBOM,
   DEFAULT_BOM_TYPE,
   EBOM_SERVICE_FIELDS,
 } from './constants';
@@ -550,6 +551,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       isSkuFilterReadOnly: () => this.isSkuFilterReadOnly(),
       isSbomMode: () => this.isSbomMode(),
       isEbomMode: () => this.isEbomMode(),
+      isMaterialMbomMode: () => this.isMaterialMbomMode(),
       getDataCellStyle: (params) => this.getDataCellStyle(params),
       getFeatureValue: (data) => this.utilService.getFeatureValue(data),
       renderHierarchicalCell: (params) => this.renderHierarchicalCell(params),
@@ -606,6 +608,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
                 () => this.isSkuFilterReadOnly(),
                 () => this.isSbomMode(),
                 () => this.isEbomMode(),
+                () => this.isMaterialMbomMode(),
               );
             }
             return this.gridConfigService.isFieldEditableInSbom(
@@ -614,6 +617,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               () => this.isSkuFilterReadOnly(),
               () => this.isSbomMode(),
               () => this.isEbomMode(),
+              () => this.isMaterialMbomMode(),
             );
           },
           cellEditor: AutocompleteCellEditorComponent,
@@ -668,6 +672,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
                 () => this.isSkuFilterReadOnly(),
                 () => this.isSbomMode(),
                 () => this.isEbomMode(),
+                () => this.isMaterialMbomMode(),
               );
             }
             return this.gridConfigService.isFieldEditableInSbom(
@@ -676,6 +681,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               () => this.isSkuFilterReadOnly(),
               () => this.isSbomMode(),
               () => this.isEbomMode(),
+              () => this.isMaterialMbomMode(),
             );
           },
           cellEditor: AutocompleteCellEditorComponent,
@@ -732,6 +738,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
                 () => this.isSkuFilterReadOnly(),
                 () => this.isSbomMode(),
                 () => this.isEbomMode(),
+                () => this.isMaterialMbomMode(),
               );
             }
             return this.gridConfigService.isFieldEditableInSbom(
@@ -740,6 +747,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               () => this.isSkuFilterReadOnly(),
               () => this.isSbomMode(),
               () => this.isEbomMode(),
+              () => this.isMaterialMbomMode(),
             );
           },
           cellEditor: AutocompleteCellEditorComponent,
@@ -800,6 +808,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               () => this.isSkuFilterReadOnly(),
               () => this.isSbomMode(),
               () => this.isEbomMode(),
+              () => this.isMaterialMbomMode(),
             );
           }
           return this.gridConfigService.isFieldEditableInSbom(
@@ -808,6 +817,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             () => this.isSkuFilterReadOnly(),
             () => this.isSbomMode(),
             () => this.isEbomMode(),
+            () => this.isMaterialMbomMode(),
           );
         },
       };
@@ -884,6 +894,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               () => this.isSkuFilterReadOnly(),
               () => this.isSbomMode(),
               () => this.isEbomMode(),
+              () => this.isMaterialMbomMode(),
             );
           }
           return this.gridConfigService.isFieldEditableInSbom(
@@ -892,6 +903,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             () => this.isSkuFilterReadOnly(),
             () => this.isSbomMode(),
             () => this.isEbomMode(),
+            () => this.isMaterialMbomMode(),
           );
         };
         columnDef.valueSetter = (params: any) => {
@@ -973,6 +985,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               field,
               () => this.isSkuFilterReadOnly(),
               () => this.isSbomMode(),
+              () => this.isEbomMode(),
+              () => this.isMaterialMbomMode(),
             );
           }
           return this.gridConfigService.isFieldEditableInSbom(
@@ -980,6 +994,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             params.data,
             () => this.isSkuFilterReadOnly(),
             () => this.isSbomMode(),
+            () => this.isEbomMode(),
+            () => this.isMaterialMbomMode(),
           );
         };
         columnDef.cellRenderer = (params: any) => {
@@ -1044,6 +1060,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       isSkuFilterReadOnly: () => this.isSkuFilterReadOnly(),
       isSbomMode: () => this.isSbomMode(),
       isEbomMode: () => this.isEbomMode(),
+      isMaterialMbomMode: () => this.isMaterialMbomMode(),
       getDataCellStyle: (params) => this.getDataCellStyle(params),
       getFeatureValue: (data) => this.utilService.getFeatureValue(data),
       renderHierarchicalCell: (params) => this.renderHierarchicalCell(params),
@@ -1114,6 +1131,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     return bomType === BOM_TYPE_EBOM;
   }
 
+  public isMaterialMbomMode(): boolean {
+    const bomType = this.dataService.getBomType();
+    return bomType === BOM_TYPE_MATERIALMBOM;
+  }
+
   public getBomComposerTitle(): string {
     const bomType = this.dataService.getBomType();
     
@@ -1121,7 +1143,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       return `${bomType} Composer`;
     }
     
-    if (bomType === 'MATERIALMBOM') {
+    if (bomType === BOM_TYPE_MATERIALMBOM) {
       return 'Material BOM Composer';
     }
     
@@ -1130,7 +1152,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   public getCriteriaLabel(): string {
     const bomType = this.dataService.getBomType();
-    if (bomType === BOM_TYPE_EBOM || bomType === 'MATERIALMBOM') {
+    if (bomType === BOM_TYPE_EBOM || bomType === BOM_TYPE_MATERIALMBOM) {
       return 'Material of SKUs chosen - ';
     }
     // For MBOM and SBOM
@@ -1138,7 +1160,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   public isSkuFilterReadOnly(): boolean {
-    if (this.isEbomMode()) {
+    if (this.isEbomMode() || this.isMaterialMbomMode()) {
       return false;
     }
     if (this.isMbomMode()) {
@@ -1993,6 +2015,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           () => this.isSkuFilterReadOnly(),
           () => this.isSbomMode(),
           () => this.isEbomMode(),
+          () => this.isMaterialMbomMode(),
         ));
 
     if (isDateColumn && isEditable) {
@@ -2043,46 +2066,19 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   openMaterialModal(materialData: any): void {
     if (!materialData) return;
 
-    // Only open modal if linkedBom is "1"
     if (materialData.linkedBom !== '1' && materialData.linkedBom !== 1) {
       return;
     }
 
-    const childId = materialData.childId;
-
-    if (!childId) {
+    const materialColorId = materialData.materialColorId;
+    if (!materialColorId) {
       return;
     }
 
-    const bomSub = this.dataService.getComplexBOM(childId).subscribe({
-      next: (bomData: any) => {
-        if (!bomData) {
-          this.showNotification('Failed to load material BOM data.', 'error');
-          return;
-        }
-
-        if (!Array.isArray(bomData.instances)) {
-          bomData.instances = [];
-        }
-
-        this.selectedMaterialData = {
-          ...bomData,
-          material: materialData.material || materialData.materialDescription || '',
-          materialDescription: materialData.materialDescription || materialData.material || '',
-          part: materialData.part || materialData.partNumber || '',
-          partNumber: materialData.partNumber || materialData.part || '',
-          materialId: materialData.materialId || bomData.materialMasterId || '',
-        };
-        this.selectedMaterialSkuData = [];
-        this.showMaterialModal = true;
-      },
-      error: (error: any) => {
-        const errorMessage =
-          error?.error?.message || error?.message || 'Failed to load material BOM data.';
-        this.showNotification(errorMessage, 'error');
-      },
-    });
-    this.subscriptions.push(bomSub);
+    const url = new URL(window.location.href);
+    url.searchParams.set('ids', String(materialColorId));
+    url.searchParams.set('bomType', 'EBOM');
+    window.open(url.toString(), '_blank');
   }
 
   closeMaterialModal(): void {
@@ -2109,7 +2105,34 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const bomType = this.dataService.getBomType() ?? '';
     const requiredFields = this.validationService.getRequiredFieldsForSave(bomType);
     const touchedRows = allDataRows.filter((row) => this.isRowTouched(row));
-    const validationResult = this.validationService.validateRows(touchedRows, requiredFields);
+    const requiredFieldsOrGetter =
+      bomType === BOM_TYPE_SBOM
+        ? (row: any) =>
+            requiredFields.filter((f) =>
+              f.keys.some((key) =>
+                row.isNewRow
+                  ? this.gridConfigService.isFieldEditableForNewRow(
+                      key,
+                      () => this.isSkuFilterReadOnly(),
+                      () => this.isSbomMode(),
+                      () => this.isEbomMode(),
+                      () => this.isMaterialMbomMode(),
+                    )
+                  : this.gridConfigService.isFieldEditableInSbom(
+                      key,
+                      row,
+                      () => this.isSkuFilterReadOnly(),
+                      () => this.isSbomMode(),
+                      () => this.isEbomMode(),
+                      () => this.isMaterialMbomMode(),
+                    ),
+              ),
+            )
+        : requiredFields;
+    const validationResult = this.validationService.validateRows(
+      touchedRows,
+      requiredFieldsOrGetter,
+    );
 
     validationResult.invalidRows?.forEach((ir) => {
       rowValidationMap.set(ir.row, {
@@ -2190,7 +2213,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     duplicateValidation.invalidRows?.forEach(ir => {
       if (!this.isRowTouched(ir.row)) return;
       const existing = rowValidationMap.get(ir.row);
-      const duplicateMsg = duplicateValidation.message || (this.isEbomMode() ? 'Duplicate Part + Feature combination' : 'Duplicate Feature-SKU combination');
+      const duplicateMsg = duplicateValidation.message || ((this.isEbomMode() || this.isMaterialMbomMode()) ? 'Duplicate Part + Feature combination' : 'Duplicate Feature-SKU combination');
       if (existing) {
         existing.skuErrors.push(duplicateMsg);
       } else {
@@ -3302,6 +3325,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           isMbomMode: () => this.isMbomMode(),
           isSbomMode: () => this.isSbomMode(),
           isEbomMode: () => this.isEbomMode(),
+          isMaterialMbomMode: () => this.isMaterialMbomMode(),
           editedRows: this.editedRows,
           editedFields: this.editedFields,
           originalRowValues: this.originalRowValues,
@@ -3440,6 +3464,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         () => this.isMbomMode(),
         () => this.isSbomMode(),
         () => this.isEbomMode(),
+        () => this.isMaterialMbomMode(),
       );
       this.massEditStartDate = massEditState.startDate;
       this.massEditEndDate = massEditState.endDate;

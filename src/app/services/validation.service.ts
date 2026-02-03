@@ -4,6 +4,7 @@ import {
   BOM_TYPE_EBOM,
   BOM_TYPE_MBOM,
   BOM_TYPE_SBOM,
+  BOM_TYPE_MATERIALMBOM,
   REQUIRED_FIELDS_FOR_SAVE,
 } from '../constants';
 import { DataService } from './data.service';
@@ -226,14 +227,17 @@ export class ValidationService {
 
   /**
    * Validate a list of rows against required fields (reuses validateRow).
+   * @param requiredFields - Fixed list for all rows, or a function that returns required fields per row (e.g. for SBOM where editability varies by row).
    */
   validateRows(
     rows: any[],
-    requiredFields: RequiredField[]
+    requiredFields: RequiredField[] | ((row: any) => RequiredField[])
   ): ValidationResult {
     const invalidRows: InvalidRow[] = [];
     rows.forEach((row) => {
-      const validation = this.validateRow(row, requiredFields);
+      const fields =
+        typeof requiredFields === 'function' ? requiredFields(row) : requiredFields;
+      const validation = this.validateRow(row, fields);
       if (!validation.isValid) {
         invalidRows.push({
           row,
@@ -456,9 +460,10 @@ export class ValidationService {
   ): ValidationResult {
     const bomType = this.dataService.getBomType();
     const isEbom = bomType === BOM_TYPE_EBOM;
+    const isMaterialMbom = bomType === BOM_TYPE_MATERIALMBOM;
 
-    // EBOM: same rule as MBOM (duplicate Part + Feature not allowed). Reuse this method with Part+Feature-only logic; no SKU/section/ptcBomPartMarkUp.
-    if (isEbom) {
+    // EBOM and MATERIALMBOM: duplicate Part + Feature not allowed. Part+Feature-only logic; no SKU/section/ptcBomPartMarkUp.
+    if (isEbom || isMaterialMbom) {
       return this.validateDuplicatePartAndFeatureOnly(rowData, displayData, apiData);
     }
 

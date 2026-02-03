@@ -6,9 +6,10 @@
 export const BOM_TYPE_EBOM = 'EBOM';
 export const BOM_TYPE_MBOM = 'MBOM';
 export const BOM_TYPE_SBOM = 'SBOM';
+export const BOM_TYPE_MATERIALMBOM = 'MATERIALMBOM';
 
 /** Default BOM type when API / JSP does not provide one (e.g. getBomType() || DEFAULT_BOM_TYPE) */
-export const DEFAULT_BOM_TYPE = 'MBOM';
+export const DEFAULT_BOM_TYPE = BOM_TYPE_EBOM;
 
 /** API payload key for BOM link object */
 export const BOM_LINK_KEY = 'bom-link';

@@ -701,13 +701,14 @@ export class GridConfigService {
     rowData: any,
     isSkuFilterReadOnly: () => boolean,
     isSbomMode: () => boolean,
-    isEbomMode?: () => boolean
+    isEbomMode?: () => boolean,
+    isMaterialMbomMode?: () => boolean
   ): boolean {
     if (isSkuFilterReadOnly()) {
       return false;
     }
 
-    if (isEbomMode?.()) {
+    if (isEbomMode?.() || isMaterialMbomMode?.()) {
       const core = EBOM_CORE_FIELDS.includes(field);
       const serviceField = EBOM_SERVICE_FIELDS.includes(field);
       return core || serviceField;
@@ -741,13 +742,14 @@ export class GridConfigService {
     field: string,
     isSkuFilterReadOnly: () => boolean,
     isSbomMode: () => boolean,
-    isEbomMode?: () => boolean
+    isEbomMode?: () => boolean,
+    isMaterialMbomMode?: () => boolean
   ): boolean {
     if (isSkuFilterReadOnly()) {
       return false;
     }
 
-    if (isEbomMode?.()) {
+    if (isEbomMode?.() || isMaterialMbomMode?.()) {
       const core = EBOM_CORE_FIELDS.includes(field) || field === 'bomLinkFeature';
       const autopopulated = EDITABLE_AUTOPOPULATED_FIELDS.includes(field);
       const serviceField = EBOM_SERVICE_FIELDS.includes(field);

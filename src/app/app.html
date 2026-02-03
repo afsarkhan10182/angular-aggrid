@@ -55,7 +55,7 @@
               <app-icon name="search" size="14"></app-icon>
             </button>
           </div>
-          <div class="sku-filter-container" *ngIf="(isMbomMode() || isSbomMode()) && !isEbomMode()">
+          <div class="sku-filter-container" *ngIf="(isMbomMode() || isSbomMode()) && !isEbomMode() && !isMaterialMbomMode()">
             <label class="sku-filter-label" for="sku-filter-trigger">SKU Views:</label>
             <div #skuFilterDropdown class="sku-filter-dropdown">
               <button
