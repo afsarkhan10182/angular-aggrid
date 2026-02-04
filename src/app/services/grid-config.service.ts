@@ -4,6 +4,18 @@ import {
   EBOM_CORE_FIELDS,
   EBOM_SERVICE_FIELDS,
   EDITABLE_AUTOPOPULATED_FIELDS,
+  ENUM_MBOM_LINE_ITEM,
+  COL_ACTIONS,
+  COL_CHECKBOX,
+  FIELD_PART_NUMBER,
+  FIELD_QUANTITY,
+  FIELD_BOM_LINK_START_DATE,
+  FIELD_BOM_LINK_END_DATE,
+  FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
+  FIELD_BOM_LINK_FEATURE,
+  FIELD_BOM_LINK_SPEC_SHEET_EXTRA,
+  SBOM_EDITABLE_FIELDS,
+  NEW_ROW_EDITABLE_FIELDS,
 } from '../constants';
 import { DataService } from './data.service';
 
@@ -517,7 +529,7 @@ export class GridConfigService {
           params.colDef.field &&
           params.newValue !== params.oldValue &&
           !params.colDef.field?.includes('Date') &&
-          params.colDef.field !== 'quantity'
+          params.colDef.field !== FIELD_QUANTITY
         ) {
           params.data[params.colDef.field] = params.newValue;
         }
@@ -528,7 +540,7 @@ export class GridConfigService {
         });
       },
       onCellClicked: (params) => {
-        if (params.colDef.field === 'actions' || params.colDef.field === 'checkbox') {
+        if (params.colDef.field === COL_ACTIONS || params.colDef.field === COL_CHECKBOX) {
           return;
         }
 
@@ -715,18 +727,18 @@ export class GridConfigService {
     }
 
     if (!isSbomMode()) {
-      return ['bomLinkStartDate', 'bomLinkEndDate', 'quantity'].includes(field);
+      return [FIELD_BOM_LINK_START_DATE, FIELD_BOM_LINK_END_DATE, FIELD_QUANTITY].includes(field);
     }
 
-    const isMbomLineItem = rowData?.ptcbomPartMarkUp === 'enumMBOM001';
+    const isMbomLineItem = rowData?.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM;
 
     // For MBOM line items: bomLinkIncludeInSpecSheet is always editable
     if (isMbomLineItem) {
-      return field === 'bomLinkIncludeInSpecSheet';
+      return field === FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET;
     }
 
     // For SBOM: Disable bomLinkIncludeInSpecSheet if bomLinkSpecSheetExtra exists
-    if (field === 'bomLinkIncludeInSpecSheet') {
+    if (field === FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET) {
       const specSheetExtra = rowData?.bomLinkSpecSheetExtra;
       if (specSheetExtra !== undefined && specSheetExtra !== null && String(specSheetExtra).trim() !== '') {
         return false;
@@ -734,8 +746,7 @@ export class GridConfigService {
     }
 
     // For regular SBOM rows
-    const editableFields = ['bomLinkIncludeInSpecSheet', 'quantity', 'bomLinkStartDate', 'bomLinkEndDate'];
-    return editableFields.includes(field);
+    return SBOM_EDITABLE_FIELDS.includes(field);
   }
 
   isFieldEditableForNewRow(
@@ -750,41 +761,26 @@ export class GridConfigService {
     }
 
     if (isEbomMode?.() || isMaterialMbomMode?.()) {
-      const core = EBOM_CORE_FIELDS.includes(field) || field === 'bomLinkFeature';
+      const core = EBOM_CORE_FIELDS.includes(field) || field === FIELD_BOM_LINK_FEATURE;
       const autopopulated = EDITABLE_AUTOPOPULATED_FIELDS.includes(field);
       const serviceField = EBOM_SERVICE_FIELDS.includes(field);
       return core || autopopulated || serviceField;
     }
 
-    if (isSbomMode() && field === 'bomLinkSpecSheetExtra') {
+    if (isSbomMode() && field === FIELD_BOM_LINK_SPEC_SHEET_EXTRA) {
       return false;
     }
 
-    if (isSbomMode() && field === 'bomLinkFeature') {
+    if (isSbomMode() && field === FIELD_BOM_LINK_FEATURE) {
       return false;
     }
 
     // For SBOM: Disable bomLinkIncludeInSpecSheet for new rows
-    if (isSbomMode() && field === 'bomLinkIncludeInSpecSheet') {
+    if (isSbomMode() && field === FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET) {
       return false;
     }
 
-    const editableFields = [
-      'bomLinkFeature',
-      'materialDescription',
-      'material',
-      'supplier',
-      'colorDescription',
-      'color',
-      'partNumber',
-      'bomLinkStartDate',
-      'bomLinkEndDate',
-      'quantity',
-      'bomLinkSpecSheetExtra',
-      'bomLinkIncludeInSpecSheet',
-      'bomLinkCountryOfOrigin',
-    ];
-    return editableFields.includes(field);
+    return NEW_ROW_EDITABLE_FIELDS.includes(field);
   }
 
   // Grouping Methods (merged from GroupByService)
@@ -857,14 +853,14 @@ export class GridConfigService {
     rowsToGroup.forEach((row) => {
       const isHeader = row.isGroupHeader;
       if (!isHeader) {
-        const partNumber = row.partNumber || row.part;
+        const partNumber = row?.[FIELD_PART_NUMBER] || row.part;
         if (!partNumber || String(partNumber).trim() === '') {
           return;
         }
       }
 
       let groupValue = row[groupField.field];
-      if (groupField.field === 'bomLinkFeature' && !groupValue && row.feature) {
+      if (groupField.field === FIELD_BOM_LINK_FEATURE && !groupValue && row.feature) {
         groupValue = row.feature;
       }
       const key = groupValue !== null && groupValue !== undefined ? String(groupValue).trim() : '__null__';
@@ -1128,10 +1124,10 @@ export class GridConfigService {
     }
 
     return [
-      data.partNumber,
+      data[FIELD_PART_NUMBER],
       data.part,
-      data.section && (data.partNumber || data.part)
-        ? `${data.section}::${data.partNumber || data.part}`
+      data.section && (data[FIELD_PART_NUMBER] || data.part)
+        ? `${data.section}::${data[FIELD_PART_NUMBER] || data.part}`
         : null,
     ].filter((v) => v !== null && v !== undefined && `${v}`.trim() !== '');
   }
@@ -1152,10 +1148,10 @@ export class GridConfigService {
     }
 
     const rowId =
-      data.materialKey || data.newRowId || data.partNumber || data.part;
+      data.materialKey || data.newRowId || data[FIELD_PART_NUMBER] || data.part;
     const compositeId =
-      data.section && (data.partNumber || data.part)
-        ? `${data.section}::${data.partNumber || data.part}`
+      data.section && (data[FIELD_PART_NUMBER] || data.part)
+        ? `${data.section}::${data[FIELD_PART_NUMBER] || data.part}`
         : null;
     const hasError =
       (rowId && componentInstance.invalidRowIds.has(rowId)) ||

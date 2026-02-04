@@ -5,7 +5,38 @@ import {
   BOM_TYPE_MBOM,
   BOM_TYPE_SBOM,
   BOM_TYPE_MATERIALMBOM,
+  FIELD_PART_NUMBER,
   REQUIRED_FIELDS_FOR_SAVE,
+  DEFAULT_REQUIRED_FIELDS,
+  ROW_ID_UNKNOWN,
+  LABEL_ROW,
+  LABEL_ROWS,
+  MSG_VALIDATION_REQUIRED_FIELDS,
+  MSG_NO_SKUS_SELECTED,
+  MSG_SKU_SELECTION,
+  MSG_DUPLICATE_PART_SKU,
+  MSG_DUPLICATE_FEATURE_SKU_SECTION,
+  MSG_DUPLICATE_PART_FEATURE_SKU,
+  MSG_DUPLICATE_FEATURE_AND_PART,
+  MSG_DUPLICATE_PART_NUMBER_SKU,
+  MSG_DUPLICATE_PART_NUMBER_SKU_MULTIPLE,
+  MSG_DUPLICATE_FEATURE_SKU_SECTION_ONE,
+  MSG_DUPLICATE_FEATURE_FOR_SKU,
+  MSG_DUPLICATE_FEATURE_AND_PART_FOR_SKU,
+  MSG_NO_DUPLICATE_FOUND,
+  MSG_DUPLICATE_PART_FEATURE_COMBO,
+  MSG_NO_DUPLICATE_PART_FEATURE,
+  ENUM_MBOM_LINE_ITEM,
+  VALUE_SPEC_NO,
+  DISPLAY_FALSE,
+  DUPLICATE_TYPE_FEATURE_UNIQUENESS,
+  DUPLICATE_TYPE_DUPLICATE_FEATURE,
+  DUPLICATE_TYPE_DUPLICATE_PART,
+  DUPLICATE_TYPE_ENUM_MBOM_001,
+  DUPLICATE_TYPE_NOT_ENUM_MBOM_001,
+  DUPLICATE_TYPE_SBOM,
+  HEADER_FEATURE,
+  LABEL_QUANTITY,
 } from '../constants';
 import { DataService } from './data.service';
 
@@ -19,15 +50,17 @@ export interface InvalidRow {
   missingFields: string[];
   rowId: string | number;
   skuErrors?: string[];
-  duplicateType?:
-    | 'enumMBOM001'
-    | 'notEnumMBOM001'
-    | 'sbom'
-    | 'feature-uniqueness'
-    | 'duplicate-feature'
-    | 'duplicate-part'
-    | null; // Track which type of duplicate for error message
+  duplicateType?: DuplicateType; // Track which type of duplicate for error message
 }
+
+export type DuplicateType =
+  | typeof DUPLICATE_TYPE_ENUM_MBOM_001
+  | typeof DUPLICATE_TYPE_NOT_ENUM_MBOM_001
+  | typeof DUPLICATE_TYPE_SBOM
+  | typeof DUPLICATE_TYPE_FEATURE_UNIQUENESS
+  | typeof DUPLICATE_TYPE_DUPLICATE_FEATURE
+  | typeof DUPLICATE_TYPE_DUPLICATE_PART
+  | null;
 
 export interface ValidationResult {
   isValid: boolean;
@@ -47,20 +80,9 @@ export interface SkuValidationResult {
 export class ValidationService {
   constructor(private dataService: DataService) {}
   /**
-   * Default required fields for new BOM rows
+   * Default required fields for new BOM rows (from constants)
    */
-  private readonly defaultRequiredFields: RequiredField[] = [
-    { keys: ['bomLinkFeature'], label: 'Feature' },
-    { keys: ['materialDescription'], label: 'Material' },
-    { keys: ['supplier'], label: 'Supplier' },
-    { keys: ['colorDescription'], label: 'Color' },
-    { keys: ['partNumber'], label: 'Part' },
-    { keys: ['bomLinkStartDate'], label: 'Start Date' },
-    { keys: ['bomLinkEndDate'], label: 'End Date' },
-    { keys: ['quantity'], label: 'Quantity' },
-    { keys: ['bomLinkSpecSheetExtra'], label: 'Spec Sheet Extra' },
-    { keys: ['bomLinkIncludeInSpecSheet'], label: 'Include In Spec Sheet' },
-  ];
+  private readonly defaultRequiredFields: RequiredField[] = [...DEFAULT_REQUIRED_FIELDS];
 
   /**
    * Check if a value is empty (null, undefined, empty string, or whitespace-only string)
@@ -82,7 +104,7 @@ export class ValidationService {
     for (const key of field.keys) {
       const value = row[key];
 
-      if (field.label === 'Quantity') {
+      if (field.label === LABEL_QUANTITY) {
         if (value === undefined || value === null || value === '' || value === 0 || value === '0') {
           continue;
         }
@@ -186,23 +208,15 @@ export class ValidationService {
         invalidRows.push({
           row,
           missingFields: validation.missingFields,
-          rowId: row.newRowId || row.partNumber || row.part || 'Unknown',
+          rowId: row.newRowId || row[FIELD_PART_NUMBER] || row.part || ROW_ID_UNKNOWN,
         });
       }
     });
 
     if (invalidRows.length > 0) {
-      const rowCount = invalidRows.length === 1 ? 'row' : 'rows';
-      const missingFieldsList = invalidRows
-        .map((ir) => {
-          const fields = ir.missingFields.join(', ');
-          return `Row ${ir.rowId}: Missing ${fields}`;
-        })
-        .join('; ');
-
       return {
         isValid: false,
-        message: `Cannot save: Some rows have missing required fields`,
+        message: MSG_VALIDATION_REQUIRED_FIELDS,
         invalidRows,
       };
     }
@@ -220,7 +234,7 @@ export class ValidationService {
   getRequiredFieldsForSave(bomType: string): RequiredField[] {
     const fields = [...REQUIRED_FIELDS_FOR_SAVE];
     if (bomType === BOM_TYPE_SBOM) {
-      return fields.filter((f) => f.label !== 'Feature');
+      return fields.filter((f) => f.label !== HEADER_FEATURE);
     }
     return fields;
   }
@@ -242,14 +256,15 @@ export class ValidationService {
         invalidRows.push({
           row,
           missingFields: validation.missingFields,
-          rowId: row.newRowId ?? row.materialKey ?? row.partNumber ?? row.part ?? 'Unknown',
+          rowId:
+            row.newRowId ?? row.materialKey ?? row[FIELD_PART_NUMBER] ?? row.part ?? ROW_ID_UNKNOWN,
         });
       }
     });
     if (invalidRows.length > 0) {
       return {
         isValid: false,
-        message: 'Cannot save: Some rows have missing required fields.',
+        message: MSG_VALIDATION_REQUIRED_FIELDS,
         invalidRows,
       };
     }
@@ -311,7 +326,7 @@ export class ValidationService {
     const { count, skuIds } = this.countSkusWithValues(row, skuInfo);
 
     if (count === 0) {
-      const rowId = row.newRowId || row.partNumber || row.part || 'Unknown';
+      const rowId = row.newRowId || row[FIELD_PART_NUMBER] || row.part || ROW_ID_UNKNOWN;
       return {
         isValid: false,
         message: `Row ${rowId}: At least 1 SKU must be selected before submit.`,
@@ -345,7 +360,7 @@ export class ValidationService {
     const { count: selectedCount, skuIds: selectedSkuIds } = this.countSkusWithValues(row, skuInfo);
 
     if (selectedCount === 0) {
-      return { isValid: false, message: 'No SKUs selected in row' };
+      return { isValid: false, message: MSG_NO_SKUS_SELECTED };
     }
 
     const payloadSkuIds = payloadSkus
@@ -354,7 +369,7 @@ export class ValidationService {
 
     if (selectedCount === 1) {
       if (payloadSkuIds.length !== 1) {
-        const rowId = row.newRowId || row.partNumber || row.part || 'Unknown';
+        const rowId = row.newRowId || row[FIELD_PART_NUMBER] || row.part || ROW_ID_UNKNOWN;
         return {
           isValid: false,
           message: `Row ${rowId}: Only 1 SKU is selected, but payload contains ${payloadSkuIds.length} SKU(s).`,
@@ -362,7 +377,7 @@ export class ValidationService {
       }
 
       if (!payloadSkuIds.includes(selectedSkuIds[0])) {
-        const rowId = row.newRowId || row.partNumber || row.part || 'Unknown';
+        const rowId = row.newRowId || row[FIELD_PART_NUMBER] || row.part || ROW_ID_UNKNOWN;
         return {
           isValid: false,
           message: `Row ${rowId}: Selected SKU (${selectedSkuIds[0]}) does not match payload SKU (${payloadSkuIds[0]}).`,
@@ -371,7 +386,7 @@ export class ValidationService {
     } else {
       const missingSkus = selectedSkuIds.filter((id) => !payloadSkuIds.includes(id));
       if (missingSkus.length > 0) {
-        const rowId = row.newRowId || row.partNumber || row.part || 'Unknown';
+        const rowId = row.newRowId || row[FIELD_PART_NUMBER] || row.part || ROW_ID_UNKNOWN;
         return {
           isValid: false,
           message: `Row ${rowId}: Selected SKUs (${selectedSkuIds.join(
@@ -382,7 +397,7 @@ export class ValidationService {
 
       const extraSkus = payloadSkuIds.filter((id) => !selectedSkuIds.includes(id));
       if (extraSkus.length > 0) {
-        const rowId = row.newRowId || row.partNumber || row.part || 'Unknown';
+        const rowId = row.newRowId || row[FIELD_PART_NUMBER] || row.part || ROW_ID_UNKNOWN;
         return {
           isValid: false,
           message: `Row ${rowId}: Payload contains SKUs (${extraSkus.join(
@@ -424,14 +439,14 @@ export class ValidationService {
       if (!validation.isValid) {
         invalidRows.push({
           row,
-          missingFields: ['SKU selection'],
-          rowId: row.newRowId || row.partNumber || row.part || 'Unknown',
+          missingFields: [MSG_SKU_SELECTION],
+          rowId: row.newRowId || row[FIELD_PART_NUMBER] || row.part || ROW_ID_UNKNOWN,
         });
       }
     });
 
     if (invalidRows.length > 0) {
-      const rowCount = invalidRows.length === 1 ? 'row' : 'rows';
+      const rowCount = invalidRows.length === 1 ? LABEL_ROW : LABEL_ROWS;
       const rowIds = invalidRows.map((ir) => ir.rowId).join(', ');
 
       return {
@@ -489,7 +504,7 @@ export class ValidationService {
         if (!bomLink) continue;
 
         const section = bomLink.sectionInternalName || bomLink.section || '';
-        const partNumber = String(bomLink.partNumber || '').trim();
+        const partNumber = String(bomLink?.[FIELD_PART_NUMBER] || '').trim();
         const bomLinkFeature = String(bomLink.bomLinkFeature || '').trim();
         const ptcbomPartMarkUp = bomLink.ptcbomPartMarkUp || '';
         const isEmptyPartNumber = !partNumber || partNumber === '';
@@ -497,7 +512,7 @@ export class ValidationService {
         // Skip if missing required fields (section and feature are always required)
         if (!section || !bomLinkFeature) continue;
 
-        if (isMbom && ptcbomPartMarkUp === 'enumMBOM001' && isEmptyPartNumber) {
+        if (isMbom && ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM && isEmptyPartNumber) {
           continue;
         }
         if (isSbom && isEmptyPartNumber) {
@@ -506,7 +521,7 @@ export class ValidationService {
 
         const rowLike: any = {
           section: section,
-          partNumber: partNumber,
+          [FIELD_PART_NUMBER]: partNumber,
           bomLinkFeature: bomLinkFeature,
           ptcbomPartMarkUp: ptcbomPartMarkUp,
         };
@@ -547,7 +562,7 @@ export class ValidationService {
         // For MBOM with ptcbomPartMarkUp !== "enumMBOM001": Key is Section+Part+Feature
         // For SBOM: Key is Section+Part+Feature (always)
         let existingKey: string;
-        if (isMbom && ptcbomPartMarkUp === 'enumMBOM001') {
+        if (isMbom && ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM) {
           // Case 2: MBOM with ptcbomPartMarkUp === "enumMBOM001" - check Section+Feature only
           existingKey = `${section}::${bomLinkFeature}`;
         } else {
@@ -556,10 +571,10 @@ export class ValidationService {
         }
 
         const existingIndex = existingRows.findIndex((r) => {
-          if (isMbom && r.ptcbomPartMarkUp === 'enumMBOM001') {
+          if (isMbom && r.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM) {
             return `${r.section}::${r.bomLinkFeature}` === existingKey;
           } else {
-            return `${r.section}::${r.partNumber}::${r.bomLinkFeature}` === existingKey;
+            return `${r.section}::${r[FIELD_PART_NUMBER]}::${r.bomLinkFeature}` === existingKey;
           }
         });
 
@@ -626,7 +641,7 @@ export class ValidationService {
       for (const row of newRows) {
         const section = row.section || '';
         const bomLinkFeature = String(row.bomLinkFeature || '').trim();
-        const partNumber = String(row.partNumber || '').trim();
+        const partNumber = String(row?.[FIELD_PART_NUMBER] || '').trim();
 
         if (!section || !bomLinkFeature) {
           continue;
@@ -682,7 +697,7 @@ export class ValidationService {
               row: duplicateRow,
               missingFields: [],
               rowId: duplicateRow.newRowId || duplicateRow.id || 0,
-              duplicateType: 'duplicate-feature' as const,
+              duplicateType: DUPLICATE_TYPE_DUPLICATE_FEATURE,
             });
           }
 
@@ -704,7 +719,7 @@ export class ValidationService {
 
     for (const row of existingRows) {
       const section = row.section || '';
-      const partNumber = String(row.partNumber || '').trim();
+      const partNumber = String(row?.[FIELD_PART_NUMBER] || '').trim();
       const bomLinkFeature = String(row.bomLinkFeature || '').trim();
       const ptcbomPartMarkUp = row.ptcbomPartMarkUp || '';
 
@@ -722,7 +737,7 @@ export class ValidationService {
 
       const isEmptyPartNumber = !partNumber || partNumber === '';
 
-      if (isMbom && ptcbomPartMarkUp === 'enumMBOM001') {
+      if (isMbom && ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM) {
         if (isEmptyPartNumber) {
           continue;
         }
@@ -741,7 +756,7 @@ export class ValidationService {
         }
         const skuSet = partMap.get(bomLinkFeature)!;
         skuIdsToUse.forEach((skuId: string) => skuSet.add(skuId));
-      } else if (isMbom && ptcbomPartMarkUp !== 'enumMBOM001') {
+      } else if (isMbom && ptcbomPartMarkUp !== ENUM_MBOM_LINE_ITEM) {
         if (!isEmptyPartNumber) {
           if (!existingCombinationsNoPartWithPart.has(section)) {
             existingCombinationsNoPartWithPart.set(section, new Map());
@@ -851,7 +866,7 @@ export class ValidationService {
         }
       }
 
-      const partNumber = String(row.partNumber || '').trim();
+      const partNumber = String(row?.[FIELD_PART_NUMBER] || '').trim();
       const bomLinkFeature = String(row.bomLinkFeature || '').trim();
       const isEmptyPartNumber = !partNumber || partNumber === '';
       const isEmptyFeature = !bomLinkFeature || bomLinkFeature === '';
@@ -875,14 +890,7 @@ export class ValidationService {
 
       let foundDuplicate = false;
       const duplicateSkus: string[] = [];
-      let duplicateType:
-        | 'enumMBOM001'
-        | 'notEnumMBOM001'
-        | 'sbom'
-        | 'feature-uniqueness'
-        | 'duplicate-feature'
-        | 'duplicate-part'
-        | null = null;
+      let duplicateType: DuplicateType = null;
       let errorMessage = '';
 
       for (const skuId of rowSkus.skuIds) {
@@ -895,7 +903,7 @@ export class ValidationService {
                 if (!bomLink) continue;
 
                 const instanceSection = bomLink.sectionInternalName || bomLink.section || '';
-                const instancePartNumber = String(bomLink.partNumber || '').trim();
+                const instancePartNumber = String(bomLink?.[FIELD_PART_NUMBER] || '').trim();
                 const instanceFeature = String(bomLink.bomLinkFeature || '').trim();
                 const instanceSpecSheetExtra = String(bomLink.bomLinkSpecSheetExtra || '').trim();
 
@@ -923,24 +931,24 @@ export class ValidationService {
             }
 
             const hiddenRecords = matchingRecords.filter(
-              (record) => record.specSheetExtra === 'No' || record.specSheetExtra === 'false'
+              (record) => record.specSheetExtra === VALUE_SPEC_NO || record.specSheetExtra === DISPLAY_FALSE
             );
 
             const visibleRecords = matchingRecords.filter(
-              (record) => record.specSheetExtra !== 'No' && record.specSheetExtra !== 'false'
+              (record) => record.specSheetExtra !== VALUE_SPEC_NO && record.specSheetExtra !== DISPLAY_FALSE
             );
 
             if (visibleRecords.length > 0) {
               duplicateSkus.push(skuId);
               foundDuplicate = true;
-              duplicateType = 'duplicate-part';
-              errorMessage = 'Duplicate part number for the same SKU. A record with the same part and SKU already exists when feature is not present.';
+              duplicateType = DUPLICATE_TYPE_DUPLICATE_PART;
+              errorMessage = MSG_DUPLICATE_PART_NUMBER_SKU;
               break;
             } else if (hiddenRecords.length > 1) {
               duplicateSkus.push(skuId);
               foundDuplicate = true;
-              duplicateType = 'duplicate-part';
-              errorMessage = 'Duplicate part number for the same SKU. Multiple records found with the same part and SKU when feature is not present.';
+              duplicateType = DUPLICATE_TYPE_DUPLICATE_PART;
+              errorMessage = MSG_DUPLICATE_PART_NUMBER_SKU_MULTIPLE;
               break;
             }
           } else {
@@ -952,7 +960,7 @@ export class ValidationService {
 
                 const instanceSection = bomLink.sectionInternalName || bomLink.section || '';
                 const instanceFeature = String(bomLink.bomLinkFeature || '').trim();
-                const instancePartNumber = String(bomLink.partNumber || '').trim();
+                const instancePartNumber = String(bomLink?.[FIELD_PART_NUMBER] || '').trim();
 
                 const isSectionMatch = instanceSection === section;
                 const isFeatureMatch = instanceFeature === bomLinkFeature;
@@ -979,8 +987,8 @@ export class ValidationService {
             if (matchingRecords.length > 0) {
               duplicateSkus.push(skuId);
               foundDuplicate = true;
-              duplicateType = 'duplicate-part';
-              errorMessage = 'Duplicate part for the same SKU.';
+              duplicateType = DUPLICATE_TYPE_DUPLICATE_PART;
+              errorMessage = MSG_DUPLICATE_PART_SKU;
               break;
             }
           }
@@ -993,7 +1001,7 @@ export class ValidationService {
 
               const instanceSection = bomLink.sectionInternalName || bomLink.section || '';
               const instanceFeature = String(bomLink.bomLinkFeature || '').trim();
-              const instancePartNumber = String(bomLink.partNumber || '').trim();
+              const instancePartNumber = String(bomLink?.[FIELD_PART_NUMBER] || '').trim();
               const instancePtcbomPartMarkUp = bomLink.ptcbomPartMarkUp || '';
 
               if (
@@ -1025,8 +1033,8 @@ export class ValidationService {
           if (recordCount > 1) {
             duplicateSkus.push(skuId);
             foundDuplicate = true;
-            duplicateType = 'feature-uniqueness';
-            errorMessage = 'Duplicate feature for the same SKU and section.';
+            duplicateType = DUPLICATE_TYPE_FEATURE_UNIQUENESS;
+            errorMessage = MSG_DUPLICATE_FEATURE_SKU_SECTION;
             break;
           } else if (recordCount === 0) {
           } else if (recordCount === 1) {
@@ -1040,14 +1048,14 @@ export class ValidationService {
               if (existingPartNumber !== partNumber) {
                 duplicateSkus.push(skuId);
                 foundDuplicate = true;
-                duplicateType = 'duplicate-feature';
-                errorMessage = 'Duplicate feature for the same SKU and section.';
+                duplicateType = DUPLICATE_TYPE_DUPLICATE_FEATURE;
+                errorMessage = MSG_DUPLICATE_FEATURE_SKU_SECTION;
                 break;
               } else {
                 duplicateSkus.push(skuId);
                 foundDuplicate = true;
-                duplicateType = 'duplicate-part';
-                errorMessage = 'Duplicate feature and part for the same SKU and section.';
+                duplicateType = DUPLICATE_TYPE_DUPLICATE_PART;
+                errorMessage = MSG_DUPLICATE_FEATURE_AND_PART;
                 break;
               }
             }
@@ -1056,7 +1064,7 @@ export class ValidationService {
       }
 
       if (foundDuplicate) {
-        const rowId = row.newRowId || row.partNumber || 'Unknown';
+        const rowId = row.newRowId || row?.[FIELD_PART_NUMBER] || ROW_ID_UNKNOWN;
         invalidRows.push({
           row,
           missingFields: [],
@@ -1069,19 +1077,18 @@ export class ValidationService {
     let finalErrorMessage = 'Duplicate Part for the chosen Feature and SKU';
     if (invalidRows.length > 0) {
       const firstDuplicate = invalidRows[0] as any;
-      if (firstDuplicate.duplicateType === 'feature-uniqueness') {
-        finalErrorMessage =
-          'Duplicate feature for the same SKU and section. One SKU should not have more than one feature for the same section.';
-      } else if (firstDuplicate.duplicateType === 'duplicate-feature') {
-        finalErrorMessage = 'Duplicate feature for the same SKU and section.';
-      } else if (firstDuplicate.duplicateType === 'duplicate-part') {
-        finalErrorMessage = 'Duplicate part for the same SKU and section.';
-      } else if (firstDuplicate.duplicateType === 'notEnumMBOM001') {
-        finalErrorMessage = 'Duplicate Feature for the chosen SKU';
-      } else if (firstDuplicate.duplicateType === 'enumMBOM001') {
-        finalErrorMessage = 'Duplicate Feature and Part for the chosen SKU';
-      } else if (firstDuplicate.duplicateType === 'sbom') {
-        finalErrorMessage = 'Duplicate Feature and Part for the chosen SKU';
+      if (firstDuplicate.duplicateType === DUPLICATE_TYPE_FEATURE_UNIQUENESS) {
+        finalErrorMessage = MSG_DUPLICATE_FEATURE_SKU_SECTION_ONE;
+      } else if (firstDuplicate.duplicateType === DUPLICATE_TYPE_DUPLICATE_FEATURE) {
+        finalErrorMessage = MSG_DUPLICATE_FEATURE_SKU_SECTION;
+      } else if (firstDuplicate.duplicateType === DUPLICATE_TYPE_DUPLICATE_PART) {
+        finalErrorMessage = MSG_DUPLICATE_FEATURE_SKU_SECTION;
+      } else if (firstDuplicate.duplicateType === DUPLICATE_TYPE_NOT_ENUM_MBOM_001) {
+        finalErrorMessage = MSG_DUPLICATE_FEATURE_FOR_SKU;
+      } else if (firstDuplicate.duplicateType === DUPLICATE_TYPE_ENUM_MBOM_001) {
+        finalErrorMessage = MSG_DUPLICATE_FEATURE_AND_PART_FOR_SKU;
+      } else if (firstDuplicate.duplicateType === DUPLICATE_TYPE_SBOM) {
+        finalErrorMessage = MSG_DUPLICATE_FEATURE_AND_PART_FOR_SKU;
       }
     }
 
@@ -1090,7 +1097,7 @@ export class ValidationService {
       message:
         invalidRows.length > 0
           ? finalErrorMessage
-          : 'No duplicate Feature+Part+SKU combinations found.',
+          : MSG_NO_DUPLICATE_FOUND,
       invalidRows: invalidRows.length > 0 ? invalidRows : undefined,
     };
 
@@ -1117,7 +1124,7 @@ export class ValidationService {
       for (const instance of apiData.instances) {
         const bomLink = instance[BOM_LINK_KEY];
         if (!bomLink) continue;
-        const partNumber = String(bomLink.partNumber || '').trim();
+        const partNumber = String(bomLink?.[FIELD_PART_NUMBER] || '').trim();
         const feature = String(bomLink.bomLinkFeature || '').trim();
         if (partNumber && partNumber !== '') {
           existingCombinations.add(`${partNumber.toLowerCase()}|${feature.toLowerCase()}`);
@@ -1127,7 +1134,7 @@ export class ValidationService {
       const collectRows = (rows: any[]) => {
         for (const row of rows) {
           if ((row.isDirectRow || row.isSubRow) && !row.isNewRow) {
-            const partNumber = String(row.partNumber || '').trim();
+            const partNumber = String(row?.[FIELD_PART_NUMBER] || '').trim();
             const feature = String(row.bomLinkFeature || '').trim();
             if (partNumber && partNumber !== '') {
               existingCombinations.add(`${partNumber.toLowerCase()}|${feature.toLowerCase()}`);
@@ -1141,7 +1148,7 @@ export class ValidationService {
 
     const newCombinationCounts = new Map<string, any[]>();
     for (const row of newRows) {
-      const partNumber = String(row.partNumber || '').trim();
+      const partNumber = String(row?.[FIELD_PART_NUMBER] || '').trim();
       const feature = String(row.bomLinkFeature || '').trim();
       if (!partNumber || partNumber === '') continue;
       const key = `${partNumber.toLowerCase()}|${feature.toLowerCase()}`;
@@ -1156,16 +1163,16 @@ export class ValidationService {
           invalidRows.push({
             row: r,
             missingFields: [],
-            rowId: r.newRowId ?? r.partNumber ?? 'Unknown',
-            duplicateType: 'duplicate-part',
+            rowId: r.newRowId ?? r?.[FIELD_PART_NUMBER] ?? ROW_ID_UNKNOWN,
+            duplicateType: DUPLICATE_TYPE_DUPLICATE_PART,
           })
         );
       } else if (existingCombinations.has(key)) {
         invalidRows.push({
           row: rows[0],
           missingFields: [],
-          rowId: rows[0].newRowId ?? rows[0].partNumber ?? 'Unknown',
-          duplicateType: 'duplicate-part',
+          rowId: rows[0].newRowId ?? rows[0]?.[FIELD_PART_NUMBER] ?? ROW_ID_UNKNOWN,
+          duplicateType: DUPLICATE_TYPE_DUPLICATE_PART,
         });
       }
     }
@@ -1174,8 +1181,8 @@ export class ValidationService {
       isValid: invalidRows.length === 0,
       message:
         invalidRows.length > 0
-          ? 'Duplicate Part + Feature combination found. Each Part + Feature must be unique.'
-          : 'No duplicate Part + Feature combinations found.',
+          ? MSG_DUPLICATE_PART_FEATURE_COMBO
+          : MSG_NO_DUPLICATE_PART_FEATURE,
       invalidRows: invalidRows.length > 0 ? invalidRows : undefined,
     };
   }

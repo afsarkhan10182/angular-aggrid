@@ -36,6 +36,38 @@ import {
   BOM_TYPE_MATERIALMBOM,
   DEFAULT_BOM_TYPE,
   EBOM_SERVICE_FIELDS,
+  EDITABLE_AUTOPOPULATED_FIELDS,
+  COL_ACTIONS,
+  COL_CHECKBOX,
+  FIELD_ACTIONS,
+  FIELD_BOM_LINK_FEATURE,
+  FIELD_FEATURE,
+  FIELD_BOM_LINK_PART,
+  FIELD_PART_NUMBER,
+  FIELD_CHECKBOX,
+  FIELD_MATERIAL,
+  FIELD_MATERIAL_DESCRIPTION,
+  FIELD_SUPPLIER,
+  FIELD_COLOR,
+  FIELD_COLOR_DESCRIPTION,
+  FIELD_HAS_LINKED_BOM,
+  LS_KEY_SHOW_EXPIRED_DATA,
+  NOTIFICATION_TYPE_ERROR,
+  NOTIFICATION_TYPE_ERROR_PERSISTENT,
+  NOTIFICATION_TYPE_SUCCESS,
+  NOTIFICATION_TYPE_INFO,
+  MSG_SAVE_DISABLED_VIEW_ONLY,
+  COLUMNS_REFRESH_ACTIONS,
+  ROW_ID_UNKNOWN,
+  EXCLUDED_FIELDS_EXPORT,
+  MSG_EXPORT_EXCEL_ERROR,
+  MSG_EXPORT_EXCEL_SUCCESS,
+  MSG_EXPORT_EXCEL_SUCCESS_SELECTED,
+  LABEL_ROW,
+  LABEL_ROWS,
+  JSP_BOM_COMPOSER,
+  PARAM_BOM_TYPE,
+  PARAM_IDS,
 } from './constants';
 import type {
   SkuFilterOption,
@@ -152,7 +184,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     this.showExpiredData = false;
     try {
-      localStorage.removeItem('showExpiredData');
+      localStorage.removeItem(LS_KEY_SHOW_EXPIRED_DATA);
     } catch {}
 
     this.defaultColDef = {
@@ -251,7 +283,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           child.materialKey,
           child.material,
           child.part,
-          child.partNumber,
+          child[FIELD_PART_NUMBER],
         ].filter((val) => val !== undefined && val !== null);
 
         return candidateValues.includes(materialIdentifier);
@@ -314,7 +346,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       error: (error) => {
         this.showNotification(
           'This application must be accessed through FlexPLM. Please login to FlexPLM first.',
-          'error',
+          NOTIFICATION_TYPE_ERROR,
         );
       },
     });
@@ -366,7 +398,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       error: (error) => {
         this.isLoading = false;
         const errorMessage = this.dataService.getLoadErrorMessage(error);
-        this.showNotification(errorMessage, 'error-persistent');
+        this.showNotification(errorMessage, NOTIFICATION_TYPE_ERROR_PERSISTENT);
       },
     });
     this.subscriptions.push(loadSub);
@@ -393,8 +425,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       .filter((col) => {
         return (
           col.field &&
-          col.field !== 'actions' &&
-          (col.sortable !== false || col.field === 'bomLinkFeature')
+          col.field !== COL_ACTIONS &&
+          (col.sortable !== false || col.field === FIELD_BOM_LINK_FEATURE)
         );
       })
       .map((col) => ({
@@ -407,7 +439,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         .map((g) => g.field)
         .filter((f): f is string => !!f);
       groupedFields.forEach((field) => {
-        if (field !== 'bomLinkFeature') {
+        if (field !== FIELD_BOM_LINK_FEATURE) {
           this.gridApi.setColumnsVisible([field], false);
         }
       });
@@ -478,7 +510,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   get allColumns(): any[] {
     return this.columnDefs.filter((col) => {
       const field = col.field || (col as any).colId;
-      return field !== 'checkbox';
+      return field !== COL_CHECKBOX;
     });
   }
 
@@ -524,7 +556,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         return params.data.children.some((child: any) => {
           if (child.isMaterialHeader) return true;
 
-          const val = child.partNumber || child.part;
+          const val = child[FIELD_PART_NUMBER] || child.part;
           if (!val || String(val).trim() === '') {
             return false;
           }
@@ -564,7 +596,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     columns.push(featureCol);
 
     Object.keys(columnMapping).forEach((field) => {
-      if (field === 'feature' || field === 'bomLinkFeature') {
+      if (field === FIELD_FEATURE || field === FIELD_BOM_LINK_FEATURE) {
         return;
       }
 
@@ -822,7 +854,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         },
       };
 
-      if (field === 'bomLinkPart' || field === 'partNumber') {
+      if (field === FIELD_BOM_LINK_PART || field === FIELD_PART_NUMBER) {
         columnDef.cellEditor = AutocompleteCellEditorComponent;
         columnDef.cellEditorParams = (params: any) => ({
           placeholder: 'search part numbers...',
@@ -837,12 +869,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           const fieldName = params.colDef.field;
           const newVal = params.newValue == null || params.newValue === '' ? '' : String(params.newValue).trim();
           params.data[fieldName] = newVal;
-          if (fieldName === 'partNumber') {
+          if (fieldName === FIELD_PART_NUMBER) {
             params.data.part = newVal;
             params.data.bomLinkPart = newVal;
           } else {
             params.data.part = newVal;
-            params.data.partNumber = newVal;
+            params.data[FIELD_PART_NUMBER] = newVal;
           }
           if (newVal === '') {
             this.clearAutopopulateFieldsForRow(params.data);
@@ -861,7 +893,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           isServiceSearch: true,
           context: { dataService: this.dataService },
         });
-      } else if (field === 'material' || field === 'materialDescription') {
+      } else if (field === FIELD_MATERIAL || field === FIELD_MATERIAL_DESCRIPTION) {
         columnDef.cellEditor = AutocompleteCellEditorComponent;
         columnDef.cellEditorParams = (params: any) => ({
           placeholder: 'search materials...',
@@ -914,14 +946,14 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           return true;
         };
       } else if (
-        field === 'supplier' ||
-        field === 'color' ||
-        field === 'colorDescription' ||
-        field === 'feature'
+        field === FIELD_SUPPLIER ||
+        field === FIELD_COLOR ||
+        field === FIELD_COLOR_DESCRIPTION ||
+        field === FIELD_FEATURE
       ) {
-        const isColorField = field === 'color' || field === 'colorDescription';
+        const isColorField = field === FIELD_COLOR || field === FIELD_COLOR_DESCRIPTION;
 
-        if (field === 'supplier' || isColorField) {
+        if (field === FIELD_SUPPLIER || isColorField) {
           columnDef.cellEditor = AutocompleteCellEditorComponent;
 
           if (isColorField) {
@@ -939,7 +971,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             const nodeData = params.node?.data || params.data || {};
             let values: string[] = [];
 
-            if (field === 'supplier') {
+            if (field === FIELD_SUPPLIER) {
               values =
                 nodeData._availableSuppliers && Array.isArray(nodeData._availableSuppliers)
                   ? nodeData._availableSuppliers
@@ -1295,7 +1327,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   isSkuColumn(col: any): boolean {
-    return col.field && (col.field.startsWith('sku') || col.field.startsWith('actions'));
+    return col.field && (col.field.startsWith('sku') || col.field.startsWith(FIELD_ACTIONS));
   }
 
   toggleExpiredData(): void {
@@ -1596,7 +1628,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     this.activeGroupFields.push(field);
 
-    if (this.gridApi && field.field && field.field !== 'bomLinkFeature') {
+    if (this.gridApi && field.field && field.field !== FIELD_BOM_LINK_FEATURE) {
       this.gridApi.setColumnsVisible([field.field], false);
     }
 
@@ -1608,7 +1640,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     if (this.gridApi && field.field) {
       const colDef = this.columnDefs.find((col) => col.field === field.field);
-      if (field.field !== 'bomLinkFeature' && colDef && !colDef.hide) {
+      if (field.field !== FIELD_BOM_LINK_FEATURE && colDef && !colDef.hide) {
         this.gridApi.setColumnsVisible([field.field], true);
       }
     }
@@ -1625,7 +1657,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (this.gridApi && groupedFields.length > 0) {
       groupedFields.forEach((field) => {
         const colDef = this.columnDefs.find((col) => col.field === field);
-        if (field !== 'bomLinkFeature' && colDef && !colDef.hide) {
+        if (field !== FIELD_BOM_LINK_FEATURE && colDef && !colDef.hide) {
           this.gridApi.setColumnsVisible([field], true);
         }
       });
@@ -1818,12 +1850,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (this.handleDeleteButton(event, target, isReadOnlySkuFilter)) return;
     if (this.handleDisconnectButton(event, target, isReadOnlySkuFilter)) return;
 
-    if (event.colDef.field === 'actions') {
+    if (event.colDef.field === COL_ACTIONS) {
       this.handleActionsColumnClick(event);
       return;
     }
 
-    if (event.colDef.field === 'material' || event.colDef.field === 'materialDescription') {
+    if (event.colDef.field === FIELD_MATERIAL || event.colDef.field === FIELD_MATERIAL_DESCRIPTION) {
       this.handleMaterialColumnClick(event);
       return;
     }
@@ -1860,8 +1892,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.gridApi.forEachNode((node: any) => {
       const row = node?.data;
       if (!row?.materialColorId) return;
-      const rowId = row.materialKey ?? row.newRowId ?? row.partNumber ?? row.part ?? '';
-      const compositeId = row.section && (row.partNumber || row.part) ? `${row.section}::${row.partNumber || row.part}` : null;
+      const rowId =
+        row.materialKey ?? row.newRowId ?? row[FIELD_PART_NUMBER] ?? row.part ?? '';
+      const compositeId =
+        row.section && (row[FIELD_PART_NUMBER] || row.part)
+          ? `${row.section}::${row[FIELD_PART_NUMBER] || row.part}`
+          : null;
       const isEdited =
         this.editedRows.has(rowId) ||
         (compositeId && this.editedRows.has(compositeId)) ||
@@ -1890,9 +1926,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         this.isSaving = false;
         if (result.success) {
           this.invalidRowIds.clear();
-          this.rowManagementService.showSaveMessage(result.message, this, 'success');
+          this.rowManagementService.showSaveMessage(result.message, this, NOTIFICATION_TYPE_SUCCESS);
         } else {
-          this.rowManagementService.showSaveMessage(result.message, this, 'error');
+          this.rowManagementService.showSaveMessage(result.message, this, NOTIFICATION_TYPE_ERROR);
         }
       })
       .catch(() => {
@@ -1900,7 +1936,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         this.rowManagementService.showSaveMessage(
           'An unexpected error occurred while saving. Please try again.',
           this,
-          'error-persistent',
+          NOTIFICATION_TYPE_ERROR_PERSISTENT,
         );
       });
   }
@@ -1908,11 +1944,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   private clearAutopopulateFieldsForRow(data: any): void {
     if (!data) return;
     const fieldsToClear = [
-      'material',
-      'materialDescription',
-      'supplier',
-      'color',
-      'colorDescription',
+      ...EDITABLE_AUTOPOPULATED_FIELDS,
       'colorId',
       'materialSupplierMasterId',
       '_availablePartNumbers',
@@ -1925,7 +1957,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private handlePartNumberFieldClick(event: any): boolean {
-    if (event.colDef.field === 'bomLinkPart' || event.colDef.field === 'partNumber') {
+    if (event.colDef.field === FIELD_BOM_LINK_PART || event.colDef.field === FIELD_PART_NUMBER) {
       event.api.startEditingCell({
         rowIndex: event.rowIndex,
         colKey: event.column.getId(),
@@ -1998,13 +2030,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (!event.data || event.data.isSectionHeader) return;
 
     const field = event.colDef.field;
-    if (!field || field === 'actions' || field.startsWith('sku')) return;
+    if (!field || field === COL_ACTIONS || field.startsWith('sku')) return;
 
     const isDateColumn = field === 'bomLinkStartDate' || field === 'bomLinkEndDate';
     const isSpecSheetField =
       field === 'bomLinkSpecSheetExtra' || field === 'bomLinkIncludeInSpecSheet';
     const isAutocompleteField =
-      isSpecSheetField || field === 'materialDescription' || field === 'material';
+      isSpecSheetField || field === FIELD_MATERIAL_DESCRIPTION || field === FIELD_MATERIAL;
 
     const isEditable =
       !isReadOnlySkuFilter &&
@@ -2076,14 +2108,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
 
     const pathname = window.location.pathname || '';
-    const jspName = 'BOMComposer.jsp';
-    const pathToJsp = pathname.endsWith(jspName)
+    const pathToJsp = pathname.endsWith(JSP_BOM_COMPOSER)
       ? pathname
-      : pathname.replace(/\/?$/, '') + '/BOMComposer.jsp';
+      : pathname.replace(/\/?$/, '') + '/' + JSP_BOM_COMPOSER;
 
     const url = new URL(pathToJsp, window.location.origin);
-    url.searchParams.set('ids', String(ids).trim());
-    url.searchParams.set('bomType', 'EBOM');
+    url.searchParams.set(PARAM_IDS, String(ids).trim());
+    url.searchParams.set(PARAM_BOM_TYPE, BOM_TYPE_EBOM);
     window.open(url.toString(), '_blank');
   }
 
@@ -2095,7 +2126,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
  saveChanges(): void {
     if (this.isSkuFilterReadOnly()) {
-      this.showNotification('Save is disabled in view-only mode.', 'info');
+      this.showNotification(MSG_SAVE_DISABLED_VIEW_ONLY, NOTIFICATION_TYPE_INFO);
       return;
     }
 
@@ -2106,7 +2137,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     allDataRows.forEach((row) => {
       row.validation = { isValid: true, missingFields: [], skuErrors: [] };
     });
-    this.gridApi.refreshCells({ force: true, columns: ['actions'] });
+    this.gridApi.refreshCells({ force: true, columns: [...COLUMNS_REFRESH_ACTIONS] });
 
     const bomType = this.dataService.getBomType() ?? '';
     const requiredFields = this.validationService.getRequiredFieldsForSave(bomType);
@@ -2147,8 +2178,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       });
       this.invalidRowIds.add(ir.rowId);
       const row = ir.row;
-      if (row?.section && (row.partNumber || row.part)) {
-        this.invalidRowIds.add(`${row.section}::${row.partNumber || row.part}`);
+      if (row?.section && (row[FIELD_PART_NUMBER] || row.part)) {
+        this.invalidRowIds.add(`${row.section}::${row[FIELD_PART_NUMBER] || row.part}`);
       }
     });
 
@@ -2202,7 +2233,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               });
             }
           }
-          const rowId = this.utilService.getRowId(newRow) || 'Unknown';
+          const rowId = this.utilService.getRowId(newRow) || ROW_ID_UNKNOWN;
           this.invalidRowIds.add(rowId);
         }
       }
@@ -2240,7 +2271,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       });
       this.gridApi.refreshCells({
         force: true,
-        columns: ['actions'],
+        columns: [...COLUMNS_REFRESH_ACTIONS],
       });
     }
 
@@ -2282,10 +2313,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               this.gridApi?.forEachNode((node: any) => {
                 const row = node?.data;
                 if (row?.materialColorId === materialColorId) {
-                  const rid = row.materialKey ?? row.newRowId ?? row.partNumber ?? row.part;
+                  const rid =
+                    row.materialKey ?? row.newRowId ?? row[FIELD_PART_NUMBER] ?? row.part;
                   if (rid) this.invalidRowIds.add(rid);
-                  if (row.section && (row.partNumber || row.part)) {
-                    this.invalidRowIds.add(`${row.section}::${row.partNumber || row.part}`);
+                  if (row.section && (row[FIELD_PART_NUMBER] || row.part)) {
+                    this.invalidRowIds.add(
+                      `${row.section}::${row[FIELD_PART_NUMBER] || row.part}`,
+                    );
                   }
                 }
               });
@@ -2293,7 +2327,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           }
           this.refreshGridForValidationErrors();
           const msg = err?.error?.message ?? err?.message ?? 'Material color save failed.';
-          this.showNotification(msg, 'error');
+          this.showNotification(msg, NOTIFICATION_TYPE_ERROR);
         },
       });
     } else {
@@ -2312,7 +2346,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       });
     }
     this.refreshGridForValidationErrors();
-    this.showNotification(validationResult.message, 'error');
+    this.showNotification(validationResult.message, NOTIFICATION_TYPE_ERROR);
     return true;
   }
 
@@ -2334,7 +2368,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       const data = node?.data;
       if (!data || this.utilService.isHeaderRow(data)) return;
       const hasBomFields =
-        data.partNumber !== undefined ||
+        data[FIELD_PART_NUMBER] !== undefined ||
         data.bomLinkPart !== undefined ||
         data.bomLinkFeature !== undefined ||
         data.quantity !== undefined ||
@@ -2372,15 +2406,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       }
       return false;
     }
-    const rowId = row?.partNumber ?? row?.part;
+    const rowId = row?.[FIELD_PART_NUMBER] ?? row?.part;
     if (rowId == null) return false;
     const variants = this.utilService.getIdVariants(rowId);
     for (const id of variants) {
       if (this.editedRows.has(id)) return true;
     }
     const compositeId =
-      row?.section && (row.partNumber ?? row.part)
-        ? `${row.section}::${row.partNumber ?? row.part}`
+      row?.section && (row[FIELD_PART_NUMBER] ?? row.part)
+        ? `${row.section}::${row[FIELD_PART_NUMBER] ?? row.part}`
         : null;
     if (compositeId && this.editedRows.has(compositeId)) return true;
     return false;
@@ -2501,10 +2535,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       const baseIds = new Set([
         rowToDelete.materialKey,
         rowToDelete.newRowId,
-        rowToDelete.partNumber,
+        rowToDelete[FIELD_PART_NUMBER],
         rowToDelete.part,
-        rowToDelete.section && (rowToDelete.partNumber || rowToDelete.part)
-          ? `${rowToDelete.section}::${rowToDelete.partNumber || rowToDelete.part}`
+        rowToDelete.section && (rowToDelete[FIELD_PART_NUMBER] || rowToDelete.part)
+          ? `${rowToDelete.section}::${rowToDelete[FIELD_PART_NUMBER] || rowToDelete.part}`
           : null,
       ]);
       baseIds.delete(null);
@@ -2986,7 +3020,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         const bomLink = item[BOM_LINK_KEY];
         if (!bomLink) return false;
 
-        const hasPartNumber = bomLink.partNumber && String(bomLink.partNumber).trim() !== '';
+        const hasPartNumber =
+          bomLink?.[FIELD_PART_NUMBER] && String(bomLink[FIELD_PART_NUMBER]).trim() !== '';
 
         let isCorrectMarkup = true;
         if (this.dataService.getBomType() === BOM_TYPE_MBOM) {
@@ -3009,8 +3044,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
         return {
           ...bomLink,
-          part: bomLink.partNumber,
-          partNumber: bomLink.partNumber,
+          part: bomLink[FIELD_PART_NUMBER],
+          [FIELD_PART_NUMBER]: bomLink[FIELD_PART_NUMBER],
           skus: bomLink.skus,
           linkedBom: bomLink.linkedBom,
           quantity: bomLink.quantity ? Number(bomLink.quantity).toFixed(1) : bomLink.quantity,
@@ -3029,10 +3064,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       // Add every instance as a separate row - no deduplication
       const material = {
         ...item,
-        materialKey: `${item.partNumber}_${index}`, // Simple unique key for identification
+        materialKey: `${item[FIELD_PART_NUMBER]}_${index}`, // Simple unique key for identification
         allSkus: item.skus,
-        part: item.partNumber,
-        partNumber: item.partNumber,
+        part: item[FIELD_PART_NUMBER],
+        [FIELD_PART_NUMBER]: item[FIELD_PART_NUMBER],
         linkedBom: item.linkedBom,
         section: sectionInternalName,
         sectionDisplayName: item.sectionDisplayName,
@@ -3066,8 +3101,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         return featureA.localeCompare(featureB);
       }
 
-      const partA = a.partNumber.toLowerCase().trim();
-      const partB = b.partNumber.toLowerCase().trim();
+      const partA = String(a?.[FIELD_PART_NUMBER] ?? '').toLowerCase().trim();
+      const partB = String(b?.[FIELD_PART_NUMBER] ?? '').toLowerCase().trim();
 
       return partA.localeCompare(partB);
     };
@@ -3141,7 +3176,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             children: [],
             level: 1,
             parent: sectionRow,
-            hasLinkedBom:
+            [FIELD_HAS_LINKED_BOM]:
               material.linkedBom === '1' ||
               material.linkedBom === 1 ||
               material.linkedBom === true ||
@@ -3170,7 +3205,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             isDirectRow: true,
             level: 1,
             parent: sectionRow,
-            hasLinkedBom:
+            [FIELD_HAS_LINKED_BOM]:
               material.linkedBom === '1' ||
               material.linkedBom === 1 ||
               material.linkedBom === true ||
@@ -3209,12 +3244,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       ) {
         return;
       }
-      const rowId = row.materialKey || row.newRowId || row.partNumber || row.part;
+      const rowId = row.materialKey || row.newRowId || row[FIELD_PART_NUMBER] || row.part;
       if (!rowId) return;
 
       const originalValues: any = {
-        partNumber: String(row.partNumber || row.part || row.bomLinkPart || ''),
-        bomLinkPart: String(row.bomLinkPart || row.partNumber || row.part || ''),
+        [FIELD_PART_NUMBER]: String(row[FIELD_PART_NUMBER] || row.part || row.bomLinkPart || ''),
+        bomLinkPart: String(row.bomLinkPart || row[FIELD_PART_NUMBER] || row.part || ''),
         bomLinkFeature: String(row.bomLinkFeature || row.feature || ''),
         bomLinkStartDate: String(row.bomLinkStartDate || row.startDate || ''),
         bomLinkEndDate: String(row.bomLinkEndDate || row.endDate || ''),
@@ -3224,8 +3259,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       };
 
       this.originalRowValues.set(rowId, originalValues);
-      if (row.section && (row.partNumber || row.part)) {
-        this.originalRowValues.set(`${row.section}::${row.partNumber || row.part}`, originalValues);
+      if (row.section && (row[FIELD_PART_NUMBER] || row.part)) {
+        this.originalRowValues.set(`${row.section}::${row[FIELD_PART_NUMBER] || row.part}`, originalValues);
       }
 
       if (row.children && Array.isArray(row.children)) {
@@ -3279,12 +3314,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   private showNotification(
     message: string,
-    type: 'success' | 'error' | 'error-persistent' | 'info' = 'info',
+    type: 'success' | 'error' | 'error-persistent' | 'info' = NOTIFICATION_TYPE_INFO,
   ): void {
     this.saveMessage = message;
     this.saveMessageType = type;
 
-    if (type === 'success' || type === 'info' || type === 'error') {
+    if (type === NOTIFICATION_TYPE_SUCCESS || type === NOTIFICATION_TYPE_INFO || type === NOTIFICATION_TYPE_ERROR) {
       setTimeout(() => {
         this.saveMessage = '';
         this.saveMessageType = '';
@@ -3351,7 +3386,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (!this.gridApi) return;
 
     // Define columns to exclude from export
-    const excludedFields = ['actions']; 
+    const excludedFields = [...EXCLUDED_FIELDS_EXPORT]; 
 
     // Check if any rows are selected
     const selectedNodes = this.gridApi.getSelectedNodes();
@@ -3374,15 +3409,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         let message: string;
         if (hasSelectedRows) {
           const rowCount = selectedNodes.length;
-          const rowText = rowCount > 1 ? 'rows' : 'row';
-          message = `Excel file exported successfully (${rowCount} ${rowText} selected)`;
+          const rowText = rowCount > 1 ? LABEL_ROWS : LABEL_ROW;
+          message = `${MSG_EXPORT_EXCEL_SUCCESS_SELECTED}${rowCount} ${rowText} selected)`;
         } else {
-          message = 'Excel file exported successfully';
+          message = MSG_EXPORT_EXCEL_SUCCESS;
         }
-        this.showNotification(message, 'success');
+        this.showNotification(message, NOTIFICATION_TYPE_SUCCESS);
       })
       .catch(() => {
-        this.showNotification('Error exporting to Excel. Please try again.', 'error');
+        this.showNotification(MSG_EXPORT_EXCEL_ERROR, NOTIFICATION_TYPE_ERROR);
       });
   }
 
@@ -3395,7 +3430,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       event.stopPropagation();
     }
 
-    const rowId = rowData.newRowId || rowData.partNumber;
+    const rowId = rowData.newRowId || rowData[FIELD_PART_NUMBER];
 
     let targetNode: any = null;
     this.gridApi.forEachNode((node: any) => {
@@ -3549,7 +3584,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       });
 
       if (hasChanges) {
-        const rowId = rowData.newRowId || rowData.partNumber;
+        const rowId = rowData.newRowId || rowData[FIELD_PART_NUMBER];
         if (rowId) {
           this.editedRows.add(rowId);
         }

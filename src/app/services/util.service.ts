@@ -1,6 +1,16 @@
 import { Injectable } from '@angular/core';
 import { GridApi, ColDef } from 'ag-grid-community';
-import { BOM_TYPE_MBOM, BOM_TYPE_SBOM } from '../constants';
+import {
+  BOM_TYPE_MBOM,
+  BOM_TYPE_SBOM,
+  EXCLUDED_FIELDS_EXPORT,
+  EXCEL_HEADER_SECTION,
+  EXCEL_SHEET_NAME,
+  EXCEL_FILE_NAME_PREFIX,
+  COL_ACTIONS,
+  FIELD_PART_NUMBER,
+  FIELD_HAS_LINKED_BOM,
+} from '../constants';
 
 export interface ExtendedColDef extends ColDef {
   isVirtual?: boolean;
@@ -229,9 +239,9 @@ export class UtilService {
       (async () => {
         try {
         const {
-          excludedFields = ['actions'],
+          excludedFields = [...EXCLUDED_FIELDS_EXPORT],
           fileName,
-          sheetName = 'BOM Export',
+          sheetName = EXCEL_SHEET_NAME,
           excludeHeaderRows = true,
         } = options;
 
@@ -245,7 +255,7 @@ export class UtilService {
         const { rowData, rowNodes } = this.getRowDataForExport(gridApi, options, excludeHeaderRows);
 
         const excelData: any[] = [];
-        const headers: string[] = ['Section', ...this.getColumnHeaders(visibleColumns)];
+        const headers: string[] = [EXCEL_HEADER_SECTION, ...this.getColumnHeaders(visibleColumns)];
         excelData.push(headers);
 
         this.addDataRowsToExcel(excelData, rowData, rowNodes, visibleColumns);
@@ -259,7 +269,7 @@ export class UtilService {
         worksheet['!cols'] = colWidths;
 
         const exportFileName =
-          fileName || `BOM_Composer_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+          fileName || `${EXCEL_FILE_NAME_PREFIX}${new Date().toISOString().split('T')[0]}.xlsx`;
 
         XLSX.writeFile(workbook, exportFileName);
 
@@ -279,7 +289,7 @@ export class UtilService {
       'isSubRow',
       'isBranchHeader',
       'isNewRow',
-      'hasLinkedBom',
+      FIELD_HAS_LINKED_BOM,
       'isExpanded',
       'level',
       'parent',
@@ -293,7 +303,7 @@ export class UtilService {
       '_availableSuppliers',
       '_availableColors',
       'newRowId',
-      'actions',
+      COL_ACTIONS,
     ]);
   }
 
@@ -488,7 +498,7 @@ export class UtilService {
     return {
       section: row.section || '',
       feature: String(row.bomLinkFeature || '').trim(),
-      partNumber: String(row.partNumber || '').trim(),
+      partNumber: String(row?.[FIELD_PART_NUMBER] || '').trim(),
     };
   }
 
@@ -496,7 +506,7 @@ export class UtilService {
     return {
       section: bomLink.sectionInternalName || bomLink.section || '',
       feature: String(bomLink.bomLinkFeature || '').trim(),
-      partNumber: String(bomLink.partNumber || '').trim(),
+      partNumber: String(bomLink?.[FIELD_PART_NUMBER] || '').trim(),
     };
   }
 
@@ -562,11 +572,11 @@ export class UtilService {
   isActionsColumn(params: any): boolean {
     const fieldName = params.colDef?.field;
     const colId = params.column?.getColId() || params.colDef?.colId || fieldName;
-    return fieldName === 'actions' || colId === 'actions';
+    return fieldName === COL_ACTIONS || colId === COL_ACTIONS;
   }
 
   getRowId(row: any): string | number | null {
-    return row.materialKey || row.newRowId || row.partNumber || row.part || null;
+    return row.materialKey || row.newRowId || row[FIELD_PART_NUMBER] || row.part || null;
   }
 
   createAutocompleteFilter(): (searchValue: string, options: string[]) => string[] {
@@ -632,7 +642,7 @@ export class UtilService {
       rows.forEach((row) => {
         if (this.isHeaderRow(row)) return;
         const hasBomFields =
-          row.partNumber !== undefined ||
+          row[FIELD_PART_NUMBER] !== undefined ||
           row.bomLinkPart !== undefined ||
           row.bomLinkFeature !== undefined ||
           row.quantity !== undefined ||
@@ -681,7 +691,7 @@ export class UtilService {
    * @returns Part number value
    */
   getPartNumberValue(row: any): string {
-    return row.partNumber;
+    return row?.[FIELD_PART_NUMBER];
   }
 
   private getSectionValueForRow(row: any, node: any): string {

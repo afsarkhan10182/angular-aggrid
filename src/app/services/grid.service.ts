@@ -1,4 +1,23 @@
-import { BOM_TYPE_SBOM } from '../constants';
+import {
+  BOM_TYPE_SBOM,
+  ENUM_MBOM_LINE_ITEM,
+  VALUE_SPEC_NO,
+  COL_CHECKBOX,
+  COL_ACTIONS,
+  TITLE_EXPIRED,
+  TITLE_REQUIRED_FIELD_ERROR,
+  TITLE_REQUIRED_FIELD,
+  TITLE_DELETE_ROW,
+  TITLE_ADD_ROW,
+  MSG_MISSING,
+  MSG_SKU_ERROR,
+  HEADER_FEATURE,
+  FIELD_BOM_LINK_FEATURE,
+  FIELD_PART_NUMBER,
+  FIELD_PTCBOM_PART_MARK_UP_DISPLAY_NAME,
+  FIELD_HAS_LINKED_BOM,
+  PLACEHOLDER_SEARCH_BOM_FEATURES,
+} from '../constants';
 import { Injectable } from '@angular/core';
 import { ColDef, GridApi } from 'ag-grid-community';
 import { DataService } from './data.service';
@@ -101,21 +120,21 @@ export class GridService {
     if (!isSbom) return false;
 
     const isDataRow = node.isDirectRow || node.isSubRow;
-    const partNumber = node.partNumber || node.part || '';
+    const partNumber = node?.[FIELD_PART_NUMBER] || node.part || '';
     const hasPartNumber = partNumber && String(partNumber).trim() !== '';
 
     if (!isDataRow || !hasPartNumber) return false;
 
-    const isMbomLineItem = node.ptcbomPartMarkUp === 'enumMBOM001';
+    const isMbomLineItem = node.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM;
     if (isMbomLineItem) return false;
 
     const specSheetExtra = String(node.bomLinkSpecSheetExtra || '').trim();
-    return specSheetExtra === 'No';
+    return specSheetExtra === VALUE_SPEC_NO;
   }
 
   private shouldIncludeNode(node: any): boolean {
     const isDataRow = node.isDirectRow || node.isSubRow;
-    const partNumber = node.partNumber || node.part || '';
+    const partNumber = node?.[FIELD_PART_NUMBER] || node.part || '';
     const hasPartNumber = partNumber && String(partNumber).trim() !== '';
     return !isDataRow || hasPartNumber;
   }
@@ -306,13 +325,13 @@ export class GridService {
   private renderMaterialHeader(data: any, config: CellRenderingConfig): string {
     const materialIdentifier = data.materialKey || '';
     const materialIndex = data.materialIndex ?? '';
-    const linkIcon = data.hasLinkedBom ? '🔗' : '';
+    const linkIcon = data[FIELD_HAS_LINKED_BOM] ? '🔗' : '';
     const textColor = config.shouldHighlightRow(data) ? 'color: #ff0000;' : '';
 
     return `
       <div class="hier-header hier-clickable material-header" onclick="globalThis.toggleMaterial('${data.section}', '${materialIdentifier}', ${materialIndex})">
         ${linkIcon ? `<span class="material-link-icon">${linkIcon}</span>` : ''}
-        <span class="hier-title" style="${textColor}">${config.utilService.escapeHtml(String(data.material || data.part || data.partNumber || ''))}</span>
+        <span class="hier-title" style="${textColor}">${config.utilService.escapeHtml(String(data.material || data.part || data[FIELD_PART_NUMBER] || ''))}</span>
       </div>
     `;
   }
@@ -328,7 +347,7 @@ export class GridService {
   }
 
   private renderDirectRow(data: any, config: CellRenderingConfig): string {
-    const linkIcon = data.hasLinkedBom ? '🔗' : '';
+    const linkIcon = data[FIELD_HAS_LINKED_BOM] ? '🔗' : '';
     const featureValue = data.bomLinkFeature || '';
     const textColor = config.shouldHighlightRow(data) ? 'color: #ff0000;' : '';
 
@@ -474,8 +493,8 @@ export class GridService {
   createCheckboxColumn(): ExtendedColDef {
     return {
       headerName: '',
-      field: 'checkbox',
-      colId: 'checkbox',
+      field: COL_CHECKBOX,
+      colId: COL_CHECKBOX,
       width: 40,
       minWidth: 40,
       maxWidth: 40,
@@ -499,8 +518,8 @@ export class GridService {
   ): ExtendedColDef {
     return {
       headerName: '',
-      field: 'actions',
-      colId: 'actions',
+      field: COL_ACTIONS,
+      colId: COL_ACTIONS,
       width: 40,
       minWidth: 40,
       maxWidth: 40,
@@ -518,10 +537,10 @@ export class GridService {
         }
 
         if (params.data.isExpired) {
-          return `<span class="expired-indicator" title="Expired">e</span>`;
+          return `<span class="expired-indicator" title="${TITLE_EXPIRED}">e</span>`;
         }
 
-        const partId = params.data.partNumber;
+        const partId = params.data?.[FIELD_PART_NUMBER];
         const row = params.data;
 
         const renderValidationIcon = () => {
@@ -529,24 +548,24 @@ export class GridService {
           const missing = (row.validation.missingFields || []).join(', ');
           const skuErrors = (row.validation.skuErrors || []).join(', ');
           const tooltipParts = [
-            missing ? `Missing: ${missing}` : null,
-            skuErrors ? `SKU Error: ${skuErrors}` : null,
+            missing ? `${MSG_MISSING}: ${missing}` : null,
+            skuErrors ? `${MSG_SKU_ERROR}: ${skuErrors}` : null,
           ].filter(Boolean);
-          const escaped = (tooltipParts.join('\n') || 'Required field error').replace(/"/g, '&quot;');
-          return `<span class="validation-error-icon" style="width:40px; display:inline-block; color:#ef4444; position:absolute; left:-18px; top:0px; cursor: pointer; font-size: 20px" title="${escaped}" aria-label="Required field">&#8505;</span>`;
+          const escaped = (tooltipParts.join('\n') || TITLE_REQUIRED_FIELD_ERROR).replace(/"/g, '&quot;');
+          return `<span class="validation-error-icon" style="width:40px; display:inline-block; color:#ef4444; position:absolute; left:-18px; top:0px; cursor: pointer; font-size: 20px" title="${escaped}" aria-label="${TITLE_REQUIRED_FIELD}">&#8505;</span>`;
         };
 
         if (row.validation && !row.validation.isValid) {
           const icon = renderValidationIcon();
           if (row.isNewRow) {
-            return `${icon}<span class="delete-row-btn" data-new-row-id="${row.newRowId}" title="Delete">−</span>`;
+            return `${icon}<span class="delete-row-btn" data-new-row-id="${row.newRowId}" title="${TITLE_DELETE_ROW}">−</span>`;
           }
           if (
-            (params.data.isMaterialHeader && params.data.hasLinkedBom) ||
+            (params.data.isMaterialHeader && params.data[FIELD_HAS_LINKED_BOM]) ||
             params.data.isDirectRow ||
             (params.data.isSectionHeader && !hasVisibleChildren(params))
           ) {
-            const addBtn = isAddRowEnabled() ? `<span class="add-row-btn" data-part-id="${partId || ''}" title="Add">+</span>` : '';
+            const addBtn = isAddRowEnabled() ? `<span class="add-row-btn" data-part-id="${partId || ''}" title="${TITLE_ADD_ROW}">+</span>` : '';
             return `${icon}${addBtn}`;
           }
           return icon;
@@ -554,16 +573,16 @@ export class GridService {
 
         if (params.data.isNewRow) {
           const newRowId = params.data.newRowId;
-          return `<span class="delete-row-btn" data-new-row-id="${newRowId}" title="Delete">−</span>`;
+          return `<span class="delete-row-btn" data-new-row-id="${newRowId}" title="${TITLE_DELETE_ROW}">−</span>`;
         }
 
         if (
-          (params.data.isMaterialHeader && params.data.hasLinkedBom) ||
+          (params.data.isMaterialHeader && params.data[FIELD_HAS_LINKED_BOM]) ||
           params.data.isDirectRow ||
           (params.data.isSectionHeader && !hasVisibleChildren(params))
         ) {
           if (isAddRowEnabled()) {
-            return `<span class="add-row-btn" data-part-id="${partId}" title="Add">+</span>`;
+            return `<span class="add-row-btn" data-part-id="${partId}" title="${TITLE_ADD_ROW}">+</span>`;
           }
           return '';
         }
@@ -580,9 +599,9 @@ export class GridService {
 
   createFeatureColumn(config: ColumnDefinitionConfig): ExtendedColDef {
     return {
-      headerName: 'Feature',
-      field: 'bomLinkFeature',
-      colId: 'bomLinkFeature',
+      headerName: HEADER_FEATURE,
+      field: FIELD_BOM_LINK_FEATURE,
+      colId: FIELD_BOM_LINK_FEATURE,
       width: 150,
       minWidth: 150,
       pinned: 'left',
@@ -609,7 +628,7 @@ export class GridService {
         }
         if (params.data.isNewRow) {
           return this.gridConfigService.isFieldEditableForNewRow(
-            'bomLinkFeature',
+            FIELD_BOM_LINK_FEATURE,
             config.isSkuFilterReadOnly,
             config.isSbomMode,
             config.isEbomMode,
@@ -617,7 +636,7 @@ export class GridService {
           );
         }
         return this.gridConfigService.isFieldEditableInSbom(
-          'bomLinkFeature',
+          FIELD_BOM_LINK_FEATURE,
           params.data,
           config.isSkuFilterReadOnly,
           config.isSbomMode,
@@ -627,7 +646,7 @@ export class GridService {
       },
       cellEditor: AutocompleteCellEditorComponent,
       cellEditorParams: () => ({
-        placeholder: 'search BOM features...',
+        placeholder: PLACEHOLDER_SEARCH_BOM_FEATURES,
         isBomFeatureSearch: true,
         context: {
           dataService: this.dataService,
@@ -648,7 +667,7 @@ export class GridService {
       minWidth: 100,
       sortable: true,
       resizable: true,
-      hide: field === 'ptcbomPartMarkUpDisplayName',
+      hide: field === FIELD_PTCBOM_PART_MARK_UP_DISPLAY_NAME,
       cellRenderer: (params: any) => {
         if (
           params.data.isSectionHeader ||
@@ -839,7 +858,7 @@ export class GridService {
           col?.field &&
           !config.isSkuColumn(col) &&
           !config.isFieldGrouped(col.field) &&
-          col.field !== 'checkbox',
+          col.field !== COL_CHECKBOX,
       );
     }
 
@@ -878,7 +897,7 @@ export class GridService {
         return (
           !config.isSkuColumn(colDef) &&
           !config.isFieldGrouped(colDef.field) &&
-          colDef.field !== 'checkbox'
+          colDef.field !== COL_CHECKBOX
         );
       });
 

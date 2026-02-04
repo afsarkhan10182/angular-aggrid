@@ -1,4 +1,33 @@
-import { BOM_LINK_KEY, BOM_TYPE_EBOM, BOM_TYPE_MATERIALMBOM, DEFAULT_BOM_TYPE } from '../constants';
+import {
+  BOM_LINK_KEY,
+  BOM_TYPE_EBOM,
+  BOM_TYPE_MATERIALMBOM,
+  DEFAULT_BOM_TYPE,
+  HEADER_CSRF_NONCE,
+  ATTR_PART_NUMBER,
+  ATTR_PTCMATERIAL_NAME,
+  FIELD_BOM_LINK_FEATURE,
+  FIELD_BOM_LINK_COUNTRY_OF_ORIGIN,
+  FIELD_PART_NUMBER,
+  FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT,
+  FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE,
+  FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_TWO,
+  MSG_LOAD_BOM_FAILED,
+  MSG_LOAD_BOM_SERVER_ERROR,
+  MSG_MATERIAL_COLORS_SAVED_MOCK,
+  PARAM_BOM_TYPE,
+  FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
+  SKU_FILTER_LABEL_ALL,
+  SKU_FILTER_LABEL_HD_EDITABLE,
+  SKU_FILTER_LABEL_HD_VIEW_ONLY,
+  SKU_FILTER_LABEL_NON_HD,
+  SKU_FILTER_LABEL_EDITABLE_SKUS,
+  SKU_FILTER_EMPTY_HD_EDITABLE,
+  SKU_FILTER_EMPTY_HD_VIEW_ONLY,
+  SKU_FILTER_EMPTY_NON_HD,
+  SKU_FILTER_EMPTY_EDITABLE,
+  LABEL_ALL,
+} from '../constants';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, map, catchError, throwError, of } from 'rxjs';
@@ -37,7 +66,7 @@ export interface BomLink {
   sectionInternalName: string;
   supplier: string;
   bomLinkNotes: string;
-  partNumber: string;
+  materialColorPartNumber: string;
   materialSupplierComments: string;
   supplierDescription: string;
   bomLinkIncludeInSpecSheet: string;
@@ -133,7 +162,7 @@ export class DataService {
     };
 
     if (csrfToken) {
-      headers['CSRF_NONCE'] = csrfToken;
+      headers[HEADER_CSRF_NONCE] = csrfToken;
     }
 
     return headers;
@@ -152,7 +181,7 @@ export class DataService {
         apiUrl += `/${bomId}`;
       }
       if (bomType) {
-        apiUrl += `?bomType=${bomType}`;
+        apiUrl += `?${PARAM_BOM_TYPE}=${bomType}`;
       }
     }
 
@@ -160,28 +189,6 @@ export class DataService {
       map((data) => {
         this.apiData = data;
         return data;
-      }),
-      catchError(this.handleError),
-    );
-  }
-
-  /**
-   * Get Complex BOM data for a specific material
-   * @param materialId Material ID or part number
-   * @returns Observable of material details in key-value format
-   */
-  getComplexBOM(materialId: string): Observable<any> {
-    const apiUrl = environment.useMockApi
-      ? `/api/materialmodal.json`
-      : `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/getMaterialBOM?materialMasterId=${materialId}`;
-
-    return this.http.get<any>(apiUrl).pipe(
-      map((data) => {
-        if (data?.instances && Array.isArray(data.instances)) {
-          return data;
-        }
-
-        throw new Error('Invalid API response format: expected instances/columns structure');
       }),
       catchError(this.handleError),
     );
@@ -216,7 +223,7 @@ export class DataService {
               queryLower.length === 0
                 ? true
                 : isPartNumberSearch
-                  ? (instance.partNumber || '').toLowerCase().includes(queryLower)
+                  ? (instance.materialColorPartNumber || '').toLowerCase().includes(queryLower)
                   : (instance.material || '').toLowerCase().includes(queryLower);
             if (match) filteredInstances[id] = instance;
           });
@@ -234,7 +241,7 @@ export class DataService {
         }),
       );
     } else {
-      const attributeName = isPartNumberSearch ? 'partNumber' : 'ptcmaterialName';
+      const attributeName = isPartNumberSearch ? ATTR_PART_NUMBER : ATTR_PTCMATERIAL_NAME;
       const typeId = isPartNumberSearch
         ? 'com.lcs.wc.material.LCSMaterialColor'
         : 'com.lcs.wc.material.LCSMaterial';
@@ -269,7 +276,7 @@ export class DataService {
       'name',
       query,
       fetchLimit,
-      'bomLinkFeature',
+      FIELD_BOM_LINK_FEATURE,
     );
   }
 
@@ -280,7 +287,7 @@ export class DataService {
     query: string,
     fetchLimit: number = 20,
   ): Observable<{ results: any[]; resultCount: number; hasMore: boolean }> {
-    return this.searchFlexInstances('Country', 'name', query, fetchLimit, 'bomLinkCountryOfOrigin');
+    return this.searchFlexInstances('Country', 'name', query, fetchLimit, FIELD_BOM_LINK_COUNTRY_OF_ORIGIN);
   }
 
   /**
@@ -295,7 +302,7 @@ export class DataService {
       'name',
       query,
       fetchLimit,
-      'partNumber',
+      FIELD_PART_NUMBER,
     );
   }
 
@@ -403,7 +410,7 @@ export class DataService {
   }
 
   getLoadErrorMessage(error: any): string {
-    const fallback = 'Failed to load BOM data. Please try again.';
+    const fallback = MSG_LOAD_BOM_FAILED;
     if (!error) return fallback;
 
     const status = error.status;
@@ -412,7 +419,7 @@ export class DataService {
     if (status === 500) {
       return backendMessage
         ? `Failed to load BOM data: ${backendMessage}`
-        : 'Failed to load BOM data: Server error (500).';
+        : MSG_LOAD_BOM_SERVER_ERROR;
     }
 
     if (backendMessage) {
@@ -474,7 +481,7 @@ export class DataService {
 
   /**
    * Part/material search: same endpoint and payload shape; only attribute name and typeId differ.
-   * Part: attributeName 'partNumber', typeId 'com.lcs.wc.material.LCSMaterialColor'
+   * Part: attributeName 'materialColorPartNumber', typeId 'com.lcs.wc.material.LCSMaterialColor'
    * Material: attributeName 'ptcmaterialName', typeId 'com.lcs.wc.material.LCSMaterial'
    */
   private materialColorsSearchByAttribute(
@@ -505,7 +512,7 @@ export class DataService {
   /**
    * Map API response (serviceDataModal.json shape) to { results, resultCount, hasMore }.
    * Uses response.resultCount, response.from, response.to when present for pagination/count.
-   * Each result: { flatInstance, responseColumns, partNumber, material } for dropdown and row population.
+   * Each result: { flatInstance, responseColumns, materialColorPartNumber, material } for dropdown and row population.
    */
   private mapMaterialColorsResponseToResults(
     response: any,
@@ -524,7 +531,8 @@ export class DataService {
       materialColorId,
       flatInstance: instance,
       responseColumns: columns,
-      partNumber: instance.partNumber ?? '',
+      // Backend changed field name from `partNumber` -> `materialColorPartNumber`
+      materialColorPartNumber: instance.materialColorPartNumber ?? '',
       material: instance.material ?? '',
       supplier: instance.supplier ?? '',
       color: instance.color ?? '',
@@ -568,11 +576,11 @@ export class DataService {
   ): { [key: string]: any } {
     const instanceData: { [key: string]: any } = {};
     editedFieldsForRow.forEach((fieldName) => {
-      if (fieldName === 'materialColorServiceEquivalent') {
+      if (fieldName === FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT) {
         instanceData[fieldName] = row.materialColorServiceEquivalentId || row.materialColorServiceEquivalent || '';
-      } else if (fieldName === 'materialColorServiceSubstituteOne') {
+      } else if (fieldName === FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE) {
         instanceData[fieldName] = row.materialColorServiceSubstituteOneId || row.materialColorServiceSubstituteOne || '';
-      } else if (fieldName === 'materialColorServiceSubstituteTwo') {
+      } else if (fieldName === FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_TWO) {
         instanceData[fieldName] = row.materialColorServiceSubstituteTwoId || row.materialColorServiceSubstituteTwo || '';
       } else {
         instanceData[fieldName] = row[fieldName] ?? '';
@@ -588,7 +596,7 @@ export class DataService {
    */
   saveMaterialColors(payload: { instances: { [key: string]: any } }): Observable<any> {
     if (environment.useMockApi) {
-      return of({ success: true, message: 'Material colors saved (mock)' });
+      return of({ success: true, message: MSG_MATERIAL_COLORS_SAVED_MOCK });
     }
 
     const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/saveMaterialColors`;
@@ -665,7 +673,7 @@ export class DataService {
         color: sku.color,
         size: sku.size1,
         value: partRow[`sku${sku.skuId}`],
-        partNumber: partRow.partNumber.toString(),
+        partNumber: String(partRow?.[FIELD_PART_NUMBER] ?? ''),
       }));
   }
 
@@ -679,7 +687,7 @@ export class DataService {
       return fromJsp;
     }
     const fromUrl = typeof window !== 'undefined' && window.location?.search
-      ? new URLSearchParams(window.location.search).get('bomType')
+      ? new URLSearchParams(window.location.search).get(PARAM_BOM_TYPE)
       : null;
     if (fromUrl != null && String(fromUrl).trim() !== '') {
       return fromUrl;
@@ -711,7 +719,7 @@ export class DataService {
   fetchIncludeInSpecSheetConstraints(): Observable<any> {
     const url = environment.useMockApi
       ? 'api/IncludeInSpecSheet.json'
-      : `${this.getServiceHostUrl()}/Windchill/servlet/rest/tm/types/com.lcs.wc.flexbom.FlexBOMLink/attributes/bomLinkIncludeInSpecSheet`;
+      : `${this.getServiceHostUrl()}/Windchill/servlet/rest/tm/types/com.lcs.wc.flexbom.FlexBOMLink/attributes/${FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET}`;
 
     return this.http.get<any>(url).pipe(
       catchError(() => {
@@ -772,17 +780,17 @@ export class DataService {
     value: MbomSkuFilterOption;
   }> {
     return [
-      { label: 'ALL - View only', value: 'all' },
-      { label: 'HD source - Editable', value: 'hdEditable' },
-      { label: 'HD source - View only', value: 'hdViewOnly' },
-      { label: 'Non HD source - View only', value: 'nonHdSource' },
+      { label: SKU_FILTER_LABEL_ALL, value: 'all' },
+      { label: SKU_FILTER_LABEL_HD_EDITABLE, value: 'hdEditable' },
+      { label: SKU_FILTER_LABEL_HD_VIEW_ONLY, value: 'hdViewOnly' },
+      { label: SKU_FILTER_LABEL_NON_HD, value: 'nonHdSource' },
     ];
   }
 
   getSbomSkuFilterOptions(): Array<{ label: string; value: SbomSkuFilterOption }> {
     return [
-      { label: 'ALL - View only', value: 'all' },
-      { label: 'Editable SKUs', value: 'editableSkus' },
+      { label: SKU_FILTER_LABEL_ALL, value: 'all' },
+      { label: SKU_FILTER_LABEL_EDITABLE_SKUS, value: 'editableSkus' },
     ];
   }
 
@@ -815,15 +823,15 @@ export class DataService {
       all: {},
       hdEditable: {
         filter: (sku) => sku.isHDSource === true && sku.isEditable === true,
-        emptyMessage: 'No HD editable SKUs found. Editing is disabled.',
+        emptyMessage: SKU_FILTER_EMPTY_HD_EDITABLE,
       },
       hdViewOnly: {
         filter: (sku) => sku.isHDSource === true,
-        emptyMessage: 'No HD source view-only SKUs found.',
+        emptyMessage: SKU_FILTER_EMPTY_HD_VIEW_ONLY,
       },
       nonHdSource: {
         filter: (sku) => sku.isHDSource === false,
-        emptyMessage: 'No non-HD source SKUs found.',
+        emptyMessage: SKU_FILTER_EMPTY_NON_HD,
       },
     };
 
@@ -831,7 +839,7 @@ export class DataService {
       all: {},
       editableSkus: {
         filter: (sku) => sku.isEditable === true,
-        emptyMessage: 'No editable SKUs found. Editing is disabled.',
+        emptyMessage: SKU_FILTER_EMPTY_EDITABLE,
       },
     };
 
@@ -878,13 +886,13 @@ export class DataService {
     isMbomModeFn: () => boolean,
   ): string {
     const mbomMessages: Record<string, string> = {
-      hdEditable: 'No HD editable SKUs found. Editing is disabled.',
-      hdViewOnly: 'No HD source view-only SKUs found.',
-      nonHdSource: 'No non-HD source SKUs found.',
+      hdEditable: SKU_FILTER_EMPTY_HD_EDITABLE,
+      hdViewOnly: SKU_FILTER_EMPTY_HD_VIEW_ONLY,
+      nonHdSource: SKU_FILTER_EMPTY_NON_HD,
     };
 
     const sbomMessages: Record<string, string> = {
-      editableSkus: 'No editable SKUs found. Editing is disabled.',
+      editableSkus: SKU_FILTER_EMPTY_EDITABLE,
     };
 
     if (isMbomModeFn()) {
@@ -904,6 +912,6 @@ export class DataService {
     isMbomMode: () => boolean,
   ): string {
     const options = isMbomMode() ? mbomOptions : sbomOptions;
-    return options.find((item) => item.value === option)?.label || 'All';
+    return options.find((item) => item.value === option)?.label || LABEL_ALL;
   }
 }

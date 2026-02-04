@@ -20,6 +20,10 @@ import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import {
   PARTS_EDIT_MODAL_DISABLED_FIELDS,
   PARTS_EDIT_MODAL_DROPDOWN_FIELDS,
+  FIELD_PART_NUMBER,
+  FIELD_MATERIAL_COLOR_STATUS,
+  PLACEHOLDER_SEARCH_SERVICES,
+  COL_ERROR_INDICATOR,
 } from '../../constants';
 import { DataService } from '../../services/data.service';
 import { GridConfigService } from '../../services/grid-config.service';
@@ -101,8 +105,8 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
     const columnDefs: ColDef[] = [
       {
         headerName: '',
-        field: 'errorIndicator',
-        colId: 'errorIndicator',
+        field: COL_ERROR_INDICATOR,
+        colId: COL_ERROR_INDICATOR,
         width: 50,
         minWidth: 50,
         maxWidth: 50,
@@ -140,12 +144,13 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
       const headerName = columns[field];
       const isDisabled = disabledFields.has(field);
       const isDropdown = dropdownFields.has(field);
+      const isPartNumberField = field === FIELD_PART_NUMBER;
 
       const colDef: ColDef = {
         headerName: headerName,
         field: field,
-        width: field === 'partNumber' || field === 'materialColorStatus' ? 120 : 200,
-        minWidth: field === 'partNumber' || field === 'materialColorStatus' ? 100 : 150,
+        width: isPartNumberField || field === FIELD_MATERIAL_COLOR_STATUS ? 120 : 200,
+        minWidth: isPartNumberField || field === FIELD_MATERIAL_COLOR_STATUS ? 100 : 150,
         editable: !isDisabled,
         sortable: true,
         filter: true,
@@ -176,7 +181,7 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
       if (isDropdown) {
         colDef.cellEditor = AutocompleteCellEditorComponent;
         colDef.cellEditorParams = () => ({
-          placeholder: 'search services...',
+          placeholder: PLACEHOLDER_SEARCH_SERVICES,
           isServiceSearch: true,
           context: {
             dataService: this.dataService,
@@ -188,7 +193,7 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
       }
 
       // Add value formatter for partNumber
-      if (field === 'partNumber') {
+      if (isPartNumberField) {
         colDef.valueFormatter = (params: any) => {
           return params.value || '';
         };
@@ -438,7 +443,7 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
             this.gridApi.setGridOption('rowData', [...this.rowData]);
             this.gridApi.refreshCells({ 
               force: true,
-              columns: ['errorIndicator']
+              columns: [COL_ERROR_INDICATOR]
             });
             this.gridApi.redrawRows();
           }
@@ -937,7 +942,7 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
       if (this.gridApi) {
         this.gridApi.refreshCells({ 
           force: true,
-          columns: ['errorIndicator'] // Refresh error indicator column
+          columns: [COL_ERROR_INDICATOR] // Refresh error indicator column
         });
         this.gridApi.redrawRows();
       }
@@ -952,7 +957,7 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
     if (this.gridApi) {
       this.gridApi.refreshCells({ 
         force: true,
-        columns: ['errorIndicator'] // Refresh error indicator column
+        columns: [COL_ERROR_INDICATOR] // Refresh error indicator column
       });
       this.gridApi.redrawRows();
     }
@@ -968,7 +973,7 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
 
   getPartNumberForError(materialColorId: string): string {
     const row = this.rowData.find((r) => r.materialColorId === materialColorId);
-    return row?.partNumber || materialColorId;
+    return row?.[FIELD_PART_NUMBER] || materialColorId;
   }
 
   hasErrors(): boolean {

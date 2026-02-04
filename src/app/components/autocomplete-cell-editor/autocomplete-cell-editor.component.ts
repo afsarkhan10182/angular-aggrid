@@ -2,7 +2,27 @@ import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } fr
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ICellEditorAngularComp } from 'ag-grid-angular';
-import { BOM_LINK_KEY, BOM_TYPE_EBOM } from '../../constants';
+import {
+  BOM_LINK_KEY,
+  BOM_TYPE_EBOM,
+  FIELD_COLOR_DESCRIPTION,
+  FIELD_COLOR,
+  FIELD_BOM_LINK_PART,
+  FIELD_PART_NUMBER,
+  FIELD_PART,
+  FIELD_BOM_LINK_FEATURE,
+  FIELD_BOM_LINK_COUNTRY_OF_ORIGIN,
+  FIELD_MATERIAL,
+  FIELD_MATERIAL_DESCRIPTION,
+  FIELD_SUPPLIER,
+  FIELD_FEATURE,
+  COLUMNS_REFRESH_AFTER_PART,
+  PART_FIELD_KEYS,
+  EDITABLE_AUTOPOPULATED_FIELDS,
+  FIELD_QUANTITY,
+  FIELD_BOM_LINK_START_DATE,
+  FIELD_BOM_LINK_END_DATE,
+} from '../../constants';
 import { DataService } from '../../services/data.service';
 import { UtilService } from '../../services/util.service';
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
@@ -74,8 +94,8 @@ export class AutocompleteCellEditorComponent
       }
     }
 
-    if (fieldName === 'colorDescription') {
-      return 'color';
+    if (fieldName === FIELD_COLOR_DESCRIPTION) {
+      return FIELD_COLOR;
     }
 
     return fieldName;
@@ -299,13 +319,13 @@ export class AutocompleteCellEditorComponent
 
     this.isPartNumberSearch =
       params.isPartNumberSearch === true ||
-      fieldName === 'bomLinkPart' ||
-      fieldName === 'partNumber' ||
-      fieldName === 'part';
+      fieldName === FIELD_BOM_LINK_PART ||
+      fieldName === FIELD_PART_NUMBER ||
+      fieldName === FIELD_PART;
 
-    this.isBomFeatureSearch = params.isBomFeatureSearch === true || fieldName === 'bomLinkFeature';
+    this.isBomFeatureSearch = params.isBomFeatureSearch === true || fieldName === FIELD_BOM_LINK_FEATURE;
     this.isCountrySearch =
-      params.isCountrySearch === true || fieldName === 'bomLinkCountryOfOrigin';
+      params.isCountrySearch === true || fieldName === FIELD_BOM_LINK_COUNTRY_OF_ORIGIN;
     this.isServiceSearch =
       params.isServiceSearch === true ||
       fieldName === 'materialColorServiceSubstituteOne' ||
@@ -320,7 +340,7 @@ export class AutocompleteCellEditorComponent
       (params.useApiSearch === true ||
         (this.dataService &&
           (this.placeholder.includes('material') || this.placeholder.includes('Material'))) ||
-        (this.dataService && (fieldName === 'material' || fieldName === 'materialDescription')));
+        (this.dataService && (fieldName === FIELD_MATERIAL || fieldName === FIELD_MATERIAL_DESCRIPTION)));
 
     let valuesParam = params.values;
     if (typeof valuesParam === 'function') {
@@ -348,7 +368,7 @@ export class AutocompleteCellEditorComponent
       this.customFilterFunction = params.filterFunction;
     }
 
-    const isColorOrSupplier = fieldName === 'color' || fieldName === 'supplier';
+    const isColorOrSupplier = fieldName === FIELD_COLOR || fieldName === FIELD_SUPPLIER;
     if (isColorOrSupplier) {
       this.refreshOptionsFromNodeData();
     } else if (
@@ -375,7 +395,7 @@ export class AutocompleteCellEditorComponent
     this.value = event.target.value || '';
 
     const fieldName = this.getFieldName();
-    const isColorOrSupplier = fieldName === 'color' || fieldName === 'supplier';
+    const isColorOrSupplier = fieldName === FIELD_COLOR || fieldName === FIELD_SUPPLIER;
 
     if (isColorOrSupplier && !this.value) {
       this.refreshOptionsFromNodeData();
@@ -523,12 +543,12 @@ export class AutocompleteCellEditorComponent
     const fieldName = this.getFieldName();
     const nodeData = this.params.node.data || {};
 
-    if (fieldName !== 'supplier' && fieldName !== 'color') return;
+    if (fieldName !== FIELD_SUPPLIER && fieldName !== FIELD_COLOR) return;
 
     const filteredValues =
-      (fieldName === 'supplier' && Array.isArray(nodeData._availableSuppliers)
+      (fieldName === FIELD_SUPPLIER && Array.isArray(nodeData._availableSuppliers)
         ? nodeData._availableSuppliers
-        : fieldName === 'color' && Array.isArray(nodeData._availableColors)
+        : fieldName === FIELD_COLOR && Array.isArray(nodeData._availableColors)
         ? nodeData._availableColors
         : null) || [];
 
@@ -628,7 +648,7 @@ export class AutocompleteCellEditorComponent
       } else {
         selectedMaterial = this.materialOptions.find((material) => {
           if (this.isPartNumberSearch) {
-            return (material.partNumber || '') === option;
+            return (material.materialColorPartNumber || '') === option;
           }
           const matLabel = material.material || material.ptcmaterialName || material.materialName || material.name || '';
           return matLabel === option;
@@ -645,12 +665,12 @@ export class AutocompleteCellEditorComponent
           this.params.node.data[fieldName] = option;
         }
 
-        if (fieldName === 'bomLinkFeature') {
+        if (fieldName === FIELD_BOM_LINK_FEATURE) {
           // Store display value for UI
-          this.params.node.setDataValue('feature', option);
+          this.params.node.setDataValue(FIELD_FEATURE, option);
           if (this.params.node.data) {
-          this.params.node.data.feature = option;
-        }
+            this.params.node.data[FIELD_FEATURE] = option;
+          }
 
         let selectedFeatureId: string | null = null;
         if (this.isBomFeatureSearch && this.genericOptions.length > 0) {
@@ -709,10 +729,10 @@ export class AutocompleteCellEditorComponent
           }
         }
 
-        if (fieldName === 'partNumber' || fieldName === 'bomLinkPart') {
-          this.params.node.setDataValue('part', option);
+        if (fieldName === FIELD_PART_NUMBER || fieldName === FIELD_BOM_LINK_PART) {
+          this.params.node.setDataValue(FIELD_PART, option);
           if (this.params.node.data) {
-            this.params.node.data.part = option;
+            this.params.node.data[FIELD_PART] = option;
           }
           if (!option || String(option).trim() === '') {
             this.clearAutopopulatedFieldsWhenPartCleared();
@@ -736,12 +756,12 @@ export class AutocompleteCellEditorComponent
         const columnsToRefresh = [fieldName];
         if (selectedMaterial && (this.isMaterialSearch || this.isPartNumberSearch)) {
           if (
-            fieldName === 'material' ||
-            fieldName === 'materialDescription' ||
-            fieldName === 'partNumber' ||
-            fieldName === 'bomLinkPart'
+            fieldName === FIELD_MATERIAL ||
+            fieldName === FIELD_MATERIAL_DESCRIPTION ||
+            fieldName === FIELD_PART_NUMBER ||
+            fieldName === FIELD_BOM_LINK_PART
           ) {
-            columnsToRefresh.push('color', 'colorDescription', 'supplier');
+            columnsToRefresh.push(...COLUMNS_REFRESH_AFTER_PART);
           }
         }
         this.params.api.refreshCells({
@@ -773,11 +793,7 @@ export class AutocompleteCellEditorComponent
     const node = this.params.node;
     const data = node.data;
     const fieldsToClear = [
-      'material',
-      'materialDescription',
-      'supplier',
-      'color',
-      'colorDescription',
+      ...EDITABLE_AUTOPOPULATED_FIELDS,
       'colorId',
       'materialSupplierMasterId',
       '_availablePartNumbers',
@@ -796,7 +812,7 @@ export class AutocompleteCellEditorComponent
   /**
    * Populate row from dropdown selection using only serviceDataModal.json / API structure:
    * - responseColumns: which fields exist in the response (single source of truth)
-   * - flatInstance: flat key-value for the selected row (partNumber, material, supplier, color, colorId, childId, etc.)
+   * - flatInstance: flat key-value for the selected row (materialColorPartNumber, material, supplier, color, colorId, childId, etc.)
    * For each column in responseColumns, set row[key] = flatInstance[key]. If a column is in the grid but not in
    * responseColumns, it is not filled (no error). Internal IDs (colorId, materialSupplierMasterId) are set for save.
    */
@@ -848,23 +864,23 @@ export class AutocompleteCellEditorComponent
       }
     }
 
-    const partValue = flatInstance.partNumber != null ? String(flatInstance.partNumber) : '';
+    const partValue = flatInstance.materialColorPartNumber != null ? String(flatInstance.materialColorPartNumber) : '';
     const materialValue = flatInstance.material != null ? String(flatInstance.material) : '';
 
     if (partValue) {
       this.setPartIdentifiers(partValue);
     }
-    if (partValue && originalData.part !== partValue) {
-      this.params.node.setDataValue('part', partValue);
-      if (this.params.node.data) this.params.node.data.part = partValue;
+    if (partValue && originalData[FIELD_PART] !== partValue) {
+      this.params.node.setDataValue(FIELD_PART, partValue);
+      if (this.params.node.data) this.params.node.data[FIELD_PART] = partValue;
     }
-    if (materialValue && originalData.materialDescription !== materialValue) {
-      this.params.node.setDataValue('materialDescription', materialValue);
-      if (this.params.node.data) this.params.node.data.materialDescription = materialValue;
+    if (materialValue && originalData[FIELD_MATERIAL_DESCRIPTION] !== materialValue) {
+      this.params.node.setDataValue(FIELD_MATERIAL_DESCRIPTION, materialValue);
+      if (this.params.node.data) this.params.node.data[FIELD_MATERIAL_DESCRIPTION] = materialValue;
     }
-    if (flatInstance.color != null && originalData.colorDescription !== flatInstance.color) {
-      this.params.node.setDataValue('colorDescription', String(flatInstance.color));
-      if (this.params.node.data) this.params.node.data.colorDescription = flatInstance.color;
+    if (flatInstance.color != null && originalData[FIELD_COLOR_DESCRIPTION] !== flatInstance.color) {
+      this.params.node.setDataValue(FIELD_COLOR_DESCRIPTION, String(flatInstance.color));
+      if (this.params.node.data) this.params.node.data[FIELD_COLOR_DESCRIPTION] = flatInstance.color;
     }
 
     if (this.isPartNumberSearch && partValue && this.dataService) {
@@ -921,19 +937,19 @@ export class AutocompleteCellEditorComponent
     const items = apiData!.instances;
     const existingPart = items.find((item: any) => {
       const bomLink = item[BOM_LINK_KEY];
-      return bomLink.partNumber === partNumber;
+      return bomLink?.[FIELD_PART_NUMBER] === partNumber;
     });
     if (existingPart) {
       const partData = existingPart[BOM_LINK_KEY];
       if (this.params && this.params.node) {
         const fieldsToPopulate = [
-          'supplier',
-          'colorDescription',
-          'bomLinkFeature',
-          'materialDescription',
-          'bomLinkStartDate',
-          'bomLinkEndDate',
-          'quantity',
+          FIELD_SUPPLIER,
+          FIELD_COLOR_DESCRIPTION,
+          FIELD_BOM_LINK_FEATURE,
+          FIELD_MATERIAL_DESCRIPTION,
+          FIELD_BOM_LINK_START_DATE,
+          FIELD_BOM_LINK_END_DATE,
+          FIELD_QUANTITY,
         ];
 
         const oldData = { ...this.params.node.data };
@@ -951,7 +967,7 @@ export class AutocompleteCellEditorComponent
 
         const skuInfo = dataService.getSkuInfo();
         const skuAutoFillWithPartNumber = dataService.getBomType() === BOM_TYPE_EBOM;
-        const partNumberForSkus = partData.partNumber ?? '';
+        const partNumberForSkus = partData?.[FIELD_PART_NUMBER] ?? '';
         skuInfo.forEach((sku: any) => {
           const skuFieldName = `sku${sku.skuId}`;
           const newSkuValue = skuAutoFillWithPartNumber
@@ -969,7 +985,7 @@ export class AutocompleteCellEditorComponent
           }
         });
 
-        const partIdentifier = partData.partNumber;
+        const partIdentifier = partData?.[FIELD_PART_NUMBER];
         if (partIdentifier) {
           this.setPartIdentifiers(partIdentifier);
         }
@@ -1046,7 +1062,7 @@ export class AutocompleteCellEditorComponent
 
     this.materialOptions.forEach((material: any) => {
       const label = this.isPartNumberSearch
-        ? (material.partNumber || '')
+        ? (material.materialColorPartNumber || '')
         : (material.material || material.ptcmaterialName || material.materialName || material.name || '');
 
       if (label.length > 0) {
@@ -1064,7 +1080,7 @@ export class AutocompleteCellEditorComponent
       return;
     }
 
-    const targetFields = ['partNumber', 'bomLinkPart', 'part'];
+    const targetFields = [...PART_FIELD_KEYS];
     const updatedColumns: string[] = [];
 
     targetFields.forEach((field) => {
@@ -1174,7 +1190,7 @@ export class AutocompleteCellEditorComponent
     const fi = selectedMaterial.flatInstance;
     const colorName = fi.color ?? '';
     const supplierName = fi.supplier ?? '';
-    const partNumber = fi.partNumber ?? selectedMaterial.partNumber ?? '';
+    const partNumber = fi.materialColorPartNumber ?? selectedMaterial.materialColorPartNumber ?? '';
 
     const availableColors = colorName ? [colorName] : [];
     const availableSuppliers = supplierName ? [supplierName] : [];
@@ -1198,36 +1214,36 @@ export class AutocompleteCellEditorComponent
     }
 
     const currentData = this.params.node.data || {};
-    const existingColor = currentData.color || currentData.colorDescription || '';
-    const existingSupplier = currentData.supplier || '';
+    const existingColor = currentData[FIELD_COLOR] || currentData[FIELD_COLOR_DESCRIPTION] || '';
+    const existingSupplier = currentData[FIELD_SUPPLIER] || '';
 
     if (colorName && existingColor !== colorName) {
-      this.params.node.setDataValue('color', colorName);
+      this.params.node.setDataValue(FIELD_COLOR, colorName);
       if (this.params.node.data) {
-        this.params.node.data.color = colorName;
+        this.params.node.data[FIELD_COLOR] = colorName;
       }
       // Also set colorDescription field (actual column field name)
-      this.params.node.setDataValue('colorDescription', colorName);
+      this.params.node.setDataValue(FIELD_COLOR_DESCRIPTION, colorName);
       if (this.params.node.data) {
-        this.params.node.data.colorDescription = colorName;
+        this.params.node.data[FIELD_COLOR_DESCRIPTION] = colorName;
       }
     }
 
     if (supplierName && existingSupplier !== supplierName) {
-      this.params.node.setDataValue('supplier', supplierName);
+      this.params.node.setDataValue(FIELD_SUPPLIER, supplierName);
       if (this.params.node.data) {
-        this.params.node.data.supplier = supplierName;
+        this.params.node.data[FIELD_SUPPLIER] = supplierName;
       }
     }
 
     const fieldName = this.getFieldName();
     const partFieldName =
-      fieldName === 'bomLinkPart' || fieldName === 'partNumber' ? fieldName : 'bomLinkPart';
+      fieldName === FIELD_BOM_LINK_PART || fieldName === FIELD_PART_NUMBER ? fieldName : FIELD_BOM_LINK_PART;
     const existingPartNumber =
       currentData[partFieldName] ||
-      currentData.bomLinkPart ||
-      currentData.partNumber ||
-      currentData.part ||
+      currentData[FIELD_BOM_LINK_PART] ||
+      currentData[FIELD_PART_NUMBER] ||
+      currentData[FIELD_PART] ||
       '';
     if (partNumber && existingPartNumber !== partNumber) {
       this.params.node.setDataValue(partFieldName, partNumber);
@@ -1306,47 +1322,47 @@ export class AutocompleteCellEditorComponent
           }
 
           const currentData = this.params.node.data || {};
-          const existingColor = currentData.color || currentData.colorDescription || '';
-          const existingSupplier = currentData.supplier || '';
+          const existingColor = currentData[FIELD_COLOR] || currentData[FIELD_COLOR_DESCRIPTION] || '';
+          const existingSupplier = currentData[FIELD_SUPPLIER] || '';
 
           if (availableColors.length === 1 && initialColorValue) {
             if (existingColor !== initialColorValue) {
-              this.params.node.setDataValue('color', initialColorValue);
+              this.params.node.setDataValue(FIELD_COLOR, initialColorValue);
               if (this.params.node.data) {
-                this.params.node.data.color = initialColorValue;
+                this.params.node.data[FIELD_COLOR] = initialColorValue;
               }
               // Also set colorDescription field (actual column field name)
-              this.params.node.setDataValue('colorDescription', initialColorValue);
+              this.params.node.setDataValue(FIELD_COLOR_DESCRIPTION, initialColorValue);
               if (this.params.node.data) {
-                this.params.node.data.colorDescription = initialColorValue;
+                this.params.node.data[FIELD_COLOR_DESCRIPTION] = initialColorValue;
               }
             }
           } else if (availableColors.length > 1) {
             if (existingColor && !availableColors.includes(existingColor)) {
-              this.params.node.setDataValue('color', '');
+              this.params.node.setDataValue(FIELD_COLOR, '');
               if (this.params.node.data) {
-                this.params.node.data.color = '';
+                this.params.node.data[FIELD_COLOR] = '';
               }
               // Also clear colorDescription field
-              this.params.node.setDataValue('colorDescription', '');
+              this.params.node.setDataValue(FIELD_COLOR_DESCRIPTION, '');
               if (this.params.node.data) {
-                this.params.node.data.colorDescription = '';
+                this.params.node.data[FIELD_COLOR_DESCRIPTION] = '';
               }
             }
           }
 
           if (availableSuppliers.length === 1 && initialSupplierValue) {
             if (existingSupplier !== initialSupplierValue) {
-              this.params.node.setDataValue('supplier', initialSupplierValue);
+              this.params.node.setDataValue(FIELD_SUPPLIER, initialSupplierValue);
               if (this.params.node.data) {
-                this.params.node.data.supplier = initialSupplierValue;
+                this.params.node.data[FIELD_SUPPLIER] = initialSupplierValue;
               }
             }
           } else if (availableSuppliers.length > 1) {
             if (existingSupplier && !availableSuppliers.includes(existingSupplier)) {
-              this.params.node.setDataValue('supplier', '');
+              this.params.node.setDataValue(FIELD_SUPPLIER, '');
               if (this.params.node.data) {
-                this.params.node.data.supplier = '';
+                this.params.node.data[FIELD_SUPPLIER] = '';
               }
             }
           }
@@ -1356,7 +1372,7 @@ export class AutocompleteCellEditorComponent
             setTimeout(() => {
               this.params.api.refreshCells({
                 rowNodes: [this.params.node],
-                columns: ['color', 'colorDescription', 'supplier'],
+                columns: [...COLUMNS_REFRESH_AFTER_PART],
                 force: true,
               });
             }, 50);

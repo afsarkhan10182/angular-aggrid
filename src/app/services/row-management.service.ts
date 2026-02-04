@@ -1,4 +1,29 @@
-import { BOM_LINK_KEY, BOM_TYPE_EBOM, BOM_TYPE_SBOM } from '../constants';
+import {
+  BOM_LINK_KEY,
+  BOM_TYPE_EBOM,
+  BOM_TYPE_SBOM,
+  LS_KEY_LAST_SAVED_AT,
+  VALUE_SPEC_YES,
+  NOTIFICATION_TYPE_SUCCESS,
+  NOTIFICATION_TYPE_ERROR,
+  NOTIFICATION_TYPE_INFO,
+  FIELD_PART_NUMBER,
+  FIELD_PART,
+  FIELD_BOM_LINK_PART,
+  FIELD_BOM_LINK_FEATURE,
+  FIELD_FEATURE,
+  FIELD_BOM_LINK_START_DATE,
+  FIELD_BOM_LINK_END_DATE,
+  FIELD_START_DATE,
+  FIELD_END_DATE,
+  FIELD_QUANTITY,
+  FIELD_QTY,
+  FIELD_BOM_LINK_SPEC_SHEET_EXTRA,
+  FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
+  FIELD_SUPPLIER,
+  FIELD_COLOR_DESCRIPTION,
+  FIELD_MATERIAL_DESCRIPTION,
+} from '../constants';
 import { Injectable } from '@angular/core';
 import { GridApi } from 'ag-grid-community';
 import { DataService } from './data.service';
@@ -13,7 +38,7 @@ export class RowManagementService {
   private lastSavedAt: Date | null = null;
 
   constructor(private readonly gridConfigService: GridConfigService) {
-    const savedTimestamp = localStorage.getItem('lastSavedAt');
+    const savedTimestamp = localStorage.getItem(LS_KEY_LAST_SAVED_AT);
     if (savedTimestamp) {
       this.lastSavedAt = new Date(savedTimestamp);
     }
@@ -45,7 +70,7 @@ export class RowManagementService {
    */
   setLastSavedAt(date: Date): void {
     this.lastSavedAt = date;
-    localStorage.setItem('lastSavedAt', date.toISOString());
+    localStorage.setItem(LS_KEY_LAST_SAVED_AT, date.toISOString());
   }
 
   /**
@@ -62,7 +87,7 @@ export class RowManagementService {
     const newRowIdValue = this.nextRowId;
     const newRow: any = {
       part: '',
-      partNumber: '',
+      [FIELD_PART_NUMBER]: '',
       supplier: '',
       color: '',
       feature: '',
@@ -95,7 +120,7 @@ export class RowManagementService {
 
     const bomType = dataService.getBomType();
     if (bomType === BOM_TYPE_SBOM) {
-      newRow.bomLinkSpecSheetExtra = 'Yes';
+      newRow.bomLinkSpecSheetExtra = VALUE_SPEC_YES;
       newRow.bomLinkIncludeInSpecSheet = '';
     }
 
@@ -195,7 +220,7 @@ export class RowManagementService {
       return;
     }
 
-    const valueToPaste = params.data.partNumber || params.data.part;
+    const valueToPaste = params.data?.[FIELD_PART_NUMBER] || params.data?.part;
 
     if (!valueToPaste) {
       return;
@@ -290,7 +315,10 @@ export class RowManagementService {
 
     const fieldName: string | undefined = params?.colDef?.field;
     const partId =
-      params.data.materialKey || params.data.newRowId || params.data.partNumber || params.data.part;
+      params.data.materialKey ||
+      params.data.newRowId ||
+      params.data[FIELD_PART_NUMBER] ||
+      params.data.part;
     if (!partId || !fieldName) return;
 
     const compositeId = this.getCompositeId(params.data);
@@ -311,7 +339,7 @@ export class RowManagementService {
   }
 
   private getCompositeId(rowData: any): string | null {
-    const partValue = rowData.partNumber || rowData.part;
+    const partValue = rowData?.[FIELD_PART_NUMBER] || rowData?.part;
     const sectionValue = rowData.section;
     return !rowData.materialKey && !rowData.newRowId && sectionValue && partValue
       ? `${sectionValue}::${partValue}`
@@ -344,10 +372,10 @@ export class RowManagementService {
 
   private isDateField(fieldName: string): boolean {
     return (
-      fieldName === 'bomLinkStartDate' ||
-      fieldName === 'bomLinkEndDate' ||
-      fieldName === 'startDate' ||
-      fieldName === 'endDate'
+      fieldName === FIELD_BOM_LINK_START_DATE ||
+      fieldName === FIELD_BOM_LINK_END_DATE ||
+      fieldName === FIELD_START_DATE ||
+      fieldName === FIELD_END_DATE
     );
   }
 
@@ -363,20 +391,20 @@ export class RowManagementService {
       originalRowValues.get(params.data.materialKey) ||
       originalRowValues.get(partId) ||
       (compositeId ? originalRowValues.get(compositeId) : null) ||
-      originalRowValues.get(params.data.partNumber) ||
+      originalRowValues.get(params.data?.[FIELD_PART_NUMBER]) ||
       originalRowValues.get(params.data.part) ||
       null;
     if (!original) return undefined;
 
-    if (fieldName === 'partNumber' || fieldName === 'part' || fieldName === 'bomLinkPart')
-      return original.partNumber ?? original.bomLinkPart ?? original.part;
-    if (fieldName === 'bomLinkFeature' || fieldName === 'feature')
-      return original.bomLinkFeature ?? original.feature;
-    if (fieldName === 'bomLinkStartDate' || fieldName === 'startDate') return original.bomLinkStartDate;
-    if (fieldName === 'bomLinkEndDate' || fieldName === 'endDate') return original.bomLinkEndDate;
-    if (fieldName === 'quantity' || fieldName === 'qty') return original.quantity;
-    if (fieldName === 'bomLinkSpecSheetExtra') return original.bomLinkSpecSheetExtra;
-    if (fieldName === 'bomLinkIncludeInSpecSheet') return original.bomLinkIncludeInSpecSheet;
+    if (fieldName === FIELD_PART_NUMBER || fieldName === FIELD_PART || fieldName === FIELD_BOM_LINK_PART)
+      return original[FIELD_PART_NUMBER] ?? original[FIELD_BOM_LINK_PART] ?? original[FIELD_PART];
+    if (fieldName === FIELD_BOM_LINK_FEATURE || fieldName === FIELD_FEATURE)
+      return original[FIELD_BOM_LINK_FEATURE] ?? original[FIELD_FEATURE];
+    if (fieldName === FIELD_BOM_LINK_START_DATE || fieldName === FIELD_START_DATE) return original[FIELD_BOM_LINK_START_DATE];
+    if (fieldName === FIELD_BOM_LINK_END_DATE || fieldName === FIELD_END_DATE) return original[FIELD_BOM_LINK_END_DATE];
+    if (fieldName === FIELD_QUANTITY || fieldName === FIELD_QTY) return original[FIELD_QUANTITY];
+    if (fieldName === FIELD_BOM_LINK_SPEC_SHEET_EXTRA) return original[FIELD_BOM_LINK_SPEC_SHEET_EXTRA];
+    if (fieldName === FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET) return original[FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET];
 
     return undefined;
   }
@@ -438,11 +466,11 @@ export class RowManagementService {
       params.data.materialKey,
       params.data.newRowId,
       partId,
-      params.data.partNumber,
+      params.data[FIELD_PART_NUMBER],
       params.data.part,
       compositeId,
-      params.data.section && (params.data.partNumber || params.data.part)
-        ? `${params.data.section}::${params.data.partNumber || params.data.part}`
+      params.data.section && (params.data[FIELD_PART_NUMBER] || params.data.part)
+        ? `${params.data.section}::${params.data[FIELD_PART_NUMBER] || params.data.part}`
         : null,
     ]);
     baseIds.delete(null);
@@ -500,13 +528,13 @@ export class RowManagementService {
     dataService: DataService,
     editedRows: Set<string | number>
   ): void {
-    if ((params.field === 'part' || params.colDef?.field === 'part') && params.newValue) {
+    if ((params.field === FIELD_PART || params.colDef?.field === FIELD_PART) && params.newValue) {
       const apiData = dataService.getApiData();
 
       const items = apiData!.instances;
       const existingPart = items.find((item) => {
         const bomLink = item[BOM_LINK_KEY];
-        return bomLink.partNumber === params.newValue;
+        return bomLink?.[FIELD_PART_NUMBER] === params.newValue;
       });
 
       if (existingPart) {
@@ -514,13 +542,13 @@ export class RowManagementService {
         const existingPartData = bomLink as any;
 
         const fieldsToPopulate = [
-          'supplier',
-          'colorDescription',
-          'bomLinkFeature',
-          'materialDescription',
-          'bomLinkStartDate',
-          'bomLinkEndDate',
-          'quantity',
+          FIELD_SUPPLIER,
+          FIELD_COLOR_DESCRIPTION,
+          FIELD_BOM_LINK_FEATURE,
+          FIELD_MATERIAL_DESCRIPTION,
+          FIELD_BOM_LINK_START_DATE,
+          FIELD_BOM_LINK_END_DATE,
+          FIELD_QUANTITY,
         ];
         const oldData = { ...params.node.data };
 
@@ -528,7 +556,7 @@ export class RowManagementService {
           if (existingPartData[fieldName] !== undefined && existingPartData[fieldName] !== null) {
             let valueToSet = existingPartData[fieldName];
 
-            if (fieldName === 'bomLinkStartDate' || fieldName === 'bomLinkEndDate') {
+            if (fieldName === FIELD_BOM_LINK_START_DATE || fieldName === FIELD_BOM_LINK_END_DATE) {
               valueToSet = this.gridConfigService.formatDateToMMDDYYYY(valueToSet);
             }
 
@@ -570,7 +598,7 @@ export class RowManagementService {
     }
 
     if (!params.data.isNewRow) {
-      editedRows.add(params.data.partNumber.toString());
+      editedRows.add(String(params.data?.[FIELD_PART_NUMBER] ?? ''));
     }
   }
 
@@ -720,7 +748,7 @@ export class RowManagementService {
 
   private updateSaveTimestamp(): void {
     this.lastSavedAt = new Date();
-    localStorage.setItem('lastSavedAt', this.lastSavedAt.toISOString());
+    localStorage.setItem(LS_KEY_LAST_SAVED_AT, this.lastSavedAt.toISOString());
     this.newRows.clear();
   }
 
@@ -824,12 +852,12 @@ export class RowManagementService {
   showSaveMessage(
     message: string,
     componentInstance: any,
-    type: 'success' | 'error' | 'error-persistent' | 'info' = 'info'
+    type: 'success' | 'error' | 'error-persistent' | 'info' = NOTIFICATION_TYPE_INFO
   ): void {
     componentInstance.saveMessage = message;
     componentInstance.saveMessageType = type;
 
-    if (type === 'success' || type === 'info' || type === 'error') {
+    if (type === NOTIFICATION_TYPE_SUCCESS || type === NOTIFICATION_TYPE_INFO || type === NOTIFICATION_TYPE_ERROR) {
       setTimeout(() => {
         this.clearSaveMessage(componentInstance);
       }, 3000);

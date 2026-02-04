@@ -7,6 +7,22 @@ import {
   BOM_TYPE_MATERIALMBOM,
   COLUMN_RENAME_FOR_API,
   DEFAULT_BOM_TYPE,
+  VALUE_SPEC_YES,
+  VALUE_SPEC_NO,
+  API_TRUE,
+  API_FALSE,
+  ENUM_MBOM_LINE_ITEM,
+  FIELD_PART_NUMBER,
+  FIELD_BOM_LINK_PART,
+  FIELD_PART,
+  FIELD_BOM_LINK_SPEC_SHEET_EXTRA,
+  FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
+  FIELD_BOM_LINK_START_DATE,
+  FIELD_BOM_LINK_END_DATE,
+  FIELD_START_DATE,
+  FIELD_END_DATE,
+  FIELD_QUANTITY,
+  FIELD_QTY,
 } from '../constants';
 import { DataService } from './data.service';
 import { GridConfigService } from './grid-config.service';
@@ -49,7 +65,7 @@ export class PayloadTransformService {
 
       let matchingRows: any[] = [];
       const rowFeatureValue = row.bomLinkFeature || '';
-      const rowPartNumber = String(row.partNumber || '').trim();
+      const rowPartNumber = String(row?.[FIELD_PART_NUMBER] || '').trim();
 
       const bomType = this.dataService.getBomType() || DEFAULT_BOM_TYPE;
       const isSbom = bomType === BOM_TYPE_SBOM;
@@ -99,7 +115,7 @@ export class PayloadTransformService {
 
           if (!existingSku && apiData?.instances && Array.isArray(apiData.instances)) {
             const section = resolvedSection || '';
-            const partNumber = String(row.partNumber || '').trim();
+            const partNumber = String(row?.[FIELD_PART_NUMBER] || '').trim();
             const bomLinkFeature = String(row.bomLinkFeature || '').trim();
             
             const bomType = this.dataService.getBomType() || DEFAULT_BOM_TYPE;
@@ -114,7 +130,7 @@ export class PayloadTransformService {
                 if (!bomLink) continue;
 
                 const instanceSection = bomLink.sectionInternalName || bomLink.section || '';
-                const instancePart = String(bomLink.partNumber || '').trim();
+                const instancePart = String(bomLink?.[FIELD_PART_NUMBER] || '').trim();
                 const instanceFeature = String(bomLink.bomLinkFeature || '').trim();
                 const instancePtcbomPartMarkUp = bomLink.ptcbomPartMarkUp || '';
 
@@ -136,7 +152,7 @@ export class PayloadTransformService {
                   }
                 } else if (isMbom) {
                   isFeatureMatch = instanceFeature === bomLinkFeature;
-                  const instanceIsEnumMBOM001 = instancePtcbomPartMarkUp === 'enumMBOM001';
+                  const instanceIsEnumMBOM001 = instancePtcbomPartMarkUp === ENUM_MBOM_LINE_ITEM;
                   requiresPartMatch = instanceHasPartNumber && Boolean(instanceIsEnumMBOM001);
                 }
 
@@ -308,7 +324,7 @@ export class PayloadTransformService {
       r
     );
 
-    const existingPart = String(r.partNumber || '').trim();
+    const existingPart = String(r?.[FIELD_PART_NUMBER] || '').trim();
     const isPartMatch = requiresPartMatch ? existingPart === rowPartNumber : true;
 
     return isSectionMatch && isFeatureMatch && isPartMatch;
@@ -336,9 +352,9 @@ export class PayloadTransformService {
     }
 
     if (isMbom) {
-      const existingPart = String(r.partNumber || '').trim();
+      const existingPart = String(r?.[FIELD_PART_NUMBER] || '').trim();
       const existingHasPartNumber = existingPart !== '';
-      const existingIsEnumMBOM001 = r.ptcbomPartMarkUp === 'enumMBOM001';
+      const existingIsEnumMBOM001 = r.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM;
       return {
         isFeatureMatch: existingFeature === rowFeatureValue.trim(),
         requiresPartMatch: existingHasPartNumber && existingIsEnumMBOM001,
@@ -390,7 +406,12 @@ export class PayloadTransformService {
     if (gridApi) {
       gridApi.forEachNode((node: any) => {
         if (node.data) {
-          const nodeRowId = node.data.materialKey || node.data.newRowId || node.data.partNumber || node.data.part || '';
+          const nodeRowId =
+            node.data.materialKey ||
+            node.data.newRowId ||
+            node.data[FIELD_PART_NUMBER] ||
+            node.data.part ||
+            '';
           if (nodeRowId && editedRows.has(nodeRowId)) {
             currentRowDataMap.set(nodeRowId, node.data);
           }
@@ -410,7 +431,7 @@ export class PayloadTransformService {
         return;
       }
 
-      const rowId = row.materialKey || row.newRowId || row.partNumber || row.part || '';
+      const rowId = row.materialKey || row.newRowId || row[FIELD_PART_NUMBER] || row.part || '';
       const isNewRow = row.isNewRow === true;
       const isEdited = editedRows.has(rowId);
       
@@ -443,7 +464,7 @@ export class PayloadTransformService {
         }
 
         if (bomType === BOM_TYPE_MBOM) {
-          bomLink.ptcbomPartMarkUp = 'enumMBOM001';
+          bomLink.ptcbomPartMarkUp = ENUM_MBOM_LINE_ITEM;
         }
 
         let quantityValue: any = null;
@@ -494,10 +515,10 @@ export class PayloadTransformService {
 
         if (row.bomLinkSpecSheetExtra) {
           const val = String(row.bomLinkSpecSheetExtra);
-          if (val === 'Yes') {
-            bomLink.bomLinkSpecSheetExtra = 'true';
-          } else if (val === 'No') {
-            bomLink.bomLinkSpecSheetExtra = 'false';
+          if (val === VALUE_SPEC_YES) {
+            bomLink.bomLinkSpecSheetExtra = API_TRUE;
+          } else if (val === VALUE_SPEC_NO) {
+            bomLink.bomLinkSpecSheetExtra = API_FALSE;
           } else {
             bomLink.bomLinkSpecSheetExtra = val;
           }
@@ -521,15 +542,15 @@ export class PayloadTransformService {
         );
       } else if (isEdited) {
         const compositeId =
-          row.section && (row.partNumber || row.part)
-            ? `${row.section}::${row.partNumber || row.part}`
+          row.section && (row[FIELD_PART_NUMBER] || row.part)
+            ? `${row.section}::${row[FIELD_PART_NUMBER] || row.part}`
             : null;
         
         const originalValues =
           originalRowValues.get(row.materialKey) ||
           originalRowValues.get(rowId) ||
           (compositeId ? originalRowValues.get(compositeId) : null) ||
-          originalRowValues.get(row.partNumber) ||
+          originalRowValues.get(row[FIELD_PART_NUMBER]) ||
           originalRowValues.get(row.part) ||
           {};
 
@@ -540,9 +561,9 @@ export class PayloadTransformService {
         const editedFieldsForRow = editedFields.get(rowId) || new Set<string>();
 
         const partEdited =
-          editedFieldsForRow.has('partNumber') ||
-          editedFieldsForRow.has('bomLinkPart') ||
-          editedFieldsForRow.has('part');
+          editedFieldsForRow.has(FIELD_PART_NUMBER) ||
+          editedFieldsForRow.has(FIELD_BOM_LINK_PART) ||
+          editedFieldsForRow.has(FIELD_PART);
         if (partEdited) {
           if (currentRow.materialSupplierMasterId) {
             bomLink.childId = this.utilService.extractIdAfterLastColon(
@@ -558,35 +579,35 @@ export class PayloadTransformService {
           }
         }
 
-        if (editedFieldsForRow.has('bomLinkSpecSheetExtra')) {
+        if (editedFieldsForRow.has(FIELD_BOM_LINK_SPEC_SHEET_EXTRA)) {
           const currentVal = String(originalValues.bomLinkSpecSheetExtra || '');
           const newVal = String(currentRow.bomLinkSpecSheetExtra || '');
           
-          if (currentVal === 'Yes') {
-            bomLink.bomLinkSpecSheetExtra_old = 'true';
-          } else if (currentVal === 'No') {
-            bomLink.bomLinkSpecSheetExtra_old = 'false';
+          if (currentVal === VALUE_SPEC_YES) {
+            bomLink.bomLinkSpecSheetExtra_old = API_TRUE;
+          } else if (currentVal === VALUE_SPEC_NO) {
+            bomLink.bomLinkSpecSheetExtra_old = API_FALSE;
           } else {
             bomLink.bomLinkSpecSheetExtra_old = currentVal;
           }
           
-          if (newVal === 'Yes') {
-            bomLink.bomLinkSpecSheetExtra_new = 'true';
-          } else if (newVal === 'No') {
-            bomLink.bomLinkSpecSheetExtra_new = 'false';
+          if (newVal === VALUE_SPEC_YES) {
+            bomLink.bomLinkSpecSheetExtra_new = API_TRUE;
+          } else if (newVal === VALUE_SPEC_NO) {
+            bomLink.bomLinkSpecSheetExtra_new = API_FALSE;
           } else {
             bomLink.bomLinkSpecSheetExtra_new = newVal;
           }
         }
 
-        if (editedFieldsForRow.has('bomLinkIncludeInSpecSheet')) {
+        if (editedFieldsForRow.has(FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET)) {
           const currentVal = String(originalValues.bomLinkIncludeInSpecSheet || '');
           const newVal = String(currentRow.bomLinkIncludeInSpecSheet || '');
           bomLink.bomLinkIncludeInSpecSheet_old = includeInSpecSheetMap[currentVal] || currentVal;
           bomLink.bomLinkIncludeInSpecSheet_new = includeInSpecSheetMap[newVal] || newVal;
         }
 
-        if (editedFieldsForRow.has('bomLinkStartDate') || editedFieldsForRow.has('startDate')) {
+        if (editedFieldsForRow.has(FIELD_BOM_LINK_START_DATE) || editedFieldsForRow.has(FIELD_START_DATE)) {
           const currentStartDate =
             originalValues.bomLinkStartDate || originalValues.startDate || '';
           const newStartDate = currentRow.bomLinkStartDate || currentRow.startDate || '';
@@ -595,14 +616,14 @@ export class PayloadTransformService {
           bomLink.bomLinkStartDate_new = this.utilService.convertDateToApiFormat(newStartDate);
         }
 
-        if (editedFieldsForRow.has('bomLinkEndDate') || editedFieldsForRow.has('endDate')) {
+        if (editedFieldsForRow.has(FIELD_BOM_LINK_END_DATE) || editedFieldsForRow.has(FIELD_END_DATE)) {
           const currentEndDate = originalValues.bomLinkEndDate || originalValues.endDate || '';
           const newEndDate = currentRow.bomLinkEndDate || currentRow.endDate || '';
           bomLink.bomLinkEndDate_old = this.utilService.convertDateToApiFormat(currentEndDate);
           bomLink.bomLinkEndDate_new = this.utilService.convertDateToApiFormat(newEndDate);
         }
 
-        if (editedFieldsForRow.has('quantity') || editedFieldsForRow.has('qty')) {
+        if (editedFieldsForRow.has(FIELD_QUANTITY) || editedFieldsForRow.has(FIELD_QTY)) {
           const currentQuantityRaw = originalValues.quantity || originalValues.qty || '';
           const newQuantityRaw = currentRow.quantity || currentRow.qty || '';
           bomLink.quantity_old = this.utilService.formatQuantityToString(currentQuantityRaw);

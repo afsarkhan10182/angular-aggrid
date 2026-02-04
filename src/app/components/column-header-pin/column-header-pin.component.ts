@@ -14,6 +14,7 @@ import { CommonModule } from '@angular/common';
 import { IHeaderParams } from 'ag-grid-community';
 import { IHeaderAngularComp } from 'ag-grid-angular';
 import { IconComponent } from '../icon/icon.component';
+import { COL_ACTIONS, COL_CHECKBOX } from '../../constants';
 
 class MenuStateService {
   private static currentOpenMenu: ColumnHeaderPinComponent | null = null;
@@ -439,7 +440,7 @@ export class ColumnHeaderPinComponent
 
     const field = params.column?.getColDef()?.field;
     const colId = params.column?.getColId();
-    this.showMenuButton = field !== 'actions' && field !== 'checkbox' && colId !== 'actions' && colId !== 'checkbox';
+    this.showMenuButton = field !== COL_ACTIONS && field !== COL_CHECKBOX && colId !== COL_ACTIONS && colId !== COL_CHECKBOX;
   }
 
   refresh(params: IHeaderParams): boolean {
@@ -449,7 +450,7 @@ export class ColumnHeaderPinComponent
     
     const field = params.column?.getColDef()?.field;
     const colId = params.column?.getColId();
-    this.showMenuButton = field !== 'actions' && field !== 'checkbox' && colId !== 'actions' && colId !== 'checkbox';
+    this.showMenuButton = field !== COL_ACTIONS && field !== COL_CHECKBOX && colId !== COL_ACTIONS && colId !== COL_CHECKBOX;
     
     return true;
   }

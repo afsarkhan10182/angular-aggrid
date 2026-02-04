@@ -2,6 +2,16 @@ import { Injectable } from '@angular/core';
 import { GridApi } from 'ag-grid-community';
 import { GridConfigService } from './grid-config.service';
 import { DataService } from './data.service';
+import {
+  ENUM_MBOM_LINE_ITEM,
+  COL_CHECKBOX,
+  COL_ACTIONS,
+  MASS_EDIT_DATE_START_FIELDS,
+  MASS_EDIT_DATE_END_FIELDS,
+  MASS_EDIT_QUANTITY_FIELDS,
+  MASS_EDIT_INCLUDE_IN_SPEC_SHEET_FIELDS,
+  FIELD_PART_NUMBER,
+} from '../constants';
 
 export interface MassEditState {
   startDate: string;
@@ -91,13 +101,13 @@ export class MassEditService {
   }
 
   private populateStartDate(selectedRows: any[], state: MassEditState): void {
-    this.populateDateField(selectedRows, ['bomLinkStartDate'], (dateStr) => {
+    this.populateDateField(selectedRows, [...MASS_EDIT_DATE_START_FIELDS], (dateStr) => {
       state.startDate = dateStr;
     });
   }
 
   private populateEndDate(selectedRows: any[], state: MassEditState): void {
-    this.populateDateField(selectedRows, ['bomLinkEndDate'], (dateStr) => {
+    this.populateDateField(selectedRows, [...MASS_EDIT_DATE_END_FIELDS], (dateStr) => {
       state.endDate = dateStr;
     });
   }
@@ -130,7 +140,7 @@ export class MassEditService {
       this.setQuantityIfSame(selectedRows, state);
     } else if (isSbomMode()) {
       const hasMbomRows = selectedRows.some(
-        (row: any) => row?.ptcbomPartMarkUp === 'enumMBOM001'
+        (row: any) => row?.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM
       );
       if (!hasMbomRows) {
         this.setQuantityIfSame(selectedRows, state);
@@ -145,7 +155,7 @@ export class MassEditService {
   ): void {
     if (!isSbomMode()) return;
 
-    const includeInSpecSheetFields = ['bomLinkIncludeInSpecSheet'];
+    const includeInSpecSheetFields = [...MASS_EDIT_INCLUDE_IN_SPEC_SHEET_FIELDS];
     const firstIncludeInSpecSheet = this.getStringValue(selectedRows[0], includeInSpecSheetFields);
     const allSameIncludeInSpecSheet = selectedRows.every((row) => {
       const rowValue = this.getStringValue(row, includeInSpecSheetFields);
@@ -157,7 +167,7 @@ export class MassEditService {
   }
 
   private setQuantityIfSame(selectedRows: any[], state: MassEditState): void {
-    const qtyFields = ['quantity'];
+    const qtyFields = [...MASS_EDIT_QUANTITY_FIELDS];
     const firstQty = this.getQtyValue(selectedRows[0], qtyFields);
     const allSameQty = selectedRows.every((row) => {
       const rowQty = this.getQtyValue(row, qtyFields);
@@ -205,7 +215,7 @@ export class MassEditService {
       return false;
     }
     return Array.from(selectedRows).some(
-      (row: any) => row?.ptcbomPartMarkUp === 'enumMBOM001'
+      (row: any) => row?.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM
     );
   }
 
@@ -288,7 +298,7 @@ export class MassEditService {
     const allColumns = gridApi.getColumns();
     if (allColumns) {
       allColumns.forEach((col: any) => {
-        if (col.getColId && col.getColId() !== 'checkbox' && col.getColId() !== 'actions') {
+        if (col.getColId && col.getColId() !== COL_CHECKBOX && col.getColId() !== COL_ACTIONS) {
           columnFields.add(col.getColId());
         }
       });
@@ -299,7 +309,7 @@ export class MassEditService {
         if (colDef.field && colDef.field !== 'checkbox' && colDef.field !== 'actions') {
           columnFields.add(colDef.field);
         }
-        if (colDef.colId && colDef.colId !== 'checkbox' && colDef.colId !== 'actions') {
+        if (colDef.colId && colDef.colId !== COL_CHECKBOX && colDef.colId !== COL_ACTIONS) {
           columnFields.add(colDef.colId);
         }
       });
@@ -326,7 +336,7 @@ export class MassEditService {
     return this.updateDateField(
       params,
       params.state.startDate,
-      ['bomLinkStartDate'],
+      [...MASS_EDIT_DATE_START_FIELDS],
       (dateStr) => this.gridConfigService.formatDateToMMDDYYYY(dateStr)
     );
   }
@@ -335,7 +345,7 @@ export class MassEditService {
     return this.updateDateField(
       params,
       params.state.endDate,
-      ['bomLinkEndDate'],
+      [...MASS_EDIT_DATE_END_FIELDS],
       (dateStr) => this.gridConfigService.formatDateToMMDDYYYY(dateStr)
     );
   }
@@ -371,7 +381,7 @@ export class MassEditService {
       state.quantity !== undefined;
     if (!shouldUpdate) return false;
 
-    const targetField = this.findTargetField(['quantity'], columnFields, rowData);
+    const targetField = this.findTargetField([...MASS_EDIT_QUANTITY_FIELDS], columnFields, rowData);
     const currentValue = rowData[targetField];
 
     if (currentValue !== state.quantity) {
@@ -394,7 +404,7 @@ export class MassEditService {
     if (!isSbomMode() || !state.includeInSpecSheet) return false;
     if (rowData.isNewRow) return false;
 
-    const isMbomRow = rowData?.ptcbomPartMarkUp === 'enumMBOM001';
+    const isMbomRow = rowData?.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM;
     
     // For MBOM line items, apply regardless of specSheetExtra value
     // For non-MBOM rows, skip if specSheetExtra exists
@@ -404,7 +414,7 @@ export class MassEditService {
       if (hasSpecSheetExtra) return false;
     }
 
-    const targetField = this.findTargetField(['bomLinkIncludeInSpecSheet'], columnFields, rowData);
+    const targetField = this.findTargetField([...MASS_EDIT_INCLUDE_IN_SPEC_SHEET_FIELDS], columnFields, rowData);
     const currentValue = rowData[targetField] || '';
 
     if (currentValue !== state.includeInSpecSheet) {
@@ -418,10 +428,10 @@ export class MassEditService {
 
   private trackEditedFields(params: TrackEditedFieldsParams): void {
     const { rowData, state, isMbomMode, isSbomMode, isEbomMode, isMaterialMbomMode, isMbomRow, columnFields, editedRows, editedFields } = params;
-    const primaryKey = rowData.materialKey || rowData.newRowId || rowData.partNumber || rowData.part;
+    const primaryKey = rowData.materialKey || rowData.newRowId || rowData[FIELD_PART_NUMBER] || rowData.part;
     const compositeKey =
-      rowData.section && (rowData.partNumber || rowData.part)
-        ? `${rowData.section}::${rowData.partNumber || rowData.part}`
+      rowData.section && (rowData[FIELD_PART_NUMBER] || rowData.part)
+        ? `${rowData.section}::${rowData[FIELD_PART_NUMBER] || rowData.part}`
         : null;
     const editKey = primaryKey || compositeKey;
 
@@ -436,18 +446,18 @@ export class MassEditService {
     const editedFieldsForRow = editedFields.get(editKey)!;
 
     if (isMbomMode() || isEbomMode() || isMaterialMbomMode?.()) {
-      this.addFieldIfExists(editedFieldsForRow, ['bomLinkStartDate'], columnFields, rowData, state.startDate);
-      this.addFieldIfExists(editedFieldsForRow, ['bomLinkEndDate'], columnFields, rowData, state.endDate);
-      this.addFieldIfExists(editedFieldsForRow, ['quantity'], columnFields, rowData, state.quantity !== null && state.quantity !== undefined);
+      this.addFieldIfExists(editedFieldsForRow, [...MASS_EDIT_DATE_START_FIELDS], columnFields, rowData, state.startDate);
+      this.addFieldIfExists(editedFieldsForRow, [...MASS_EDIT_DATE_END_FIELDS], columnFields, rowData, state.endDate);
+      this.addFieldIfExists(editedFieldsForRow, [...MASS_EDIT_QUANTITY_FIELDS], columnFields, rowData, state.quantity !== null && state.quantity !== undefined);
     }
 
     if (isSbomMode()) {
       if (!isMbomRow) {
-        this.addFieldIfExists(editedFieldsForRow, ['bomLinkStartDate'], columnFields, rowData, state.startDate);
-        this.addFieldIfExists(editedFieldsForRow, ['bomLinkEndDate'], columnFields, rowData, state.endDate);
-        this.addFieldIfExists(editedFieldsForRow, ['quantity'], columnFields, rowData, state.quantity !== null && state.quantity !== undefined);
+        this.addFieldIfExists(editedFieldsForRow, [...MASS_EDIT_DATE_START_FIELDS], columnFields, rowData, state.startDate);
+        this.addFieldIfExists(editedFieldsForRow, [...MASS_EDIT_DATE_END_FIELDS], columnFields, rowData, state.endDate);
+        this.addFieldIfExists(editedFieldsForRow, [...MASS_EDIT_QUANTITY_FIELDS], columnFields, rowData, state.quantity !== null && state.quantity !== undefined);
       }
-      this.addFieldIfExists(editedFieldsForRow, ['bomLinkIncludeInSpecSheet'], columnFields, rowData, state.includeInSpecSheet);
+      this.addFieldIfExists(editedFieldsForRow, [...MASS_EDIT_INCLUDE_IN_SPEC_SHEET_FIELDS], columnFields, rowData, state.includeInSpecSheet);
     }
   }
 

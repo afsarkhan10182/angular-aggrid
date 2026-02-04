@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { catchError, tap, map } from 'rxjs/operators';
 import { UtilService } from './util.service';
+import { HEADER_CSRF_NONCE } from '../constants';
 
 export interface LoggedInUserModel {
   name: string;
@@ -97,7 +98,7 @@ export class SessionService {
     };
 
     if (this.csrfToken) {
-      headers['CSRF_NONCE'] = this.csrfToken;
+      headers[HEADER_CSRF_NONCE] = this.csrfToken;
     }
 
     return this.http.post<any>(this.getUserApiUrl(), requestBody, { headers }).pipe(

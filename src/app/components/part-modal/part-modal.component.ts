@@ -5,7 +5,17 @@ import {
   EventEmitter,
   HostListener,
 } from '@angular/core';
-import { BOM_LINK_KEY } from '../../constants';
+import {
+  BOM_LINK_KEY,
+  FIELD_PART_NUMBER,
+  FIELD_SUPPLIER,
+  FIELD_FEATURE,
+  FIELD_QTY,
+  FIELD_COLOR,
+  FIELD_START_DATE,
+  FIELD_END_DATE,
+  FIELD_HAS_LINKED_BOM,
+} from '../../constants';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -23,12 +33,12 @@ export class PartModalComponent {
   @Output() modalClose = new EventEmitter<void>();
 
   private readonly displayedFields = new Set([
-    'supplier',
-    'feature',
-    'qty',
-    'color',
-    'startDate',
-    'endDate',
+    FIELD_SUPPLIER,
+    FIELD_FEATURE,
+    FIELD_QTY,
+    FIELD_COLOR,
+    FIELD_START_DATE,
+    FIELD_END_DATE,
   ]);
 
   constructor() {}
@@ -82,7 +92,7 @@ export class PartModalComponent {
       'isSubRow',
       'isBranchHeader',
       'isNewRow',
-      'hasLinkedBom',
+      FIELD_HAS_LINKED_BOM,
       'isExpanded',
       'level',
       'parent',
@@ -246,7 +256,7 @@ export class PartModalComponent {
     if (!this.hasInstances()) return [];
     
     return this.partData.instances.filter((instance: any) => {
-      const partNumber = instance[BOM_LINK_KEY]?.partNumber || '';
+      const partNumber = instance[BOM_LINK_KEY]?.[FIELD_PART_NUMBER] || '';
       const material = instance[BOM_LINK_KEY]?.material || '';
       
       const hasPartNumber = partNumber && String(partNumber).trim() !== '';
