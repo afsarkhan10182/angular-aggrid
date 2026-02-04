@@ -1195,6 +1195,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (this.isEbomMode() || this.isMaterialMbomMode()) {
       return false;
     }
+    if (this.isSbomMode()) {
+      return false;
+    }
     if (this.isMbomMode()) {
       return this.selectedSkuFilter !== 'hdEditable';
     }
