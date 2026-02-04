@@ -2070,13 +2070,19 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    const materialColorId = materialData.materialColorId;
-    if (!materialColorId) {
+    const ids = materialData.materialColorId ?? materialData.childId;
+    if (ids == null || String(ids).trim() === '') {
       return;
     }
 
-    const url = new URL(window.location.href);
-    url.searchParams.set('ids', String(materialColorId));
+    const pathname = window.location.pathname || '';
+    const jspName = 'BOMComposer.jsp';
+    const pathToJsp = pathname.endsWith(jspName)
+      ? pathname
+      : pathname.replace(/\/?$/, '') + '/BOMComposer.jsp';
+
+    const url = new URL(pathToJsp, window.location.origin);
+    url.searchParams.set('ids', String(ids).trim());
     url.searchParams.set('bomType', 'EBOM');
     window.open(url.toString(), '_blank');
   }
