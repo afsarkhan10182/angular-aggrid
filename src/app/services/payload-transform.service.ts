@@ -28,6 +28,14 @@ import { DataService } from './data.service';
 import { GridConfigService } from './grid-config.service';
 import { UtilService } from './util.service';
 
+export interface TransformGridDataToApiOptions {
+  skuInfoOverride?: any[];
+  gridApi?: any;
+  hasDisconnectEdits?: boolean;
+  disconnectedSkuKeys?: Set<string>;
+  getDisconnectedKey?: (row: any, skuField: string) => string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -48,10 +56,28 @@ export class PayloadTransformService {
    * @param rowData - Hierarchical row data for finding matching rows
    * @returns Array of SKU objects ready for API payload
    */
-  buildSkusArrayFromRow(row: any, skuInfo: any[], rowData: any[], apiData?: any): any[] {
+  buildSkusArrayFromRow(
+    row: any,
+    skuInfo: any[],
+    rowData: any[],
+    apiData?: any,
+    options?: { disconnectedSkuKeys?: Set<string>; getDisconnectedKey?: (row: any, skuField: string) => string }
+  ): any[] {
     const skus: any[] = [];
     const allowedSkuIds = new Set<string>(skuInfo.map((sku: any) => String(sku.skuId)));
     const isNewRow = row.isNewRow;
+    const disconnectedSkuKeys = options?.disconnectedSkuKeys;
+    const getDisconnectedKey = options?.getDisconnectedKey;
+    const getSkuValue = (skuFieldName: string): any => {
+      if (
+        disconnectedSkuKeys &&
+        getDisconnectedKey &&
+        disconnectedSkuKeys.has(getDisconnectedKey(row, skuFieldName))
+      ) {
+        return '';
+      }
+      return row[skuFieldName];
+    };
 
     if (isNewRow) {
       const hasSkuValue = (v: any) => {
@@ -189,9 +215,9 @@ export class PayloadTransformService {
       if (!row.allSkus || !Array.isArray(row.allSkus) || row.allSkus.length === 0) {
         skuInfo.forEach((sku) => {
           const skuFieldName = `sku${sku.skuId}`;
-          const skuValue = row[skuFieldName];
+          const skuValue = getSkuValue(skuFieldName);
 
-          if (skuValue !== undefined && skuValue !== null && skuValue !== '') {
+          if (skuValue !== undefined && skuValue !== null && String(skuValue).trim() !== '') {
             skus.push({
               ...sku,
               value: String(skuValue),
@@ -207,12 +233,12 @@ export class PayloadTransformService {
           return;
         }
         const skuFieldName = `sku${originalSku.skuId}`;
-        const currentValue = row[skuFieldName];
+        const currentValue = getSkuValue(skuFieldName);
 
         skus.push({
           ...originalSku,
           value:
-            currentValue !== undefined && currentValue !== null
+            currentValue !== undefined && currentValue !== null && String(currentValue).trim() !== ''
               ? String(currentValue)
               : originalSku.value || '',
         });
@@ -365,17 +391,9 @@ export class PayloadTransformService {
   }
 
   /**
-   * Transform grid row data to API payload format
-   * Handles both new rows and edited rows with proper field mapping
-   *
-   * @param rowData - Hierarchical row data from grid
-   * @param displayData - Flat display data (for new rows not yet in hierarchy)
-   * @param editedRows - Set of edited row IDs
-   * @param editedFields - Map of edited field names per row
-   * @param originalRowValues - Map of original values before editing
-   * @param constraintsData - Constraints data for mapping
-   * @param options - Optional parameters (skuInfoOverride, gridApi)
-   * @returns Complete API payload object
+   * Transform grid row data to API payload format.
+   * Handles both new rows and edited rows with proper field mapping.
+   * @param options - Optional: skuInfoOverride, gridApi, hasDisconnectEdits, disconnectedSkuKeys, getDisconnectedKey
    */
   transformGridDataToApiFormat(
     rowData: any[],
@@ -384,10 +402,12 @@ export class PayloadTransformService {
     editedFields: Map<string | number, Set<string>>,
     originalRowValues: Map<string | number, any>,
     constraintsData: any,
-    options?: { skuInfoOverride?: any[]; gridApi?: any }
+    options?: TransformGridDataToApiOptions
   ): any {
     const skuInfoOverride = options?.skuInfoOverride;
     const gridApi = options?.gridApi;
+    const disconnectedSkuKeys = options?.disconnectedSkuKeys;
+    const getDisconnectedKey = options?.getDisconnectedKey;
     
     const instances: any[] = [];
     const skuInfo = Array.isArray(skuInfoOverride)
@@ -636,23 +656,27 @@ export class PayloadTransformService {
           );
           bomLink.skus = filteredSkus.map((originalSku: any) => {
             const skuFieldName = `sku${originalSku.skuId}`;
-            const currentValue = row[skuFieldName];
+            const isDisconnected =
+              disconnectedSkuKeys &&
+              getDisconnectedKey &&
+              disconnectedSkuKeys.has(getDisconnectedKey(currentRow, skuFieldName));
+            const rawValue = currentRow[skuFieldName];
+            const currentValue = isDisconnected
+              ? ''
+              : rawValue !== undefined && rawValue !== null
+                ? String(rawValue)
+                : originalSku.value || '';
 
             return {
               ...originalSku,
-              value:
-                currentValue !== undefined && currentValue !== null
-                  ? String(currentValue)
-                  : originalSku.value || '',
+              value: currentValue,
             };
           });
         } else {
-          bomLink.skus = this.buildSkusArrayFromRow(
-            row,
-            skuInfo,
-            rowData,
-            originalApiData || undefined
-          );
+          bomLink.skus = this.buildSkusArrayFromRow(row, skuInfo, rowData, originalApiData || undefined, {
+            disconnectedSkuKeys,
+            getDisconnectedKey,
+          });
         }
       } else {
         return;
@@ -662,6 +686,14 @@ export class PayloadTransformService {
         const editedFieldsForRow = editedFields.get(rowId) || new Set<string>();
         const hasNonServiceEdit = [...editedFieldsForRow].some((f) => !ebomServiceFieldsSet.has(f));
         if (!hasNonServiceEdit) return;
+      }
+
+      const rowHasDisconnect =
+        disconnectedSkuKeys &&
+        getDisconnectedKey &&
+        [...disconnectedSkuKeys].some((k) => k.startsWith(String(rowId) + '|'));
+      if (rowHasDisconnect) {
+        bomLink.disconnect = true;
       }
 
       instances.push({

@@ -25,7 +25,10 @@ import { RowManagementService } from './services/row-management.service';
 import { SessionService } from './services/session.service';
 import { ValidationService } from './services/validation.service';
 import { UtilService, ExtendedColDef } from './services/util.service';
-import { PayloadTransformService } from './services/payload-transform.service';
+import {
+  PayloadTransformService,
+  TransformGridDataToApiOptions,
+} from './services/payload-transform.service';
 import { MassEditService, MassEditState } from './services/mass-edit.service';
 import { environment } from '../environments/environment';
 import {
@@ -39,7 +42,9 @@ import {
   EDITABLE_AUTOPOPULATED_FIELDS,
   COL_ACTIONS,
   COL_CHECKBOX,
+  ENUM_MBOM_LINE_ITEM,
   FIELD_ACTIONS,
+  FIELD_BOM_LINK_SPEC_SHEET_EXTRA,
   FIELD_BOM_LINK_FEATURE,
   FIELD_FEATURE,
   FIELD_BOM_LINK_PART,
@@ -68,6 +73,7 @@ import {
   JSP_BOM_COMPOSER,
   PARAM_BOM_TYPE,
   PARAM_IDS,
+  VALUE_SPEC_YES,
 } from './constants';
 import type {
   SkuFilterOption,
@@ -139,6 +145,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public get skuFilterOptions(): Array<{ label: string; value: SkuFilterOption }> {
     return this.isMbomMode() ? this.mbomSkuFilterOptions : this.sbomSkuFilterOptions;
   }
+
+  /** Cache for grouped tree (before flatten) to avoid full re-filter/re-group on expand/collapse only */
+  private _groupedCache: { key: string; grouped: any[] } | null = null;
+
   public isLoading: boolean = true;
   public constraintsData: any = null;
   public isSaving: boolean = false;
@@ -152,6 +162,20 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public massEditEndDate: string = '';
   public massEditQuantity: number | null = null;
   public massEditIncludeInSpecSheet: string = '';
+
+  /** True when user disconnected one or more SKUs (single or bulk); payload will send disconnect: true. Cleared on successful save. */
+  public hasDisconnectEdits: boolean = false;
+
+  /** Keys 'rowId|skuField' for SKUs marked disconnected (shown strikethrough until save). Cleared on successful save. */
+  public disconnectedSkuKeys: Set<string> = new Set<string>();
+
+  /** When false, the disconnected SKUs panel is hidden (user closed it). Re-shown when new disconnects are added. */
+  public showDisconnectedSkusPanel = true;
+
+  /** True when disconnected SKUs panel is visible (same layout impact as mass edit for grid height). */
+  get hasDisconnectedSkusPanelVisible(): boolean {
+    return this.isSbomMode() && this.disconnectedSkuKeys.size > 0 && this.showDisconnectedSkusPanel;
+  }
 
   public gridOptions: GridOptions = {} as GridOptions;
 
@@ -180,6 +204,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.gridOptions.context = {
       dataService: this.dataService,
       setSkipEditTracking: (skip: boolean) => this.rowManagementService.setSkipEditTracking(skip),
+      editedRows: this.editedRows,
+      editedFields: this.editedFields,
     };
 
     this.showExpiredData = false;
@@ -209,10 +235,14 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             ...commonOptions.context,
             dataService: this.dataService,
             setSkipEditTracking: (skip: boolean) => this.rowManagementService.setSkipEditTracking(skip),
+            editedRows: this.editedRows,
+            editedFields: this.editedFields,
           }
         : {
             dataService: this.dataService,
             setSkipEditTracking: (skip: boolean) => this.rowManagementService.setSkipEditTracking(skip),
+            editedRows: this.editedRows,
+            editedFields: this.editedFields,
           },
       isFullWidthRow: (params: any) => {
         return params.rowNode.data.isGroupHeader;
@@ -379,6 +409,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         }
 
         this.rowData = this.transformToHierarchicalData(data);
+        this._groupedCache = null;
         this.storeOriginalValues();
         this.initializeColumns();
 
@@ -1093,6 +1124,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       isSbomMode: () => this.isSbomMode(),
       isEbomMode: () => this.isEbomMode(),
       isMaterialMbomMode: () => this.isMaterialMbomMode(),
+      canDisconnectForRow: (data) => this.canDisconnectForRow(data),
+      isSkuDisconnected: (row, skuField) => this.isSkuDisconnected(row, skuField),
       getDataCellStyle: (params) => this.getDataCellStyle(params),
       getFeatureValue: (data) => this.utilService.getFeatureValue(data),
       renderHierarchicalCell: (params) => this.renderHierarchicalCell(params),
@@ -1791,39 +1824,47 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       hierarchicalData = this.filterHierarchicalData(this.rowData, this.searchText);
     }
 
-    // Apply SKU filter for editable view (only show rows with SKU in existing response)
     hierarchicalData = this.filterHierarchicalDataBySkuFilter(hierarchicalData);
+
+    const applyGroupState = (items: any[]): any[] => {
+      return items.map((item) => {
+        const newItem = { ...item };
+
+        if (newItem.isSectionHeader) {
+          newItem.isExpanded = newItem.isExpanded ?? true;
+        }
+
+        if (newItem.isGroupHeader && newItem.groupKey) {
+          const savedState = this.groupExpandedState.get(newItem.groupKey);
+          newItem.isExpanded = savedState ?? true;
+        }
+
+        if (newItem.children && Array.isArray(newItem.children)) {
+          newItem.children = applyGroupState(newItem.children);
+        }
+
+        return newItem;
+      });
+    };
+
     if (this.activeGroupFields.length > 0) {
-      let groupedHierarchicalData = this.gridConfigService.groupHierarchicalData(
-        hierarchicalData,
-        this.activeGroupFields,
-      );
+      const cacheKey = `${this.activeGroupFields.map((g) => g.field).sort().join('|')}|${(this.searchText || '').trim()}|${this.selectedSkuFilter}|${this.rowData.length}`;
+      let groupedHierarchicalData: any[];
 
-      const applyGroupState = (items: any[]): any[] => {
-        return items.map((item) => {
-          const newItem = { ...item };
-
-          if (newItem.isSectionHeader) {
-            newItem.isExpanded = newItem.isExpanded ?? true;
-          }
-
-          if (newItem.isGroupHeader && newItem.groupKey) {
-            const savedState = this.groupExpandedState.get(newItem.groupKey);
-            newItem.isExpanded = savedState ?? true;
-          }
-
-          if (newItem.children && Array.isArray(newItem.children)) {
-            newItem.children = applyGroupState(newItem.children);
-          }
-
-          return newItem;
-        });
-      };
+      if (this._groupedCache?.key === cacheKey) {
+        groupedHierarchicalData = this._groupedCache.grouped;
+      } else {
+        groupedHierarchicalData = this.gridConfigService.groupHierarchicalData(
+          hierarchicalData,
+          this.activeGroupFields,
+        );
+        this._groupedCache = { key: cacheKey, grouped: groupedHierarchicalData };
+      }
 
       groupedHierarchicalData = applyGroupState(groupedHierarchicalData);
-
       this.displayData = this.flattenHierarchicalData(groupedHierarchicalData);
     } else {
+      this._groupedCache = null;
       this.displayData = this.flattenHierarchicalData(hierarchicalData);
       this.groupExpandedState.clear();
     }
@@ -1852,6 +1893,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (this.handlePastePartButton(event, target, isReadOnlySkuFilter)) return;
     if (this.handleDeleteButton(event, target, isReadOnlySkuFilter)) return;
     if (this.handleDisconnectButton(event, target, isReadOnlySkuFilter)) return;
+    if (this.handleReconnectButton(event, target, isReadOnlySkuFilter)) return;
 
     if (event.colDef.field === COL_ACTIONS) {
       this.handleActionsColumnClick(event);
@@ -1928,6 +1970,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       .then((result) => {
         this.isSaving = false;
         if (result.success) {
+          this.hasDisconnectEdits = false;
+          this.disconnectedSkuKeys.clear();
+          this.showDisconnectedSkusPanel = true;
           this.invalidRowIds.clear();
           this.rowManagementService.showSaveMessage(result.message, this, NOTIFICATION_TYPE_SUCCESS);
         } else {
@@ -2023,8 +2068,20 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       return true;
     }
     const skuField = disconnectButton.dataset['skuField'];
-    if (skuField && event.data) {
+    if (skuField && event.data && this.canDisconnectForRow(event.data)) {
       this.disconnectPartFromSku(event.data, skuField, event.event);
+    }
+    return true;
+  }
+
+  private handleReconnectButton(event: any, target: HTMLElement, isReadOnlySkuFilter: boolean): boolean {
+    const reconnectButton = target?.closest('[data-action="reconnect-sku"]');
+    if (!(reconnectButton instanceof HTMLElement)) return false;
+
+    if (isReadOnlySkuFilter) return true;
+    const skuField = reconnectButton.dataset['skuField'];
+    if (skuField && event.data) {
+      this.reconnectPartFromSku(event.data, skuField, event.event);
     }
     return true;
   }
@@ -3301,6 +3358,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
    */
   transformGridDataToApiFormat(rowData: any[], skuInfoOverride?: any[]): any {
     const skuInfo = skuInfoOverride || this.getFilteredSkuInfo();
+    const options: TransformGridDataToApiOptions = {
+      skuInfoOverride: skuInfo,
+      gridApi: this.gridApi,
+      hasDisconnectEdits: this.hasDisconnectEdits,
+      disconnectedSkuKeys: this.disconnectedSkuKeys,
+      getDisconnectedKey: (r: any, f: string) => this.getDisconnectedKey(r, f),
+    };
     return this.payloadTransformService.transformGridDataToApiFormat(
       rowData,
       this.displayData,
@@ -3308,10 +3372,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       this.editedFields,
       this.originalRowValues,
       this.constraintsData,
-      {
-        skuInfoOverride: skuInfo,
-        gridApi: this.gridApi,
-      },
+      options,
     );
   }
 
@@ -3426,14 +3487,22 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   disconnectPartFromSku(rowData: any, skuField: string, event?: any): void {
     if (!rowData || !skuField || !this.gridApi) return;
-    if (this.isSkuFilterReadOnly()) return;
+    if (this.isSkuFilterReadOnly() || !this.canDisconnectForRow(rowData)) return;
 
     if (event) {
       event.preventDefault();
       event.stopPropagation();
     }
 
-    const rowId = rowData.newRowId || rowData[FIELD_PART_NUMBER];
+    this.hasDisconnectEdits = true;
+    this.showDisconnectedSkusPanel = true;
+    this.disconnectedSkuKeys.add(this.getDisconnectedKey(rowData, skuField));
+    const rowId =
+      rowData.materialKey ??
+      rowData.newRowId ??
+      rowData[FIELD_PART_NUMBER] ??
+      rowData.part;
+    if (rowId) this.editedRows.add(rowId);
 
     let targetNode: any = null;
     this.gridApi.forEachNode((node: any) => {
@@ -3441,24 +3510,119 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         targetNode = node;
       }
     });
+    if (targetNode) {
+      this.gridApi.refreshCells({
+        rowNodes: [targetNode],
+        columns: [skuField],
+        force: true,
+      });
+    }
+  }
+
+  /**
+   * When reconnecting, if this row has no other disconnects and no other edited fields,
+   * clear it from editedRows/editedFields and invalidRowIds so Save can become disabled and validation is cleared.
+   */
+  private clearRowEditStateIfReverted(rowId: string | number, row?: any): void {
+    const prefix = String(rowId) + '|';
+    const hasOtherDisconnects = [...this.disconnectedSkuKeys].some((k) => k.startsWith(prefix));
+    if (hasOtherDisconnects) return;
+
+    const variants = this.utilService.getIdVariants(rowId);
+    const hasEditedFields = [...variants].some(
+      (id) => (this.editedFields.get(id)?.size ?? 0) > 0
+    );
+    if (row) {
+      const compositeId =
+        row.section && (row[FIELD_PART_NUMBER] ?? row.part)
+          ? `${row.section}::${row[FIELD_PART_NUMBER] ?? row.part}`
+          : null;
+      if (compositeId && (this.editedFields.get(compositeId)?.size ?? 0) > 0) return;
+    }
+    if (hasEditedFields) return;
+
+    variants.forEach((id) => {
+      this.editedRows.delete(id);
+      this.editedFields.delete(id);
+      this.invalidRowIds.delete(id);
+    });
+    if (row) {
+      const compositeId =
+        row.section && (row[FIELD_PART_NUMBER] ?? row.part)
+          ? `${row.section}::${row[FIELD_PART_NUMBER] ?? row.part}`
+          : null;
+      if (compositeId) {
+        this.editedRows.delete(compositeId);
+        this.editedFields.delete(compositeId);
+        this.invalidRowIds.delete(compositeId);
+      }
+      row.validation = { isValid: true, missingFields: [], skuErrors: [] };
+    }
+  }
+
+  /** Revert a disconnect: remove from disconnectedSkuKeys so the SKU is no longer marked for disconnect on save. */
+  reconnectPartFromSku(rowData: any, skuField: string, event?: any): void {
+    if (!rowData || !skuField || !this.gridApi) return;
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const key = this.getDisconnectedKey(rowData, skuField);
+    if (!this.disconnectedSkuKeys.has(key)) return;
+
+    this.disconnectedSkuKeys.delete(key);
+    if (this.disconnectedSkuKeys.size === 0) this.hasDisconnectEdits = false;
+
+    const rowId =
+      rowData.materialKey ??
+      rowData.newRowId ??
+      rowData[FIELD_PART_NUMBER] ??
+      rowData.part;
+    this.clearRowEditStateIfReverted(rowId, rowData);
+
+    let targetNode: any = null;
+    this.gridApi.forEachNode((node: any) => {
+      if (node.data === rowData) targetNode = node;
+    });
+    if (targetNode) {
+      this.gridApi.refreshCells({
+        rowNodes: [targetNode],
+        columns: [skuField, ...COLUMNS_REFRESH_ACTIONS],
+        force: true,
+      });
+    }
+  }
+
+  /** Revert one disconnected SKU from the panel (by key "rowId|skuField"). */
+  reconnectSkuByKey(key: string): void {
+    if (!key || !this.gridApi) return;
+    const idx = key.indexOf('|');
+    if (idx <= 0) return;
+    const rowId = key.slice(0, idx);
+    const skuField = key.slice(idx + 1);
+    if (!this.disconnectedSkuKeys.has(key)) return;
+
+    this.disconnectedSkuKeys.delete(key);
+    if (this.disconnectedSkuKeys.size === 0) this.hasDisconnectEdits = false;
+
+    let targetNode: any = null;
+    this.gridApi.forEachNode((node: any) => {
+      const data = node?.data;
+      if (!data) return;
+      const id =
+        data.materialKey ?? data.newRowId ?? data[FIELD_PART_NUMBER] ?? data.part ?? '';
+      if (String(id) === String(rowId)) {
+        targetNode = node;
+      }
+    });
+    this.clearRowEditStateIfReverted(rowId, targetNode?.data);
 
     if (targetNode) {
-      targetNode.setDataValue(skuField, '');
-      rowData[skuField] = '';
-
-      if (rowId) {
-        this.editedRows.add(rowId);
-      }
-
-      // Use refreshCells with specific column to avoid flicker
-      const column = this.gridApi.getColumn(skuField);
-      if (column) {
-        this.gridApi.refreshCells({
-          rowNodes: [targetNode],
-          columns: [skuField],
-          force: true,
-        });
-      }
+      this.gridApi.refreshCells({
+        rowNodes: [targetNode],
+        columns: [skuField, ...COLUMNS_REFRESH_ACTIONS],
+        force: true,
+      });
     }
   }
 
@@ -3486,6 +3650,74 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     return this.massEditService.hasMbomLineItemsInSelection(this.selectedRows, () =>
       this.isSbomMode(),
     );
+  }
+
+  /**
+   * Row is eligible for disconnect only in SBOM: not read-only, existing row (not new),
+   * not MBOM line item, and SpecSheet Extra is Yes.
+   */
+  canDisconnectForRow(row: any): boolean {
+    if (!row || this.isSkuFilterReadOnly() || !this.isSbomMode()) return false;
+    if (row.isNewRow) return false;
+    if (row.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM) return false;
+    const specSheetExtra = String(row[FIELD_BOM_LINK_SPEC_SHEET_EXTRA] ?? '').trim();
+    return specSheetExtra === VALUE_SPEC_YES;
+  }
+
+  /** Key for disconnectedSkuKeys: rowId|skuField. Used for strikethrough and payload. */
+  getDisconnectedKey(row: any, skuField: string): string {
+    const rowId =
+      row?.materialKey ??
+      row?.newRowId ??
+      row?.[FIELD_PART_NUMBER] ??
+      row?.part ??
+      '';
+    return `${rowId}|${skuField}`;
+  }
+
+  isSkuDisconnected(row: any, skuField: string): boolean {
+    return this.disconnectedSkuKeys.has(this.getDisconnectedKey(row, skuField));
+  }
+
+  /** For tooltip: list of SKU names/labels that have values in this row. */
+  getConnectedSkuLabelsForRow(row: any): string[] {
+    if (!row) return [];
+    const skuInfo = this.getFilteredSkuInfo();
+    const labels: string[] = [];
+    skuInfo.forEach((sku: any) => {
+      const skuField = `sku${sku.skuId}`;
+      const val = row[skuField];
+      if (val != null && String(val).trim() !== '') {
+        const label = sku.skuName || sku.name || sku.skuId || skuField;
+        labels.push(label);
+      }
+    });
+    return labels;
+  }
+
+  closeDisconnectedSkusPanel(): void {
+    this.showDisconnectedSkusPanel = false;
+  }
+
+  /** List of disconnected SKUs for the panel: part, skuId, and key for revert. */
+  getDisconnectedSkuList(): { part: string; skuId: string; key: string }[] {
+    const list: { part: string; skuId: string; key: string }[] = [];
+    if (!this.gridApi || this.disconnectedSkuKeys.size === 0) return list;
+    const skuInfo = this.getFilteredSkuInfo();
+
+    this.gridApi.forEachNode((node: any) => {
+      const row = node?.data;
+      if (!row || (!row.isDirectRow && !row.isSubRow && !row.isNewRow)) return;
+      const part = String(row[FIELD_PART_NUMBER] ?? row.part ?? '—').trim() || '—';
+      skuInfo.forEach((sku: any) => {
+        const skuField = `sku${sku.skuId}`;
+        const key = this.getDisconnectedKey(row, skuField);
+        if (this.disconnectedSkuKeys.has(key)) {
+          list.push({ part, skuId: String(sku.skuId), key });
+        }
+      });
+    });
+    return list;
   }
 
   closeMassEditMode(): void {
@@ -3560,37 +3792,37 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   bulkDisconnectFromSkus(): void {
-    if (this.isSkuFilterReadOnly()) {
-      return;
-    }
-    if (this.selectedRows.size === 0 || !this.gridApi) {
-      return;
-    }
+    if (this.isSkuFilterReadOnly() || !this.isSbomMode()) return;
+    if (this.selectedRows.size === 0 || !this.gridApi) return;
 
     const selectedNodes = this.gridApi.getSelectedNodes();
     const skuInfo = this.getFilteredSkuInfo();
-    const nodesToUpdate: any[] = [];
     const skuFields: string[] = skuInfo.map((sku) => `sku${sku.skuId}`);
+    const nodesToUpdate: any[] = [];
 
     selectedNodes.forEach((node: any) => {
       if (!node.data) return;
 
       const rowData = node.data;
-      let hasChanges = false;
+      if (rowData.isNewRow || !this.canDisconnectForRow(rowData)) return;
 
+      let hasChanges = false;
       skuFields.forEach((skuField) => {
-        if (rowData[skuField] && rowData[skuField] !== '') {
-          rowData[skuField] = '';
-          node.setDataValue(skuField, '');
+        if (rowData[skuField] != null && String(rowData[skuField]).trim() !== '') {
+          this.disconnectedSkuKeys.add(this.getDisconnectedKey(rowData, skuField));
           hasChanges = true;
         }
       });
 
       if (hasChanges) {
-        const rowId = rowData.newRowId || rowData[FIELD_PART_NUMBER];
-        if (rowId) {
-          this.editedRows.add(rowId);
-        }
+        this.hasDisconnectEdits = true;
+        this.showDisconnectedSkusPanel = true;
+        const rowId =
+          rowData.materialKey ??
+          rowData.newRowId ??
+          rowData[FIELD_PART_NUMBER] ??
+          rowData.part;
+        if (rowId) this.editedRows.add(rowId);
         nodesToUpdate.push(node);
       }
     });

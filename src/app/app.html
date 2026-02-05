@@ -1,4 +1,4 @@
-<div class="app-container" [class.mass-edit-active]="massEditMode">
+<div class="app-container" [class.mass-edit-active]="massEditMode || hasDisconnectedSkusPanelVisible">
   <!-- Header -->
   <div class="app-header">
     <div class="header-left">
@@ -168,6 +168,17 @@
               <app-icon name="cog" size="14"></app-icon>
               <span>Service - DataManager</span>
             </button>
+            <!-- Disconnect All SKUs - SBOM only; disabled when no row selected, tooltip when disabled -->
+            <button
+              *ngIf="isSbomMode()"
+              (click)="bulkDisconnectFromSkus(); closeActionDropdown()"
+              class="action-dropdown-item"
+              [class.disabled]="selectedRows.size === 0"
+              [disabled]="selectedRows.size === 0"
+              [attr.title]="selectedRows.size === 0 ? 'Select at least one checkbox' : null"
+            >
+              <span>Disconnect All SKUs</span>
+            </button>
           </div>
         </div>
         <div class="save-section">
@@ -204,6 +215,20 @@
       <button (click)="clearSaveMessage()" class="save-message-close" title="Close">
         <span class="close-icon-text">×</span>
       </button>
+    </div>
+
+    <!-- Disconnected SKUs (same height as Mass Edit so grid height is consistent) -->
+    <div *ngIf="hasDisconnectedSkusPanelVisible" class="disconnected-skus-panel">
+      <div class="disconnected-skus-bar">
+        <span class="disconnected-skus-title">Disconnected SKUs ({{ disconnectedSkuKeys.size }}) — applied on Save</span>
+        <button (click)="closeDisconnectedSkusPanel()" class="disconnected-skus-close" type="button" title="Close">×</button>
+      </div>
+      <div class="disconnected-skus-chips">
+        <span *ngFor="let item of getDisconnectedSkuList()" class="disconnected-skus-chip">
+          {{ item.part }} → {{ item.skuId }}
+          <button type="button" class="disconnected-skus-chip-undo" (click)="reconnectSkuByKey(item.key)" title="Reconnect">&#8617;</button>
+        </span>
+      </div>
     </div>
 
     <!-- Mass Edit Panel -->
@@ -292,7 +317,7 @@
           <ag-grid-angular
             style="width: 100%"
             [style.height]="
-              massEditMode
+              (massEditMode || hasDisconnectedSkusPanelVisible)
                 ? 'calc(100vh - 350px)'
                 : !!saveMessage
                   ? 'calc(100vh - 250px)'

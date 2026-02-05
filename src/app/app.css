@@ -162,6 +162,24 @@
   opacity: 0.9;
 }
 
+/* Per-SKU disconnect (cross) in existing SBOM rows */
+:host ::ng-deep .sku-disconnect-btn {
+  margin-left: 8px;
+  background: #ef4444;
+  color: #ffffff;
+  border: none;
+  border-radius: 3px;
+  padding: 2px 6px;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  transition: opacity 0.2s ease;
+}
+
+:host ::ng-deep .sku-disconnect-btn:hover {
+  opacity: 0.9;
+}
+
 .loading-spinner-container {
   position: absolute;
   top: 0;
@@ -870,6 +888,129 @@
 
 .action-dropdown-item:not(.disabled):hover app-icon {
   color: #475569;
+}
+
+/* Disconnected SKUs — same height as Mass Edit panel so grid height stays consistent */
+.disconnected-skus-panel {
+  background: #fef2f2;
+  border: 2px solid #fecaca;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  min-height: 136px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.disconnected-skus-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #fecaca;
+  min-height: 32px;
+}
+
+.disconnected-skus-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.disconnected-skus-close {
+  flex-shrink: 0;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.disconnected-skus-close:hover {
+  background: #dc2626;
+}
+
+.disconnected-skus-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-content: flex-start;
+  flex: 1;
+  min-height: 40px;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+.disconnected-skus-chip {
+  font-size: 12px;
+  padding: 4px 6px 4px 8px;
+  background: #fff;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+  color: #374151;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.disconnected-skus-chip-undo {
+  font-size: 11px;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #64748b;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.disconnected-skus-chip-undo:hover {
+  background: #f0fdf4;
+  color: #22c55e;
+  transform: scale(1.2);
+}
+
+/* Reconnect icon in grid cell; hover shows "Reconnect" tooltip */
+:host ::ng-deep .sku-reconnect-btn {
+  margin-left: 6px;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  background: transparent;
+  color: #64748b;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+:host ::ng-deep .sku-reconnect-btn:hover {
+  background: #f0fdf4;
+  color: #22c55e;
+  transform: scale(1.25);
 }
 
 /* Mass Edit Panel */

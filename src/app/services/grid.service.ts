@@ -49,6 +49,10 @@ export interface ColumnDefinitionConfig {
   isSbomMode: () => boolean;
   isEbomMode?: () => boolean;
   isMaterialMbomMode?: () => boolean;
+  /** SBOM: row can disconnect SKU only when not MBOM and SpecSheet Extra is not Yes */
+  canDisconnectForRow?: (data: any) => boolean;
+  /** True when this row+skuField is marked disconnected (show strikethrough). */
+  isSkuDisconnected?: (row: any, skuField: string) => boolean;
   getDataCellStyle: (params: any) => any;
   getFeatureValue: (data: any) => any;
   renderHierarchicalCell: (params: any) => string;
@@ -552,7 +556,7 @@ export class GridService {
             skuErrors ? `${MSG_SKU_ERROR}: ${skuErrors}` : null,
           ].filter(Boolean);
           const escaped = (tooltipParts.join('\n') || TITLE_REQUIRED_FIELD_ERROR).replace(/"/g, '&quot;');
-          return `<span class="validation-error-icon" style="width:40px; display:inline-block; color:#ef4444; position:absolute; left:-18px; top:0px; cursor: pointer; font-size: 20px" title="${escaped}" aria-label="${TITLE_REQUIRED_FIELD}">&#8505;</span>`;
+          return `<span class="validation-error-icon" style="width:40px; display:inline-flex; align-items:center; justify-content:center; color:#991b1b; position:absolute; left:-18px; top:50%; transform: translateY(-50%); cursor: pointer; font-size: 12px; line-height: 12px; height: 12px" title="${escaped}" aria-label="${TITLE_REQUIRED_FIELD}">ⓘ</span>`;
         };
 
         if (row.validation && !row.validation.isValid) {
@@ -1006,17 +1010,24 @@ export class GridService {
     const value = params.value;
     if (!value && value !== 0) return '';
 
+    const skuField = params.colDef.field;
+    const isDisconnected =
+      typeof config.isSkuDisconnected === 'function' && config.isSkuDisconnected(data, skuField);
     const textColor = config.shouldHighlightRow(data) ? 'color: #ff0000;' : '';
+    const strikeStyle = isDisconnected ? 'text-decoration: line-through; opacity: 0.8;' : '';
     const valueStr = String(value);
     const htmlValue = config.utilService.escapeHtml(valueStr).replaceAll('\n', '<br>');
-    const skuField = params.colDef.field;
-    const canDisconnect = !config.isSkuFilterReadOnly();
+    const baseCanDisconnect = !config.isSkuFilterReadOnly();
+    const canDisconnect =
+      !isDisconnected &&
+      baseCanDisconnect &&
+      (typeof config.canDisconnectForRow !== 'function' || config.canDisconnectForRow(data));
 
     if (data.isMaterialHeader || data.isDirectRow) {
-      return this.renderSkuCellWithDelete(htmlValue, textColor, skuField, canDisconnect);
+      return this.renderSkuCellWithDelete(htmlValue, textColor, strikeStyle, skuField, canDisconnect, isDisconnected);
     }
 
-    return this.renderSkuCellWithDelete(htmlValue, textColor, skuField, canDisconnect);
+    return this.renderSkuCellWithDelete(htmlValue, textColor, strikeStyle, skuField, canDisconnect, isDisconnected);
   }
 
   private renderNewRowSkuCellInternal(params: any, config: any): string {
@@ -1026,12 +1037,24 @@ export class GridService {
     return config.renderNewRowSkuCell(params);
   }
 
-  private renderSkuCellWithDelete(htmlValue: string, textColor: string, skuField: string, canDisconnect: boolean): string {
-    const deleteIcon = '';
+  private renderSkuCellWithDelete(
+    htmlValue: string,
+    textColor: string,
+    strikeStyle: string,
+    skuField: string,
+    canDisconnect: boolean,
+    isDisconnected: boolean
+  ): string {
+    let actionBtn = '';
+    if (canDisconnect) {
+      actionBtn = `<button type="button" class="sku-disconnect-btn" data-action="disconnect-sku" data-sku-field="${this.utilService.escapeHtml(skuField)}" title="Disconnect SKU">&#10005;</button>`;
+    } else if (isDisconnected) {
+      actionBtn = `<button type="button" class="sku-reconnect-btn" data-action="reconnect-sku" data-sku-field="${this.utilService.escapeHtml(skuField)}" title="Reconnect">&#8617;</button>`;
+    }
 
     return `<div style="white-space: pre-line; line-height: 1.5; padding: 4px 0; display: flex; align-items: center;">
-      <span style="${textColor}flex: 1;">${htmlValue}</span>
-      ${deleteIcon}
+      <span style="${textColor}${strikeStyle}flex: 1;">${htmlValue}</span>
+      ${actionBtn}
     </div>`;
   }
 }

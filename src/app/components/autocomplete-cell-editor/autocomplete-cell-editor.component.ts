@@ -25,7 +25,7 @@ import {
 } from '../../constants';
 import { DataService } from '../../services/data.service';
 import { UtilService } from '../../services/util.service';
-import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators';
 import { of, Subject, Subscription } from 'rxjs';
 
 @Component({
@@ -79,6 +79,10 @@ export class AutocompleteCellEditorComponent
   /** Total count from API (serviceDataModal resultCount) for part/material search pagination display */
   totalResultCount: number = 0;
 
+  private _positionScheduled = false;
+  private _searchRequestId = 0;
+  private _loadMoreRequestId = 0;
+
   constructor(private utilService: UtilService) {
     this.dataService = null as any;
   }
@@ -110,6 +114,7 @@ export class AutocompleteCellEditorComponent
         distinctUntilChanged(),
         switchMap((query) => {
           const effectiveQuery = query ?? '';
+          const requestId = ++this._searchRequestId;
           const usesApiSearch =
             (this.isMaterialSearch ||
               this.isPartNumberSearch ||
@@ -118,41 +123,48 @@ export class AutocompleteCellEditorComponent
               this.isServiceSearch) &&
             this.dataService;
 
+          const emptyResponse = { results: [], resultCount: 0, hasMore: false };
+          const wrap = (obs: any) =>
+            obs.pipe(
+              map((res: any) => ({ requestId, response: res })),
+              catchError(() => of({ requestId, response: emptyResponse }))
+            );
+
           if (usesApiSearch) {
             if (this.isBomFeatureSearch) {
               if (effectiveQuery.length >= 1) {
                 this.currentQuery = effectiveQuery;
                 this.isLoadingMore = false;
-                return this.dataService.searchBomFeatures(this.currentQuery, this.PAGE_SIZE);
+                return wrap(this.dataService.searchBomFeatures(this.currentQuery, this.PAGE_SIZE));
               }
 
               this.hasMore = false;
               this.genericOptions = [];
-              return of({ results: [], resultCount: 0, hasMore: false });
+              return of({ requestId, response: { results: [], resultCount: 0, hasMore: false } });
             }
 
             if (this.isCountrySearch) {
               if (effectiveQuery.length >= 1) {
                 this.currentQuery = effectiveQuery;
                 this.isLoadingMore = false;
-                return this.dataService.searchCountriesOfOrigin(this.currentQuery, this.PAGE_SIZE);
+                return wrap(this.dataService.searchCountriesOfOrigin(this.currentQuery, this.PAGE_SIZE));
               }
 
               this.hasMore = false;
               this.genericOptions = [];
-              return of({ results: [], resultCount: 0, hasMore: false });
+              return of({ requestId, response: { results: [], resultCount: 0, hasMore: false } });
             }
 
             if (this.isServiceSearch) {
               if (effectiveQuery.length >= 1) {
                 this.currentQuery = effectiveQuery;
                 this.isLoadingMore = false;
-                return this.dataService.searchServices(this.currentQuery, this.PAGE_SIZE);
+                return wrap(this.dataService.searchServices(this.currentQuery, this.PAGE_SIZE));
               }
 
               this.hasMore = false;
               this.genericOptions = [];
-              return of({ results: [], resultCount: 0, hasMore: false });
+              return of({ requestId, response: { results: [], resultCount: 0, hasMore: false } });
             }
 
             if (effectiveQuery.length >= 1) {
@@ -160,35 +172,43 @@ export class AutocompleteCellEditorComponent
               this.fromIndex = 1;
               this.toIndex = this.PAGE_SIZE;
               this.isLoadingMore = false;
-              return this.dataService.searchMaterials(
-                effectiveQuery,
-                this.fromIndex,
-                this.toIndex,
-                this.isPartNumberSearch
+              this._loadMoreRequestId++;
+              return wrap(
+                this.dataService.searchMaterials(
+                  effectiveQuery,
+                  this.fromIndex,
+                  this.toIndex,
+                  this.isPartNumberSearch
+                )
               );
             }
 
             this.fromIndex = 1;
             this.toIndex = this.PAGE_SIZE;
             this.hasMore = false;
-            return of({ results: [], resultCount: 0, hasMore: false });
+            return of({ requestId, response: { results: [], resultCount: 0, hasMore: false } });
           }
 
           if (effectiveQuery.length >= 2) {
             return of({
-              results: this.filterLocalOptions(effectiveQuery),
-              resultCount: 0,
-              hasMore: false,
+              requestId,
+              response: {
+                results: this.filterLocalOptions(effectiveQuery),
+                resultCount: 0,
+                hasMore: false,
+              },
             });
           }
 
-          return of({ results: [], resultCount: 0, hasMore: false });
+          return of({ requestId, response: { results: [], resultCount: 0, hasMore: false } });
         }),
         catchError(() => {
-          return of({ results: [], resultCount: 0, hasMore: false });
+          return of({ requestId: 0, response: { results: [], resultCount: 0, hasMore: false } });
         })
       )
-      .subscribe((response) => {
+      .subscribe((payload: any) => {
+        if (this.isDestroyed || payload.requestId !== this._searchRequestId) return;
+        const response = payload.response;
         if (!this.isDestroyed) {
           const results = response.results || [];
           const resultCount = response.resultCount || 0;
@@ -229,11 +249,7 @@ export class AutocompleteCellEditorComponent
           this.showDropdown = shouldShow;
 
           if (this.showDropdown) {
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                this.positionDropdown();
-              });
-            });
+            this.schedulePositionDropdown();
           }
         }
       });
@@ -244,27 +260,7 @@ export class AutocompleteCellEditorComponent
     setTimeout(() => {
       this.input.nativeElement.focus();
       this.input.nativeElement.select();
-
-      const usesApiSearch =
-        this.isMaterialSearch ||
-        this.isPartNumberSearch ||
-        this.isBomFeatureSearch ||
-        this.isCountrySearch ||
-        this.isServiceSearch;
-
-      if (usesApiSearch) {
-        if (this.dataService && this.value && this.value.length >= 1) {
-          this.searchSubject.next(this.value);
-        }
-      } else if (this.options.length > 0) {
-        this.filteredOptions = this.options.slice(0, 50);
-        this.showDropdown = this.filteredOptions.length > 0;
-        this.setInitialSelectedIndex();
-      }
-
-      if (this.showDropdown) {
-        this.positionDropdown();
-      }
+      this.handleInputOpen();
     }, 0);
   }
 
@@ -426,11 +422,7 @@ export class AutocompleteCellEditorComponent
     this.selectedIndex = -1;
 
     if (this.showDropdown) {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          this.positionDropdown();
-        });
-      });
+      this.schedulePositionDropdown();
     }
   }
 
@@ -476,65 +468,11 @@ export class AutocompleteCellEditorComponent
   onBlur(): void {}
 
   onInputClick(): void {
-    this.refreshOptionsFromNodeData();
-
-    const usesApiSearch =
-      this.isMaterialSearch ||
-      this.isPartNumberSearch ||
-      this.isBomFeatureSearch ||
-      this.isCountrySearch ||
-      this.isServiceSearch;
-
-    if (usesApiSearch) {
-      if (this.dataService && this.value && this.value.length >= 1) {
-        this.searchSubject.next(this.value);
-      }
-    } else {
-      if (this.options.length > 0) {
-        this.filteredOptions = this.options.slice(0, 50);
-        this.showDropdown = this.filteredOptions.length > 0;
-        this.setInitialSelectedIndex();
-      }
-    }
-
-    if (this.showDropdown) {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          this.positionDropdown();
-        });
-      });
-    }
+    this.handleInputOpen();
   }
 
   onInputFocus(): void {
-    this.refreshOptionsFromNodeData();
-
-    const usesApiSearch =
-      this.isMaterialSearch ||
-      this.isPartNumberSearch ||
-      this.isBomFeatureSearch ||
-      this.isCountrySearch ||
-      this.isServiceSearch;
-
-    if (usesApiSearch) {
-      if (this.dataService && this.value && this.value.length >= 1) {
-        this.searchSubject.next(this.value);
-      }
-    } else {
-      if (this.options.length > 0) {
-        this.filteredOptions = this.options.slice(0, 50);
-        this.showDropdown = this.filteredOptions.length > 0;
-        this.setInitialSelectedIndex();
-      }
-    }
-
-    if (this.showDropdown) {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          this.positionDropdown();
-        });
-      });
-    }
+    this.handleInputOpen();
   }
 
   private refreshOptionsFromNodeData(): void {
@@ -601,6 +539,8 @@ export class AutocompleteCellEditorComponent
     }
 
     this.isLoadingMore = true;
+    const queryForThisLoad = this.currentQuery;
+    const loadMoreId = ++this._loadMoreRequestId;
 
     this.fromIndex = this.toIndex + 1;
     this.toIndex = this.fromIndex + (this.PAGE_SIZE - 1);
@@ -609,23 +549,29 @@ export class AutocompleteCellEditorComponent
       .searchMaterials(this.currentQuery, this.fromIndex, this.toIndex, this.isPartNumberSearch)
       .subscribe({
         next: (response) => {
-          if (!this.isDestroyed) {
-            const materials = response.results || [];
-            const resultCount = response.resultCount || 0;
-
-            this.hasMore = resultCount > this.toIndex;
-
-            if (Array.isArray(materials) && materials.length > 0) {
-              this.materialOptions = [...this.materialOptions, ...materials];
-              this.buildFilteredOptionsFromMaterials();
-            } else {
-              this.hasMore = false;
-            }
-
+          if (
+            this.isDestroyed ||
+            queryForThisLoad !== this.currentQuery ||
+            loadMoreId !== this._loadMoreRequestId
+          ) {
             this.isLoadingMore = false;
+            return;
           }
+          const materials = response.results || [];
+          const resultCount = response.resultCount || 0;
+
+          this.hasMore = resultCount > this.toIndex;
+
+          if (Array.isArray(materials) && materials.length > 0) {
+            this.materialOptions = [...this.materialOptions, ...materials];
+            this.buildFilteredOptionsFromMaterials();
+          } else {
+            this.hasMore = false;
+          }
+
+          this.isLoadingMore = false;
         },
-        error: (error) => {
+        error: () => {
           this.isLoadingMore = false;
           this.hasMore = false;
         },
@@ -661,16 +607,9 @@ export class AutocompleteCellEditorComponent
       if (fieldName) {
         this.params.node.setDataValue(fieldName, option);
 
-        if (this.params.node.data) {
-          this.params.node.data[fieldName] = option;
-        }
-
         if (fieldName === FIELD_BOM_LINK_FEATURE) {
           // Store display value for UI
           this.params.node.setDataValue(FIELD_FEATURE, option);
-          if (this.params.node.data) {
-            this.params.node.data[FIELD_FEATURE] = option;
-          }
 
         let selectedFeatureId: string | null = null;
         if (this.isBomFeatureSearch && this.genericOptions.length > 0) {
@@ -693,9 +632,6 @@ export class AutocompleteCellEditorComponent
 
           if (selectedFeatureId) {
             this.params.node.setDataValue('bomLinkFeatureId', selectedFeatureId);
-            if (this.params.node.data) {
-              this.params.node.data.bomLinkFeatureId = selectedFeatureId;
-            }
           }
         }
 
@@ -723,17 +659,11 @@ export class AutocompleteCellEditorComponent
             // Store ID in a separate field (e.g., materialColorServiceEquivalentId)
             const idFieldName = `${fieldName}Id`;
             this.params.node.setDataValue(idFieldName, selectedServiceId);
-            if (this.params.node.data) {
-              this.params.node.data[idFieldName] = selectedServiceId;
-            }
           }
         }
 
         if (fieldName === FIELD_PART_NUMBER || fieldName === FIELD_BOM_LINK_PART) {
           this.params.node.setDataValue(FIELD_PART, option);
-          if (this.params.node.data) {
-            this.params.node.data[FIELD_PART] = option;
-          }
           if (!option || String(option).trim() === '') {
             this.clearAutopopulatedFieldsWhenPartCleared();
           }
@@ -771,11 +701,36 @@ export class AutocompleteCellEditorComponent
         });
       }
 
+      this.markNewRowAsEditedIfNeeded(fieldName);
       setTimeout(() => {
         if (this.params && this.params.api) {
           this.params.api.stopEditing();
         }
       }, 0);
+    }
+  }
+
+  /**
+   * When editing a new row in the main grid, part/material selection updates the row via setDataValue.
+   * AG Grid may not fire onCellValueChanged for that commit, so the row is never added to editedRows
+   * and the Save button stays disabled. Explicitly mark the new row as edited when part/material is selected.
+   */
+  private markNewRowAsEditedIfNeeded(fieldName: string): void {
+    const data = this.params?.node?.data;
+    if (!data?.isNewRow) return;
+    const rowId = data.newRowId;
+    if (rowId == null) return;
+    const ctx = (this.params?.context as any) ?? this.params?.api?.getGridOption?.('context');
+    const editedRows = ctx?.editedRows;
+    if (!editedRows) return;
+    editedRows.add(rowId);
+    const editedFields = ctx?.editedFields;
+    if (editedFields) {
+      if (!editedFields.has(rowId)) editedFields.set(rowId, new Set<string>());
+      editedFields.get(rowId)!.add(fieldName);
+      if (fieldName === FIELD_PART_NUMBER || fieldName === FIELD_BOM_LINK_PART) {
+        editedFields.get(rowId)!.add(FIELD_PART);
+      }
     }
   }
 
@@ -801,7 +756,6 @@ export class AutocompleteCellEditorComponent
     fieldsToClear.forEach((field) => {
       if (data.hasOwnProperty(field)) {
         node.setDataValue(field, field === '_availablePartNumbers' ? [] : '');
-        (data as any)[field] = field === '_availablePartNumbers' ? [] : '';
       }
     });
     if (this.params.api) {
@@ -844,23 +798,18 @@ export class AutocompleteCellEditorComponent
       const value = flatInstance[key];
       if (originalData[key] === value) return;
       this.params.node.setDataValue(key, value);
-      if (this.params.node.data) {
-        this.params.node.data[key] = value;
-      }
     });
 
     if (flatInstance.colorId != null && String(flatInstance.colorId) !== '') {
       const colorId = String(flatInstance.colorId);
       if (originalData.colorId !== colorId) {
         this.params.node.setDataValue('colorId', colorId);
-        if (this.params.node.data) this.params.node.data.colorId = colorId;
       }
     }
     if (flatInstance.childId != null && String(flatInstance.childId) !== '') {
       const childId = String(flatInstance.childId);
       if (originalData.materialSupplierMasterId !== childId) {
         this.params.node.setDataValue('materialSupplierMasterId', childId);
-        if (this.params.node.data) this.params.node.data.materialSupplierMasterId = childId;
       }
     }
 
@@ -872,15 +821,12 @@ export class AutocompleteCellEditorComponent
     }
     if (partValue && originalData[FIELD_PART] !== partValue) {
       this.params.node.setDataValue(FIELD_PART, partValue);
-      if (this.params.node.data) this.params.node.data[FIELD_PART] = partValue;
     }
     if (materialValue && originalData[FIELD_MATERIAL_DESCRIPTION] !== materialValue) {
       this.params.node.setDataValue(FIELD_MATERIAL_DESCRIPTION, materialValue);
-      if (this.params.node.data) this.params.node.data[FIELD_MATERIAL_DESCRIPTION] = materialValue;
     }
     if (flatInstance.color != null && originalData[FIELD_COLOR_DESCRIPTION] !== flatInstance.color) {
       this.params.node.setDataValue(FIELD_COLOR_DESCRIPTION, String(flatInstance.color));
-      if (this.params.node.data) this.params.node.data[FIELD_COLOR_DESCRIPTION] = flatInstance.color;
     }
 
     if (this.isPartNumberSearch && partValue && this.dataService) {
@@ -896,7 +842,6 @@ export class AutocompleteCellEditorComponent
         const skuFieldName = `sku${sku.skuId}`;
         if (originalData[skuFieldName] !== partValue) {
           this.params.node.setDataValue(skuFieldName, partValue);
-          if (this.params.node.data) this.params.node.data[skuFieldName] = partValue;
         }
       });
     } else if (material.skus && Array.isArray(material.skus) && skuInfoPart?.length > 0) {
@@ -906,7 +851,6 @@ export class AutocompleteCellEditorComponent
         const skuValue = matchingSku ? matchingSku.value : '';
         if (originalData[skuFieldName] !== skuValue) {
           this.params.node.setDataValue(skuFieldName, skuValue);
-          if (this.params.node.data) this.params.node.data[skuFieldName] = skuValue;
         }
       });
     }
@@ -958,9 +902,6 @@ export class AutocompleteCellEditorComponent
           if (partData[fieldName] !== undefined && partData[fieldName] !== null) {
             if (oldData[fieldName] !== partData[fieldName]) {
               this.params.node.setDataValue(fieldName, partData[fieldName]);
-              if (this.params.node.data) {
-                this.params.node.data[fieldName] = partData[fieldName];
-              }
             }
           }
         });
@@ -979,9 +920,6 @@ export class AutocompleteCellEditorComponent
 
           if (oldData[skuFieldName] !== newSkuValue) {
             this.params.node.setDataValue(skuFieldName, newSkuValue);
-            if (this.params.node.data) {
-              this.params.node.data[skuFieldName] = newSkuValue;
-            }
           }
         });
 
@@ -1011,18 +949,21 @@ export class AutocompleteCellEditorComponent
       if (!searchValue) {
         this.filteredOptions = this.options.slice(0, 8);
       } else {
-        const startsWithMatches = this.options
-          .filter((option) => String(option).toLowerCase().startsWith(searchValue))
-          .slice(0, 6);
-
-        const containsMatches = this.options
-          .filter((option) => {
-            const optionLower = String(option).toLowerCase();
-            return optionLower.includes(searchValue) && !optionLower.startsWith(searchValue);
-          })
-          .slice(0, 4);
-
-        this.filteredOptions = [...startsWithMatches, ...containsMatches];
+        const startsWith: string[] = [];
+        const contains: string[] = [];
+        const maxStartsWith = 6;
+        const maxContains = 4;
+        for (let i = 0; i < this.options.length; i++) {
+          const option = this.options[i];
+          const optionLower = String(option).toLowerCase();
+          if (optionLower.startsWith(searchValue)) {
+            if (startsWith.length < maxStartsWith) startsWith.push(option);
+          } else if (optionLower.includes(searchValue)) {
+            if (contains.length < maxContains) contains.push(option);
+          }
+          if (startsWith.length >= maxStartsWith && contains.length >= maxContains) break;
+        }
+        this.filteredOptions = [...startsWith, ...contains];
       }
     }
 
@@ -1087,32 +1028,67 @@ export class AutocompleteCellEditorComponent
       const currentValue = this.params.node.data ? this.params.node.data[field] : undefined;
       if (currentValue !== partValue) {
         this.params.node.setDataValue(field, partValue);
-        if (this.params.node.data) {
-          this.params.node.data[field] = partValue;
-        }
         updatedColumns.push(field);
       }
     });
 
     if (updatedColumns.length > 0 && this.params.api) {
-      setTimeout(() => {
-        const existingColumns = updatedColumns.filter(
-          (field) => !!this.params.api.getColumn(field)
-        );
-        if (existingColumns.length > 0) {
-          this.params.api.refreshCells({
-            rowNodes: [this.params.node],
-            columns: existingColumns,
-            force: true,
-          });
-        }
-      }, 50);
+      const existingColumns = updatedColumns.filter(
+        (field) => !!this.params.api.getColumn(field)
+      );
+      if (existingColumns.length > 0) {
+        this.params.api.refreshCells({
+          rowNodes: [this.params.node],
+          columns: existingColumns,
+          force: true,
+        });
+      }
     }
   }
 
   private closeDropdown(): void {
     this.showDropdown = false;
     this.selectedIndex = -1;
+  }
+
+  /** Single rAF throttle for dropdown positioning to avoid layout thrash from focus/click/init. */
+  private schedulePositionDropdown(): void {
+    if (this._positionScheduled || !this.showDropdown) return;
+    this._positionScheduled = true;
+    requestAnimationFrame(() => {
+      this._positionScheduled = false;
+      if (this.showDropdown) {
+        this.positionDropdown();
+      }
+    });
+  }
+
+  /** Shared logic for focus, click, and init: refresh options and schedule positioning. */
+  private handleInputOpen(): void {
+    this.refreshOptionsFromNodeData();
+
+    const usesApiSearch =
+      this.isMaterialSearch ||
+      this.isPartNumberSearch ||
+      this.isBomFeatureSearch ||
+      this.isCountrySearch ||
+      this.isServiceSearch;
+
+    if (usesApiSearch) {
+      if (this.dataService && this.value && this.value.length >= 1) {
+        this.searchSubject.next(this.value);
+      }
+    } else {
+      if (this.options.length > 0) {
+        this.filteredOptions = this.options.slice(0, 50);
+        this.showDropdown = this.filteredOptions.length > 0;
+        this.setInitialSelectedIndex();
+      }
+    }
+
+    if (this.showDropdown) {
+      this.schedulePositionDropdown();
+    }
   }
 
   private positionDropdown(): void {
@@ -1197,20 +1173,10 @@ export class AutocompleteCellEditorComponent
     const availablePartNumbers = partNumber ? [partNumber] : [];
 
     this.params.node.setDataValue('_availableColors', availableColors);
-    if (this.params.node.data) {
-      this.params.node.data._availableColors = availableColors;
-    }
-
     this.params.node.setDataValue('_availableSuppliers', availableSuppliers);
-    if (this.params.node.data) {
-      this.params.node.data._availableSuppliers = availableSuppliers;
-    }
 
     if (availablePartNumbers.length > 0) {
       this.params.node.setDataValue('_availablePartNumbers', availablePartNumbers);
-      if (this.params.node.data) {
-        this.params.node.data._availablePartNumbers = availablePartNumbers;
-      }
     }
 
     const currentData = this.params.node.data || {};
@@ -1219,21 +1185,11 @@ export class AutocompleteCellEditorComponent
 
     if (colorName && existingColor !== colorName) {
       this.params.node.setDataValue(FIELD_COLOR, colorName);
-      if (this.params.node.data) {
-        this.params.node.data[FIELD_COLOR] = colorName;
-      }
-      // Also set colorDescription field (actual column field name)
       this.params.node.setDataValue(FIELD_COLOR_DESCRIPTION, colorName);
-      if (this.params.node.data) {
-        this.params.node.data[FIELD_COLOR_DESCRIPTION] = colorName;
-      }
     }
 
     if (supplierName && existingSupplier !== supplierName) {
       this.params.node.setDataValue(FIELD_SUPPLIER, supplierName);
-      if (this.params.node.data) {
-        this.params.node.data[FIELD_SUPPLIER] = supplierName;
-      }
     }
 
     const fieldName = this.getFieldName();
@@ -1247,18 +1203,12 @@ export class AutocompleteCellEditorComponent
       '';
     if (partNumber && existingPartNumber !== partNumber) {
       this.params.node.setDataValue(partFieldName, partNumber);
-      if (this.params.node.data) {
-        this.params.node.data[partFieldName] = partNumber;
-      }
-
       if (this.params.api) {
-        setTimeout(() => {
-          this.params.api.refreshCells({
-            rowNodes: [this.params.node],
-            columns: [partFieldName],
-            force: true,
-          });
-        }, 50);
+        this.params.api.refreshCells({
+          rowNodes: [this.params.node],
+          columns: [partFieldName],
+          force: true,
+        });
       }
     }
   }
@@ -1273,16 +1223,10 @@ export class AutocompleteCellEditorComponent
 
     if (initialColorValue) {
       this.params.node.setDataValue('_availableColors', [initialColorValue]);
-      if (this.params.node.data) {
-        this.params.node.data._availableColors = [initialColorValue];
-      }
     }
 
     if (initialSupplierValue) {
       this.params.node.setDataValue('_availableSuppliers', [initialSupplierValue]);
-      if (this.params.node.data) {
-        this.params.node.data._availableSuppliers = [initialSupplierValue];
-      }
     }
 
     const materialsSub = this.dataService.searchMaterials(partNumber, 1, 1000, true).subscribe({
@@ -1312,14 +1256,7 @@ export class AutocompleteCellEditorComponent
           const availableSuppliers = Array.from(uniqueSuppliers).sort();
 
           this.params.node.setDataValue('_availableColors', availableColors);
-          if (this.params.node.data) {
-            this.params.node.data._availableColors = availableColors;
-          }
-
           this.params.node.setDataValue('_availableSuppliers', availableSuppliers);
-          if (this.params.node.data) {
-            this.params.node.data._availableSuppliers = availableSuppliers;
-          }
 
           const currentData = this.params.node.data || {};
           const existingColor = currentData[FIELD_COLOR] || currentData[FIELD_COLOR_DESCRIPTION] || '';
@@ -1328,54 +1265,31 @@ export class AutocompleteCellEditorComponent
           if (availableColors.length === 1 && initialColorValue) {
             if (existingColor !== initialColorValue) {
               this.params.node.setDataValue(FIELD_COLOR, initialColorValue);
-              if (this.params.node.data) {
-                this.params.node.data[FIELD_COLOR] = initialColorValue;
-              }
-              // Also set colorDescription field (actual column field name)
               this.params.node.setDataValue(FIELD_COLOR_DESCRIPTION, initialColorValue);
-              if (this.params.node.data) {
-                this.params.node.data[FIELD_COLOR_DESCRIPTION] = initialColorValue;
-              }
             }
           } else if (availableColors.length > 1) {
             if (existingColor && !availableColors.includes(existingColor)) {
               this.params.node.setDataValue(FIELD_COLOR, '');
-              if (this.params.node.data) {
-                this.params.node.data[FIELD_COLOR] = '';
-              }
-              // Also clear colorDescription field
               this.params.node.setDataValue(FIELD_COLOR_DESCRIPTION, '');
-              if (this.params.node.data) {
-                this.params.node.data[FIELD_COLOR_DESCRIPTION] = '';
-              }
             }
           }
 
           if (availableSuppliers.length === 1 && initialSupplierValue) {
             if (existingSupplier !== initialSupplierValue) {
               this.params.node.setDataValue(FIELD_SUPPLIER, initialSupplierValue);
-              if (this.params.node.data) {
-                this.params.node.data[FIELD_SUPPLIER] = initialSupplierValue;
-              }
             }
           } else if (availableSuppliers.length > 1) {
             if (existingSupplier && !availableSuppliers.includes(existingSupplier)) {
               this.params.node.setDataValue(FIELD_SUPPLIER, '');
-              if (this.params.node.data) {
-                this.params.node.data[FIELD_SUPPLIER] = '';
-              }
             }
           }
 
-          // Refresh color and supplier columns after populating
           if (this.params.api) {
-            setTimeout(() => {
-              this.params.api.refreshCells({
-                rowNodes: [this.params.node],
-                columns: [...COLUMNS_REFRESH_AFTER_PART],
-                force: true,
-              });
-            }, 50);
+            this.params.api.refreshCells({
+              rowNodes: [this.params.node],
+              columns: [...COLUMNS_REFRESH_AFTER_PART],
+              force: true,
+            });
           }
         }
       },

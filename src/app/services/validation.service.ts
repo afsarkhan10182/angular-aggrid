@@ -20,6 +20,7 @@ import {
   MSG_DUPLICATE_FEATURE_AND_PART,
   MSG_DUPLICATE_PART_NUMBER_SKU,
   MSG_DUPLICATE_PART_NUMBER_SKU_MULTIPLE,
+  MSG_DUPLICATE_SECTION_PART_SKU,
   MSG_DUPLICATE_FEATURE_SKU_SECTION_ONE,
   MSG_DUPLICATE_FEATURE_FOR_SKU,
   MSG_DUPLICATE_FEATURE_AND_PART_FOR_SKU,
@@ -509,8 +510,9 @@ export class ValidationService {
         const ptcbomPartMarkUp = bomLink.ptcbomPartMarkUp || '';
         const isEmptyPartNumber = !partNumber || partNumber === '';
 
-        // Skip if missing required fields (section and feature are always required)
-        if (!section || !bomLinkFeature) continue;
+        // SBOM: feature is not used in UI; allow empty feature. MBOM: require section and feature.
+        if (!section) continue;
+        if (isMbom && (!bomLinkFeature || bomLinkFeature === '')) continue;
 
         if (isMbom && ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM && isEmptyPartNumber) {
           continue;
@@ -643,11 +645,11 @@ export class ValidationService {
         const bomLinkFeature = String(row.bomLinkFeature || '').trim();
         const partNumber = String(row?.[FIELD_PART_NUMBER] || '').trim();
 
-        if (!section || !bomLinkFeature) {
+        // SBOM-only: use Section+Part+SKU (feature not in UI). MBOM/others: require section, feature, part.
+        if (!section || !partNumber || partNumber === '') {
           continue;
         }
-
-        if (!partNumber || partNumber === '') {
+        if (!isSbom && !bomLinkFeature) {
           continue;
         }
 
@@ -657,7 +659,9 @@ export class ValidationService {
         }
 
         for (const skuId of rowSkus.skuIds) {
-          const combinationKey = `${section}|${bomLinkFeature}|${skuId}`;
+          const combinationKey = isSbom
+            ? `${section}|${partNumber}|${skuId}`
+            : `${section}|${bomLinkFeature}|${skuId}`;
 
           if (!newRowDetails.has(combinationKey)) {
             newRowDetails.set(combinationKey, []);
@@ -668,8 +672,8 @@ export class ValidationService {
 
       for (const [combinationKey, rows] of newRowDetails.entries()) {
         if (rows.length > 1) {
-          const [section, feature, skuId] = combinationKey.split('|');
-
+          const parts = combinationKey.split('|');
+          const section = parts[0];
           const sectionDetails = apiData?.sectionDetails || {};
           let sectionDisplayName = section;
 
@@ -697,13 +701,17 @@ export class ValidationService {
               row: duplicateRow,
               missingFields: [],
               rowId: duplicateRow.newRowId || duplicateRow.id || 0,
-              duplicateType: DUPLICATE_TYPE_DUPLICATE_FEATURE,
+              duplicateType: DUPLICATE_TYPE_DUPLICATE_PART,
             });
           }
 
+          const message = isSbom
+            ? MSG_DUPLICATE_SECTION_PART_SKU
+            : `Duplicate feature "${parts[1]}" for the same SKU "${parts[2]}" and section "${sectionDisplayName}". Multiple new rows cannot have the same feature for the same SKU in the same section.`;
+
           return {
             isValid: false,
-            message: `Duplicate feature "${feature}" for the same SKU "${skuId}" and section "${sectionDisplayName}". Multiple new rows cannot have the same feature for the same SKU in the same section.`,
+            message,
             invalidRows: invalidRows,
           };
         }
@@ -1082,7 +1090,7 @@ export class ValidationService {
       } else if (firstDuplicate.duplicateType === DUPLICATE_TYPE_DUPLICATE_FEATURE) {
         finalErrorMessage = MSG_DUPLICATE_FEATURE_SKU_SECTION;
       } else if (firstDuplicate.duplicateType === DUPLICATE_TYPE_DUPLICATE_PART) {
-        finalErrorMessage = MSG_DUPLICATE_FEATURE_SKU_SECTION;
+        finalErrorMessage = MSG_DUPLICATE_SECTION_PART_SKU;
       } else if (firstDuplicate.duplicateType === DUPLICATE_TYPE_NOT_ENUM_MBOM_001) {
         finalErrorMessage = MSG_DUPLICATE_FEATURE_FOR_SKU;
       } else if (firstDuplicate.duplicateType === DUPLICATE_TYPE_ENUM_MBOM_001) {
