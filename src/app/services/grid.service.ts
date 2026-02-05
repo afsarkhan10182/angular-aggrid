@@ -285,6 +285,55 @@ export class GridService {
     return this.renderDefaultCell(data, config);
   }
 
+  private buildHierHeader(options: {
+    classes?: string;
+    style?: string;
+    title?: string;
+    onClick?: string;
+    content: string;
+  }): string {
+    const classes = options.classes ? ` ${options.classes}` : '';
+    const style = options.style ? ` style="${options.style}"` : '';
+    const title = options.title ? ` title="${options.title}"` : '';
+    const onClick = options.onClick ? ` onclick="${options.onClick}"` : '';
+    return `
+      <div class="hier-header${classes}"${style}${title}${onClick}>
+        ${options.content}
+      </div>
+    `;
+  }
+
+  private buildActionIcons(options: {
+    showAdd?: boolean;
+    addPartId?: string;
+    showDelete?: boolean;
+    deletePartId?: string;
+    deleteNewRowId?: number;
+    showInfo?: boolean;
+    infoLabel?: string;
+  }): string {
+    const icons: string[] = [];
+
+    if (options.showInfo) {
+      const aria = options.infoLabel ? ` aria-label="${options.infoLabel}"` : '';
+      icons.push(`<span class="validation-error-icon"${aria}>ⓘ</span>`);
+    }
+    if (options.showDelete) {
+      const attrs = options.deleteNewRowId
+        ? ` data-new-row-id="${options.deleteNewRowId}"`
+        : options.deletePartId
+          ? ` data-part-id="${options.deletePartId}"`
+          : '';
+      icons.push(`<span class="delete-row-btn"${attrs} title="${TITLE_DELETE_ROW}">−</span>`);
+    }
+    if (options.showAdd) {
+      const attrs = options.addPartId ? ` data-part-id="${options.addPartId}"` : '';
+      icons.push(`<span class="add-row-btn"${attrs} title="${TITLE_ADD_ROW}">+</span>`);
+    }
+
+    return icons.join('');
+  }
+
   private renderGroupHeader(data: any, config: CellRenderingConfig): string {
     const arrowIcon = data.isExpanded ? '▼' : '▶';
     const groupValue = data.groupValue !== null && data.groupValue !== undefined ? String(data.groupValue) : '(Empty)';
@@ -295,57 +344,59 @@ export class GridService {
     const hoverBg = this.getGroupHoverBackgroundColor(groupLevel);
     const indentPx = groupLevel * 16;
 
-    return `
-      <div
-        class="hier-header hier-clickable"
-        style="--bg:${bgColor};--bg-hover:${hoverBg};--border:${borderColor};--arrow-color:${borderColor};--indent:${indentPx}px;"
-        onclick="globalThis.toggleGroup('${data.groupKey}')"
-      >
+    return this.buildHierHeader({
+      classes: 'hier-clickable',
+      style: `--bg:${bgColor};--bg-hover:${hoverBg};--border:${borderColor};--arrow-color:${borderColor};--indent:${indentPx}px;`,
+      onClick: `globalThis.toggleGroup('${data.groupKey}')`,
+      content: `
         <span class="hier-arrow">${arrowIcon}</span>
         <span class="hier-title">
           <span class="hier-indent"></span>${config.utilService.escapeHtml(data.groupHeaderName)}: ${config.utilService.escapeHtml(groupValue)}
         </span>
         <span class="hier-count">(${groupCount})</span>
-      </div>
-    `;
+      `,
+    });
   }
 
   private renderSectionHeader(data: any, config: CellRenderingConfig): string {
     const arrowIcon = data.isExpanded ? '▼' : '▶';
     const displayName = data.sectionDisplayName;
     const internalName = data.section;
-    return `
-      <div
-        class="hier-header hier-clickable section-header"
-        title="${config.utilService.escapeHtml(displayName)}"
-        onclick="globalThis.toggleSection('${internalName}')"
-      >
+    const title = config.utilService.escapeHtml(displayName);
+    return this.buildHierHeader({
+      classes: 'hier-clickable section-header',
+      title,
+      onClick: `globalThis.toggleSection('${internalName}')`,
+      content: `
         <span class="hier-arrow">${arrowIcon}</span>
-        <span class="hier-title">${config.utilService.escapeHtml(displayName)}</span>
-      </div>
-    `;
+        <span class="hier-title">${title}</span>
+      `,
+    });
   }
 
   private renderMaterialHeader(data: any, config: CellRenderingConfig): string {
     const materialIdentifier = data.materialKey || '';
     const materialIndex = data.materialIndex ?? '';
     const linkIcon = data[FIELD_HAS_LINKED_BOM] ? '🔗' : '';
-    const textColor = config.shouldHighlightRow(data) ? 'color: #ff0000;' : '';
+    const titleClass = config.shouldHighlightRow(data) ? 'hier-title-highlight' : '';
+    const titleText = config.utilService.escapeHtml(String(data.material || data.part || data[FIELD_PART_NUMBER] || ''));
 
-    return `
-      <div class="hier-header hier-clickable material-header" onclick="globalThis.toggleMaterial('${data.section}', '${materialIdentifier}', ${materialIndex})">
+    return this.buildHierHeader({
+      classes: 'hier-clickable material-header',
+      onClick: `globalThis.toggleMaterial('${data.section}', '${materialIdentifier}', ${materialIndex})`,
+      content: `
         ${linkIcon ? `<span class="material-link-icon">${linkIcon}</span>` : ''}
-        <span class="hier-title" style="${textColor}">${config.utilService.escapeHtml(String(data.material || data.part || data[FIELD_PART_NUMBER] || ''))}</span>
-      </div>
-    `;
+        <span class="hier-title ${titleClass}">${titleText}</span>
+      `,
+    });
   }
 
   private renderParentRow(data: any, config: CellRenderingConfig): string {
-    const textColor = config.shouldHighlightRow(data) ? 'color: #ff0000;' : '';
+    const titleClass = config.shouldHighlightRow(data) ? 'hier-title-highlight' : '';
 
     return `
       <div class="hier-header parent-row-header">
-        <span class="hier-title" style="${textColor}"><span class="hier-indent" style="--indent:16px;"></span>${config.utilService.escapeHtml(String(data.part || ''))}</span>
+        <span class="hier-title ${titleClass}"><span class="hier-indent hier-indent-16"></span>${config.utilService.escapeHtml(String(data.part || ''))}</span>
       </div>
     `;
   }
@@ -353,12 +404,12 @@ export class GridService {
   private renderDirectRow(data: any, config: CellRenderingConfig): string {
     const linkIcon = data[FIELD_HAS_LINKED_BOM] ? '🔗' : '';
     const featureValue = data.bomLinkFeature || '';
-    const textColor = config.shouldHighlightRow(data) ? 'color: #ff0000;' : '';
+    const textClass = config.shouldHighlightRow(data) ? 'direct-text-highlight' : '';
 
     return `
       <div class="hier-row direct-row">
         ${linkIcon ? `<span class="direct-link-icon">${linkIcon}</span>` : ''}
-        <span class="direct-text" style="${textColor}">${config.utilService.escapeHtml(featureValue)}</span>
+        <span class="direct-text ${textClass}">${config.utilService.escapeHtml(featureValue)}</span>
       </div>
     `;
   }
@@ -384,12 +435,11 @@ export class GridService {
     const borderColor = this.getGroupBorderColor(groupLevel);
     const hoverBg = this.getGroupHoverBackgroundColor(groupLevel);
 
-    return `
-      <div
-        class="hier-header hier-clickable"
-        style="height:100%;padding:0 8px;--bg:${bgColor};--bg-hover:${hoverBg};--border:${borderColor};--arrow-color:${borderColor};--indent:${indentPixels}px;"
-          onclick="globalThis.toggleGroup('${data.groupKey}')"
-      >
+    return this.buildHierHeader({
+      classes: 'hier-clickable hier-header-fullwidth',
+      style: `--bg:${bgColor};--bg-hover:${hoverBg};--border:${borderColor};--arrow-color:${borderColor};--indent:${indentPixels}px;`,
+      onClick: `globalThis.toggleGroup('${data.groupKey}')`,
+      content: `
         <span class="hier-arrow">${arrowIcon}</span>
         <span class="hier-title">
           <span class="hier-indent"></span>${config.utilService.escapeHtml(
@@ -397,13 +447,13 @@ export class GridService {
           )}: ${config.utilService.escapeHtml(groupValue)}
         </span>
         <span class="hier-count">(${groupCount})</span>
-      </div>
-    `;
+      `,
+    });
   }
 
   renderNewRowSkuCell(params: any, config: CellRenderingConfig): string {
     if (params.colDef?.isDisabled) {
-      return '<div class="sku-cell-disabled-placeholder" style="color: #9ca3af; font-style: italic; text-align: center; padding: 4px;">Not Available</div>';
+      return '<div class="sku-cell-disabled-placeholder">Not Available</div>';
     }
 
     const rowData = params.data || {};
@@ -556,28 +606,30 @@ export class GridService {
             skuErrors ? `${MSG_SKU_ERROR}: ${skuErrors}` : null,
           ].filter(Boolean);
           const escaped = (tooltipParts.join('\n') || TITLE_REQUIRED_FIELD_ERROR).replace(/"/g, '&quot;');
-          return `<span class="validation-error-icon" style="width:40px; display:inline-flex; align-items:center; justify-content:center; color:#991b1b; position:absolute; left:-18px; top:50%; transform: translateY(-50%); cursor: pointer; font-size: 12px; line-height: 12px; height: 12px" title="${escaped}" aria-label="${TITLE_REQUIRED_FIELD}">ⓘ</span>`;
+          return `<span class="validation-error-icon" title="${escaped}" aria-label="${TITLE_REQUIRED_FIELD}">ⓘ</span>`;
         };
 
         if (row.validation && !row.validation.isValid) {
           const icon = renderValidationIcon();
           if (row.isNewRow) {
-            return `${icon}<span class="delete-row-btn" data-new-row-id="${row.newRowId}" title="${TITLE_DELETE_ROW}">−</span>`;
+            return `${icon}${this.buildActionIcons({ showDelete: true, deleteNewRowId: row.newRowId })}`;
           }
           if (
             (params.data.isMaterialHeader && params.data[FIELD_HAS_LINKED_BOM]) ||
             params.data.isDirectRow ||
             (params.data.isSectionHeader && !hasVisibleChildren(params))
           ) {
-            const addBtn = isAddRowEnabled() ? `<span class="add-row-btn" data-part-id="${partId || ''}" title="${TITLE_ADD_ROW}">+</span>` : '';
-            return `${icon}${addBtn}`;
+            return `${icon}${this.buildActionIcons({
+              showAdd: isAddRowEnabled(),
+              addPartId: partId || '',
+            })}`;
           }
           return icon;
         }
 
         if (params.data.isNewRow) {
           const newRowId = params.data.newRowId;
-          return `<span class="delete-row-btn" data-new-row-id="${newRowId}" title="${TITLE_DELETE_ROW}">−</span>`;
+          return this.buildActionIcons({ showDelete: true, deleteNewRowId: newRowId });
         }
 
         if (
@@ -586,7 +638,7 @@ export class GridService {
           (params.data.isSectionHeader && !hasVisibleChildren(params))
         ) {
           if (isAddRowEnabled()) {
-            return `<span class="add-row-btn" data-part-id="${partId}" title="${TITLE_ADD_ROW}">+</span>`;
+            return this.buildActionIcons({ showAdd: true, addPartId: partId });
           }
           return '';
         }
@@ -1013,8 +1065,8 @@ export class GridService {
     const skuField = params.colDef.field;
     const isDisconnected =
       typeof config.isSkuDisconnected === 'function' && config.isSkuDisconnected(data, skuField);
-    const textColor = config.shouldHighlightRow(data) ? 'color: #ff0000;' : '';
-    const strikeStyle = isDisconnected ? 'text-decoration: line-through; opacity: 0.8;' : '';
+    const isHighlighted = config.shouldHighlightRow(data);
+    const isStruck = isDisconnected;
     const valueStr = String(value);
     const htmlValue = config.utilService.escapeHtml(valueStr).replaceAll('\n', '<br>');
     const baseCanDisconnect = !config.isSkuFilterReadOnly();
@@ -1024,23 +1076,23 @@ export class GridService {
       (typeof config.canDisconnectForRow !== 'function' || config.canDisconnectForRow(data));
 
     if (data.isMaterialHeader || data.isDirectRow) {
-      return this.renderSkuCellWithDelete(htmlValue, textColor, strikeStyle, skuField, canDisconnect, isDisconnected);
+      return this.renderSkuCellWithDelete(htmlValue, isHighlighted, isStruck, skuField, canDisconnect, isDisconnected);
     }
 
-    return this.renderSkuCellWithDelete(htmlValue, textColor, strikeStyle, skuField, canDisconnect, isDisconnected);
+    return this.renderSkuCellWithDelete(htmlValue, isHighlighted, isStruck, skuField, canDisconnect, isDisconnected);
   }
 
   private renderNewRowSkuCellInternal(params: any, config: any): string {
     if (params.colDef?.isDisabled) {
-      return '<div class="sku-cell-disabled-placeholder" style="color: #9ca3af; font-style: italic; text-align: center; padding: 4px;">Not Available</div>';
+      return '<div class="sku-cell-disabled-placeholder">Not Available</div>';
     }
     return config.renderNewRowSkuCell(params);
   }
 
   private renderSkuCellWithDelete(
     htmlValue: string,
-    textColor: string,
-    strikeStyle: string,
+    isHighlighted: boolean,
+    isStruck: boolean,
     skuField: string,
     canDisconnect: boolean,
     isDisconnected: boolean
@@ -1052,8 +1104,16 @@ export class GridService {
       actionBtn = `<button type="button" class="sku-reconnect-btn" data-action="reconnect-sku" data-sku-field="${this.utilService.escapeHtml(skuField)}" title="Reconnect">&#8617;</button>`;
     }
 
-    return `<div style="white-space: pre-line; line-height: 1.5; padding: 4px 0; display: flex; align-items: center;">
-      <span style="${textColor}${strikeStyle}flex: 1;">${htmlValue}</span>
+    const textClasses = [
+      'sku-cell-text',
+      isHighlighted ? 'sku-cell-text-highlight' : '',
+      isStruck ? 'sku-cell-text-disconnected' : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+
+    return `<div class="sku-cell-display">
+      <span class="${textClasses}">${htmlValue}</span>
       ${actionBtn}
     </div>`;
   }

@@ -2704,3 +2704,27 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
   background: #fee2e2;
   color: #ef4444;
 }
+
+/* ========================================
+   SKU CELL DISPLAY (EXISTING ROWS)
+   ======================================== */
+.sku-cell-display {
+  white-space: pre-line;
+  line-height: 1.5;
+  padding: 4px 0;
+  display: flex;
+  align-items: center;
+}
+
+.sku-cell-text {
+  flex: 1;
+}
+
+.sku-cell-text-highlight {
+  color: #ff0000;
+}
+
+.sku-cell-text-disconnected {
+  text-decoration: line-through;
+  opacity: 0.8;
+}

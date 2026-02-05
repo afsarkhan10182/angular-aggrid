@@ -65,6 +65,14 @@
   min-width: 0;
 }
 
+:host ::ng-deep .hier-title-highlight {
+  color: #ff0000;
+}
+
+:host ::ng-deep .direct-text-highlight {
+  color: #ff0000;
+}
+
 :host ::ng-deep .hier-count {
   margin-left: 8px;
   font-size: 11px;
@@ -76,6 +84,15 @@
 :host ::ng-deep .hier-indent {
   display: inline-block;
   width: var(--indent, 0px);
+}
+
+:host ::ng-deep .hier-indent-16 {
+  --indent: 16px;
+}
+
+:host ::ng-deep .hier-header-fullwidth {
+  height: 100%;
+  padding: 0 8px;
 }
 
 :host ::ng-deep .section-header {
@@ -142,6 +159,22 @@
   flex: 0 0 auto;
   cursor: pointer;
   user-select: none;
+}
+
+:host ::ng-deep .validation-error-icon {
+  width: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #991b1b;
+  position: absolute;
+  left: -18px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 12px;
+  height: 12px;
 }
 
 /* SKU disconnect button in rendered cell HTML */

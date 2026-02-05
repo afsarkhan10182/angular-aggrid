@@ -96,7 +96,7 @@ import type {
   styleUrls: ['./app.css'],
 })
 export class App implements OnInit, OnDestroy, AfterViewInit {
-  private gridApi!: GridApi;
+  public gridApi!: GridApi;
   private subscriptions: Subscription[] = [];
   public showColumnVisibilityPanel = false;
   public showGroupByPanel = false;
