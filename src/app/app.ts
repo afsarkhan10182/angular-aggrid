@@ -1126,6 +1126,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       isMaterialMbomMode: () => this.isMaterialMbomMode(),
       canDisconnectForRow: (data) => this.canDisconnectForRow(data),
       isSkuDisconnected: (row, skuField) => this.isSkuDisconnected(row, skuField),
+      isSkuEditableForDisconnect: (skuField) => this.isSkuEditableForDisconnect(skuField),
       getDataCellStyle: (params) => this.getDataCellStyle(params),
       getFeatureValue: (data) => this.utilService.getFeatureValue(data),
       renderHierarchicalCell: (params) => this.renderHierarchicalCell(params),
@@ -3488,6 +3489,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   disconnectPartFromSku(rowData: any, skuField: string, event?: any): void {
     if (!rowData || !skuField || !this.gridApi) return;
     if (this.isSkuFilterReadOnly() || !this.canDisconnectForRow(rowData)) return;
+    if (!this.isSkuEditableForDisconnect(skuField)) return;
 
     if (event) {
       event.preventDefault();
@@ -3679,6 +3681,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     return this.disconnectedSkuKeys.has(this.getDisconnectedKey(row, skuField));
   }
 
+  /** True if SKU (from skuInfo) has isEditable === true; only then show disconnect cross and allow disconnect action. */
+  isSkuEditableForDisconnect(skuField: string): boolean {
+    const skuInfo = this.getFilteredSkuInfo();
+    const sku = skuInfo.find((s: any) => `sku${s.skuId}` === skuField);
+    return sku?.isEditable === true;
+  }
+
   /** For tooltip: list of SKU names/labels that have values in this row. */
   getConnectedSkuLabelsForRow(row: any): string[] {
     if (!row) return [];
@@ -3808,7 +3817,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
       let hasChanges = false;
       skuFields.forEach((skuField) => {
-        if (rowData[skuField] != null && String(rowData[skuField]).trim() !== '') {
+        if (
+          this.isSkuEditableForDisconnect(skuField) &&
+          rowData[skuField] != null &&
+          String(rowData[skuField]).trim() !== ''
+        ) {
           this.disconnectedSkuKeys.add(this.getDisconnectedKey(rowData, skuField));
           hasChanges = true;
         }

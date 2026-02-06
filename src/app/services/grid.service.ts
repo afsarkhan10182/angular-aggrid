@@ -53,6 +53,8 @@ export interface ColumnDefinitionConfig {
   canDisconnectForRow?: (data: any) => boolean;
   /** True when this row+skuField is marked disconnected (show strikethrough). */
   isSkuDisconnected?: (row: any, skuField: string) => boolean;
+  /** True when SKU (from skuInfo) has isEditable === true; only then show disconnect cross. */
+  isSkuEditableForDisconnect?: (skuField: string) => boolean;
   getDataCellStyle: (params: any) => any;
   getFeatureValue: (data: any) => any;
   renderHierarchicalCell: (params: any) => string;
@@ -1070,9 +1072,12 @@ export class GridService {
     const valueStr = String(value);
     const htmlValue = config.utilService.escapeHtml(valueStr).replaceAll('\n', '<br>');
     const baseCanDisconnect = !config.isSkuFilterReadOnly();
+    const skuEditableForDisconnect =
+      typeof config.isSkuEditableForDisconnect !== 'function' || config.isSkuEditableForDisconnect(skuField);
     const canDisconnect =
       !isDisconnected &&
       baseCanDisconnect &&
+      skuEditableForDisconnect &&
       (typeof config.canDisconnectForRow !== 'function' || config.canDisconnectForRow(data));
 
     if (data.isMaterialHeader || data.isDirectRow) {
