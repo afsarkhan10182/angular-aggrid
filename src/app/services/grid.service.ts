@@ -336,6 +336,10 @@ export class GridService {
     return icons.join('');
   }
 
+  private wrapActionsContent(html: string): string {
+    return html ? `<div class="actions-cell-content">${html}</div>` : '';
+  }
+
   private renderGroupHeader(data: any, config: CellRenderingConfig): string {
     const arrowIcon = data.isExpanded ? '▼' : '▶';
     const groupValue = data.groupValue !== null && data.groupValue !== undefined ? String(data.groupValue) : '(Empty)';
@@ -571,14 +575,18 @@ export class GridService {
     getGroupCount: (data: any) => number,
     hasVisibleChildren: (params: any) => boolean,
     getBomType: () => string,
+    checkboxSelection?: (params: any) => boolean,
   ): ExtendedColDef {
+    const hasCheckbox = (params: any) =>
+      typeof checkboxSelection === 'function' ? checkboxSelection(params) : false;
+
     return {
       headerName: '',
       field: COL_ACTIONS,
       colId: COL_ACTIONS,
-      width: 40,
-      minWidth: 40,
-      maxWidth: 40,
+      width: 60,
+      minWidth: 60,
+      maxWidth: 76,
       pinned: 'left',
       resizable: false,
       sortable: false,
@@ -586,6 +594,10 @@ export class GridService {
       suppressMovable: true,
       context: {
         excludeFromExport: true,
+      },
+      cellClassRules: {
+        'actions-has-error': (params: any) => !!params.data?.validation && !params.data.validation.isValid,
+        'actions-no-checkbox': (params: any) => !hasCheckbox(params),
       },
       cellRenderer: (params: any) => {
         if (params.data.isGroupHeader) {
@@ -611,41 +623,36 @@ export class GridService {
           return `<span class="validation-error-icon" title="${escaped}" aria-label="${TITLE_REQUIRED_FIELD}">ⓘ</span>`;
         };
 
+        let iconsContent = '';
         if (row.validation && !row.validation.isValid) {
           const icon = renderValidationIcon();
           if (row.isNewRow) {
-            return `${icon}${this.buildActionIcons({ showDelete: true, deleteNewRowId: row.newRowId })}`;
-          }
-          if (
+            iconsContent = `${icon}${this.buildActionIcons({ showDelete: true, deleteNewRowId: row.newRowId })}`;
+          } else if (
             (params.data.isMaterialHeader && params.data[FIELD_HAS_LINKED_BOM]) ||
             params.data.isDirectRow ||
             (params.data.isSectionHeader && !hasVisibleChildren(params))
           ) {
-            return `${icon}${this.buildActionIcons({
+            iconsContent = `${icon}${this.buildActionIcons({
               showAdd: isAddRowEnabled(),
               addPartId: partId || '',
             })}`;
+          } else {
+            iconsContent = icon;
           }
-          return icon;
-        }
-
-        if (params.data.isNewRow) {
-          const newRowId = params.data.newRowId;
-          return this.buildActionIcons({ showDelete: true, deleteNewRowId: newRowId });
-        }
-
-        if (
+        } else if (params.data.isNewRow) {
+          iconsContent = this.buildActionIcons({ showDelete: true, deleteNewRowId: params.data.newRowId });
+        } else if (
           (params.data.isMaterialHeader && params.data[FIELD_HAS_LINKED_BOM]) ||
           params.data.isDirectRow ||
           (params.data.isSectionHeader && !hasVisibleChildren(params))
         ) {
           if (isAddRowEnabled()) {
-            return this.buildActionIcons({ showAdd: true, addPartId: partId });
+            iconsContent = this.buildActionIcons({ showAdd: true, addPartId: partId });
           }
-          return '';
         }
 
-        return '';
+        return iconsContent ? this.wrapActionsContent(iconsContent) : '';
       },
       cellStyle: {
         textAlign: 'center',

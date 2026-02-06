@@ -162,19 +162,21 @@
 }
 
 :host ::ng-deep .validation-error-icon {
-  width: 40px;
+  width: 14px;
+  height: 14px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #991b1b;
-  position: absolute;
-  left: -18px;
-  top: 50%;
-  transform: translateY(-50%);
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  color: #dc2626;
   cursor: pointer;
-  font-size: 12px;
-  line-height: 12px;
-  height: 12px;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 600;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 /* SKU disconnect button in rendered cell HTML */
@@ -1223,12 +1225,6 @@
   transition: opacity 0.2s ease;
 }
 
-/* Checkbox column: prevent cropping + keep spacing tight */
-:host ::ng-deep .ag-cell[col-id='checkbox'],
-:host ::ng-deep .ag-header-cell[col-id='checkbox'] {
-  padding-left: 15px !important;
-  padding-right: 15px !important;
-}
 
 .sku-delete-btn-existing:hover {
   opacity: 1;

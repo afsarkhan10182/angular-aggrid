@@ -891,7 +891,8 @@ body {
   word-wrap: break-word !important;
 }
 
-/* Actions column header - distinct styling with visible borders */
+/* ========== Actions column: one column with checkbox | error ⓘ | plus + ========== */
+
 .ag-header-cell[col-id='actions'],
 .ag-theme-alpine .ag-header-cell[col-id='actions'],
 div.ag-header-cell[col-id='actions'] {
@@ -900,13 +901,10 @@ div.ag-header-cell[col-id='actions'] {
   border-left: none !important;
   border-top: none !important;
   border-bottom: 1px solid #d1d5db !important;
-  min-width: 40px !important;
-  max-width: 40px !important;
-  width: 40px !important;
-  padding: 12px 4px !important;
-  font-size: 14px !important;
-  font-weight: 700 !important;
-  color: #374151 !important;
+  min-width: var(--actions-col-width, 60px) !important;
+  max-width: var(--actions-col-width, 60px) !important;
+  width: var(--actions-col-width, 60px) !important;
+  padding: 6px 4px !important;
   box-sizing: border-box !important;
 }
 
@@ -1039,12 +1037,13 @@ div.ag-header-cell[col-id='actions'] {
   text-overflow: ellipsis !important;
 }
 
-/* Actions column cell styling - Improved with visible borders */
+/* Actions column: checkbox + error ⓘ + plus/delete (+/−) in one column */
 .ag-cell[col-id='actions'] {
-  min-width: 40px !important;
-  max-width: 40px !important;
-  padding: 4px !important;
-  /* ✅ VISIBLE BORDERS - Consistent with other cells */
+  min-width: var(--actions-col-width, 60px) !important;
+  max-width: var(--actions-col-width, 60px) !important;
+  width: var(--actions-col-width, 60px) !important;
+  padding: 6px 4px !important;
+  box-sizing: border-box !important;
   border-right: var(--ag-cell-vertical-border-width) var(--ag-row-border-style)
     var(--ag-row-border-color) !important;
   border-bottom: var(--ag-cell-horizontal-border-width) var(--ag-row-border-style)
@@ -1055,6 +1054,143 @@ div.ag-header-cell[col-id='actions'] {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  overflow: visible !important;
+}
+
+/* Actions cell wrapper: fill cell so icons are not clipped (fix 28px/15px constraint) */
+.ag-cell[col-id='actions'] .ag-cell-wrapper,
+.ag-pinned-left-cols-container .ag-cell[col-id='actions'] .ag-cell-wrapper {
+  width: 100% !important;
+  min-width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  overflow: visible !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  --actions-gap: 8px;
+  --actions-pad: 4px;
+  --actions-checkbox-width: 18px;
+  gap: var(--actions-gap);
+  padding-left: var(--actions-pad);
+}
+
+.ag-cell[col-id='actions'] .ag-cell-value,
+.ag-pinned-left-cols-container .ag-cell[col-id='actions'] .ag-cell-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+/* Actions cell: checkbox + ⓘ + +/− in one row */
+.ag-cell[col-id='actions'] .actions-cell-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--actions-gap);
+  flex-wrap: nowrap;
+}
+
+/* Tighter spacing only when error icon is present */
+.ag-cell[col-id='actions'].actions-has-error .ag-cell-wrapper,
+.ag-pinned-left-cols-container .ag-cell[col-id='actions'].actions-has-error .ag-cell-wrapper {
+  --actions-gap: 6px;
+  --actions-pad: 4px;
+}
+
+.ag-cell[col-id='actions'].actions-has-error .actions-cell-content {
+  gap: var(--actions-gap);
+}
+
+.ag-cell[col-id='actions'].actions-has-error .actions-cell-content .validation-error-icon {
+  width: 18px !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  font-size: 15px !important;
+}
+
+/* Reserve checkbox space when checkbox is not rendered */
+.ag-cell[col-id='actions'].actions-no-checkbox .ag-cell-value,
+.ag-pinned-left-cols-container .ag-cell[col-id='actions'].actions-no-checkbox .ag-cell-value {
+  margin-left: 0;
+}
+
+.ag-cell[col-id='actions'].actions-no-checkbox .actions-cell-content,
+.ag-pinned-left-cols-container .ag-cell[col-id='actions'].actions-no-checkbox .actions-cell-content {
+  padding-left: calc(var(--actions-checkbox-width) + var(--actions-gap));
+}
+
+.ag-cell[col-id='actions'] .ag-selection-checkbox,
+.ag-pinned-left-cols-container .ag-cell[col-id='actions'] .ag-selection-checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  cursor: pointer;
+  margin-right: 0;
+  padding: 0;
+}
+
+.ag-cell[col-id='actions'] .ag-selection-checkbox input,
+.ag-pinned-left-cols-container .ag-cell[col-id='actions'] .ag-selection-checkbox input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+.ag-cell[col-id='actions'] .ag-selection-checkbox .ag-icon,
+.ag-pinned-left-cols-container .ag-cell[col-id='actions'] .ag-selection-checkbox .ag-icon {
+  font-size: 14px;
+}
+
+.ag-cell[col-id='actions'] .actions-cell-content .validation-error-icon {
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  width: 18px !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  flex-shrink: 0;
+  font-size: 12px !important;
+  line-height: 1 !important;
+}
+
+.ag-cell[col-id='actions'] .actions-cell-content .add-row-btn,
+.ag-cell[col-id='actions'] .actions-cell-content .delete-row-btn {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
+  margin: 0;
+  flex-shrink: 0;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  font-size: 12px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
+}
+
+.ag-cell[col-id='actions'] .actions-cell-content .add-row-btn:hover {
+  transform: scale(1.15);
+}
+
+.ag-cell[col-id='actions'] .actions-cell-content .delete-row-btn:hover {
+  transform: scale(1.15);
 }
 
 /* Qty column specific styling - Improved with visible borders */
@@ -1901,9 +2037,9 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
   padding: 8px 16px !important;
 }
 
-/* Actions column header - ensure borders are visible and padding is correct */
+/* Actions column header - match cell padding for aligned look */
 .ag-theme-alpine .ag-header-cell[col-id='actions'] {
-  padding: 12px 4px !important;
+  padding: 6px 4px !important;
   border-right: 1px solid #d1d5db !important;
   border-bottom: 1px solid #d1d5db !important;
 }

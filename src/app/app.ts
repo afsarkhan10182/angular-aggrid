@@ -98,6 +98,7 @@ import type {
 export class App implements OnInit, OnDestroy, AfterViewInit {
   public gridApi!: GridApi;
   private subscriptions: Subscription[] = [];
+  private actionsColumnWidth = 60;
   public showColumnVisibilityPanel = false;
   public showGroupByPanel = false;
   public draggedColumn: ExtendedColDef | null = null;
@@ -419,6 +420,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         } else {
           this.displayData = this.getInitialDisplayData();
         }
+        this.applyActionsColumnWidth(this.computeActionsColumnWidth());
 
         if (this.gridApi) {
           setTimeout(() => {
@@ -449,8 +451,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   initializeColumns(): void {
+    this.actionsColumnWidth = this.computeActionsColumnWidth();
     const columnMapping = this.dataService.getColumnMapping();
     this.columnDefs = this.createHierarchicalColumns(columnMapping);
+    this.applyActionsColumnWidth(this.actionsColumnWidth);
 
     this.availableGroupFields = this.columnDefs
       .filter((col) => {
@@ -474,6 +478,34 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           this.gridApi.setColumnsVisible([field], false);
         }
       });
+    }
+  }
+
+  private computeActionsColumnWidth(): number {
+    const hasErrors =
+      this.hasValidationErrors(this.rowData) || this.hasValidationErrors(this.displayData);
+    return hasErrors ? 76 : 60;
+  }
+
+  private hasValidationErrors(rows: any[] | undefined): boolean {
+    if (!rows || rows.length === 0) return false;
+    const stack: any[] = [...rows];
+    while (stack.length > 0) {
+      const row = stack.pop();
+      if (row?.validation && row.validation.isValid === false) return true;
+      if (Array.isArray(row?.children) && row.children.length > 0) {
+        stack.push(...row.children);
+      }
+    }
+    return false;
+  }
+
+  private applyActionsColumnWidth(width: number): void {
+    if (typeof document !== 'undefined') {
+      document.documentElement.style.setProperty('--actions-col-width', `${width}px`);
+    }
+    if (this.gridApi) {
+      this.gridApi.setColumnWidths([{ key: COL_ACTIONS, newWidth: width }], false);
     }
   }
 
@@ -548,16 +580,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   createHierarchicalColumns(columnMapping: any): ColDef[] {
     const columns: ExtendedColDef[] = [];
 
-    const checkboxCol = this.gridService.createCheckboxColumn();
-    checkboxCol.headerCheckboxSelection = () => {
-      return this.isAddRowEnabled();
-    };
-    checkboxCol.headerCheckboxSelectionFilteredOnly = true;
-    checkboxCol.checkboxSelection = (params: any) => {
-      if (!this.isAddRowEnabled()) {
-        return false;
-      }
-
+    const checkboxSelection = (params: any) => {
+      if (!this.isAddRowEnabled()) return false;
       const data = params?.data;
       if (!data) return false;
       return !(
@@ -567,7 +591,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         data.isBranchHeader
       );
     };
-    columns.push(checkboxCol);
 
     const actionsCol = this.gridService.createActionsColumn(
       () => this.isAddRowEnabled(),
@@ -605,7 +628,14 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         });
       },
       () => this.dataService.getBomType() || DEFAULT_BOM_TYPE,
+      checkboxSelection,
     );
+    actionsCol.width = this.actionsColumnWidth;
+    actionsCol.minWidth = this.actionsColumnWidth;
+    actionsCol.maxWidth = 76;
+    actionsCol.headerCheckboxSelection = () => this.isAddRowEnabled();
+    actionsCol.headerCheckboxSelectionFilteredOnly = true;
+    actionsCol.checkboxSelection = checkboxSelection;
     columns.push(actionsCol);
 
     const featureCol = this.gridService.createFeatureColumn({
@@ -1361,6 +1391,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (this.rowData && this.rowData.length > 0) {
       this.applyHierarchicalSearch();
     }
+
+    this.applyActionsColumnWidth(this.actionsColumnWidth);
   }
 
   isSkuColumn(col: any): boolean {
@@ -2199,6 +2231,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       row.validation = { isValid: true, missingFields: [], skuErrors: [] };
     });
     this.gridApi.refreshCells({ force: true, columns: [...COLUMNS_REFRESH_ACTIONS] });
+    this.applyActionsColumnWidth(this.computeActionsColumnWidth());
 
     const bomType = this.dataService.getBomType() ?? '';
     const requiredFields = this.validationService.getRequiredFieldsForSave(bomType);
@@ -2334,6 +2367,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         force: true,
         columns: [...COLUMNS_REFRESH_ACTIONS],
       });
+      this.applyActionsColumnWidth(this.computeActionsColumnWidth());
     }
 
     if (this.handleValidationError(validationResult)) {

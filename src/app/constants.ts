@@ -10,7 +10,7 @@ export const BOM_TYPE_SBOM = 'SBOM';
 export const BOM_TYPE_MATERIALMBOM = 'MATERIALMBOM';
 
 /** Default BOM type when API / JSP does not provide one */
-export const DEFAULT_BOM_TYPE = BOM_TYPE_EBOM;
+export const DEFAULT_BOM_TYPE = BOM_TYPE_SBOM;
 
 /** API payload key for BOM link object */
 export const BOM_LINK_KEY = 'bom-link';
