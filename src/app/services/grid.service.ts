@@ -588,6 +588,8 @@ export class GridService {
       minWidth: 60,
       maxWidth: 76,
       pinned: 'left',
+      lockPosition: 'left',
+      lockPinned: true,
       resizable: false,
       sortable: false,
       filter: true,
