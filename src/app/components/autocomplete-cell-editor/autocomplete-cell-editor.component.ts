@@ -67,6 +67,7 @@ export class AutocompleteCellEditorComponent
 
   private params: any;
   private originalValue: string = '';
+  private lastPartValueBeforeSelection: string | null = null;
   private customFilterFunction?: (searchTerm: string, options: string[]) => string[];
   private dataService: DataService;
   private searchSubject = new Subject<string>();
@@ -610,6 +611,18 @@ export class AutocompleteCellEditorComponent
     if (this.params && this.params.node) {
       const fieldName = this.getFieldName();
       if (fieldName) {
+        if (PART_FIELD_KEYS.includes(fieldName)) {
+          const data = this.params.node.data || {};
+          const prevPart =
+            data[FIELD_PART_NUMBER] ??
+            data[FIELD_BOM_LINK_PART] ??
+            data[FIELD_PART] ??
+            '';
+          this.lastPartValueBeforeSelection = String(prevPart ?? '').trim();
+        } else {
+          this.lastPartValueBeforeSelection = null;
+        }
+
         this.params.node.setDataValue(fieldName, option);
 
         if (fieldName === FIELD_BOM_LINK_FEATURE) {
@@ -664,6 +677,31 @@ export class AutocompleteCellEditorComponent
             // Store ID in a separate field (e.g., materialColorServiceEquivalentId)
             const idFieldName = `${fieldName}Id`;
             this.params.node.setDataValue(idFieldName, selectedServiceId);
+          }
+        }
+
+        if (this.isCountrySearch && this.genericOptions.length > 0) {
+          let selectedCountryId: string | null = null;
+
+          if (
+            optionIndex !== undefined &&
+            optionIndex >= 0 &&
+            optionIndex < this.genericOptions.length
+          ) {
+            const selectedCountry = this.genericOptions[optionIndex];
+            selectedCountryId = selectedCountry.id || selectedCountry.displayValue || option;
+          } else {
+            const selectedCountry = this.genericOptions.find(
+              (country: any) => (country.displayValue || country.name || '') === option
+            );
+            if (selectedCountry) {
+              selectedCountryId = selectedCountry.id || selectedCountry.displayValue || option;
+            }
+          }
+
+          if (fieldName) {
+            const idFieldName = `${fieldName}Id`;
+            this.params.node.setDataValue(idFieldName, selectedCountryId || '');
           }
         }
 
@@ -868,9 +906,21 @@ export class AutocompleteCellEditorComponent
     }
 
     const skuInfoPart = this.dataService?.getSkuInfo();
-    if (skuInfoPart?.length > 0 && this.dataService?.getBomType() === BOM_TYPE_EBOM && partValue) {
+    const isEbom = this.dataService?.getBomType() === BOM_TYPE_EBOM;
+    if (skuInfoPart?.length > 0 && isEbom && partValue) {
+      const isExistingRow = !this.params?.node?.data?.isNewRow;
+      const shouldLimitSkuUpdate = isExistingRow && this.isPartNumberSearch;
+      const previousPartValue = (this.lastPartValueBeforeSelection || '').trim();
+
       skuInfoPart.forEach((sku) => {
         const skuFieldName = `sku${sku.skuId}`;
+        if (shouldLimitSkuUpdate) {
+          if (!previousPartValue) return;
+          const currentSkuValue = String(originalData[skuFieldName] ?? '').trim();
+          if (currentSkuValue !== previousPartValue) {
+            return;
+          }
+        }
         if (originalData[skuFieldName] !== partValue) {
           this.params.node.setDataValue(skuFieldName, partValue);
         }
@@ -886,6 +936,7 @@ export class AutocompleteCellEditorComponent
       });
     }
     } finally {
+      this.lastPartValueBeforeSelection = null;
       setTimeout(() => setSkip?.(false), 0);
     }
   }

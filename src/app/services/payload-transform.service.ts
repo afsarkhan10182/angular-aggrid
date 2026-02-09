@@ -568,6 +568,13 @@ export class PayloadTransformService {
           }
         }
 
+        if (row.bomLinkCountryOfOriginId) {
+          const val = String(row.bomLinkCountryOfOriginId).trim();
+          if (val !== '') {
+            bomLink.bomLinkCountryOfOrigin = val;
+          }
+        }
+
         bomLink.skus = this.buildSkusArrayFromRow(
           row,
           skuInfo,
