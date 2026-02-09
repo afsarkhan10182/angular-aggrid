@@ -46,6 +46,20 @@ export class PayloadTransformService {
     private readonly gridConfigService: GridConfigService,
   ) {}
 
+  private resolveChildId(row: any): string | null {
+    if (row?.childId !== undefined && row?.childId !== null && String(row.childId).trim() !== '') {
+      return String(row.childId);
+    }
+    return null;
+  }
+
+  private resolveColorId(row: any): string | null {
+    if (row?.colorId !== undefined && row?.colorId !== null && String(row.colorId).trim() !== '') {
+      return String(row.colorId);
+    }
+    return null;
+  }
+
   /**
    * Build SKUs array from a row for the API payload
    * For new rows: Attempts to reuse metadata from existing rows with matching section+feature+empty part
@@ -523,14 +537,14 @@ export class PayloadTransformService {
           bomLink.bomLinkEndDate = this.utilService.convertDateToApiFormat(String(row.endDate));
         }
 
-        if (row.materialSupplierMasterId) {
-          bomLink.childId = this.utilService.extractIdAfterLastColon(row.materialSupplierMasterId);
-        } else if (row.materialSupplierVersionId) {
-          bomLink.childId = this.utilService.extractIdAfterLastColon(row.materialSupplierVersionId);
+        const resolvedChildId = this.resolveChildId(row);
+        if (resolvedChildId) {
+          bomLink.childId = resolvedChildId;
         }
 
-        if (row.colorId) {
-          bomLink.colorId = this.utilService.extractIdAfterLastColon(row.colorId);
+        const resolvedColorId = this.resolveColorId(row);
+        if (resolvedColorId) {
+          bomLink.colorId = resolvedColorId;
         }
 
         if (row.bomLinkSpecSheetExtra) {
@@ -585,17 +599,13 @@ export class PayloadTransformService {
           editedFieldsForRow.has(FIELD_BOM_LINK_PART) ||
           editedFieldsForRow.has(FIELD_PART);
         if (partEdited) {
-          if (currentRow.materialSupplierMasterId) {
-            bomLink.childId = this.utilService.extractIdAfterLastColon(
-              currentRow.materialSupplierMasterId,
-            );
-          } else if (currentRow.materialSupplierVersionId) {
-            bomLink.childId = this.utilService.extractIdAfterLastColon(
-              currentRow.materialSupplierVersionId,
-            );
+          const resolvedChildId = this.resolveChildId(currentRow);
+          if (resolvedChildId) {
+            bomLink.childId = resolvedChildId;
           }
-          if (currentRow.colorId) {
-            bomLink.colorId = this.utilService.extractIdAfterLastColon(currentRow.colorId);
+          const resolvedColorId = this.resolveColorId(currentRow);
+          if (resolvedColorId) {
+            bomLink.colorId = resolvedColorId;
           }
         }
 

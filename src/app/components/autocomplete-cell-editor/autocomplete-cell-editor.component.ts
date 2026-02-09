@@ -596,7 +596,12 @@ export class AutocompleteCellEditorComponent
           if (this.isPartNumberSearch) {
             return (material.materialColorPartNumber || '') === option;
           }
-          const matLabel = material.material || material.ptcmaterialName || material.materialName || material.name || '';
+          const matLabel =
+            material.material ||
+            material.ptcmaterialName ||
+            material.materialName ||
+            material.name ||
+            '';
           return matLabel === option;
         });
       }
@@ -672,6 +677,13 @@ export class AutocompleteCellEditorComponent
 
       if (selectedMaterial) {
         this.autoPopulateFields(selectedMaterial);
+        if (
+          fieldName === FIELD_PART_NUMBER ||
+          fieldName === FIELD_BOM_LINK_PART ||
+          fieldName === FIELD_PART
+        ) {
+          this.markExistingRowAsEditedForPartChange(fieldName);
+        }
       } else if (
         !this.isMaterialSearch &&
         !this.isPartNumberSearch &&
@@ -734,6 +746,26 @@ export class AutocompleteCellEditorComponent
     }
   }
 
+  private markExistingRowAsEditedForPartChange(fieldName: string): void {
+    const data = this.params?.node?.data;
+    if (!data || data.isNewRow) return;
+    const rowId =
+      data.materialKey || data.newRowId || data[FIELD_PART_NUMBER] || data.part || null;
+    if (rowId == null) return;
+    const ctx = (this.params?.context as any) ?? this.params?.api?.getGridOption?.('context');
+    const editedRows = ctx?.editedRows;
+    const editedFields = ctx?.editedFields;
+    if (editedRows) editedRows.add(rowId);
+    if (editedFields) {
+      if (!editedFields.has(rowId)) editedFields.set(rowId, new Set<string>());
+      const set = editedFields.get(rowId)!;
+      set.add(fieldName);
+      if (fieldName !== FIELD_PART_NUMBER) set.add(FIELD_PART_NUMBER);
+      if (fieldName !== FIELD_BOM_LINK_PART) set.add(FIELD_BOM_LINK_PART);
+      set.add(FIELD_PART);
+    }
+  }
+
   private filterLocalOptions(query: string): string[] {
     if (!this.options || this.options.length === 0) {
       return [];
@@ -781,6 +813,7 @@ export class AutocompleteCellEditorComponent
 
     if (material?.materialColorId && this.params.node?.data) {
       this.params.node.data.materialColorId = material.materialColorId;
+      this.params.node.setDataValue('materialColorId', material.materialColorId);
     }
 
     const ctx = (this.params?.context as any) ?? this.params?.api?.getGridOption?.('context');
@@ -802,15 +835,13 @@ export class AutocompleteCellEditorComponent
 
     if (flatInstance.colorId != null && String(flatInstance.colorId) !== '') {
       const colorId = String(flatInstance.colorId);
-      if (originalData.colorId !== colorId) {
-        this.params.node.setDataValue('colorId', colorId);
-      }
+      this.params.node.data.colorId = colorId;
+      this.params.node.setDataValue('colorId', colorId);
     }
     if (flatInstance.childId != null && String(flatInstance.childId) !== '') {
       const childId = String(flatInstance.childId);
-      if (originalData.materialSupplierMasterId !== childId) {
-        this.params.node.setDataValue('materialSupplierMasterId', childId);
-      }
+      this.params.node.data.childId = childId;
+      this.params.node.setDataValue('childId', childId);
     }
 
     const partValue = flatInstance.materialColorPartNumber != null ? String(flatInstance.materialColorPartNumber) : '';

@@ -825,7 +825,9 @@ export class GridConfigService {
   private createNestedGroups(
     data: any[],
     groupFields: GroupConfig[],
-    level: number
+    level: number,
+    sectionKey?: string,
+    sectionDisplayName?: string
   ): any[] {
     if (level >= groupFields.length) {
       return data;
@@ -891,11 +893,19 @@ export class GridConfigService {
         groupValue: groupValue,
         groupKey: `${groupField.field}_${key}`,
         isExpanded: true,
+        section: sectionKey,
+        sectionDisplayName: sectionDisplayName,
         children: [],
       };
 
       if (level < groupFields.length - 1) {
-        groupHeader.children = this.createNestedGroups(groupRows, groupFields, level + 1);
+        groupHeader.children = this.createNestedGroups(
+          groupRows,
+          groupFields,
+          level + 1,
+          sectionKey,
+          sectionDisplayName
+        );
       } else {
         groupHeader.children = groupRows;
       }
@@ -1029,7 +1039,13 @@ export class GridConfigService {
         };
       }
 
-      const groupedChildren = this.createNestedGroups(section.children, groupFields, 0);
+      const groupedChildren = this.createNestedGroups(
+        section.children,
+        groupFields,
+        0,
+        section.section,
+        section.sectionDisplayName
+      );
       
       return {
         ...sectionWithExpanded,
@@ -1054,7 +1070,6 @@ export class GridConfigService {
     this.addGroupRowClasses(classes, data);
     this.addStatusRowClasses(classes, data);
     this.addEditedRowClass(classes, data, componentInstance);
-    this.addValidationErrorClass(classes, data, componentInstance);
 
     return classes.join(' ');
   }
@@ -1142,22 +1157,4 @@ export class GridConfigService {
     });
   }
 
-  private addValidationErrorClass(classes: string[], data: any, componentInstance: any): void {
-    if (!componentInstance.invalidRowIds) {
-      return;
-    }
-
-    const rowId =
-      data.materialKey || data.newRowId || data[FIELD_PART_NUMBER] || data.part;
-    const compositeId =
-      data.section && (data[FIELD_PART_NUMBER] || data.part)
-        ? `${data.section}::${data[FIELD_PART_NUMBER] || data.part}`
-        : null;
-    const hasError =
-      (rowId && componentInstance.invalidRowIds.has(rowId)) ||
-      (compositeId && componentInstance.invalidRowIds.has(compositeId));
-    if (hasError) {
-      classes.push('validation-error-row');
-    }
-  }
 }

@@ -1125,6 +1125,10 @@ div.ag-header-cell[col-id='actions'] {
   padding-left: calc(var(--actions-checkbox-width) + var(--actions-gap));
 }
 
+.section-fullwidth-actions.actions-no-checkbox .actions-cell-content {
+  padding-left: calc(var(--actions-checkbox-width) + var(--actions-gap));
+}
+
 .ag-cell[col-id='actions'] .ag-selection-checkbox,
 .ag-pinned-left-cols-container .ag-cell[col-id='actions'] .ag-selection-checkbox {
   display: inline-flex;
@@ -1403,47 +1407,6 @@ div.ag-header-cell[col-id='actions'] {
   background: #ffffff !important;
   border: 2px solid #007bff !important;
   border-radius: 2px !important;
-}
-
-/* Validation error row styling - clear visual indication */
-.ag-row.validation-error-row {
-  background: #fef2f2 !important;
-  border-left: 4px solid #ef4444 !important;
-  border-right: 2px solid #ef4444 !important;
-}
-
-.ag-row.validation-error-row .ag-cell {
-  background: #fef2f2 !important;
-  border-bottom: 1px solid #fecaca !important;
-}
-
-.ag-row.validation-error-row:hover {
-  background: #fee2e2 !important;
-}
-
-.ag-row.validation-error-row:hover .ag-cell {
-  background: #fee2e2 !important;
-}
-
-/* Override other row classes when validation error is present */
-.ag-row.validation-error-row.new-row {
-  background: #fef2f2 !important;
-  border-left: 4px solid #ef4444 !important;
-  border-right: 2px solid #ef4444 !important;
-}
-
-.ag-row.validation-error-row.new-row .ag-cell {
-  background: #fef2f2 !important;
-}
-
-.ag-row.validation-error-row.edited-row {
-  background: #fef2f2 !important;
-  border-left: 4px solid #ef4444 !important;
-  border-right: 2px solid #ef4444 !important;
-}
-
-.ag-row.validation-error-row.edited-row .ag-cell {
-  background: #fef2f2 !important;
 }
 
 /* Sub-row styling - children under material headers */
@@ -2080,10 +2043,74 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
 .ag-theme-alpine .ag-row.section-header-row .ag-cell {
   background-color: #eff6ff !important;
   border-top: none !important;
-  border-bottom: 1px solid #cbd5e1 !important;
+  border-bottom: none !important;
   border-right: none !important;
   border-left: none !important;
   --ag-cell-vertical-border-width: 0 !important;
+}
+
+.ag-theme-alpine .ag-row.section-header-row {
+  border-bottom: 1px solid #cbd5e1 !important;
+}
+
+/* Full-width section headers (keep fixed position even if Feature column moves) */
+.ag-theme-alpine .ag-row.section-header-row .ag-full-width-row {
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+.section-fullwidth-row {
+  display: grid;
+  grid-template-columns: var(--actions-col-width, 60px) 1fr;
+  align-items: stretch;
+  height: var(--ag-row-height, 28px);
+  width: calc(100% + var(--actions-col-width, 60px));
+  position: relative;
+  left: calc(-1 * var(--actions-col-width, 60px));
+  background-color: #eff6ff;
+  border-bottom: none;
+}
+
+.section-fullwidth-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: var(--actions-pad, 4px);
+  gap: var(--actions-gap, 4px);
+  border-right: 1px solid #e2e8f0;
+}
+
+.section-fullwidth-content {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  height: 100%;
+}
+
+.section-fullwidth-content .hier-header {
+  height: 100%;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.section-fullwidth-content .hier-title {
+  line-height: 1.2;
+}
+
+.section-fullwidth-content .section-header-add.add-row-btn {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
+  margin-left: 6px;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 /* Keep actions column border visible */

@@ -835,6 +835,7 @@ export class RowManagementService {
         delete updatedRow.isNewRow;
         delete updatedRow.newRowId;
         delete updatedRow.insertAfter;
+        delete updatedRow.insertAfterSection;
       }
 
       // Recursively process children

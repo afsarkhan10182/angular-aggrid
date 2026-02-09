@@ -16,6 +16,7 @@ import { Subscription } from 'rxjs';
 import { AutocompleteCellEditorComponent } from './components/autocomplete-cell-editor/autocomplete-cell-editor.component';
 import { IconComponent } from './components/icon/icon.component';
 import { ColumnHeaderPinComponent } from './components/column-header-pin/column-header-pin.component';
+import { HierarchicalCellRendererComponent } from './components/hierarchical-cell-renderer/hierarchical-cell-renderer.component';
 import { PartModalComponent } from './components/part-modal/part-modal.component';
 import { PartsEditModalComponent } from './components/parts-edit-modal/parts-edit-modal.component';
 import { DataService } from './services/data.service';
@@ -91,6 +92,7 @@ import type {
     IconComponent,
     PartModalComponent,
     PartsEditModalComponent,
+    HierarchicalCellRendererComponent,
   ],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
@@ -203,6 +205,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     private readonly cdr: ChangeDetectorRef,
   ) {
     this.gridOptions.context = {
+      componentParent: this,
       dataService: this.dataService,
       setSkipEditTracking: (skip: boolean) => this.rowManagementService.setSkipEditTracking(skip),
       editedRows: this.editedRows,
@@ -234,6 +237,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       context: commonOptions.context
         ? {
             ...commonOptions.context,
+            componentParent: this,
             dataService: this.dataService,
             setSkipEditTracking: (skip: boolean) => this.rowManagementService.setSkipEditTracking(skip),
             editedRows: this.editedRows,
@@ -246,10 +250,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             editedFields: this.editedFields,
           },
       isFullWidthRow: (params: any) => {
-        return params.rowNode.data.isGroupHeader;
+        const data = params.rowNode.data;
+        return data.isGroupHeader || data.isSectionHeader;
       },
-      fullWidthCellRenderer: (params: any) => {
-        return this.renderGroupHeaderFullWidth(params);
+      getRowId: (params: any) => {
+        return this.getGridRowId(params?.data);
+      },
+      fullWidthCellRenderer: HierarchicalCellRendererComponent,
+      onRowClicked: (params: any) => {
+        this.onRowClicked(params);
       },
     };
 
@@ -257,19 +266,50 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
-    (globalThis as any).toggleSection = (section: string) => {
-      this.toggleSection(section);
-    };
-    (globalThis as any).toggleMaterial = (
-      section: string,
-      materialIdentifier: string,
-      materialIndex?: number,
-    ) => {
-      this.toggleMaterial(section, materialIdentifier, materialIndex);
-    };
-    (globalThis as any).toggleGroup = (groupKey: string) => {
-      this.toggleGroup(groupKey);
-    };
+  }
+
+  private getGridRowId(data: any): string {
+    if (!data) return '';
+
+    if (data.isSectionHeader) {
+      const sectionKey =
+        data.section ?? data.sectionDisplayName ?? data.sectionName ?? 'unknown';
+      return `section::${sectionKey}`;
+    }
+
+    if (data.isGroupHeader) {
+      const groupKey =
+        data.groupKey ??
+        `${data.groupField ?? ''}:${data.groupValue ?? ''}`;
+      const sectionKey = data.section ?? data.sectionDisplayName ?? '';
+      return `group::${sectionKey}::${data.groupLevel ?? ''}::${groupKey}`;
+    }
+
+    if (data.isMaterialHeader) {
+      const materialKey =
+        data.materialKey ??
+        data.material ??
+        data.part ??
+        data[FIELD_PART_NUMBER] ??
+        data.materialIndex ??
+        'unknown';
+      const sectionKey = data.section ?? '';
+      return `material::${sectionKey}::${materialKey}`;
+    }
+
+    if (data.isNewRow && data.newRowId != null) {
+      return `new::${data.newRowId}`;
+    }
+
+    const baseId =
+      data.materialKey ??
+      data.newRowId ??
+      data[FIELD_PART_NUMBER] ??
+      data.part ??
+      data.material ??
+      'unknown';
+    const sectionKey = data.section ?? '';
+    return sectionKey ? `row::${sectionKey}::${baseId}` : `row::${baseId}`;
   }
 
   public toggleSection(section: string): void {
@@ -281,7 +321,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (!sectionRow) return;
 
     sectionRow.isExpanded = !sectionRow.isExpanded;
+    this._groupedCache = null;
     this.applyHierarchicalSearch();
+    this.redrawSectionHeader(sectionRow);
   }
 
   public toggleMaterial(
@@ -509,6 +551,42 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  public addRowForSection(sectionInternalName: string): void {
+    const rowIndex = this.displayData.findIndex(
+      (row) => row?.isSectionHeader && row.section === sectionInternalName,
+    );
+    if (rowIndex === -1) return;
+
+    const sectionRow = this.rowData.find(
+      (row: any) => row?.isSectionHeader && row.section === sectionInternalName,
+    );
+    const wasExpanded = sectionRow ? (sectionRow.isExpanded ?? true) : true;
+    if (sectionRow) {
+      sectionRow.isExpanded = true;
+    }
+
+    const result = this.addRowAfter(rowIndex);
+    if (result?.newRow) {
+      result.newRow.insertAfterSection = sectionInternalName;
+    }
+
+    if (sectionRow && !wasExpanded) {
+      this._groupedCache = null;
+      this.applyHierarchicalSearch();
+      this.redrawSectionHeader(sectionRow);
+    }
+  }
+
+  private redrawSectionHeader(sectionRow: any): void {
+    if (!this.gridApi || !sectionRow) return;
+    const rowId = this.getGridRowId(sectionRow);
+    if (!rowId) return;
+    const rowNode = this.gridApi.getRowNode(rowId);
+    if (rowNode) {
+      this.gridApi.redrawRows({ rowNodes: [rowNode] });
+    }
+  }
+
   private getFilteredSkuInfo(): any[] {
     return this.dataService.getFilteredSkuInfo(this.selectedSkuFilter, () => this.isMbomMode());
   }
@@ -595,38 +673,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const actionsCol = this.gridService.createActionsColumn(
       () => this.isAddRowEnabled(),
       (data) => this.gridConfigService.getGroupCount(data),
-      (params) => {
-        if (
-          !params.data.children ||
-          !Array.isArray(params.data.children) ||
-          params.data.children.length === 0
-        ) {
-          return false;
-        }
-
-        const bomType = this.dataService.getBomType();
-        const isSbom = bomType === BOM_TYPE_SBOM;
-
-        return params.data.children.some((child: any) => {
-          if (child.isMaterialHeader) return true;
-
-          const val = child[FIELD_PART_NUMBER] || child.part;
-          if (!val || String(val).trim() === '') {
-            return false;
-          }
-
-          if (isSbom) {
-            const isMbomLineItem = child.ptcbomPartMarkUp === 'enumMBOM001';
-            const specSheetExtra = String(child.bomLinkSpecSheetExtra || '').trim();
-
-            if (!isMbomLineItem && specSheetExtra === 'No') {
-              return false;
-            }
-          }
-
-          return true;
-        });
-      },
+      (params) => this.gridService.hasVisibleChildren(params.data),
       () => this.dataService.getBomType() || DEFAULT_BOM_TYPE,
       checkboxSelection,
     );
@@ -647,13 +694,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       isMaterialMbomMode: () => this.isMaterialMbomMode(),
       getDataCellStyle: (params) => this.getDataCellStyle(params),
       getFeatureValue: (data) => this.utilService.getFeatureValue(data),
-      renderHierarchicalCell: (params) => this.renderHierarchicalCell(params),
+      renderHierarchicalCell: () => '',
       getHierarchicalCellStyle: (params) => this.getHierarchicalCellStyle(params),
       getFilteredSkuInfo: () => this.getFilteredSkuInfo(),
-      shouldHighlightRow: (data) => this.shouldHighlightRow(data),
+      shouldHighlightRow: (data) => this.gridService.shouldHighlightRow(data),
       renderNewRowSkuCell: (params) => this.renderNewRowSkuCell(params),
       utilService: this.utilService,
     });
+    featureCol.cellRenderer = HierarchicalCellRendererComponent;
+    featureCol.cellRendererParams = {};
     columns.push(featureCol);
 
     Object.keys(columnMapping).forEach((field) => {
@@ -1159,10 +1208,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       isSkuEditableForDisconnect: (skuField) => this.isSkuEditableForDisconnect(skuField),
       getDataCellStyle: (params) => this.getDataCellStyle(params),
       getFeatureValue: (data) => this.utilService.getFeatureValue(data),
-      renderHierarchicalCell: (params) => this.renderHierarchicalCell(params),
+      renderHierarchicalCell: () => '',
       getHierarchicalCellStyle: (params) => this.getHierarchicalCellStyle(params),
       getFilteredSkuInfo: () => this.getFilteredSkuInfo(),
-      shouldHighlightRow: (data) => this.shouldHighlightRow(data),
+      shouldHighlightRow: (data) => this.gridService.shouldHighlightRow(data),
       renderNewRowSkuCell: (params) => this.renderNewRowSkuCell(params),
       utilService: this.utilService,
     });
@@ -1171,43 +1220,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     return allColumns;
   }
 
-  renderHierarchicalCell(params: any): string {
-    return this.gridService.renderHierarchicalCell(params, {
-      shouldHighlightRow: (data) => this.shouldHighlightRow(data),
-      getPartNumberValue: (row) => this.utilService.getPartNumberValue(row),
-      isSkuFilterReadOnly: () => this.isSkuFilterReadOnly(),
-      utilService: this.utilService,
-      gridConfigService: this.gridConfigService,
-    });
-  }
-
-  /**
-   * Check if a row should be highlighted (has part for reference SKU)
-   */
-  private shouldHighlightRow(data: any): boolean {
-    if (!data) return false;
-    const refSkuId = this.dataService.getRefSkuId();
-    const refSkuFieldName = `sku${refSkuId}`;
-    return !!(data[refSkuFieldName] && String(data[refSkuFieldName]).trim() !== '');
-  }
-
-  /**
-   * Get text color for highlighted rows
-   */
-  private getHighlightColor(data: any): string | undefined {
-    return this.shouldHighlightRow(data) ? '#ff0000' : undefined;
-  }
-
-
-  private renderGroupHeaderFullWidth(params: any): string {
-    return this.gridService.renderGroupHeaderFullWidth(params, {
-      shouldHighlightRow: (data) => this.shouldHighlightRow(data),
-      getPartNumberValue: (row) => this.utilService.getPartNumberValue(row),
-      isSkuFilterReadOnly: () => this.isSkuFilterReadOnly(),
-      utilService: this.utilService,
-      gridConfigService: this.gridConfigService,
-    });
-  }
 
   /**
    * Check if we're in SBOM mode
@@ -1313,7 +1325,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   private renderNewRowSkuCell(params: any): string {
     return this.gridService.renderNewRowSkuCell(params, {
-      shouldHighlightRow: (data) => this.shouldHighlightRow(data),
+      shouldHighlightRow: (data) => this.gridService.shouldHighlightRow(data),
       getPartNumberValue: (row) => this.utilService.getPartNumberValue(row),
       isSkuFilterReadOnly: () => this.isSkuFilterReadOnly(),
       isEbomMode: () => this.isEbomMode(),
@@ -1324,57 +1336,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
 
   getHierarchicalCellStyle(params: any): any {
-    const data = params.data;
-    const isActionsColumn = this.utilService.isActionsColumn(params);
-    const hasPartForRefSku = this.shouldHighlightRow(data);
-
-    if (data?.isGroupHeader) {
-      const bgColor = this.getGroupBackgroundColor(data.groupLevel ?? 0);
-      return this.utilService.getGroupHeaderStyle(bgColor, isActionsColumn);
-    }
-    if (data?.isSectionHeader) {
-      return this.utilService.getSectionHeaderStyle(isActionsColumn);
-    }
-    if (data.isMaterialHeader) {
-      return this.utilService.getMaterialHeaderStyle(hasPartForRefSku);
-    }
-    if (data.isParentRow) {
-      return this.utilService.getParentRowStyle(hasPartForRefSku);
-    }
-    if (data.isDirectRow) {
-      return this.utilService.getDirectRowStyle(hasPartForRefSku);
-    }
-
-    return this.utilService.getDefaultRowStyle(hasPartForRefSku);
+    return this.gridService.getHierarchicalCellStyle(params, this.utilService);
   }
 
-
   getDataCellStyle(params: any): any {
-    const data = params.data;
-    const baseStyle: any = { borderRight: '1px solid #e2e8f0' };
-    if (!data) return baseStyle;
-
-    const hasPartForRefSku = this.shouldHighlightRow(data);
-    const isActionsColumn = this.utilService.isActionsColumn(params);
-
-    if (data.isGroupHeader) {
-      const bgColor = this.getGroupBackgroundColor(data.groupLevel ?? 0);
-      return this.utilService.getDataGroupHeaderStyle(bgColor, isActionsColumn);
-    }
-    if (data.isSectionHeader) {
-      return this.utilService.getDataSectionHeaderStyle(isActionsColumn);
-    }
-    if (data.isMaterialHeader) {
-      return this.utilService.getDataMaterialHeaderStyle(hasPartForRefSku);
-    }
-    if (data.isParentRow) {
-      return this.utilService.getParentRowStyle(hasPartForRefSku);
-    }
-    if (data.isDirectRow) {
-      return this.utilService.getDataDirectRowStyle(baseStyle, hasPartForRefSku);
-    }
-
-    return this.utilService.getDataDefaultStyle(baseStyle, hasPartForRefSku);
+    return this.gridService.getDataCellStyle(params, this.utilService);
   }
 
 
@@ -1842,15 +1808,109 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   private applyGrouping(): void {
     const newRows: any[] = [];
-    const isSkuFilterActive = this.selectedSkuFilter !== 'all';
+    const seenNewRowIds = new Set<number>();
+    if (this.displayData && Array.isArray(this.displayData)) {
+      let currentSection: { section?: string; sectionDisplayName?: string } = {};
+      const lastRowIdBySection = new Map<string, string | number>();
 
-    if (!isSkuFilterActive && this.displayData && Array.isArray(this.displayData)) {
+      // Pass 1: collect last real row id per section (ignore new rows)
       this.displayData.forEach((row) => {
-        if (row.isNewRow && !row.isSectionHeader && !row.isGroupHeader && !row.isMaterialHeader) {
+        if (row?.isSectionHeader) {
+          currentSection = {
+            section: row.section,
+            sectionDisplayName: row.sectionDisplayName,
+          };
+          return;
+        }
+
+        if (
+          row &&
+          !row.isSectionHeader &&
+          !row.isGroupHeader &&
+          !row.isMaterialHeader &&
+          !row.isNewRow
+        ) {
+          const resolvedSection = row.section || currentSection.section;
+          const anchorId = this.getRowAnchorId(row);
+          if (resolvedSection && anchorId !== null && anchorId !== undefined && anchorId !== '') {
+            lastRowIdBySection.set(resolvedSection, anchorId);
+          }
+        }
+      });
+
+      // Pass 2: normalize new rows + collect
+      currentSection = {};
+      this.displayData.forEach((row) => {
+        if (row?.isSectionHeader) {
+          currentSection = {
+            section: row.section,
+            sectionDisplayName: row.sectionDisplayName,
+          };
+          return;
+        }
+
+        const resolvedSection = row?.section || currentSection.section;
+        const resolvedSectionDisplay = row?.sectionDisplayName || currentSection.sectionDisplayName;
+
+        if (
+          row &&
+          !row.isSectionHeader &&
+          !row.isGroupHeader &&
+          !row.isMaterialHeader &&
+          row.isNewRow
+        ) {
+          const resolvedInternalSection =
+            row.insertAfterSection ||
+            this.resolveSectionInternalName(row) ||
+            resolvedSection;
+
+          if (resolvedInternalSection) {
+            row.section = resolvedInternalSection;
+          }
+
+          if (!row.insertAfterSection && resolvedInternalSection) {
+            row.insertAfterSection = resolvedInternalSection;
+          }
+
+          if (!row.sectionDisplayName) {
+            const sectionDetails = this.dataService.getApiData()?.sectionDetails || {};
+            if (resolvedInternalSection && sectionDetails[resolvedInternalSection]) {
+              row.sectionDisplayName = sectionDetails[resolvedInternalSection];
+            } else if (resolvedSectionDisplay) {
+              row.sectionDisplayName = resolvedSectionDisplay;
+            }
+          }
+
+          if (
+            !row.insertAfterRowId &&
+            row.insertAfterSection &&
+            lastRowIdBySection.has(row.insertAfterSection)
+          ) {
+            row.insertAfterRowId = lastRowIdBySection.get(row.insertAfterSection);
+          }
+
           newRows.push(row);
+          if (row.newRowId !== undefined && row.newRowId !== null) {
+            seenNewRowIds.add(row.newRowId);
+          }
         }
       });
     }
+
+    this.rowManagementService.getNewRows().forEach((row) => {
+      if (
+        row?.isNewRow &&
+        !row.isSectionHeader &&
+        !row.isGroupHeader &&
+        !row.isMaterialHeader &&
+        row.newRowId !== undefined &&
+        row.newRowId !== null &&
+        !seenNewRowIds.has(row.newRowId)
+      ) {
+        newRows.push(row);
+        seenNewRowIds.add(row.newRowId);
+      }
+    });
 
     let hierarchicalData = this.rowData;
     if (this.searchText && this.searchText.trim() !== '') {
@@ -1902,7 +1962,93 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       this.groupExpandedState.clear();
     }
 
+    const lastInsertIndexByAnchor = new Map<string, number>();
+
     newRows.forEach((newRow) => {
+      const sectionKey = newRow.insertAfterSection || newRow.section;
+      const anchorId = newRow.insertAfterRowId;
+
+      if (anchorId !== undefined && anchorId !== null && anchorId !== '') {
+        let anchorIndex = -1;
+        let headerIndex = -1;
+        if (sectionKey) {
+          headerIndex = this.displayData.findIndex(
+            (row) => row?.isSectionHeader && row.section === sectionKey,
+          );
+        }
+
+        if (headerIndex !== -1) {
+          let nextHeaderIndex = this.displayData.length;
+          for (let i = headerIndex + 1; i < this.displayData.length; i++) {
+            if (this.displayData[i]?.isSectionHeader) {
+              nextHeaderIndex = i;
+              break;
+            }
+          }
+
+          for (let i = headerIndex + 1; i < nextHeaderIndex; i++) {
+            const row = this.displayData[i];
+            if (!row || row.isSectionHeader || row.isMaterialHeader || row.isGroupHeader) continue;
+            const candidateId =
+              row.materialKey ??
+              row.newRowId ??
+              row[FIELD_PART_NUMBER] ??
+              row.part ??
+              null;
+            if (candidateId === null || candidateId === undefined || candidateId === '') continue;
+            if (`${candidateId}` !== `${anchorId}`) continue;
+            anchorIndex = i;
+            break;
+          }
+        } else {
+          anchorIndex = this.displayData.findIndex((row) => {
+            if (!row || row.isSectionHeader || row.isMaterialHeader || row.isGroupHeader) return false;
+            const candidateId =
+              row.materialKey ??
+              row.newRowId ??
+              row[FIELD_PART_NUMBER] ??
+              row.part ??
+              null;
+            if (candidateId === null || candidateId === undefined || candidateId === '') return false;
+            if (`${candidateId}` !== `${anchorId}`) return false;
+            return true;
+          });
+        }
+        if (anchorIndex !== -1) {
+          const anchorKey = `${sectionKey ?? ''}::${anchorId}`;
+          const insertAt =
+            lastInsertIndexByAnchor.get(anchorKey) ?? anchorIndex;
+          this.displayData.splice(insertAt + 1, 0, newRow);
+          lastInsertIndexByAnchor.set(anchorKey, insertAt + 1);
+          return;
+        }
+      }
+
+      if (sectionKey) {
+        const headerIndex = this.displayData.findIndex(
+          (row) => row?.isSectionHeader && row.section === sectionKey,
+        );
+        if (headerIndex === -1) {
+          return;
+        }
+        const headerRow = this.displayData[headerIndex];
+        if (headerRow?.isExpanded === false) {
+          return;
+        }
+
+        let insertIndex = headerIndex;
+        while (insertIndex + 1 < this.displayData.length) {
+          const nextRow = this.displayData[insertIndex + 1];
+          if (nextRow?.isNewRow && nextRow.section === sectionKey) {
+            insertIndex++;
+            continue;
+          }
+          break;
+        }
+        this.displayData.splice(insertIndex + 1, 0, newRow);
+        return;
+      }
+
       const insertAfter = newRow.insertAfter;
       if (insertAfter !== undefined && insertAfter >= 0 && insertAfter < this.displayData.length) {
         this.displayData.splice(insertAfter + 1, 0, newRow);
@@ -1939,6 +2085,17 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
 
     this.handleEditableCellClick(event, isReadOnlySkuFilter);
+  }
+
+  onRowClicked(event: any): void {
+    const target = event.event?.target as HTMLElement | undefined;
+    if (target?.closest?.('[data-action]')) {
+      return;
+    }
+    // Section/group toggle is handled by the renderer click handler only.
+    if (event?.data?.isSectionHeader || event?.data?.isGroupHeader) {
+      return;
+    }
   }
 
   private handleLinkIconClick(event: any): boolean {
@@ -2237,7 +2394,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const requiredFields = this.validationService.getRequiredFieldsForSave(bomType);
     const touchedRows = allDataRows.filter((row) => this.isRowTouched(row));
     const requiredFieldsOrGetter =
-      bomType === BOM_TYPE_SBOM
+      bomType === BOM_TYPE_SBOM || bomType === BOM_TYPE_EBOM  || bomType === BOM_TYPE_MATERIALMBOM 
         ? (row: any) =>
             requiredFields.filter((f) =>
               f.keys.some((key) =>
@@ -2391,7 +2548,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     this.isSaving = true;
 
-    if (this.isEbomMode() && this.hasAnyServiceFieldTouched()) {
+    if ((this.isEbomMode() || this.isMaterialMbomMode()) && this.hasAnyServiceFieldTouched()) {
       const step1Payload = this.buildMaterialColorSavePayload();
       if (Object.keys(step1Payload.instances).length === 0) {
         this.runBomSaveStep();
@@ -2540,11 +2697,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
 
-  addRowAfter(rowIndex: number): void {
+  addRowAfter(rowIndex: number): { newRow: any; newRowId: number } | null {
+    const referenceRow = this.displayData[rowIndex];
     const { section, sectionDisplayName } = this.getSectionInfoForRow(rowIndex);
     const insertIndex = this.calculateInsertIndex(rowIndex);
 
-    this.rowManagementService.addRowAfter(
+    const result = this.rowManagementService.addRowAfter(
       insertIndex,
       this.displayData,
       this.gridApi,
@@ -2553,11 +2711,23 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       sectionDisplayName,
     );
 
+    if (result?.newRow) {
+      if (section) {
+        result.newRow.insertAfterSection = section;
+      }
+      const anchorId = this.getRowAnchorId(referenceRow);
+      if (anchorId !== undefined && anchorId !== null && anchorId !== '') {
+        result.newRow.insertAfterRowId = anchorId;
+      }
+    }
+
     setTimeout(() => {
       if (this.gridApi) {
         this.gridApi.refreshCells({ force: true });
       }
     }, 100);
+
+    return result ?? null;
   }
 
   private getSectionInfoForRow(rowIndex: number): { section: string | undefined; sectionDisplayName: string | undefined } {
@@ -2576,7 +2746,42 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       }
     }
 
+    if (!section && !sectionDisplayName) {
+      const fallback = this.getSectionFromDisplayIndex(rowIndex);
+      section = fallback.section;
+      sectionDisplayName = fallback.sectionDisplayName;
+    }
+
     return { section, sectionDisplayName };
+  }
+
+  private getSectionFromDisplayIndex(rowIndex: number): { section: string | undefined; sectionDisplayName: string | undefined } {
+    for (let i = rowIndex; i >= 0; i--) {
+      const row = this.displayData[i];
+      if (row?.isSectionHeader) {
+        return { section: row.section, sectionDisplayName: row.sectionDisplayName };
+      }
+    }
+    return { section: undefined, sectionDisplayName: undefined };
+  }
+
+  private resolveSectionInternalName(row: any): string | undefined {
+    if (!row) return undefined;
+    const current = row.section;
+    if (current && String(current).trim() !== '') {
+      return current;
+    }
+
+    const displayName = row.sectionDisplayName;
+    if (!displayName || String(displayName).trim() === '') {
+      return undefined;
+    }
+
+    const sectionDetails = this.dataService.getApiData()?.sectionDetails || {};
+    const match = Object.keys(sectionDetails).find(
+      (internalId) => sectionDetails[internalId] === displayName,
+    );
+    return match;
   }
 
   private getSectionFromGridNode(rowIndex: number): { section: string | undefined; sectionDisplayName: string | undefined } {
@@ -2621,6 +2826,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       insertIndex++;
     }
     return insertIndex;
+  }
+
+  private getRowAnchorId(row: any): string | number | null {
+    if (!row) return null;
+    if (row.materialKey != null) return row.materialKey;
+    if (row.newRowId != null) return row.newRowId;
+    if (row[FIELD_PART_NUMBER] != null && row[FIELD_PART_NUMBER] !== '') return row[FIELD_PART_NUMBER];
+    if (row.part != null && row.part !== '') return row.part;
+    return null;
   }
 
   deleteRowById(newRowId: number): void {
@@ -3286,6 +3500,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               isSubRow: true,
               level: 2,
               parent: materialRow,
+              section: section.section,
+              sectionDisplayName: section.sectionDisplayName,
             };
             this.addSkuDataToRow(childRow, child);
             materialRow.children.push(childRow);
@@ -3662,18 +3878,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  private getGroupBackgroundColor(groupLevel: number): string {
-    return this.gridService.getGroupBackgroundColor(groupLevel);
-  }
-
-  private getGroupBorderColor(groupLevel: number): string {
-    return this.gridService.getGroupBorderColor(groupLevel);
-  }
-
-  private getGroupHoverBackgroundColor(groupLevel: number): string {
-    return this.gridService.getGroupHoverBackgroundColor(groupLevel);
-  }
-
   getIncludeInSpecSheetOptionsForMassEdit(): string[] {
     return this.dataService.getIncludeInSpecSheetOptions(this.constraintsData);
   }
@@ -3896,8 +4100,5 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       (this.gridApi as any)._hoverSyncCleanup();
     }
 
-    delete (globalThis as any).toggleSection;
-    delete (globalThis as any).toggleMaterial;
-    delete (globalThis as any).toggleGroup;
   }
 }

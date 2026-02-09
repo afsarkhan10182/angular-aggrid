@@ -292,14 +292,16 @@ export class GridService {
     style?: string;
     title?: string;
     onClick?: string;
+    attrs?: string;
     content: string;
   }): string {
     const classes = options.classes ? ` ${options.classes}` : '';
     const style = options.style ? ` style="${options.style}"` : '';
     const title = options.title ? ` title="${options.title}"` : '';
     const onClick = options.onClick ? ` onclick="${options.onClick}"` : '';
+    const attrs = options.attrs ? ` ${options.attrs}` : '';
     return `
-      <div class="hier-header${classes}"${style}${title}${onClick}>
+      <div class="hier-header${classes}"${style}${title}${onClick}${attrs}>
         ${options.content}
       </div>
     `;
@@ -353,10 +355,9 @@ export class GridService {
     return this.buildHierHeader({
       classes: 'hier-clickable',
       style: `--bg:${bgColor};--bg-hover:${hoverBg};--border:${borderColor};--arrow-color:${borderColor};--indent:${indentPx}px;`,
-      onClick: `globalThis.toggleGroup('${data.groupKey}')`,
       content: `
-        <span class="hier-arrow">${arrowIcon}</span>
-        <span class="hier-title">
+        <span class="hier-arrow" data-action="toggle-group" data-group-key="${data.groupKey}">${arrowIcon}</span>
+        <span class="hier-title" data-action="toggle-group" data-group-key="${data.groupKey}">
           <span class="hier-indent"></span>${config.utilService.escapeHtml(data.groupHeaderName)}: ${config.utilService.escapeHtml(groupValue)}
         </span>
         <span class="hier-count">(${groupCount})</span>
@@ -372,10 +373,9 @@ export class GridService {
     return this.buildHierHeader({
       classes: 'hier-clickable section-header',
       title,
-      onClick: `globalThis.toggleSection('${internalName}')`,
       content: `
-        <span class="hier-arrow">${arrowIcon}</span>
-        <span class="hier-title">${title}</span>
+        <span class="hier-arrow" data-action="toggle-section" data-section="${internalName}">${arrowIcon}</span>
+        <span class="hier-title" data-action="toggle-section" data-section="${internalName}">${title}</span>
       `,
     });
   }
@@ -389,10 +389,9 @@ export class GridService {
 
     return this.buildHierHeader({
       classes: 'hier-clickable material-header',
-      onClick: `globalThis.toggleMaterial('${data.section}', '${materialIdentifier}', ${materialIndex})`,
       content: `
         ${linkIcon ? `<span class="material-link-icon">${linkIcon}</span>` : ''}
-        <span class="hier-title ${titleClass}">${titleText}</span>
+        <span class="hier-title ${titleClass}" data-action="toggle-material" data-section="${data.section}" data-material-identifier="${materialIdentifier}" data-material-index="${materialIndex}">${titleText}</span>
       `,
     });
   }
@@ -444,10 +443,9 @@ export class GridService {
     return this.buildHierHeader({
       classes: 'hier-clickable hier-header-fullwidth',
       style: `--bg:${bgColor};--bg-hover:${hoverBg};--border:${borderColor};--arrow-color:${borderColor};--indent:${indentPixels}px;`,
-      onClick: `globalThis.toggleGroup('${data.groupKey}')`,
       content: `
-        <span class="hier-arrow">${arrowIcon}</span>
-        <span class="hier-title">
+        <span class="hier-arrow" data-action="toggle-group" data-group-key="${data.groupKey}">${arrowIcon}</span>
+        <span class="hier-title" data-action="toggle-group" data-group-key="${data.groupKey}">
           <span class="hier-indent"></span>${config.utilService.escapeHtml(
             data.groupHeaderName,
           )}: ${config.utilService.escapeHtml(groupValue)}
@@ -455,6 +453,43 @@ export class GridService {
         <span class="hier-count">(${groupCount})</span>
       `,
     });
+  }
+
+  renderSectionHeaderFullWidth(
+    params: any,
+    config: CellRenderingConfig,
+    options: { showAdd: boolean },
+  ): string {
+    const data = params.data;
+    const arrowIcon = data.isExpanded ? '▼' : '▶';
+    const displayName = data.sectionDisplayName;
+    const internalName = data.section;
+    const title = config.utilService.escapeHtml(displayName);
+
+    const addIcon = options.showAdd
+      ? `<span class="section-header-add add-row-btn" title="${TITLE_ADD_ROW}" data-action="add-row" data-section="${internalName}">+</span>`
+      : '';
+
+    const headerContent = this.buildHierHeader({
+      classes: 'hier-clickable section-header',
+      title,
+      content: `
+        <span class="hier-arrow" data-action="toggle-section" data-section="${internalName}">${arrowIcon}</span>
+        <span class="hier-title" data-action="toggle-section" data-section="${internalName}">${title}</span>
+        ${addIcon}
+      `,
+    });
+
+    return `
+      <div class="section-fullwidth-row">
+        <div class="section-fullwidth-actions actions-no-checkbox">
+          
+        </div>
+        <div class="section-fullwidth-content">
+          ${headerContent}
+        </div>
+      </div>
+    `;
   }
 
   renderNewRowSkuCell(params: any, config: CellRenderingConfig): string {
@@ -548,6 +583,59 @@ export class GridService {
     if (groupLevel === 0) return '#e0f2fe';
     if (groupLevel === 1) return '#dcfce7';
     return '#fde68a';
+  }
+
+  getHierarchicalCellStyle(params: any, utilService: UtilService): any {
+    const data = params.data;
+    const isActionsColumn = utilService.isActionsColumn(params);
+    const hasPartForRefSku = this.shouldHighlightRow(data);
+
+    if (data?.isGroupHeader) {
+      const bgColor = this.getGroupBackgroundColor(data.groupLevel ?? 0);
+      return utilService.getGroupHeaderStyle(bgColor, isActionsColumn);
+    }
+    if (data?.isSectionHeader) {
+      return utilService.getSectionHeaderStyle(isActionsColumn);
+    }
+    if (data.isMaterialHeader) {
+      return utilService.getMaterialHeaderStyle(hasPartForRefSku);
+    }
+    if (data.isParentRow) {
+      return utilService.getParentRowStyle(hasPartForRefSku);
+    }
+    if (data.isDirectRow) {
+      return utilService.getDirectRowStyle(hasPartForRefSku);
+    }
+
+    return utilService.getDefaultRowStyle(hasPartForRefSku);
+  }
+
+  getDataCellStyle(params: any, utilService: UtilService): any {
+    const data = params.data;
+    const baseStyle: any = { borderRight: '1px solid #e2e8f0' };
+    if (!data) return baseStyle;
+
+    const hasPartForRefSku = this.shouldHighlightRow(data);
+    const isActionsColumn = utilService.isActionsColumn(params);
+
+    if (data.isGroupHeader) {
+      const bgColor = this.getGroupBackgroundColor(data.groupLevel ?? 0);
+      return utilService.getDataGroupHeaderStyle(bgColor, isActionsColumn);
+    }
+    if (data.isSectionHeader) {
+      return utilService.getDataSectionHeaderStyle(isActionsColumn);
+    }
+    if (data.isMaterialHeader) {
+      return utilService.getDataMaterialHeaderStyle(hasPartForRefSku);
+    }
+    if (data.isParentRow) {
+      return utilService.getParentRowStyle(hasPartForRefSku);
+    }
+    if (data.isDirectRow) {
+      return utilService.getDataDirectRowStyle(baseStyle, hasPartForRefSku);
+    }
+
+    return utilService.getDataDefaultStyle(baseStyle, hasPartForRefSku);
   }
 
   createCheckboxColumn(): ExtendedColDef {
@@ -664,6 +752,35 @@ export class GridService {
     };
   }
 
+  hasVisibleChildren(data: any): boolean {
+    if (!data?.children || !Array.isArray(data.children) || data.children.length === 0) {
+      return false;
+    }
+
+    const bomType = this.dataService.getBomType();
+    const isSbom = bomType === BOM_TYPE_SBOM;
+
+    return data.children.some((child: any) => {
+      if (child.isMaterialHeader) return true;
+
+      const val = child[FIELD_PART_NUMBER] || child.part;
+      if (!val || String(val).trim() === '') {
+        return false;
+      }
+
+      if (isSbom) {
+        const isMbomLineItem = child.ptcbomPartMarkUp === 'enumMBOM001';
+        const specSheetExtra = String(child.bomLinkSpecSheetExtra || '').trim();
+
+        if (!isMbomLineItem && specSheetExtra === 'No') {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }
+
   createFeatureColumn(config: ColumnDefinitionConfig): ExtendedColDef {
     return {
       headerName: HEADER_FEATURE,
@@ -671,7 +788,6 @@ export class GridService {
       colId: FIELD_BOM_LINK_FEATURE,
       width: 150,
       minWidth: 150,
-      pinned: 'left',
       sortable: false,
       filter: true,
       tooltipValueGetter: (params: any) => {
