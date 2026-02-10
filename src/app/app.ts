@@ -21,7 +21,7 @@ import { PartModalComponent } from './components/part-modal/part-modal.component
 import { PartsEditModalComponent } from './components/parts-edit-modal/parts-edit-modal.component';
 import { DataService } from './services/data.service';
 import { GridConfigService, GroupConfig } from './services/grid-config.service';
-import { GridService } from './services/grid.service';
+import { GridService, ColumnVisibilityConfig } from './services/grid.service';
 import { RowManagementService } from './services/row-management.service';
 import { SessionService } from './services/session.service';
 import { ValidationService } from './services/validation.service';
@@ -92,7 +92,6 @@ import type {
     IconComponent,
     PartModalComponent,
     PartsEditModalComponent,
-    HierarchicalCellRendererComponent,
   ],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
@@ -718,50 +717,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           width: 180,
           minWidth: 140,
           sortable: true,
-          cellRenderer: (params: any) => {
-            if (
-              params.data.isSectionHeader ||
-              params.data.isBranchHeader ||
-              params.data.isGroupHeader
-            ) {
-              return '';
-            }
-            const columnWidth = params.column?.getActualWidth() || 180;
-            const cellStyle = this.getDataCellStyle(params);
-            const textColor = cellStyle?.color || undefined;
-            return this.utilService.createCellContentWithTooltip(
-              params.value,
-              columnWidth,
-              textColor,
-            );
-          },
-          tooltipValueGetter: (params: any) => {
-            if (params.value === null || params.value === undefined) return null;
-            return String(params.value);
-          },
+          cellRenderer: (params: any) => this.renderDataCellContent(params, 180),
+          tooltipValueGetter: (params: any) => this.getCellTooltipValue(params),
           cellStyle: (params: any) => this.getDataCellStyle(params),
-          editable: (params: any) => {
-            if (!params.data || params.data.isSectionHeader) {
-              return false;
-            }
-            if (params.data.isNewRow) {
-              return this.gridConfigService.isFieldEditableForNewRow(
-                field,
-                () => this.isSkuFilterReadOnly(),
-                () => this.isSbomMode(),
-                () => this.isEbomMode(),
-                () => this.isMaterialMbomMode(),
-              );
-            }
-            return this.gridConfigService.isFieldEditableInSbom(
-              'bomLinkCountryOfOrigin',
-              params.data,
-              () => this.isSkuFilterReadOnly(),
-              () => this.isSbomMode(),
-              () => this.isEbomMode(),
-              () => this.isMaterialMbomMode(),
-            );
-          },
+          editable: (params: any) => this.isFieldEditable(field, params),
           cellEditor: AutocompleteCellEditorComponent,
           cellEditorParams: () => ({
             placeholder: 'search countries...',
@@ -782,50 +741,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           width: 150,
           minWidth: 100,
           sortable: true,
-          cellRenderer: (params: any) => {
-            if (
-              params.data.isSectionHeader ||
-              params.data.isBranchHeader ||
-              params.data.isGroupHeader
-            ) {
-              return '';
-            }
-            const columnWidth = params.column?.getActualWidth() || 150;
-            const cellStyle = this.getDataCellStyle(params);
-            const textColor = cellStyle?.color || undefined;
-            return this.utilService.createCellContentWithTooltip(
-              params.value,
-              columnWidth,
-              textColor,
-            );
-          },
-          tooltipValueGetter: (params: any) => {
-            if (params.value === null || params.value === undefined) return null;
-            return String(params.value);
-          },
+          cellRenderer: (params: any) => this.renderDataCellContent(params, 150),
+          tooltipValueGetter: (params: any) => this.getCellTooltipValue(params),
           cellStyle: (params: any) => this.getDataCellStyle(params),
-          editable: (params: any) => {
-            if (!params.data || params.data.isSectionHeader) {
-              return false;
-            }
-            if (params.data.isNewRow) {
-              return this.gridConfigService.isFieldEditableForNewRow(
-                field,
-                () => this.isSkuFilterReadOnly(),
-                () => this.isSbomMode(),
-                () => this.isEbomMode(),
-                () => this.isMaterialMbomMode(),
-              );
-            }
-            return this.gridConfigService.isFieldEditableInSbom(
-              'bomLinkSpecSheetExtra',
-              params.data,
-              () => this.isSkuFilterReadOnly(),
-              () => this.isSbomMode(),
-              () => this.isEbomMode(),
-              () => this.isMaterialMbomMode(),
-            );
-          },
+          editable: (params: any) => this.isFieldEditable(field, params),
           cellEditor: AutocompleteCellEditorComponent,
           cellEditorParams: {
             values: ['', 'Yes', 'No'],
@@ -848,50 +767,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           width: 150,
           minWidth: 100,
           sortable: true,
-          cellRenderer: (params: any) => {
-            if (
-              params.data.isSectionHeader ||
-              params.data.isBranchHeader ||
-              params.data.isGroupHeader
-            ) {
-              return '';
-            }
-            const columnWidth = params.column?.getActualWidth() || 150;
-            const cellStyle = this.getDataCellStyle(params);
-            const textColor = cellStyle?.color || undefined;
-            return this.utilService.createCellContentWithTooltip(
-              params.value,
-              columnWidth,
-              textColor,
-            );
-          },
-          tooltipValueGetter: (params: any) => {
-            if (params.value === null || params.value === undefined) return null;
-            return String(params.value);
-          },
+          cellRenderer: (params: any) => this.renderDataCellContent(params, 150),
+          tooltipValueGetter: (params: any) => this.getCellTooltipValue(params),
           cellStyle: (params: any) => this.getDataCellStyle(params),
-          editable: (params: any) => {
-            if (!params.data || params.data.isSectionHeader) {
-              return false;
-            }
-            if (params.data.isNewRow) {
-              return this.gridConfigService.isFieldEditableForNewRow(
-                field,
-                () => this.isSkuFilterReadOnly(),
-                () => this.isSbomMode(),
-                () => this.isEbomMode(),
-                () => this.isMaterialMbomMode(),
-              );
-            }
-            return this.gridConfigService.isFieldEditableInSbom(
-              'bomLinkIncludeInSpecSheet',
-              params.data,
-              () => this.isSkuFilterReadOnly(),
-              () => this.isSbomMode(),
-              () => this.isEbomMode(),
-              () => this.isMaterialMbomMode(),
-            );
-          },
+          editable: (params: any) => this.isFieldEditable(field, params),
           cellEditor: AutocompleteCellEditorComponent,
           cellEditorParams: (params: any) => {
             const values = ['', ...this.dataService.getIncludeInSpecSheetOptions(this.constraintsData)];
@@ -914,54 +793,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         sortable: true,
         resizable: true,
         hide: field === 'ptcbomPartMarkUpDisplayName',
-        cellRenderer: (params: any) => {
-          if (
-            params.data.isSectionHeader ||
-            params.data.isBranchHeader ||
-            params.data.isGroupHeader
-          ) {
-            return '';
-          }
-          const columnWidth = params.column?.getActualWidth() || columnDef.width || 150;
-
-          const cellStyle = this.getDataCellStyle(params);
-          const textColor = cellStyle?.color || undefined;
-
-          return this.utilService.createCellContentWithTooltip(
-            params.value,
-            columnWidth,
-            textColor,
-          );
-        },
-        tooltipValueGetter: (params: any) => {
-          if (params.value === null || params.value === undefined) return null;
-          return String(params.value);
-        },
-        cellStyle: (params: any) => {
-          return this.getDataCellStyle(params);
-        },
-        editable: (params: any) => {
-          if (!params.data || params.data.isSectionHeader) {
-            return false;
-          }
-          if (params.data.isNewRow) {
-            return this.gridConfigService.isFieldEditableForNewRow(
-              field,
-              () => this.isSkuFilterReadOnly(),
-              () => this.isSbomMode(),
-              () => this.isEbomMode(),
-              () => this.isMaterialMbomMode(),
-            );
-          }
-          return this.gridConfigService.isFieldEditableInSbom(
-            field,
-            params.data,
-            () => this.isSkuFilterReadOnly(),
-            () => this.isSbomMode(),
-            () => this.isEbomMode(),
-            () => this.isMaterialMbomMode(),
-          );
-        },
+        cellRenderer: (params: any) =>
+          this.renderDataCellContent(params, Number(columnDef.width ?? 150)),
+        tooltipValueGetter: (params: any) => this.getCellTooltipValue(params),
+        cellStyle: (params: any) => this.getDataCellStyle(params),
+        editable: (params: any) => this.isFieldEditable(field, params),
       };
 
       if (field === FIELD_BOM_LINK_PART || field === FIELD_PART_NUMBER) {
@@ -1029,24 +865,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           ) {
             return false;
           }
-
-          if (params.data?.isNewRow) {
-            return this.gridConfigService.isFieldEditableForNewRow(
-              field,
-              () => this.isSkuFilterReadOnly(),
-              () => this.isSbomMode(),
-              () => this.isEbomMode(),
-              () => this.isMaterialMbomMode(),
-            );
-          }
-          return this.gridConfigService.isFieldEditableInSbom(
-            field,
-            params.data,
-            () => this.isSkuFilterReadOnly(),
-            () => this.isSbomMode(),
-            () => this.isEbomMode(),
-            () => this.isMaterialMbomMode(),
-          );
+          return this.isFieldEditable(field, params);
         };
         columnDef.valueSetter = (params: any) => {
           if (!params.data || !params.colDef?.field) return false;
@@ -1121,44 +940,17 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           ) {
             return false;
           }
-
-          if (params.data?.isNewRow) {
-            return this.gridConfigService.isFieldEditableForNewRow(
-              field,
-              () => this.isSkuFilterReadOnly(),
-              () => this.isSbomMode(),
-              () => this.isEbomMode(),
-              () => this.isMaterialMbomMode(),
-            );
-          }
-          return this.gridConfigService.isFieldEditableInSbom(
-            field,
-            params.data,
-            () => this.isSkuFilterReadOnly(),
-            () => this.isSbomMode(),
-            () => this.isEbomMode(),
-            () => this.isMaterialMbomMode(),
-          );
+          return this.isFieldEditable(field, params);
         };
         columnDef.cellRenderer = (params: any) => {
-          if (
-            params.data.isSectionHeader ||
-            params.data.isBranchHeader ||
-            params.data.isGroupHeader
-          ) {
-            return '';
-          }
           let formattedValue = '';
           if (columnDef.valueFormatter && typeof columnDef.valueFormatter === 'function') {
             formattedValue = columnDef.valueFormatter(params) || '';
           }
-          const columnWidth = params.column?.getActualWidth() || columnDef.width || 150;
-          const cellStyle = this.getDataCellStyle(params);
-          const textColor = cellStyle?.color || undefined;
-          return this.utilService.createCellContentWithTooltip(
+          return this.renderDataCellContent(
+            params,
+            Number(columnDef.width ?? 150),
             formattedValue,
-            columnWidth,
-            textColor,
           );
         };
         columnDef.valueGetter = (params: any) => {
@@ -1224,28 +1016,28 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   /**
    * Check if we're in SBOM mode
    */
+  private getCurrentBomType(): string {
+    return this.dataService.getBomType() || DEFAULT_BOM_TYPE;
+  }
+
   public isSbomMode(): boolean {
-    const bomType = this.dataService.getBomType();
-    return bomType === BOM_TYPE_SBOM;
+    return this.getCurrentBomType() === BOM_TYPE_SBOM;
   }
 
   public isMbomMode(): boolean {
-    const bomType = this.dataService.getBomType();
-    return bomType === BOM_TYPE_MBOM;
+    return this.getCurrentBomType() === BOM_TYPE_MBOM;
   }
 
   public isEbomMode(): boolean {
-    const bomType = this.dataService.getBomType();
-    return bomType === BOM_TYPE_EBOM;
+    return this.getCurrentBomType() === BOM_TYPE_EBOM;
   }
 
   public isMaterialMbomMode(): boolean {
-    const bomType = this.dataService.getBomType();
-    return bomType === BOM_TYPE_MATERIALMBOM;
+    return this.getCurrentBomType() === BOM_TYPE_MATERIALMBOM;
   }
 
   public getBomComposerTitle(): string {
-    const bomType = this.dataService.getBomType();
+    const bomType = this.getCurrentBomType();
     
     if (bomType === BOM_TYPE_EBOM || bomType === BOM_TYPE_SBOM) {
       return `${bomType} Composer`;
@@ -1259,7 +1051,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   public getCriteriaLabel(): string {
-    const bomType = this.dataService.getBomType();
+    const bomType = this.getCurrentBomType();
     if (bomType === BOM_TYPE_EBOM || bomType === BOM_TYPE_MATERIALMBOM) {
       return 'Material of SKUs chosen - ';
     }
@@ -1343,6 +1135,70 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     return this.gridService.getDataCellStyle(params, this.utilService);
   }
 
+  private isHeaderDataRow(data: any): boolean {
+    return !!(data?.isSectionHeader || data?.isBranchHeader || data?.isGroupHeader);
+  }
+
+  private renderDataCellContent(
+    params: any,
+    fallbackWidth: number,
+    value: any = params?.value,
+  ): string {
+    if (this.isHeaderDataRow(params?.data)) {
+      return '';
+    }
+
+    const columnWidth = params.column?.getActualWidth() || fallbackWidth;
+    const cellStyle = this.getDataCellStyle(params);
+    const textColor = cellStyle?.color || undefined;
+    return this.utilService.createCellContentWithTooltip(value, columnWidth, textColor);
+  }
+
+  private getCellTooltipValue(params: any): string | null {
+    if (params.value === null || params.value === undefined) {
+      return null;
+    }
+    return String(params.value);
+  }
+
+  private isFieldEditable(field: string, params: any): boolean {
+    if (!params.data || params.data.isSectionHeader) {
+      return false;
+    }
+
+    if (params.data.isNewRow) {
+      return this.gridConfigService.isFieldEditableForNewRow(
+        field,
+        () => this.isSkuFilterReadOnly(),
+        () => this.isSbomMode(),
+        () => this.isEbomMode(),
+        () => this.isMaterialMbomMode(),
+      );
+    }
+
+    return this.gridConfigService.isFieldEditableInSbom(
+      field,
+      params.data,
+      () => this.isSkuFilterReadOnly(),
+      () => this.isSbomMode(),
+      () => this.isEbomMode(),
+      () => this.isMaterialMbomMode(),
+    );
+  }
+
+  private getColumnVisibilityConfig(): ColumnVisibilityConfig {
+    return {
+      gridApi: this.gridApi,
+      allColumns: this.allColumns as ExtendedColDef[],
+      isSkuColumn: (col: any) => this.isSkuColumn(col),
+      isFieldGrouped: (field: string) => this.isFieldGrouped(field),
+      panelColumnOrder: this.panelColumnOrder,
+      setPanelColumnOrder: (order: ExtendedColDef[]) => {
+        this.panelColumnOrder = order;
+      },
+    };
+  }
+
 
   onGridReady(params: any): void {
     this.gridApi = params.api;
@@ -1372,16 +1228,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   toggleColumnVisibility(col?: any, event?: Event): void {
     if (col && event) {
       const visible = (event.target as HTMLInputElement).checked;
-      this.gridService.toggleColumnVisibility(col, visible, {
-        gridApi: this.gridApi,
-        allColumns: this.allColumns,
-        isSkuColumn: (c) => this.isSkuColumn(c),
-        isFieldGrouped: (field) => this.isFieldGrouped(field),
-        panelColumnOrder: this.panelColumnOrder,
-        setPanelColumnOrder: (order) => {
-          this.panelColumnOrder = order;
-        },
-      });
+      this.gridService.toggleColumnVisibility(col, visible, this.getColumnVisibilityConfig());
     } else {
       this.showColumnVisibilityPanel = !this.showColumnVisibilityPanel;
       if (this.showColumnVisibilityPanel) {
@@ -1391,42 +1238,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   selectAllColumns(): void {
-    this.gridService.selectAllColumns({
-      gridApi: this.gridApi,
-      allColumns: this.allColumns,
-      isSkuColumn: (col) => this.isSkuColumn(col),
-      isFieldGrouped: (field) => this.isFieldGrouped(field),
-      panelColumnOrder: this.panelColumnOrder,
-      setPanelColumnOrder: (order) => {
-        this.panelColumnOrder = order;
-      },
-    });
+    this.gridService.selectAllColumns(this.getColumnVisibilityConfig());
   }
 
   clearAllColumns(): void {
-    this.gridService.clearAllColumns({
-      gridApi: this.gridApi,
-      allColumns: this.allColumns,
-      isSkuColumn: (col) => this.isSkuColumn(col),
-      isFieldGrouped: (field) => this.isFieldGrouped(field),
-      panelColumnOrder: this.panelColumnOrder,
-      setPanelColumnOrder: (order) => {
-        this.panelColumnOrder = order;
-      },
-    });
+    this.gridService.clearAllColumns(this.getColumnVisibilityConfig());
   }
 
   getVisibleColumnsForPanel(): ExtendedColDef[] {
-    return this.gridService.getVisibleColumnsForPanel({
-      gridApi: this.gridApi,
-      allColumns: this.allColumns,
-      isSkuColumn: (col) => this.isSkuColumn(col),
-      isFieldGrouped: (field) => this.isFieldGrouped(field),
-      panelColumnOrder: this.panelColumnOrder,
-      setPanelColumnOrder: (order) => {
-        this.panelColumnOrder = order;
-      },
-    });
+    return this.gridService.getVisibleColumnsForPanel(this.getColumnVisibilityConfig());
   }
 
   /**
@@ -1611,16 +1431,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       targetColumn,
       this.draggedColumnIndex,
       targetIndex,
-      {
-        gridApi: this.gridApi,
-        allColumns: this.allColumns,
-        isSkuColumn: (col) => this.isSkuColumn(col),
-        isFieldGrouped: (field) => this.isFieldGrouped(field),
-        panelColumnOrder: this.panelColumnOrder,
-        setPanelColumnOrder: (order) => {
-          this.panelColumnOrder = order;
-        },
-      },
+      this.getColumnVisibilityConfig(),
     );
 
     this.resetDragState();
@@ -2365,7 +2176,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const url = new URL(pathToJsp, window.location.origin);
     url.searchParams.set(PARAM_IDS, String(ids).trim());
     url.searchParams.set(PARAM_BOM_TYPE, BOM_TYPE_EBOM);
-    window.open(url.toString(), '_blank');
+    const newWindow = window.open(url.toString(), '_blank', 'noopener,noreferrer');
+    if (newWindow) {
+      newWindow.opener = null;
+    }
   }
 
   closeMaterialModal(): void {

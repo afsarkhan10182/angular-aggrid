@@ -530,8 +530,10 @@ export class RowManagementService {
   ): void {
     if ((params.field === FIELD_PART || params.colDef?.field === FIELD_PART) && params.newValue) {
       const apiData = dataService.getApiData();
-
-      const items = apiData!.instances;
+      const items = Array.isArray(apiData?.instances) ? apiData.instances : [];
+      if (items.length === 0) {
+        return;
+      }
       const existingPart = items.find((item) => {
         const bomLink = item[BOM_LINK_KEY];
         return bomLink?.[FIELD_PART_NUMBER] === params.newValue;

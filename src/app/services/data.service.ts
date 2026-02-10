@@ -316,7 +316,7 @@ export class DataService {
     const searchTerm = (query || '').trim();
 
     if (environment.useMockApi) {
-      const items = this.apiData!.instances;
+      const items = Array.isArray(this.apiData?.instances) ? this.apiData.instances : [];
       const allValues = items
         .map((item: BomInstance) => {
           const bomLink = item[BOM_LINK_KEY];
@@ -656,7 +656,7 @@ export class DataService {
   }
 
   getColumnMapping(): { [key: string]: string } {
-    return this.apiData!.columns;
+    return this.apiData?.columns ?? {};
   }
 
   getSkuDataForPart(partRow: any): any[] {

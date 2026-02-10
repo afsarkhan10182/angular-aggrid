@@ -106,6 +106,30 @@ export class AutocompleteCellEditorComponent
     return fieldName;
   }
 
+  private getGridContext(): any {
+    return (this.params?.context as any) ?? this.params?.api?.getGridOption?.('context');
+  }
+
+  private getSelectedGenericOptionId(option: string, optionIndex?: number): string | null {
+    if (!this.genericOptions.length) {
+      return null;
+    }
+
+    if (
+      optionIndex !== undefined &&
+      optionIndex >= 0 &&
+      optionIndex < this.genericOptions.length
+    ) {
+      const selectedOption = this.genericOptions[optionIndex];
+      return selectedOption.id || selectedOption.displayValue || option;
+    }
+
+    const selectedOption = this.genericOptions.find(
+      (entry: any) => (entry.displayValue || entry.name || '') === option
+    );
+    return selectedOption ? selectedOption.id || selectedOption.displayValue || option : null;
+  }
+
   ngOnInit() {
     this.originalValue = this.value;
 
@@ -628,26 +652,9 @@ export class AutocompleteCellEditorComponent
         if (fieldName === FIELD_BOM_LINK_FEATURE) {
           // Store display value for UI
           this.params.node.setDataValue(FIELD_FEATURE, option);
-
-        let selectedFeatureId: string | null = null;
-        if (this.isBomFeatureSearch && this.genericOptions.length > 0) {
-          if (
-              optionIndex !== undefined &&
-              optionIndex >= 0 &&
-              optionIndex < this.genericOptions.length
-            ) {
-              const selectedFeature = this.genericOptions[optionIndex];
-              selectedFeatureId = selectedFeature.id || selectedFeature.displayValue || option;
-            } else {
-              const selectedFeature = this.genericOptions.find(
-                (feature: any) => (feature.displayValue || feature.name || '') === option
-              );
-              if (selectedFeature) {
-                selectedFeatureId = selectedFeature.id || selectedFeature.displayValue || option;
-              }
-            }
-          }
-
+          const selectedFeatureId = this.isBomFeatureSearch
+            ? this.getSelectedGenericOptionId(option, optionIndex)
+            : null;
           if (selectedFeatureId) {
             this.params.node.setDataValue('bomLinkFeatureId', selectedFeatureId);
           }
@@ -655,24 +662,7 @@ export class AutocompleteCellEditorComponent
 
         // Handle service search fields (similar to bomLinkFeature pattern)
         if (this.isServiceSearch && this.genericOptions.length > 0) {
-          let selectedServiceId: string | null = null;
-          
-          if (
-            optionIndex !== undefined &&
-            optionIndex >= 0 &&
-            optionIndex < this.genericOptions.length
-          ) {
-            const selectedService = this.genericOptions[optionIndex];
-            selectedServiceId = selectedService.id || selectedService.displayValue || option;
-          } else {
-            const selectedService = this.genericOptions.find(
-              (service: any) => (service.displayValue || service.name || '') === option
-            );
-            if (selectedService) {
-              selectedServiceId = selectedService.id || selectedService.displayValue || option;
-            }
-          }
-
+          const selectedServiceId = this.getSelectedGenericOptionId(option, optionIndex);
           if (selectedServiceId && fieldName) {
             // Store ID in a separate field (e.g., materialColorServiceEquivalentId)
             const idFieldName = `${fieldName}Id`;
@@ -681,24 +671,7 @@ export class AutocompleteCellEditorComponent
         }
 
         if (this.isCountrySearch && this.genericOptions.length > 0) {
-          let selectedCountryId: string | null = null;
-
-          if (
-            optionIndex !== undefined &&
-            optionIndex >= 0 &&
-            optionIndex < this.genericOptions.length
-          ) {
-            const selectedCountry = this.genericOptions[optionIndex];
-            selectedCountryId = selectedCountry.id || selectedCountry.displayValue || option;
-          } else {
-            const selectedCountry = this.genericOptions.find(
-              (country: any) => (country.displayValue || country.name || '') === option
-            );
-            if (selectedCountry) {
-              selectedCountryId = selectedCountry.id || selectedCountry.displayValue || option;
-            }
-          }
-
+          const selectedCountryId = this.getSelectedGenericOptionId(option, optionIndex);
           if (fieldName) {
             const idFieldName = `${fieldName}Id`;
             this.params.node.setDataValue(idFieldName, selectedCountryId || '');
@@ -770,7 +743,7 @@ export class AutocompleteCellEditorComponent
     if (!data?.isNewRow) return;
     const rowId = data.newRowId;
     if (rowId == null) return;
-    const ctx = (this.params?.context as any) ?? this.params?.api?.getGridOption?.('context');
+    const ctx = this.getGridContext();
     const editedRows = ctx?.editedRows;
     if (!editedRows) return;
     editedRows.add(rowId);
@@ -790,7 +763,7 @@ export class AutocompleteCellEditorComponent
     const rowId =
       data.materialKey || data.newRowId || data[FIELD_PART_NUMBER] || data.part || null;
     if (rowId == null) return;
-    const ctx = (this.params?.context as any) ?? this.params?.api?.getGridOption?.('context');
+    const ctx = this.getGridContext();
     const editedRows = ctx?.editedRows;
     const editedFields = ctx?.editedFields;
     if (editedRows) editedRows.add(rowId);
@@ -854,7 +827,7 @@ export class AutocompleteCellEditorComponent
       this.params.node.setDataValue('materialColorId', material.materialColorId);
     }
 
-    const ctx = (this.params?.context as any) ?? this.params?.api?.getGridOption?.('context');
+    const ctx = this.getGridContext();
     const setSkip = ctx?.setSkipEditTracking;
     try {
       setSkip?.(true);
@@ -942,7 +915,7 @@ export class AutocompleteCellEditorComponent
   }
 
   private triggerFeatureAutoPopulation(partNumber: string): void {
-    const dataService = (this.params as any).context?.dataService;
+    const dataService = this.getGridContext()?.dataService;
 
     if (dataService) {
       this.triggerFeatureAutoPopulationWithService(partNumber, dataService);
@@ -959,8 +932,10 @@ export class AutocompleteCellEditorComponent
 
   private triggerFeatureAutoPopulationWithService(partNumber: string, dataService: any): void {
     const apiData = dataService.getApiData();
-
-    const items = apiData!.instances;
+    const items = Array.isArray(apiData?.instances) ? apiData.instances : [];
+    if (items.length === 0) {
+      return;
+    }
     const existingPart = items.find((item: any) => {
       const bomLink = item[BOM_LINK_KEY];
       return bomLink?.[FIELD_PART_NUMBER] === partNumber;

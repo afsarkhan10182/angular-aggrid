@@ -9,8 +9,6 @@ import {
   REQUIRED_FIELDS_FOR_SAVE,
   DEFAULT_REQUIRED_FIELDS,
   ROW_ID_UNKNOWN,
-  LABEL_ROW,
-  LABEL_ROWS,
   MSG_VALIDATION_REQUIRED_FIELDS,
   MSG_NO_SKUS_SELECTED,
   MSG_SKU_SELECTION,
@@ -141,13 +139,41 @@ export class ValidationService {
   private findNewRows(rows: any[]): any[] {
     const newRows: any[] = [];
     rows.forEach((row) => {
-      if (row.isNewRow && !row.isSectionHeader && !row.isGroupHeader && !row.isMaterialHeader) {
+      if (this.isDataRowForValidation(row) && row.isNewRow) {
         newRows.push(row);
       }
       if (row.children && Array.isArray(row.children)) {
         newRows.push(...this.findNewRows(row.children));
       }
     });
+    return newRows;
+  }
+
+  private isDataRowForValidation(row: any): boolean {
+    return !!(row && !row.isSectionHeader && !row.isGroupHeader && !row.isMaterialHeader);
+  }
+
+  private getValidationRowId(row: any): string | number {
+    return row.newRowId ?? row.materialKey ?? row[FIELD_PART_NUMBER] ?? row.part ?? ROW_ID_UNKNOWN;
+  }
+
+  private collectNewRows(rowData: any[], displayData?: any[]): any[] {
+    const newRows = this.findNewRows(rowData);
+    if (!displayData || !Array.isArray(displayData)) {
+      return newRows;
+    }
+
+    displayData.forEach((row: any) => {
+      if (!this.isDataRowForValidation(row) || !row.isNewRow) {
+        return;
+      }
+
+      const exists = newRows.some((nr) => nr.newRowId === row.newRowId);
+      if (!exists) {
+        newRows.push(row);
+      }
+    });
+
     return newRows;
   }
 
@@ -188,19 +214,7 @@ export class ValidationService {
     requiredFields: RequiredField[] = this.defaultRequiredFields
   ): ValidationResult {
     const invalidRows: InvalidRow[] = [];
-
-    const newRows = this.findNewRows(rowData);
-
-    if (displayData && Array.isArray(displayData)) {
-      displayData.forEach((row: any) => {
-        if (row.isNewRow && !row.isSectionHeader && !row.isGroupHeader && !row.isMaterialHeader) {
-          const exists = newRows.some((nr) => nr.newRowId === row.newRowId);
-          if (!exists) {
-            newRows.push(row);
-          }
-        }
-      });
-    }
+    const newRows = this.collectNewRows(rowData, displayData);
 
     newRows.forEach((row) => {
       const validation = this.validateRow(row, requiredFields);
@@ -209,7 +223,7 @@ export class ValidationService {
         invalidRows.push({
           row,
           missingFields: validation.missingFields,
-          rowId: row.newRowId || row[FIELD_PART_NUMBER] || row.part || ROW_ID_UNKNOWN,
+          rowId: this.getValidationRowId(row),
         });
       }
     });
@@ -257,8 +271,7 @@ export class ValidationService {
         invalidRows.push({
           row,
           missingFields: validation.missingFields,
-          rowId:
-            row.newRowId ?? row.materialKey ?? row[FIELD_PART_NUMBER] ?? row.part ?? ROW_ID_UNKNOWN,
+          rowId: this.getValidationRowId(row),
         });
       }
     });
@@ -327,7 +340,7 @@ export class ValidationService {
     const { count, skuIds } = this.countSkusWithValues(row, skuInfo);
 
     if (count === 0) {
-      const rowId = row.newRowId || row[FIELD_PART_NUMBER] || row.part || ROW_ID_UNKNOWN;
+      const rowId = this.getValidationRowId(row);
       return {
         isValid: false,
         message: `Row ${rowId}: At least 1 SKU must be selected before submit.`,
@@ -370,7 +383,7 @@ export class ValidationService {
 
     if (selectedCount === 1) {
       if (payloadSkuIds.length !== 1) {
-        const rowId = row.newRowId || row[FIELD_PART_NUMBER] || row.part || ROW_ID_UNKNOWN;
+        const rowId = this.getValidationRowId(row);
         return {
           isValid: false,
           message: `Row ${rowId}: Only 1 SKU is selected, but payload contains ${payloadSkuIds.length} SKU(s).`,
@@ -378,7 +391,7 @@ export class ValidationService {
       }
 
       if (!payloadSkuIds.includes(selectedSkuIds[0])) {
-        const rowId = row.newRowId || row[FIELD_PART_NUMBER] || row.part || ROW_ID_UNKNOWN;
+        const rowId = this.getValidationRowId(row);
         return {
           isValid: false,
           message: `Row ${rowId}: Selected SKU (${selectedSkuIds[0]}) does not match payload SKU (${payloadSkuIds[0]}).`,
@@ -387,7 +400,7 @@ export class ValidationService {
     } else {
       const missingSkus = selectedSkuIds.filter((id) => !payloadSkuIds.includes(id));
       if (missingSkus.length > 0) {
-        const rowId = row.newRowId || row[FIELD_PART_NUMBER] || row.part || ROW_ID_UNKNOWN;
+        const rowId = this.getValidationRowId(row);
         return {
           isValid: false,
           message: `Row ${rowId}: Selected SKUs (${selectedSkuIds.join(
@@ -398,7 +411,7 @@ export class ValidationService {
 
       const extraSkus = payloadSkuIds.filter((id) => !selectedSkuIds.includes(id));
       if (extraSkus.length > 0) {
-        const rowId = row.newRowId || row[FIELD_PART_NUMBER] || row.part || ROW_ID_UNKNOWN;
+        const rowId = this.getValidationRowId(row);
         return {
           isValid: false,
           message: `Row ${rowId}: Payload contains SKUs (${extraSkus.join(
@@ -420,19 +433,7 @@ export class ValidationService {
    */
   validateNewRowsSkus(rowData: any[], skuInfo: any[], displayData?: any[]): SkuValidationResult {
     const invalidRows: InvalidRow[] = [];
-
-    const newRows = this.findNewRows(rowData);
-
-    if (displayData && Array.isArray(displayData)) {
-      displayData.forEach((row: any) => {
-        if (row.isNewRow && !row.isSectionHeader && !row.isGroupHeader && !row.isMaterialHeader) {
-          const exists = newRows.some((nr) => nr.newRowId === row.newRowId);
-          if (!exists) {
-            newRows.push(row);
-          }
-        }
-      });
-    }
+    const newRows = this.collectNewRows(rowData, displayData);
 
     newRows.forEach((row) => {
       const validation = this.validateRowSkus(row, skuInfo);
@@ -441,15 +442,12 @@ export class ValidationService {
         invalidRows.push({
           row,
           missingFields: [MSG_SKU_SELECTION],
-          rowId: row.newRowId || row[FIELD_PART_NUMBER] || row.part || ROW_ID_UNKNOWN,
+          rowId: this.getValidationRowId(row),
         });
       }
     });
 
     if (invalidRows.length > 0) {
-      const rowCount = invalidRows.length === 1 ? LABEL_ROW : LABEL_ROWS;
-      const rowIds = invalidRows.map((ir) => ir.rowId).join(', ');
-
       return {
         isValid: false,
         message: `Cannot save: no SKU selected.`,
@@ -483,17 +481,7 @@ export class ValidationService {
       return this.validateDuplicatePartAndFeatureOnly(rowData, displayData, apiData);
     }
 
-    const newRows = this.findNewRows(rowData);
-    if (displayData && Array.isArray(displayData)) {
-      displayData.forEach((row: any) => {
-        if (row.isNewRow && !row.isSectionHeader && !row.isGroupHeader && !row.isMaterialHeader) {
-          const exists = newRows.some((nr) => nr.newRowId === row.newRowId);
-          if (!exists) {
-            newRows.push(row);
-          }
-        }
-      });
-    }
+    const newRows = this.collectNewRows(rowData, displayData);
 
     const existingRows: any[] = [];
     const isMbom = bomType === BOM_TYPE_MBOM;
@@ -633,9 +621,6 @@ export class ValidationService {
 
       collectRows(rowData);
     }
-
-    newRows.forEach((row, idx) => {});
-    existingRows.forEach((row, idx) => {});
 
     if (newRows.length > 1) {
       const newRowDetails = new Map<string, any[]>();
@@ -1044,35 +1029,31 @@ export class ValidationService {
             duplicateType = DUPLICATE_TYPE_FEATURE_UNIQUENESS;
             errorMessage = MSG_DUPLICATE_FEATURE_SKU_SECTION;
             break;
-          } else if (recordCount === 0) {
           } else if (recordCount === 1) {
             const matchingRecord = matchingRecords[0];
             const existingPartNumber = matchingRecord.partNumber;
-            const existingPtcbomPartMarkUp = matchingRecord.ptcbomPartMarkUp;
             const isEmptyExistingPart = matchingRecord.isEmptyPartNumber;
 
-            if (isEmptyExistingPart) {
-            } else {
+            if (!isEmptyExistingPart) {
               if (existingPartNumber !== partNumber) {
                 duplicateSkus.push(skuId);
                 foundDuplicate = true;
                 duplicateType = DUPLICATE_TYPE_DUPLICATE_FEATURE;
                 errorMessage = MSG_DUPLICATE_FEATURE_SKU_SECTION;
                 break;
-              } else {
-                duplicateSkus.push(skuId);
-                foundDuplicate = true;
-                duplicateType = DUPLICATE_TYPE_DUPLICATE_PART;
-                errorMessage = MSG_DUPLICATE_FEATURE_AND_PART;
-                break;
               }
+              duplicateSkus.push(skuId);
+              foundDuplicate = true;
+              duplicateType = DUPLICATE_TYPE_DUPLICATE_PART;
+              errorMessage = MSG_DUPLICATE_FEATURE_AND_PART;
+              break;
             }
           }
         }
       }
 
       if (foundDuplicate) {
-        const rowId = row.newRowId || row?.[FIELD_PART_NUMBER] || ROW_ID_UNKNOWN;
+        const rowId = this.getValidationRowId(row);
         invalidRows.push({
           row,
           missingFields: [],
@@ -1171,7 +1152,7 @@ export class ValidationService {
           invalidRows.push({
             row: r,
             missingFields: [],
-            rowId: r.newRowId ?? r?.[FIELD_PART_NUMBER] ?? ROW_ID_UNKNOWN,
+            rowId: this.getValidationRowId(r),
             duplicateType: DUPLICATE_TYPE_DUPLICATE_PART,
           })
         );
@@ -1179,7 +1160,7 @@ export class ValidationService {
         invalidRows.push({
           row: rows[0],
           missingFields: [],
-          rowId: rows[0].newRowId ?? rows[0]?.[FIELD_PART_NUMBER] ?? ROW_ID_UNKNOWN,
+          rowId: this.getValidationRowId(rows[0]),
           duplicateType: DUPLICATE_TYPE_DUPLICATE_PART,
         });
       }
