@@ -1,0 +1,85 @@
+{
+    "rows": [
+        {
+            "displayValue": "10400 | Cockpit : Bar End",
+            "id": "203125"
+        },
+        {
+            "displayValue": "1100 | Fuselage : Link",
+            "id": "203551"
+        },
+        {
+            "displayValue": "1200 | Fuselage : Suspension Hardware",
+            "id": "203568"
+        },
+        {
+            "displayValue": "12200 | Accessory : Kickstand",
+            "id": "203142"
+        },
+        {
+            "displayValue": "12655 | Lighting : Wire Harness",
+            "id": "203584"
+        },
+        {
+            "displayValue": "13100 | Rack : Rack Rear",
+            "id": "203158"
+        },
+        {
+            "displayValue": "13100 | Rack : Rack Rear",
+            "id": "203600"
+        },
+        {
+            "displayValue": "13200 | Rack : Rack Bracket Rear",
+            "id": "203716"
+        },
+        {
+            "displayValue": "13250 | Rack : Rack Stays Rear",
+            "id": "203732"
+        },
+        {
+            "displayValue": "13330 | Rack : Rack Rear Hardware",
+            "id": "203748"
+        },
+        {
+            "displayValue": "13370 | Rack : Rack Rear Hardware 2",
+            "id": "203764"
+        },
+        {
+            "displayValue": "13900 | Accessory : Pump",
+            "id": "203174"
+        },
+        {
+            "displayValue": "1400 | Fuselage : Sag Gauge Front",
+            "id": "203190"
+        },
+        {
+            "displayValue": "150 | Fuselage : Compliance Label 1",
+            "id": "203406"
+        },
+        {
+            "displayValue": "1500 | Fuselage : Lockout Lever Front",
+            "id": "203422"
+        },
+        {
+            "displayValue": "151 | Fuselage : Compliance Label 2",
+            "id": "203780"
+        },
+        {
+            "displayValue": "15300 | Media : Feedback Card",
+            "id": "203796"
+        },
+        {
+            "displayValue": "15510 | Packaging : Packaging Miscellaneous 2",
+            "id": "203812"
+        },
+        {
+            "displayValue": "16390 | NA : Decal Mask 5",
+            "id": "203828"
+        },
+        {
+            "displayValue": "185 | Fuselage : Framekit Hardware 2",
+            "id": "203844"
+        }
+    ],
+    "totalNumberOfRows": 20
+}

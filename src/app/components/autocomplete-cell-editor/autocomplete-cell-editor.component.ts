@@ -464,9 +464,9 @@ export class AutocompleteCellEditorComponent
       case 'Enter':
         event.preventDefault();
         if (this.selectedIndex >= 0 && this.selectedIndex < this.filteredOptions.length) {
-          this.selectOption(this.filteredOptions[this.selectedIndex]);
+          this.selectOption(this.filteredOptions[this.selectedIndex], this.selectedIndex);
         } else if (this.filteredOptions.length === 1) {
-          this.selectOption(this.filteredOptions[0]);
+          this.selectOption(this.filteredOptions[0], 0);
         } else {
           this.closeDropdown();
           setTimeout(() => {
@@ -655,8 +655,10 @@ export class AutocompleteCellEditorComponent
           const selectedFeatureId = this.isBomFeatureSearch
             ? this.getSelectedGenericOptionId(option, optionIndex)
             : null;
-          if (selectedFeatureId) {
-            this.params.node.setDataValue('bomLinkFeatureId', selectedFeatureId);
+          if (this.params.node?.data) {
+            this.params.node.data.bomLinkFeatureId = selectedFeatureId
+              ? String(selectedFeatureId)
+              : '';
           }
         }
 

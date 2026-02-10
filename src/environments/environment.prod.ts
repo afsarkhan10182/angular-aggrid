@@ -13,6 +13,7 @@ export const environment = {
     csrf: '/api/csrf.json',
     getUser: '/api/getUser.json',
     material: '/api/material.json',
+    bomFeatures: '/api/feature.json',
     materialColorsSearch: '/api/serviceDataModal.json',
   },
 };

@@ -211,7 +211,7 @@ export class DataService {
     let dataSource: Observable<any>;
 
     if (environment.useMockApi) {
-      const mockApiUrl = environment.mockApiEndpoints.materialColorsSearch ?? '/api/serviceDataModal.json';
+      const mockApiUrl = environment.mockApiEndpoints.materialColorsSearch;
       dataSource = this.http.get<any>(mockApiUrl).pipe(
         map((mockResponse) => {
           const instances = mockResponse?.instances ?? {};
@@ -277,6 +277,7 @@ export class DataService {
       query,
       fetchLimit,
       FIELD_BOM_LINK_FEATURE,
+      environment.mockApiEndpoints.bomFeatures,
     );
   }
 
@@ -312,10 +313,41 @@ export class DataService {
     query: string,
     fetchLimit: number,
     mockFieldName: string,
+    mockApiUrl?: string,
   ): Observable<{ results: any[]; resultCount: number; hasMore: boolean }> {
     const searchTerm = (query || '').trim();
 
     if (environment.useMockApi) {
+      if (mockApiUrl) {
+        return this.http.get<any>(mockApiUrl).pipe(
+          map((response) => {
+            const rows = Array.isArray(response?.rows) ? response.rows : [];
+            const filteredRows =
+              searchTerm.length > 0
+                ? rows.filter((row: any) =>
+                    String(row?.displayValue ?? row?.name ?? '')
+                      .toLowerCase()
+                      .includes(searchTerm.toLowerCase()),
+                  )
+                : rows;
+
+            const resultCount = response?.totalNumberOfRows ?? filteredRows.length;
+            const limitedRows = filteredRows.slice(0, fetchLimit).map((row: any, index: number) => ({
+              ...row,
+              displayValue: String(row?.displayValue ?? row?.name ?? ''),
+              id: row?.id != null ? String(row.id) : `${mockFieldName}-${index}`,
+            }));
+
+            return {
+              results: limitedRows,
+              resultCount,
+              hasMore: resultCount > limitedRows.length,
+            };
+          }),
+          catchError(() => of({ results: [], resultCount: 0, hasMore: false })),
+        );
+      }
+
       const items = Array.isArray(this.apiData?.instances) ? this.apiData.instances : [];
       const allValues = items
         .map((item: BomInstance) => {
@@ -557,8 +589,7 @@ export class DataService {
    */
   searchMaterialColors(materialColorIds: string): Observable<any> {
     if (environment.useMockApi) {
-      const mockUrl =
-        environment.mockApiEndpoints.materialColorsSearch ?? '/api/serviceDataModal.json';
+      const mockUrl = environment.mockApiEndpoints.materialColorsSearch;
       return this.http.get<any>(mockUrl, { headers: this.buildHttpHeaders() });
     }
     return this.materialColorsSearchByIds(materialColorIds);
