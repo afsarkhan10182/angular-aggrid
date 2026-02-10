@@ -195,6 +195,26 @@ export class DataService {
   }
 
   /**
+   * Get linked/complex BOM data for a material child/master id.
+   * This endpoint is used by linked BOM modal, not by material-color search/edit flows.
+   */
+  getComplexBOM(materialId: string): Observable<any> {
+    const apiUrl = environment.useMockApi
+      ? environment.mockApiEndpoints.complexMaterial
+      : `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/getMaterialBOM?materialMasterId=${materialId}`;
+
+    return this.http.get<any>(apiUrl).pipe(
+      map((data) => {
+        if (Array.isArray(data?.instances)) {
+          return data;
+        }
+        throw new Error('Invalid API response format for linked BOM modal');
+      }),
+      catchError(this.handleError),
+    );
+  }
+
+  /**
    * Search materials by query string using Windchill API or mock data
    * @param query Search query string
    * @param fromIndex Starting index for pagination (default: 1)

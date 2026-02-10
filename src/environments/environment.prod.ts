@@ -14,6 +14,7 @@ export const environment = {
     getUser: '/api/getUser.json',
     material: '/api/material.json',
     bomFeatures: '/api/feature.json',
+    complexMaterial: '/api/materialmodal.json',
     materialColorsSearch: '/api/serviceDataModal.json',
   },
 };

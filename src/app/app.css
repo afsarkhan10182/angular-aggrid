@@ -179,24 +179,6 @@
   flex-shrink: 0;
 }
 
-/* SKU disconnect button in rendered cell HTML */
-:host ::ng-deep .sku-delete-btn-existing {
-  margin-left: 8px;
-  background: #ef4444;
-  color: #ffffff;
-  border: none;
-  border-radius: 3px;
-  padding: 2px 6px;
-  cursor: pointer;
-  font-size: 12px;
-  line-height: 1;
-  transition: opacity 0.2s ease;
-}
-
-:host ::ng-deep .sku-delete-btn-existing:hover {
-  opacity: 0.9;
-}
-
 /* Per-SKU disconnect (cross) in existing SBOM rows */
 :host ::ng-deep .sku-disconnect-btn {
   margin-left: 8px;
@@ -613,16 +595,6 @@
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
-.search-icon {
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #6b7280;
-  font-size: 14px;
-  pointer-events: none;
-}
-
 .search-input {
   width: 100%;
   border: none;
@@ -704,10 +676,6 @@
   transform: none;
 }
 
-.search-filter-btn i {
-  font-size: 11px;
-}
-
 /* Responsive adjustments for the controls row */
 .controls-row {
   display: flex;
@@ -770,56 +738,6 @@
   gap: 12px;
   flex-wrap: nowrap;
   white-space: nowrap;
-}
-
-.export-btn {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2);
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-
-.export-btn:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-  transform: translateY(-1px);
-}
-
-.export-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.mass-edit-btn,
-.edit-parts-btn {
-  margin-left: 8px;
-}
-
-.mass-edit-btn {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-}
-
-.mass-edit-btn:hover {
-  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
-}
-
-.edit-parts-btn {
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-}
-
-.edit-parts-btn:hover {
-  background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%);
 }
 
 /* Action Dropdown */
@@ -1174,28 +1092,6 @@
   transform: translateY(-1px);
 }
 
-.bulk-disconnect-btn {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(239, 68, 68, 0.2);
-}
-
-.bulk-disconnect-btn:hover {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-  transform: translateY(-1px);
-}
-
 /* -----------------------------------------------------------------------------
  * Visual highlight for row state (UX)
  * - Edited (touched/changed, not saved yet): light yellow
@@ -1217,16 +1113,4 @@
 .ag-row.ag-row-inline-editing,
 .ag-row.ag-row-inline-editing .ag-cell {
   background-color: #fef3c7 !important;
-}
-
-/* SKU delete button styling */
-.sku-delete-btn-existing {
-  opacity: 0.7;
-  transition: opacity 0.2s ease;
-}
-
-
-.sku-delete-btn-existing:hover {
-  opacity: 1;
-  background: #dc2626 !important;
 }

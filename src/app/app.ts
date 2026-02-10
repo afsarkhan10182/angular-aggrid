@@ -11,7 +11,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
+import { ColDef, GridApi, GridOptions, getGridElement } from 'ag-grid-community';
 import { Subscription } from 'rxjs';
 import { AutocompleteCellEditorComponent } from './components/autocomplete-cell-editor/autocomplete-cell-editor.component';
 import { IconComponent } from './components/icon/icon.component';
@@ -71,9 +71,6 @@ import {
   MSG_EXPORT_EXCEL_SUCCESS_SELECTED,
   LABEL_ROW,
   LABEL_ROWS,
-  JSP_BOM_COMPOSER,
-  PARAM_BOM_TYPE,
-  PARAM_IDS,
   VALUE_SPEC_YES,
 } from './constants';
 import type {
@@ -2163,23 +2160,35 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    const ids = materialData.materialColorId ?? materialData.childId;
-    if (ids == null || String(ids).trim() === '') {
+    const materialMasterId = materialData.childId;
+    if (materialMasterId == null || String(materialMasterId).trim() === '') {
       return;
     }
 
-    const pathname = window.location.pathname || '';
-    const pathToJsp = pathname.endsWith(JSP_BOM_COMPOSER)
-      ? pathname
-      : pathname.replace(/\/?$/, '') + '/' + JSP_BOM_COMPOSER;
+    const sub = this.dataService.getComplexBOM(String(materialMasterId).trim()).subscribe({
+      next: (bomData: any) => {
+        if (!bomData || typeof bomData !== 'object') {
+          this.showNotification('Failed to load linked BOM details.', NOTIFICATION_TYPE_ERROR);
+          return;
+        }
 
-    const url = new URL(pathToJsp, window.location.origin);
-    url.searchParams.set(PARAM_IDS, String(ids).trim());
-    url.searchParams.set(PARAM_BOM_TYPE, BOM_TYPE_EBOM);
-    const newWindow = window.open(url.toString(), '_blank', 'noopener,noreferrer');
-    if (newWindow) {
-      newWindow.opener = null;
-    }
+        this.selectedMaterialData = {
+          ...bomData,
+          instances: Array.isArray(bomData.instances) ? bomData.instances : [],
+          columns: bomData.columns && typeof bomData.columns === 'object' ? bomData.columns : {},
+        };
+        this.selectedMaterialSkuData = [];
+        this.showMaterialModal = true;
+      },
+      error: (error: any) => {
+        const message =
+          error?.error?.message ||
+          error?.message ||
+          'Failed to load material BOM data.';
+        this.showNotification(message, NOTIFICATION_TYPE_ERROR);
+      },
+    });
+    this.subscriptions.push(sub);
   }
 
   closeMaterialModal(): void {
@@ -2792,109 +2801,56 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
 
   private handleDateColumnClick(event: any): void {
-    const targetRowIndex = event.rowIndex;
-    const targetColKey = event.column.getId();
-    const gridContainer = event.api.getGridElement() as HTMLElement;
-
-    if (!gridContainer) {
-      event.api.startEditingCell({
-        rowIndex: targetRowIndex,
-        colKey: targetColKey,
-        rowPinned: event.rowPinned,
-      });
-      return;
-    }
-
     event.api.startEditingCell({
-      rowIndex: targetRowIndex,
-      colKey: targetColKey,
+      rowIndex: event.rowIndex,
+      colKey: event.column.getId(),
       rowPinned: event.rowPinned,
     });
 
-    const timeouts: ReturnType<typeof setTimeout>[] = [];
-    let isCleanedUp = false;
-    const observerRef: { current: MutationObserver | null } = { current: null };
-    const cleanedUpRef = { current: isCleanedUp };
-    const cleanup = this.createEditorCleanup(observerRef, timeouts, cleanedUpRef);
-
-    const openDatePicker = (): boolean => {
-      if (cleanedUpRef.current) return false;
-
-      const editingCell = gridContainer.querySelector('.ag-cell-inline-editing') as HTMLElement;
-      if (!editingCell) return false;
-
-      const dateInput =
-        (editingCell.querySelector('input[type="date"]') as HTMLInputElement) ||
-        (editingCell.querySelector('input.ag-date-input') as HTMLInputElement) ||
-        (editingCell.querySelector('input') as HTMLInputElement);
-
-      if (dateInput?.type !== 'date') return false;
-
-      try {
-        dateInput.focus();
-        const openPicker = () => {
-          if (cleanedUpRef.current || dateInput.type !== 'date') return;
-          if (typeof dateInput.showPicker === 'function') {
-            try {
-              dateInput.showPicker();
-            } catch (e) {
-              console.warn('showPicker failed, using click fallback:', e);
-              dateInput.click();
-            }
-          } else {
-            dateInput.click();
-          }
-        };
-        requestAnimationFrame(() => {
-          requestAnimationFrame(openPicker);
-        });
-        return true;
-      } catch (e) {
-        console.warn('Date picker interaction failed:', e);
+    const openPickerFromActiveEditor = (): boolean => {
+      const editors = event.api.getCellEditorInstances({
+        rowNodes: [event.node],
+        columns: [event.column],
+      });
+      const activeEditor = Array.isArray(editors) ? editors[0] : null;
+      if (!activeEditor || typeof activeEditor.getGui !== 'function') {
         return false;
       }
+
+      const editorGui = activeEditor.getGui() as HTMLElement;
+      if (!editorGui) return false;
+
+      const dateInput = editorGui.querySelector(
+        'input[type="date"], input[type="datetime-local"]',
+      ) as HTMLInputElement | null;
+      if (!dateInput) return false;
+
+      dateInput.focus();
+      if (typeof dateInput.showPicker === 'function') {
+        try {
+          dateInput.showPicker();
+        } catch {
+          dateInput.click();
+        }
+      } else {
+        dateInput.click();
+      }
+      return true;
     };
 
-    if (openDatePicker()) {
-      cleanup();
-      return;
-    }
-
-    try {
-      const newObserver = new MutationObserver(() => {
-        if (!cleanedUpRef.current && openDatePicker()) {
-          cleanup();
-        }
-      });
-      observerRef.current = newObserver as MutationObserver | null;
-      newObserver.observe(gridContainer, {
-        childList: true,
-        subtree: true,
-      });
-    } catch (e) {
-      console.warn('MutationObserver creation failed:', e);
-      cleanup();
-    }
-
-    [100, 200, 300].forEach((delay) => {
-      const timeout = setTimeout(() => {
-        if (!cleanedUpRef.current && openDatePicker()) {
-          cleanup();
-        }
-      }, delay);
-      timeouts.push(timeout);
+    if (openPickerFromActiveEditor()) return;
+    requestAnimationFrame(() => {
+      if (openPickerFromActiveEditor()) return;
+      setTimeout(() => {
+        openPickerFromActiveEditor();
+      }, 80);
     });
-
-    const cleanupTimeout = setTimeout(() => {
-      cleanup();
-    }, 1000);
-    timeouts.push(cleanupTimeout);
   }
 
   private handleAutocompleteFieldClick(event: any): void {
     const targetRowIndex = event.rowIndex;
     const targetColKey = event.column.getId();
-    const gridContainer = event.api.getGridElement() as HTMLElement;
+    const gridContainer = getGridElement(event.api) as HTMLElement | undefined;
 
     if (!gridContainer) {
       event.api.startEditingCell({
