@@ -342,9 +342,18 @@ export class GridService {
     return html ? `<div class="actions-cell-content">${html}</div>` : '';
   }
 
+  private getGroupValueLabel(value: unknown): string {
+    if (value === null || value === undefined) {
+      return '(Empty)';
+    }
+
+    const normalized = String(value).trim();
+    return normalized !== '' ? normalized : '(Empty)';
+  }
+
   private renderGroupHeader(data: any, config: CellRenderingConfig): string {
     const arrowIcon = data.isExpanded ? '▼' : '▶';
-    const groupValue = data.groupValue !== null && data.groupValue !== undefined ? String(data.groupValue) : '(Empty)';
+    const groupValue = this.getGroupValueLabel(data.groupValue);
     const groupLevel = data.groupLevel ?? 0;
     const groupCount = this.gridConfigService.getGroupCount(data);
     const bgColor = this.getGroupBackgroundColor(groupLevel);
@@ -429,10 +438,7 @@ export class GridService {
   renderGroupHeaderFullWidth(params: any, config: CellRenderingConfig): string {
     const data = params.data;
     const arrowIcon = data.isExpanded ? '▼' : '▶';
-    const groupValue =
-      data.groupValue !== null && data.groupValue !== undefined
-        ? String(data.groupValue)
-        : '(Empty)';
+    const groupValue = this.getGroupValueLabel(data.groupValue);
     const groupLevel = data.groupLevel ?? 0;
     const indentPixels = groupLevel * 20;
     const groupCount = this.gridConfigService.getGroupCount(data);
@@ -440,7 +446,7 @@ export class GridService {
     const borderColor = this.getGroupBorderColor(groupLevel);
     const hoverBg = this.getGroupHoverBackgroundColor(groupLevel);
 
-    return this.buildHierHeader({
+    const headerContent = this.buildHierHeader({
       classes: 'hier-clickable hier-header-fullwidth',
       style: `--bg:${bgColor};--bg-hover:${hoverBg};--border:${borderColor};--arrow-color:${borderColor};--indent:${indentPixels}px;`,
       content: `
@@ -453,6 +459,15 @@ export class GridService {
         <span class="hier-count">(${groupCount})</span>
       `,
     });
+
+    return `
+      <div class="group-fullwidth-row group-level-${groupLevel}">
+        <div class="group-fullwidth-actions actions-no-checkbox"></div>
+        <div class="group-fullwidth-content">
+          ${headerContent}
+        </div>
+      </div>
+    `;
   }
 
   renderSectionHeaderFullWidth(

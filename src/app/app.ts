@@ -512,9 +512,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         .map((g) => g.field)
         .filter((f): f is string => !!f);
       groupedFields.forEach((field) => {
-        if (field !== FIELD_BOM_LINK_FEATURE) {
-          this.gridApi.setColumnsVisible([field], false);
-        }
+        this.gridApi.setColumnsVisible([field], false);
       });
     }
   }
@@ -1471,7 +1469,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     this.activeGroupFields.push(field);
 
-    if (this.gridApi && field.field && field.field !== FIELD_BOM_LINK_FEATURE) {
+    if (this.gridApi && field.field) {
       this.gridApi.setColumnsVisible([field.field], false);
     }
 
@@ -1483,7 +1481,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     if (this.gridApi && field.field) {
       const colDef = this.columnDefs.find((col) => col.field === field.field);
-      if (field.field !== FIELD_BOM_LINK_FEATURE && colDef && !colDef.hide) {
+      if (colDef && !colDef.hide) {
         this.gridApi.setColumnsVisible([field.field], true);
       }
     }
@@ -1500,7 +1498,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (this.gridApi && groupedFields.length > 0) {
       groupedFields.forEach((field) => {
         const colDef = this.columnDefs.find((col) => col.field === field);
-        if (field !== FIELD_BOM_LINK_FEATURE && colDef && !colDef.hide) {
+        if (colDef && !colDef.hide) {
           this.gridApi.setColumnsVisible([field], true);
         }
       });
