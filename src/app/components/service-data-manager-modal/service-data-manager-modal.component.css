@@ -160,11 +160,31 @@
   overflow: auto; /* Grid scrolls internally */
 }
 
-/* Keep divider fixed in body area only (avoid header border darkening) */
+
+/* Draw boundary from first scrollable column to avoid pinned-layer overlap issues */
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-header-cell[col-id="actions"],
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-cell[col-id="actions"] {
+  border-right: none !important;
+}
+
+/* Keep divider fixed at pinned boundary during horizontal scroll (header + values) */
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-header-viewport,
 .modal-grid-container ::ng-deep .ag-theme-alpine .ag-center-cols-viewport {
   border-left: 1px solid #b8c4d2 !important;
 }
 
+/* Remove AG Grid default pinned header edge to avoid double-dark divider */
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-pinned-left-header {
+  border-right: none !important;
+}
+
+/* Avoid double-dark line from AG Grid default pinned edge */
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-header-cell.ag-header-cell-last-left-pinned,
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-cell.ag-cell-last-left-pinned {
+  border-right: none !important;
+}
+
+.modal-grid-container ::ng-deep .ag-theme-alpine .ag-header-cell[col-id="materialColorPartNumber"],
 .modal-grid-container ::ng-deep .ag-theme-alpine .ag-cell[col-id="materialColorPartNumber"] {
   font-weight: 500;
 }
