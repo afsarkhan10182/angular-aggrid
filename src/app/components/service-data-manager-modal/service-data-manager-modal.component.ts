@@ -22,8 +22,11 @@ import {
   SERVICE_DATA_MANAGER_MODAL_DROPDOWN_FIELDS,
   FIELD_PART_NUMBER,
   FIELD_MATERIAL_COLOR_STATUS,
+  FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT,
+  FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE,
+  FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_TWO,
   PLACEHOLDER_SEARCH_SERVICES,
-  COL_ERROR_INDICATOR,
+  COL_ACTIONS,
 } from '../../constants';
 import { DataService } from '../../services/data.service';
 import { GridConfigService } from '../../services/grid-config.service';
@@ -62,10 +65,18 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
   private readonly editedRows = new Set<string | number>();
   private readonly editedFields = new Map<string | number, Set<string>>();
   private readonly originalRowValues = new Map<string | number, any>();
+  private readonly actionsColumnCompactWidth = 44;
+  private readonly actionsColumnErrorWidth = 60;
   public rowErrors: { [materialColorId: string]: string } = {};
   public successMessage: string = '';
   public showSuccessMessage: boolean = false;
   public isSaving: boolean = false;
+  public selectedRowCount = 0;
+  private readonly serviceLookupFields = new Set<string>([
+    FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT,
+    FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE,
+    FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_TWO,
+  ]);
 
   public massEditAutocomplete: { [field: string]: { showDropdown: boolean; options: string[]; selectedIndex: number; top?: string; left?: string; width?: string } } = {};
   private massEditSearchSubjects: { [field: string]: Subject<string> } = {};
@@ -105,31 +116,37 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
     const columnDefs: ColDef[] = [
       {
         headerName: '',
-        field: COL_ERROR_INDICATOR,
-        colId: COL_ERROR_INDICATOR,
-        width: 48,
-        minWidth: 48,
-        maxWidth: 48,
+        field: COL_ACTIONS,
+        colId: COL_ACTIONS,
+        width: this.actionsColumnCompactWidth,
+        minWidth: this.actionsColumnCompactWidth,
+        maxWidth: this.actionsColumnErrorWidth,
         pinned: 'left',
         resizable: false,
         sortable: false,
         filter: false,
         suppressMovable: true,
-        headerClass: 'error-indicator-header',
-        cellClass: 'error-indicator-cell',
-        headerComponent: undefined, // Don't show pin icon on error indicator column
+        suppressHeaderMenuButton: true,
+        lockPosition: true,
+        lockPinned: true,
+        checkboxSelection: true,
+        headerCheckboxSelection: true,
+        headerCheckboxSelectionFilteredOnly: false,
+        cellClassRules: {
+          'actions-has-error': (params: any) =>
+            !!(params.data?.materialColorId && this.rowErrors[params.data.materialColorId]),
+        },
+        headerComponent: undefined, // Keep utility actions column header simple (no pin control)
         cellRenderer: (params: any) => {
-          // Show error icon if row has error
           const hasError = params.data?.materialColorId && this.rowErrors[params.data.materialColorId];
           if (hasError) {
             const errorMessage = this.rowErrors[params.data.materialColorId];
             const escapedMessage = this.escapeHtml(errorMessage);
-            return `<span class="validation-error-icon" title="${escapedMessage}" aria-label="Row error">ⓘ</span>`;
+            return `<div class="actions-cell-content"><span class="validation-error-icon" title="${escapedMessage}" aria-label="Row error">ⓘ</span></div>`;
           }
           return '';
         },
         tooltipValueGetter: (params: any) => {
-          // Show raw error message from backend in tooltip
           if (params.data?.materialColorId && this.rowErrors[params.data.materialColorId]) {
             return this.rowErrors[params.data.materialColorId];
           }
@@ -222,6 +239,7 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
       ...this.gridConfigService.getDefaultColDef(),
       headerComponent: ColumnHeaderPinComponent,
       suppressMovable: true,
+      suppressHeaderMenuButton: true,
     };
 
     const commonOptions = this.gridConfigService.getCommonGridOptions(this);
@@ -229,7 +247,7 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
       ...commonOptions,
       suppressRowClickSelection: true,
       suppressMovableColumns: true,
-      rowSelection: 'single',
+      rowSelection: 'multiple',
       components: commonOptions.components
         ? {
             ...commonOptions.components,
@@ -254,6 +272,7 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
         if (this.columnDefs.length > 0) {
           this.gridApi.setGridOption('columnDefs', this.columnDefs);
         }
+        this.applyActionsColumnWidth(this.computeActionsColumnWidth());
         this.gridConfigService.forceHorizontalScrollbarVisibility(this.gridApi);
         this.setupMassEditScrollSync();
         // Notify grid to recalculate layout
@@ -266,53 +285,8 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
 
           const fieldName = params.colDef?.field;
           if (!fieldName) return;
-
-          if (!this.originalRowValues.has(materialColorId)) {
-            const originalRow = this.rowData.find((row) => row.materialColorId === materialColorId);
-            if (originalRow) {
-              this.originalRowValues.set(materialColorId, { ...originalRow });
-            }
-          }
-
-          const originalRow = this.originalRowValues.get(materialColorId);
-          
-          const normalizeValue = (val: any): string => {
-            if (val === null || val === undefined) return '';
-            return String(val).trim();
-          };
-
-          let originalValue: any;
-          let newValue: any;
-          
-          if (fieldName === 'materialColorServiceEquivalent' || 
-              fieldName === 'materialColorServiceSubstituteOne' || 
-              fieldName === 'materialColorServiceSubstituteTwo') {
-            originalValue = originalRow?.[fieldName] || '';
-            newValue = params.newValue || '';
-          } else {
-            originalValue = originalRow?.[fieldName];
-            newValue = params.newValue;
-          }
-
-          const normalizedOriginal = normalizeValue(originalValue);
-          const normalizedNew = normalizeValue(newValue);
-          const hasChanged = normalizedOriginal !== normalizedNew;
-
-          if (hasChanged) {
-            this.editedRows.add(materialColorId);
-            if (!this.editedFields.has(materialColorId)) {
-              this.editedFields.set(materialColorId, new Set());
-            }
-            this.editedFields.get(materialColorId)!.add(fieldName);
-          } else {
-            if (this.editedFields.has(materialColorId)) {
-              this.editedFields.get(materialColorId)!.delete(fieldName);
-              if (this.editedFields.get(materialColorId)!.size === 0) {
-                this.editedRows.delete(materialColorId);
-                this.editedFields.delete(materialColorId);
-              }
-            }
-          }
+          const newValue = this.getComparableFieldValue(fieldName, params.newValue);
+          this.syncEditedState(materialColorId, fieldName, newValue);
 
           const rowIndex = this.rowData.findIndex((row) => row.materialColorId === materialColorId);
           if (rowIndex >= 0) {
@@ -340,6 +314,61 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
     };
   }
 
+  private isServiceLookupField(fieldName: string): boolean {
+    return this.serviceLookupFields.has(fieldName);
+  }
+
+  private normalizeEditValue(value: any): string {
+    if (value === null || value === undefined) return '';
+    return String(value).trim();
+  }
+
+  private getComparableFieldValue(fieldName: string, value: any): any {
+    if (this.isServiceLookupField(fieldName)) {
+      return value || '';
+    }
+    return value;
+  }
+
+  private ensureOriginalRowSnapshot(materialColorId: string, fallbackRow?: any): any {
+    if (!this.originalRowValues.has(materialColorId)) {
+      const sourceRow = this.rowData.find((row) => row.materialColorId === materialColorId) || fallbackRow;
+      if (sourceRow) {
+        this.originalRowValues.set(materialColorId, { ...sourceRow });
+      }
+    }
+    return this.originalRowValues.get(materialColorId);
+  }
+
+  private syncEditedState(
+    materialColorId: string,
+    fieldName: string,
+    newValue: any,
+    fallbackRow?: any
+  ): boolean {
+    const originalRow = this.ensureOriginalRowSnapshot(materialColorId, fallbackRow);
+    const originalValue = this.getComparableFieldValue(fieldName, originalRow?.[fieldName]);
+    const normalizedOriginal = this.normalizeEditValue(originalValue);
+    const normalizedNew = this.normalizeEditValue(this.getComparableFieldValue(fieldName, newValue));
+    const hasChanged = normalizedOriginal !== normalizedNew;
+
+    if (hasChanged) {
+      this.editedRows.add(materialColorId);
+      if (!this.editedFields.has(materialColorId)) {
+        this.editedFields.set(materialColorId, new Set());
+      }
+      this.editedFields.get(materialColorId)!.add(fieldName);
+    } else if (this.editedFields.has(materialColorId)) {
+      this.editedFields.get(materialColorId)!.delete(fieldName);
+      if (this.editedFields.get(materialColorId)!.size === 0) {
+        this.editedRows.delete(materialColorId);
+        this.editedFields.delete(materialColorId);
+      }
+    }
+
+    return hasChanged;
+  }
+
   handleCloseClick(): void {
     if (this.hasEditedRows) {
       const confirmed = confirm(
@@ -356,7 +385,9 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
     this.editedRows.clear();
     this.editedFields.clear();
     this.originalRowValues.clear();
+    this.selectedRowCount = 0;
     this.rowErrors = {};
+    this.applyActionsColumnWidth(this.computeActionsColumnWidth());
     this.showSuccessMessage = false;
     this.successMessage = '';
     this.modalClose.emit();
@@ -395,6 +426,7 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
     if (Object.keys(instances).length === 0) return;
 
     this.rowErrors = {};
+    this.applyActionsColumnWidth(this.computeActionsColumnWidth());
     this.showSuccessMessage = false;
     this.isSaving = true;
 
@@ -412,6 +444,7 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
             const rawErrorMessage = errorObj?.errorMessage || errorObj?.message || 'Unknown error occurred';
             this.rowErrors[materialColorId] = rawErrorMessage;
           });
+          this.applyActionsColumnWidth(this.computeActionsColumnWidth());
           
           this.showSuccessMessage = false;
 
@@ -451,7 +484,7 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
             this.gridApi.setGridOption('rowData', [...this.rowData]);
             this.gridApi.refreshCells({ 
               force: true,
-              columns: [COL_ERROR_INDICATOR]
+              columns: [COL_ACTIONS]
             });
             this.gridApi.redrawRows();
           }
@@ -471,6 +504,7 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
             }
           }
         } else {
+          this.applyActionsColumnWidth(this.computeActionsColumnWidth());
           // No errors - update row data with saved instances (modal stays open)
           if (response?.instances && typeof response.instances === 'object') {
             Object.keys(response.instances).forEach((materialColorId) => {
@@ -561,6 +595,8 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
 
       this.editedRows.clear();
       this.editedFields.clear();
+      this.selectedRowCount = 0;
+      this.applyActionsColumnWidth(this.computeActionsColumnWidth());
 
       if (this.gridApi) {
         this.gridApi.setGridOption('rowData', this.rowData);
@@ -814,66 +850,78 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
       return;
     }
 
+    const selectedNodes = this.gridApi.getSelectedNodes().filter((node: any) => !!node.data);
+    const targetNodes: any[] = [];
+    if (selectedNodes.length > 0) {
+      targetNodes.push(...selectedNodes);
+    } else {
+      this.gridApi.forEachNode((node: any) => {
+        if (node.data) targetNodes.push(node);
+      });
+    }
+    if (targetNodes.length === 0) {
+      return;
+    }
+
     this.isMassEditing = true;
     setTimeout(() => {
       try {
         const nodesToUpdate: any[] = [];
         const columnsToUpdate: Set<string> = new Set();
+        const disabledFields = this.getDisabledFields();
 
-        // Apply mass edit to ALL rows
-        this.gridApi.forEachNode((node: any) => {
-          if (!node.data) return;
-
+        // Apply to selected rows when selected, otherwise apply to all rows
+        targetNodes.forEach((node: any) => {
           const rowData = node.data;
           const materialColorId = rowData.materialColorId;
           if (!materialColorId) return;
 
-          let hasChanges = false;
+          // Capture baseline once before any field updates for this row.
+          this.ensureOriginalRowSnapshot(materialColorId, rowData);
+          const wasRowEdited = this.editedRows.has(materialColorId);
+          let rowValueChanged = false;
+          let rowTouched = false;
 
           // Apply each mass edit value that was set
           // Only fields returned by getEditableFields() should be in massEditValues,
           // but we validate here as well for safety
           Object.keys(this.massEditValues).forEach((field) => {
-            const value = this.massEditValues[field]?.trim();
-            if (value) {
-              // Verify field is editable (not in disabled fields)
-              const disabledFields = this.getDisabledFields();
-              if (!disabledFields.has(field)) {
-                rowData[field] = value;
-                hasChanges = true;
-                columnsToUpdate.add(field);
-              }
+            const rawValue = this.massEditValues[field];
+            const value = rawValue?.trim();
+            if (!value || disabledFields.has(field)) return;
+
+            rowTouched = true;
+
+            const normalizedCurrent = this.normalizeEditValue(
+              this.getComparableFieldValue(field, rowData[field]),
+            );
+            const normalizedNew = this.normalizeEditValue(this.getComparableFieldValue(field, value));
+
+            if (normalizedCurrent !== normalizedNew) {
+              rowData[field] = this.getComparableFieldValue(field, value);
+              rowValueChanged = true;
+              columnsToUpdate.add(field);
             }
+
+            this.syncEditedState(materialColorId, field, value);
           });
 
-          if (hasChanges) {
-            // Store original value if not already stored
-            if (!this.originalRowValues.has(materialColorId)) {
-              const originalRow = this.rowData.find((row) => row.materialColorId === materialColorId);
-              if (originalRow) {
-                this.originalRowValues.set(materialColorId, { ...originalRow });
-              }
-            }
-
-            // Track edited rows and fields
-            this.editedRows.add(materialColorId);
-            if (!this.editedFields.has(materialColorId)) {
-              this.editedFields.set(materialColorId, new Set());
-            }
-            columnsToUpdate.forEach((col) => {
-              this.editedFields.get(materialColorId)!.add(col);
-            });
-
+          const isRowEditedNow = this.editedRows.has(materialColorId);
+          if (rowTouched && (rowValueChanged || wasRowEdited !== isRowEditedNow)) {
             nodesToUpdate.push(node);
           }
         });
 
-        if (nodesToUpdate.length > 0 && columnsToUpdate.size > 0) {
-          this.gridApi.refreshCells({
-            rowNodes: nodesToUpdate,
-            columns: Array.from(columnsToUpdate),
-            force: true,
-          });
+        if (nodesToUpdate.length > 0) {
+          if (columnsToUpdate.size > 0) {
+            this.gridApi.refreshCells({
+              rowNodes: nodesToUpdate,
+              columns: Array.from(columnsToUpdate),
+              force: true,
+            });
+          }
+          // Always redraw touched rows so edited-row class can be added/removed
+          // even when only edit state changed (e.g., revert to modal-open values).
           this.gridApi.redrawRows({ rowNodes: nodesToUpdate });
         }
 
@@ -909,6 +957,10 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
       .map((col) => col.field!);
   }
 
+  onSelectionChanged(params: any): void {
+    this.selectedRowCount = params?.api?.getSelectedNodes?.().length || 0;
+  }
+
   isDropdownField(field: string): boolean {
     const colDef = this.columnDefs.find((col) => col.field === field);
     if (!colDef) return false;
@@ -940,6 +992,15 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
     return div.innerHTML;
   }
 
+  private computeActionsColumnWidth(): number {
+    return this.hasErrors() ? this.actionsColumnErrorWidth : this.actionsColumnCompactWidth;
+  }
+
+  private applyActionsColumnWidth(width: number): void {
+    if (!this.gridApi) return;
+    this.gridApi.setColumnWidths([{ key: COL_ACTIONS, newWidth: width }], false);
+  }
+
   getRowError(materialColorId: string): string | null {
     return this.rowErrors[materialColorId] || null;
   }
@@ -947,10 +1008,11 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
   clearRowError(materialColorId: string): void {
     if (this.rowErrors[materialColorId]) {
       delete this.rowErrors[materialColorId];
+      this.applyActionsColumnWidth(this.computeActionsColumnWidth());
       if (this.gridApi) {
         this.gridApi.refreshCells({ 
           force: true,
-          columns: [COL_ERROR_INDICATOR] // Refresh error indicator column
+          columns: [COL_ACTIONS] // Refresh actions column (checkbox + validation icon)
         });
         this.gridApi.redrawRows();
       }
@@ -962,10 +1024,11 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
 
   clearAllErrors(): void {
     this.rowErrors = {};
+    this.applyActionsColumnWidth(this.computeActionsColumnWidth());
     if (this.gridApi) {
       this.gridApi.refreshCells({ 
         force: true,
-        columns: [COL_ERROR_INDICATOR] // Refresh error indicator column
+        columns: [COL_ACTIONS] // Refresh actions column (checkbox + validation icon)
       });
       this.gridApi.redrawRows();
     }

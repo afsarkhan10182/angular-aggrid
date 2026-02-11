@@ -646,6 +646,7 @@ export class DataService {
    * @param payload - Object with instances containing material color updates
    */
   saveMaterialColors(payload: { instances: { [key: string]: any } }): Observable<any> {
+    console.log('saveMaterialColors', payload);
     if (environment.useMockApi) {
       return of({ success: true, message: MSG_MATERIAL_COLORS_SAVED_MOCK });
     }

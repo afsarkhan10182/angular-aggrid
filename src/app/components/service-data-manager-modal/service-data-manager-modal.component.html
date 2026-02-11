@@ -13,7 +13,7 @@
           (click)="massEditMode ? closeMassEditMode() : openMassEdit()"
           class="mass-edit-toggle-btn"
           [class.active]="massEditMode"
-          [title]="massEditMode ? 'Close Mass Edit' : 'Enable Mass Edit for all rows'"
+          [title]="massEditMode ? 'Close Mass Edit' : 'Enable Mass Edit for selected rows'"
         >
           <app-icon name="edit" size="14"></app-icon> {{ massEditMode ? 'Close Mass Edit' : 'Mass Edit' }}
         </button>
@@ -69,11 +69,15 @@
               (click)="applyMassEdit()"
               class="apply-mass-edit-btn"
               [disabled]="isMassEditing"
-              title="Apply mass edit to all rows"
+              [title]="
+                selectedRowCount > 0
+                  ? 'Apply mass edit to selected rows'
+                  : 'Apply mass edit to all rows'
+              "
             >
               <app-icon *ngIf="!isMassEditing" name="check" size="14"></app-icon>
               <app-icon *ngIf="isMassEditing" name="spinner" size="14"></app-icon>
-              <span *ngIf="!isMassEditing">Apply All</span>
+              <span *ngIf="!isMassEditing">{{ selectedRowCount > 0 ? 'Apply Selected' : 'Apply All' }}</span>
               <span *ngIf="isMassEditing">Applying...</span>
             </button>
           </div>
