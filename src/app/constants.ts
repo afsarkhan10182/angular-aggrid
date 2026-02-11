@@ -66,7 +66,7 @@ export const FIELD_COLOR = 'color';
 export const FIELD_COLOR_DESCRIPTION = 'colorDescription';
 export const FIELD_HAS_LINKED_BOM = 'hasLinkedBom';
 export const FIELD_PTCBOM_PART_MARK_UP_DISPLAY_NAME = 'ptcbomPartMarkUpDisplayName';
-export const FIELD_MATERIAL_COLOR_STATUS = 'materialColorStatus';
+export const FIELD_MATERIAL_COLOR_STATUS = 'materialColorState';
 export const FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT = 'materialColorServiceEquivalent';
 export const FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE = 'materialColorServiceSubstituteOne';
 export const FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_TWO = 'materialColorServiceSubstituteTwo';
@@ -251,15 +251,18 @@ export const DEFAULT_REQUIRED_FIELDS: readonly { keys: string[]; label: string }
   { keys: [FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET], label: 'Include In Spec Sheet' },
 ];
 
-/** Parts Edit Modal: columns that are not editable */
-export const PARTS_EDIT_MODAL_DISABLED_FIELDS: readonly string[] = [
+/** Service Data Manager Modal: columns that are not editable */
+export const SERVICE_DATA_MANAGER_MODAL_DISABLED_FIELDS: readonly string[] = [
   FIELD_PART_NUMBER,
   'materialColorManufacturersPartNumber',
   FIELD_MATERIAL_COLOR_STATUS,
+  FIELD_MATERIAL,
+  FIELD_COLOR,
+  FIELD_SUPPLIER,
 ];
 
-/** Parts Edit Modal: service fields that use autocomplete (service search) */
-export const PARTS_EDIT_MODAL_DROPDOWN_FIELDS: readonly string[] = [
+/** Service Data Manager Modal: service fields that use autocomplete (service search) */
+export const SERVICE_DATA_MANAGER_MODAL_DROPDOWN_FIELDS: readonly string[] = [
   FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE,
   FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_TWO,
   FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT,

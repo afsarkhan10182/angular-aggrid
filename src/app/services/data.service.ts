@@ -508,7 +508,7 @@ export class DataService {
    */
   updateBomData(payload: any): Observable<any> {
     const apiUrl = environment.useMockApi
-      ? '/api/updateBom'
+      ? environment.mockApiEndpoints.saveBomLinks
       : `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/saveBOMLinks`;
 
     return this.http.put<any>(apiUrl, payload, { headers: this.buildHttpHeaders() }).pipe(
@@ -769,7 +769,7 @@ export class DataService {
    */
   fetchIncludeInSpecSheetConstraints(): Observable<any> {
     const url = environment.useMockApi
-      ? 'api/IncludeInSpecSheet.json'
+      ? environment.mockApiEndpoints.includeInSpecSheet
       : `${this.getServiceHostUrl()}/Windchill/servlet/rest/tm/types/com.lcs.wc.flexbom.FlexBOMLink/attributes/${FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET}`;
 
     return this.http.get<any>(url).pipe(

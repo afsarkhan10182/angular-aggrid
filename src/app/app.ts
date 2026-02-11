@@ -17,8 +17,8 @@ import { AutocompleteCellEditorComponent } from './components/autocomplete-cell-
 import { IconComponent } from './components/icon/icon.component';
 import { ColumnHeaderPinComponent } from './components/column-header-pin/column-header-pin.component';
 import { HierarchicalCellRendererComponent } from './components/hierarchical-cell-renderer/hierarchical-cell-renderer.component';
-import { PartModalComponent } from './components/part-modal/part-modal.component';
-import { PartsEditModalComponent } from './components/parts-edit-modal/parts-edit-modal.component';
+import { LinkedBomModalComponent } from './components/linked-bom-modal/linked-bom-modal.component';
+import { ServiceDataManagerModalComponent } from './components/service-data-manager-modal/service-data-manager-modal.component';
 import { DataService } from './services/data.service';
 import { GridConfigService, GroupConfig } from './services/grid-config.service';
 import { GridService, ColumnVisibilityConfig } from './services/grid.service';
@@ -87,8 +87,8 @@ import type {
     FormsModule,
     AgGridAngular,
     IconComponent,
-    PartModalComponent,
-    PartsEditModalComponent,
+    LinkedBomModalComponent,
+    ServiceDataManagerModalComponent,
   ],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
@@ -115,12 +115,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('columnCheckboxes') columnCheckboxes!: ElementRef;
   @ViewChild('actionDropdown') actionDropdown!: ElementRef;
   public showExpiredData = false;
-  public showMaterialModal = false;
-  public selectedMaterialData: any = {};
-  public selectedMaterialSkuData: any[] = [];
-  public showPartsEditModal = false;
-  public partsEditModalMaterialColorIds: string[] = [];
-  public partsEditModalData: any[] = [];
+  public showLinkedBomModal = false;
+  public selectedLinkedBomData: any = {};
+  public selectedLinkedBomSkuData: any[] = [];
+  public showServiceDataManagerModal = false;
+  public serviceDataManagerModalMaterialColorIds: string[] = [];
   public searchText: string = '';
   public saveMessage: string = '';
   public saveMessageType: string = '';
@@ -1910,7 +1909,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (linkIconEl && event.data && !event.data.isNewRow) {
       event.event?.preventDefault?.();
       event.event?.stopPropagation?.();
-      this.openMaterialModal(event.data);
+      this.openLinkedBomModal(event.data);
       return true;
     }
     return false;
@@ -2151,7 +2150,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  openMaterialModal(materialData: any): void {
+  openLinkedBomModal(materialData: any): void {
     if (!materialData) return;
 
     if (materialData.linkedBom !== '1' && materialData.linkedBom !== 1) {
@@ -2170,13 +2169,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           return;
         }
 
-        this.selectedMaterialData = {
+        this.selectedLinkedBomData = {
           ...bomData,
           instances: Array.isArray(bomData.instances) ? bomData.instances : [],
           columns: bomData.columns && typeof bomData.columns === 'object' ? bomData.columns : {},
         };
-        this.selectedMaterialSkuData = [];
-        this.showMaterialModal = true;
+        this.selectedLinkedBomSkuData = [];
+        this.showLinkedBomModal = true;
       },
       error: (error: any) => {
         const message =
@@ -2189,10 +2188,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.subscriptions.push(sub);
   }
 
-  closeMaterialModal(): void {
-    this.showMaterialModal = false;
-    this.selectedMaterialData = {};
-    this.selectedMaterialSkuData = [];
+  closeLinkedBomModal(): void {
+    this.showLinkedBomModal = false;
+    this.selectedLinkedBomData = {};
+    this.selectedLinkedBomSkuData = [];
   }
 
  saveChanges(): void {
@@ -3764,7 +3763,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  openPartsEditModal(): void {
+  openServiceDataManagerModal(): void {
     if (this.selectedRows.size === 0) return;
 
     // Check for unsaved changes in the main grid
@@ -3788,18 +3787,18 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       }
     });
 
-    this.partsEditModalMaterialColorIds = Array.from(ids);
-    if (this.partsEditModalMaterialColorIds.length === 0) return;
+    this.serviceDataManagerModalMaterialColorIds = Array.from(ids);
+    if (this.serviceDataManagerModalMaterialColorIds.length === 0) return;
 
-    this.showPartsEditModal = true;
+    this.showServiceDataManagerModal = true;
   }
 
-  closePartsEditModal(): void {
-    this.showPartsEditModal = false;
-    this.partsEditModalMaterialColorIds = [];
+  closeServiceDataManagerModal(): void {
+    this.showServiceDataManagerModal = false;
+    this.serviceDataManagerModalMaterialColorIds = [];
   }
 
-  onPartsEditModalDataSaved(): void {
+  onServiceDataManagerModalDataSaved(): void {
     this.editedRows.clear();
     this.editedFields.clear();
     this.originalRowValues.clear();

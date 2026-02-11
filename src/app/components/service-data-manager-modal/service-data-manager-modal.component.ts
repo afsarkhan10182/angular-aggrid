@@ -18,8 +18,8 @@ import { AutocompleteCellEditorComponent } from '../autocomplete-cell-editor/aut
 import { ColumnHeaderPinComponent } from '../column-header-pin/column-header-pin.component';
 import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import {
-  PARTS_EDIT_MODAL_DISABLED_FIELDS,
-  PARTS_EDIT_MODAL_DROPDOWN_FIELDS,
+  SERVICE_DATA_MANAGER_MODAL_DISABLED_FIELDS,
+  SERVICE_DATA_MANAGER_MODAL_DROPDOWN_FIELDS,
   FIELD_PART_NUMBER,
   FIELD_MATERIAL_COLOR_STATUS,
   PLACEHOLDER_SEARCH_SERVICES,
@@ -34,13 +34,13 @@ import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/
 import { of } from 'rxjs';
 
 @Component({
-  selector: 'app-parts-edit-modal',
+  selector: 'app-service-data-manager-modal',
   standalone: true,
   imports: [CommonModule, FormsModule, AgGridAngular, IconComponent],
-  templateUrl: './parts-edit-modal.component.html',
-  styleUrls: ['./parts-edit-modal.component.css'],
+  templateUrl: './service-data-manager-modal.component.html',
+  styleUrls: ['./service-data-manager-modal.component.css'],
 })
-export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy {
+export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() materialColorIds: string[] = [];
   @Output() modalClose = new EventEmitter<void>();
   @Output() save = new EventEmitter<any[]>();
@@ -98,7 +98,7 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
 
 
   private getDisabledFields(): Set<string> {
-    return new Set(PARTS_EDIT_MODAL_DISABLED_FIELDS);
+    return new Set(SERVICE_DATA_MANAGER_MODAL_DISABLED_FIELDS);
   }
 
   private buildColumnDefs(columns: { [key: string]: string }): ColDef[] {
@@ -107,13 +107,16 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
         headerName: '',
         field: COL_ERROR_INDICATOR,
         colId: COL_ERROR_INDICATOR,
-        width: 50,
-        minWidth: 50,
-        maxWidth: 50,
+        width: 48,
+        minWidth: 48,
+        maxWidth: 48,
         pinned: 'left',
         resizable: false,
         sortable: false,
         filter: false,
+        suppressMovable: true,
+        headerClass: 'error-indicator-header',
+        cellClass: 'error-indicator-cell',
         headerComponent: undefined, // Don't show pin icon on error indicator column
         cellRenderer: (params: any) => {
           // Show error icon if row has error
@@ -121,7 +124,7 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
           if (hasError) {
             const errorMessage = this.rowErrors[params.data.materialColorId];
             const escapedMessage = this.escapeHtml(errorMessage);
-            return `<span title="${escapedMessage}" style="color: #ef4444; cursor: help; font-size: 18px; display: inline-block; padding: 4px;" aria-label="Error">⚠</span>`;
+            return `<span class="validation-error-icon" title="${escapedMessage}" aria-label="Row error">ⓘ</span>`;
           }
           return '';
         },
@@ -137,7 +140,7 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
 
     const disabledFields = this.getDisabledFields();
     
-    const dropdownFields = new Set(PARTS_EDIT_MODAL_DROPDOWN_FIELDS);
+    const dropdownFields = new Set(SERVICE_DATA_MANAGER_MODAL_DROPDOWN_FIELDS);
 
     // Build columns in the order they appear in the API response
     Object.keys(columns).forEach((field) => {
@@ -149,11 +152,12 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
       const colDef: ColDef = {
         headerName: headerName,
         field: field,
-        width: isPartNumberField || field === FIELD_MATERIAL_COLOR_STATUS ? 120 : 200,
-        minWidth: isPartNumberField || field === FIELD_MATERIAL_COLOR_STATUS ? 100 : 150,
+        width: isPartNumberField || field === FIELD_MATERIAL_COLOR_STATUS ? 140 : 200,
+        minWidth: isPartNumberField || field === FIELD_MATERIAL_COLOR_STATUS ? 120 : 150,
         editable: !isDisabled,
         sortable: true,
         filter: true,
+        suppressMovable: true,
         cellRenderer: (params: any) => {
           // Get column width - try multiple methods for reliability
           let columnWidth = 150; // default fallback
@@ -217,12 +221,14 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
     this.defaultColDef = {
       ...this.gridConfigService.getDefaultColDef(),
       headerComponent: ColumnHeaderPinComponent,
+      suppressMovable: true,
     };
 
     const commonOptions = this.gridConfigService.getCommonGridOptions(this);
     this.gridOptions = {
       ...commonOptions,
       suppressRowClickSelection: true,
+      suppressMovableColumns: true,
       rowSelection: 'single',
       components: commonOptions.components
         ? {
@@ -357,7 +363,9 @@ export class PartsEditModalComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   saveModal(): void {
-    if (!this.gridApi || this.editedRows.size === 0) return;
+    if (!this.gridApi) return;
+    this.gridApi.stopEditing();
+    if (this.editedRows.size === 0) return;
 
     const instances: { [key: string]: any } = {};
     

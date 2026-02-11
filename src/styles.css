@@ -1107,6 +1107,25 @@ div.ag-header-cell[col-id='actions'] {
   gap: var(--actions-gap);
 }
 
+/* Shared validation info icon style (used across main grid + modals) */
+.validation-error-icon {
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 600;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
 .ag-cell[col-id='actions'].actions-has-error .actions-cell-content .validation-error-icon {
   width: 18px !important;
   min-width: 18px !important;

@@ -152,21 +152,21 @@
               <app-icon name="edit" size="14"></app-icon>
               <span>Mass Edit</span>
             </button>
-            <!-- Service - DataManager - Enabled when more than 1 selected (SBOM only) -->
+            <!-- Service Data Manager - Enabled when more than 1 selected (SBOM only) -->
             <button
               *ngIf="isSbomMode()"
-              (click)="openPartsEditModal(); closeActionDropdown()"
+              (click)="openServiceDataManagerModal(); closeActionDropdown()"
               class="action-dropdown-item"
               [class.disabled]="selectedRows.size <= 1"
               [disabled]="selectedRows.size <= 1"
               [title]="
                 selectedRows.size <= 1
-                  ? 'Select more than 1 row to enable Service - DataManager'
-                  : 'Service - DataManager'
+                  ? 'Select more than 1 row to enable Service Data Manager'
+                  : 'Service Data Manager'
               "
             >
               <app-icon name="cog" size="14"></app-icon>
-              <span>Service - DataManager</span>
+              <span>Service Data Manager</span>
             </button>
             <!-- Disconnect All SKUs - SBOM only; disabled when no row selected, tooltip when disabled -->
             <button
@@ -533,21 +533,21 @@
     </div>
   </div>
 
-  <!-- Material Detail Modal -->
-  <app-part-modal
-    *ngIf="showMaterialModal"
-    [partData]="selectedMaterialData"
-    [skuData]="selectedMaterialSkuData"
-    (modalClose)="closeMaterialModal()"
+  <!-- Linked BOM Modal -->
+  <app-linked-bom-modal
+    *ngIf="showLinkedBomModal"
+    [partData]="selectedLinkedBomData"
+    [skuData]="selectedLinkedBomSkuData"
+    (modalClose)="closeLinkedBomModal()"
   >
-  </app-part-modal>
+  </app-linked-bom-modal>
 
-  <!-- Parts Edit Modal -->
-  <app-parts-edit-modal
-    *ngIf="showPartsEditModal"
-    [materialColorIds]="partsEditModalMaterialColorIds"
-    (modalClose)="closePartsEditModal()"
-    (dataSaved)="onPartsEditModalDataSaved()"
+  <!-- Service Data Manager Modal -->
+  <app-service-data-manager-modal
+    *ngIf="showServiceDataManagerModal"
+    [materialColorIds]="serviceDataManagerModalMaterialColorIds"
+    (modalClose)="closeServiceDataManagerModal()"
+    (dataSaved)="onServiceDataManagerModalDataSaved()"
   >
-  </app-parts-edit-modal>
+  </app-service-data-manager-modal>
 </div>

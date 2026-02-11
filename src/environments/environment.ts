@@ -18,7 +18,9 @@ export const environment = {
     getUser: '/api/getUser.json',
     material: '/api/material.json',
     bomFeatures: '/api/feature.json',
+    saveBomLinks: '/api/updateBom',
     complexMaterial: '/api/materialmodal.json',
+    includeInSpecSheet: '/api/IncludeInSpecSheet.json',
     /** Single source for material-colors search: part search, material search, and search by IDs (same response structure). */
     materialColorsSearch: '/api/serviceDataModal.json',
   },

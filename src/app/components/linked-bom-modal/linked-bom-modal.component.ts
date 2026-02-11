@@ -3,13 +3,13 @@ import { BOM_LINK_KEY, FIELD_PART_NUMBER } from '../../constants';
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'app-part-modal',
+  selector: 'app-linked-bom-modal',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './part-modal.component.html',
-  styleUrls: ['./part-modal.component.css'],
+  templateUrl: './linked-bom-modal.component.html',
+  styleUrls: ['./linked-bom-modal.component.css'],
 })
-export class PartModalComponent {
+export class LinkedBomModalComponent {
   readonly bomLinkKey = BOM_LINK_KEY;
 
   @Input() partData: any = {};

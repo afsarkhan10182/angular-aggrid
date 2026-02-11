@@ -1,7 +1,7 @@
 <div class="modal-overlay" tabindex="0" aria-label="Modal overlay">
   <div class="modal-container" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>Service - DataManager</h3>
+      <h3>Service Data Manager</h3>
       <button (click)="handleCloseClick()" class="close-btn" title="Close">
         <app-icon name="times" size="16"></app-icon>
       </button>
@@ -95,7 +95,7 @@
       <div *ngIf="hasErrors()" class="error-panel">
         <div class="error-panel-header">
           <div class="error-header-left">
-            <span class="error-icon">⚠</span>
+            <span class="validation-error-icon panel-validation-error-icon" aria-hidden="true">ⓘ</span>
             <span class="error-header-text">Errors ({{ getErrorEntries().length }})</span>
           </div>
           <button (click)="clearAllErrors()" class="close-error-panel-btn" title="Dismiss all errors">
