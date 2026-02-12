@@ -6,9 +6,11 @@ import {
   ViewChild,
   ElementRef,
   HostListener,
-  ChangeDetectorRef,
+  Inject,
+  Renderer2,
+  RendererStyleFlags2,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridApi, GridOptions, getGridElement } from 'ag-grid-community';
@@ -20,12 +22,13 @@ import { HierarchicalCellRendererComponent } from './components/hierarchical-cel
 import { LinkedBomModalComponent } from './components/linked-bom-modal/linked-bom-modal.component';
 import { ServiceDataManagerModalComponent } from './components/service-data-manager-modal/service-data-manager-modal.component';
 import { DataService } from './services/data.service';
-import { GridConfigService, GroupConfig } from './services/grid-config.service';
-import { GridService, ColumnVisibilityConfig } from './services/grid.service';
+import { GridConfigService, GroupConfig } from './services/grid/grid-config.service';
+import { GridService, ColumnVisibilityConfig } from './services/grid/grid.service';
 import { RowManagementService } from './services/row-management.service';
 import { SessionService } from './services/session.service';
 import { ValidationService } from './services/validation.service';
 import { UtilService, ExtendedColDef } from './services/util.service';
+import { GridColumnsService } from './services/grid/grid-columns.service';
 import {
   PayloadTransformService,
   TransformGridDataToApiOptions,
@@ -47,15 +50,10 @@ import {
   FIELD_ACTIONS,
   FIELD_BOM_LINK_SPEC_SHEET_EXTRA,
   FIELD_BOM_LINK_FEATURE,
-  FIELD_FEATURE,
   FIELD_BOM_LINK_PART,
   FIELD_PART_NUMBER,
-  FIELD_CHECKBOX,
   FIELD_MATERIAL,
   FIELD_MATERIAL_DESCRIPTION,
-  FIELD_SUPPLIER,
-  FIELD_COLOR,
-  FIELD_COLOR_DESCRIPTION,
   FIELD_HAS_LINKED_BOM,
   LS_KEY_SHOW_EXPIRED_DATA,
   NOTIFICATION_TYPE_ERROR,
@@ -144,9 +142,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     return this.isMbomMode() ? this.mbomSkuFilterOptions : this.sbomSkuFilterOptions;
   }
 
-  /** Cache for grouped tree (before flatten) to avoid full re-filter/re-group on expand/collapse only */
-  private _groupedCache: { key: string; grouped: any[] } | null = null;
-
   public isLoading: boolean = true;
   public constraintsData: any = null;
   public isSaving: boolean = false;
@@ -195,9 +190,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     private readonly sessionService: SessionService,
     private readonly validationService: ValidationService,
     private readonly utilService: UtilService,
+    private readonly gridColumnsService: GridColumnsService,
     private readonly payloadTransformService: PayloadTransformService,
     private readonly massEditService: MassEditService,
-    private readonly cdr: ChangeDetectorRef,
+    @Inject(DOCUMENT) private readonly document: Document,
+    private readonly renderer: Renderer2,
   ) {
     this.gridOptions.context = {
       componentParent: this,
@@ -316,8 +313,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (!sectionRow) return;
 
     sectionRow.isExpanded = !sectionRow.isExpanded;
-    this._groupedCache = null;
-    this.applyHierarchicalSearch();
+    this.applyGridSearch();
     this.redrawSectionHeader(sectionRow);
   }
 
@@ -360,23 +356,23 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     if (!materialRow) return;
     materialRow.isExpanded = !materialRow.isExpanded;
-    this.applyHierarchicalSearch();
+    this.applyGridSearch();
   }
 
   private getInitialDisplayData(): any[] {
-    let hierarchicalData = this.rowData;
+    let treeData = this.rowData;
 
     if (this.activeGroupFields.length > 0) {
-      hierarchicalData = this.gridConfigService.groupHierarchicalData(
-        hierarchicalData,
+      treeData = this.gridConfigService.groupHierarchicalData(
+        treeData,
         this.activeGroupFields,
       );
     }
 
-    return this.flattenHierarchicalData(hierarchicalData);
+    return this.flattenDisplayData(treeData);
   }
 
-  private flattenHierarchicalData(data: any[]): any[] {
+  private flattenDisplayData(data: any[]): any[] {
     return this.gridService.flattenHierarchicalData(data, {
       getBomType: () => this.dataService.getBomType() || DEFAULT_BOM_TYPE,
       getFilteredSkuInfo: () => this.getFilteredSkuInfo(),
@@ -408,10 +404,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
 
     const csrfSub = this.sessionService.getCsrfToken().subscribe({
-      next: (csrfToken) => {
+      next: () => {
         this.loadData();
       },
-      error: (error) => {
+      error: () => {
         this.showNotification(
           'This application must be accessed through FlexPLM. Please login to FlexPLM first.',
           NOTIFICATION_TYPE_ERROR,
@@ -446,14 +442,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           }
         }
 
-        this.rowData = this.transformToHierarchicalData(data);
-        this._groupedCache = null;
+        this.rowData = this.transformToTreeData(data);
         this.storeOriginalValues();
         this.initializeColumns();
 
         if (this.gridApi) {
           this.gridApi.refreshHeader();
-          this.applyHierarchicalSearch();
+          this.applyGridSearch();
         } else {
           this.displayData = this.getInitialDisplayData();
         }
@@ -490,7 +485,29 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   initializeColumns(): void {
     this.actionsColumnWidth = this.computeActionsColumnWidth();
     const columnMapping = this.dataService.getColumnMapping();
-    this.columnDefs = this.createHierarchicalColumns(columnMapping);
+    this.columnDefs = this.gridColumnsService.createColumns(columnMapping, {
+      constraintsData: this.constraintsData,
+      actionsColumnWidth: this.actionsColumnWidth,
+      rowData: this.rowData,
+      isAddRowEnabled: () => this.isAddRowEnabled(),
+      isSkuFilterReadOnly: () => this.isSkuFilterReadOnly(),
+      isSbomMode: () => this.isSbomMode(),
+      isEbomMode: () => this.isEbomMode(),
+      isMaterialMbomMode: () => this.isMaterialMbomMode(),
+      getDataCellStyle: (params) => this.getDataCellStyle(params),
+      getFeatureValue: (data) => this.utilService.getFeatureValue(data),
+      getHierarchicalCellStyle: (params) => this.getHierarchicalCellStyle(params),
+      getFilteredSkuInfo: () => this.getFilteredSkuInfo(),
+      renderNewRowSkuCell: (params) => this.renderNewRowSkuCell(params),
+      renderDataCellContent: (params, fallbackWidth, value) =>
+        this.renderDataCellContent(params, fallbackWidth, value),
+      getCellTooltipValue: (params) => this.getCellTooltipValue(params),
+      isFieldEditable: (field, params) => this.isFieldEditable(field, params),
+      clearAutopopulateFieldsForRow: (data) => this.clearAutopopulateFieldsForRow(data),
+      canDisconnectForRow: (data) => this.canDisconnectForRow(data),
+      isSkuDisconnected: (row, skuField) => this.isSkuDisconnected(row, skuField),
+      isSkuEditableForDisconnect: (skuField) => this.isSkuEditableForDisconnect(skuField),
+    });
     this.applyActionsColumnWidth(this.actionsColumnWidth);
 
     this.availableGroupFields = this.columnDefs
@@ -536,8 +553,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private applyActionsColumnWidth(width: number): void {
-    if (typeof document !== 'undefined') {
-      document.documentElement.style.setProperty('--actions-col-width', `${width}px`);
+    if (this.document?.documentElement) {
+      this.renderer.setStyle(
+        this.document.documentElement,
+        '--actions-col-width',
+        `${width}px`,
+        RendererStyleFlags2.DashCase,
+      );
     }
     if (this.gridApi) {
       this.gridApi.setColumnWidths([{ key: COL_ACTIONS, newWidth: width }], false);
@@ -564,8 +586,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
 
     if (sectionRow && !wasExpanded) {
-      this._groupedCache = null;
-      this.applyHierarchicalSearch();
+      this.applyGridSearch();
       this.redrawSectionHeader(sectionRow);
     }
   }
@@ -628,7 +649,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (this.gridApi) {
       this.gridApi.setGridOption('columnDefs', this.columnDefs);
       this.gridApi.refreshHeader();
-      this.applyHierarchicalSearch();
+      this.applyGridSearch();
 
       if (this.isSkuFilterReadOnly()) {
         this.gridApi.deselectAll();
@@ -647,365 +668,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       return field !== COL_CHECKBOX;
     });
   }
-
-  createHierarchicalColumns(columnMapping: any): ColDef[] {
-    const columns: ExtendedColDef[] = [];
-
-    const checkboxSelection = (params: any) => {
-      if (!this.isAddRowEnabled()) return false;
-      const data = params?.data;
-      if (!data) return false;
-      return !(
-        data.isSectionHeader ||
-        data.isGroupHeader ||
-        data.isMaterialHeader ||
-        data.isBranchHeader
-      );
-    };
-
-    const actionsCol = this.gridService.createActionsColumn(
-      () => this.isAddRowEnabled(),
-      (data) => this.gridConfigService.getGroupCount(data),
-      (params) => this.gridService.hasVisibleChildren(params.data),
-      () => this.dataService.getBomType() || DEFAULT_BOM_TYPE,
-      checkboxSelection,
-    );
-    actionsCol.width = this.actionsColumnWidth;
-    actionsCol.minWidth = this.actionsColumnWidth;
-    actionsCol.maxWidth = 76;
-    actionsCol.headerCheckboxSelection = () => this.isAddRowEnabled();
-    actionsCol.headerCheckboxSelectionFilteredOnly = true;
-    actionsCol.checkboxSelection = checkboxSelection;
-    columns.push(actionsCol);
-
-    const featureCol = this.gridService.createFeatureColumn({
-      columnMapping,
-      constraintsData: this.constraintsData,
-      isSkuFilterReadOnly: () => this.isSkuFilterReadOnly(),
-      isSbomMode: () => this.isSbomMode(),
-      isEbomMode: () => this.isEbomMode(),
-      isMaterialMbomMode: () => this.isMaterialMbomMode(),
-      getDataCellStyle: (params) => this.getDataCellStyle(params),
-      getFeatureValue: (data) => this.utilService.getFeatureValue(data),
-      renderHierarchicalCell: () => '',
-      getHierarchicalCellStyle: (params) => this.getHierarchicalCellStyle(params),
-      getFilteredSkuInfo: () => this.getFilteredSkuInfo(),
-      shouldHighlightRow: (data) => this.gridService.shouldHighlightRow(data),
-      renderNewRowSkuCell: (params) => this.renderNewRowSkuCell(params),
-      utilService: this.utilService,
-    });
-    featureCol.cellRenderer = HierarchicalCellRendererComponent;
-    featureCol.cellRendererParams = {};
-    columns.push(featureCol);
-
-    Object.keys(columnMapping).forEach((field) => {
-      if (field === FIELD_FEATURE || field === FIELD_BOM_LINK_FEATURE) {
-        return;
-      }
-
-      if (field === 'bomLinkCountryOfOrigin') {
-        const headerName = columnMapping[field];
-        columns.push({
-          headerName,
-          field,
-          width: 180,
-          minWidth: 140,
-          sortable: true,
-          cellRenderer: (params: any) => this.renderDataCellContent(params, 180),
-          tooltipValueGetter: (params: any) => this.getCellTooltipValue(params),
-          cellStyle: (params: any) => this.getDataCellStyle(params),
-          editable: (params: any) => this.isFieldEditable(field, params),
-          cellEditor: AutocompleteCellEditorComponent,
-          cellEditorParams: () => ({
-            placeholder: 'search countries...',
-            isCountrySearch: true,
-            context: {
-              dataService: this.dataService,
-            },
-          }),
-        });
-        return;
-      }
-
-      if (field === 'bomLinkSpecSheetExtra') {
-        const headerName = columnMapping[field];
-        columns.push({
-          headerName,
-          field,
-          width: 150,
-          minWidth: 100,
-          sortable: true,
-          cellRenderer: (params: any) => this.renderDataCellContent(params, 150),
-          tooltipValueGetter: (params: any) => this.getCellTooltipValue(params),
-          cellStyle: (params: any) => this.getDataCellStyle(params),
-          editable: (params: any) => this.isFieldEditable(field, params),
-          cellEditor: AutocompleteCellEditorComponent,
-          cellEditorParams: {
-            values: ['', 'Yes', 'No'],
-            placeholder: 'Select...',
-            filterFunction: (searchValue: string, options: string[]) => {
-              if (!searchValue) return options;
-              const lower = searchValue.toLowerCase();
-              return options.filter((opt) => opt.toLowerCase().includes(lower));
-            },
-          },
-        });
-        return;
-      }
-
-      if (field === 'bomLinkIncludeInSpecSheet') {
-        const headerName = columnMapping[field];
-        columns.push({
-          headerName,
-          field,
-          width: 150,
-          minWidth: 100,
-          sortable: true,
-          cellRenderer: (params: any) => this.renderDataCellContent(params, 150),
-          tooltipValueGetter: (params: any) => this.getCellTooltipValue(params),
-          cellStyle: (params: any) => this.getDataCellStyle(params),
-          editable: (params: any) => this.isFieldEditable(field, params),
-          cellEditor: AutocompleteCellEditorComponent,
-          cellEditorParams: (params: any) => {
-            const values = ['', ...this.dataService.getIncludeInSpecSheetOptions(this.constraintsData)];
-            return {
-              values,
-              placeholder: 'Select...',
-              filterFunction: this.utilService.createAutocompleteFilter(),
-            };
-          },
-        });
-        return;
-      }
-
-      const headerName = columnMapping[field];
-      const columnDef: ColDef = {
-        headerName: headerName,
-        field: field,
-        width: 150,
-        minWidth: 100,
-        sortable: true,
-        resizable: true,
-        hide: field === 'ptcbomPartMarkUpDisplayName',
-        cellRenderer: (params: any) =>
-          this.renderDataCellContent(params, Number(columnDef.width ?? 150)),
-        tooltipValueGetter: (params: any) => this.getCellTooltipValue(params),
-        cellStyle: (params: any) => this.getDataCellStyle(params),
-        editable: (params: any) => this.isFieldEditable(field, params),
-      };
-
-      if (field === FIELD_BOM_LINK_PART || field === FIELD_PART_NUMBER) {
-        columnDef.cellEditor = AutocompleteCellEditorComponent;
-        columnDef.cellEditorParams = (params: any) => ({
-          placeholder: 'search part numbers...',
-          useApiSearch: true,
-          isPartNumberSearch: true,
-          context: {
-            dataService: this.dataService,
-          },
-        });
-        columnDef.valueSetter = (params: any) => {
-          if (!params.data || !params.colDef?.field) return false;
-          const fieldName = params.colDef.field;
-          const newVal = params.newValue == null || params.newValue === '' ? '' : String(params.newValue).trim();
-          params.data[fieldName] = newVal;
-          if (fieldName === FIELD_PART_NUMBER) {
-            params.data.part = newVal;
-            params.data.bomLinkPart = newVal;
-          } else {
-            params.data.part = newVal;
-            params.data[FIELD_PART_NUMBER] = newVal;
-          }
-          if (newVal === '') {
-            this.clearAutopopulateFieldsForRow(params.data);
-            params.api?.refreshCells({ rowNodes: [params.node], force: true });
-          }
-          return true;
-        };
-      } else if (
-        field === 'materialColorServiceSubstituteOne' ||
-        field === 'materialColorServiceSubstituteTwo' ||
-        field === 'materialColorServiceEquivalent'
-      ) {
-        columnDef.cellEditor = AutocompleteCellEditorComponent;
-        columnDef.cellEditorParams = () => ({
-          placeholder: 'search services...',
-          isServiceSearch: true,
-          context: { dataService: this.dataService },
-        });
-      } else if (field === FIELD_MATERIAL || field === FIELD_MATERIAL_DESCRIPTION) {
-        columnDef.cellEditor = AutocompleteCellEditorComponent;
-        columnDef.cellEditorParams = (params: any) => ({
-          placeholder: 'search materials...',
-          useApiSearch: true,
-          context: {
-            dataService: this.dataService,
-          },
-        });
-      } else if (field === 'quantity') {
-        columnDef.cellEditor = 'agNumberCellEditor';
-        columnDef.cellEditorParams = {
-          min: 0,
-          step: 'any',
-        };
-        columnDef.editable = (params: any) => {
-          if (
-            params.data &&
-            (params.data.isExpired ||
-              params.data.isSectionHeader ||
-              params.data.isGroupHeader ||
-              params.data.isMaterialHeader ||
-              params.data.isBranchHeader)
-          ) {
-            return false;
-          }
-          return this.isFieldEditable(field, params);
-        };
-        columnDef.valueSetter = (params: any) => {
-          if (!params.data || !params.colDef?.field) return false;
-          const v = params.newValue;
-          params.data[params.colDef.field] =
-            v === null || v === undefined || v === '' ? '' : String(v);
-          return true;
-        };
-      } else if (
-        field === FIELD_SUPPLIER ||
-        field === FIELD_COLOR ||
-        field === FIELD_COLOR_DESCRIPTION ||
-        field === FIELD_FEATURE
-      ) {
-        const isColorField = field === FIELD_COLOR || field === FIELD_COLOR_DESCRIPTION;
-
-        if (field === FIELD_SUPPLIER || isColorField) {
-          columnDef.cellEditor = AutocompleteCellEditorComponent;
-
-          if (isColorField) {
-            columnDef.valueGetter = (params: any) =>
-              params.data?.colorDescription || params.data?.color || '';
-            columnDef.valueSetter = (params: any) => {
-              if (!params.data) return false;
-              params.data.color = params.newValue || '';
-              params.data.colorDescription = params.newValue || '';
-              return true;
-            };
-          }
-
-          columnDef.cellEditorParams = (params: any) => {
-            const nodeData = params.node?.data || params.data || {};
-            let values: string[] = [];
-
-            if (field === FIELD_SUPPLIER) {
-              values =
-                nodeData._availableSuppliers && Array.isArray(nodeData._availableSuppliers)
-                  ? nodeData._availableSuppliers
-                  : this.gridConfigService.getUniqueSuppliers(this.rowData);
-            } else if (isColorField) {
-              values =
-                nodeData._availableColors && Array.isArray(nodeData._availableColors)
-                  ? nodeData._availableColors
-                  : this.gridConfigService.getUniqueColors(this.rowData);
-            }
-
-            return {
-              values,
-              placeholder: `search ${isColorField ? 'color' : field}...`,
-              context: { dataService: this.dataService },
-            };
-          };
-        } else {
-          columnDef.cellEditor = 'agTextCellEditor';
-          columnDef.cellEditorParams = (params: any) => {
-            return {
-              values: this.gridConfigService.getUniqueFeatures(this.rowData),
-              placeholder: `search ${field}...`,
-            };
-          };
-        }
-      } else if (field === 'bomLinkStartDate' || field === 'bomLinkEndDate') {
-        columnDef.filter = false;
-        columnDef.cellEditor = 'agDateCellEditor';
-        columnDef.editable = (params: any) => {
-          if (
-            params.data &&
-            (params.data.isSectionHeader ||
-              params.data.isGroupHeader ||
-              params.data.isBranchHeader ||
-              params.data.isMaterialHeader)
-          ) {
-            return false;
-          }
-          return this.isFieldEditable(field, params);
-        };
-        columnDef.cellRenderer = (params: any) => {
-          let formattedValue = '';
-          if (columnDef.valueFormatter && typeof columnDef.valueFormatter === 'function') {
-            formattedValue = columnDef.valueFormatter(params) || '';
-          }
-          return this.renderDataCellContent(
-            params,
-            Number(columnDef.width ?? 150),
-            formattedValue,
-          );
-        };
-        columnDef.valueGetter = (params: any) => {
-          if (!params.data) return undefined;
-          const value = params.data[field];
-          if (!value || value === '') return undefined;
-          if (value instanceof Date) return value;
-          return this.gridConfigService.parseDateString(String(value)) || undefined;
-        };
-        columnDef.cellEditorParams = {
-          browserDatePicker: true,
-          minValidYear: 2000,
-          maxValidYear: 2050,
-          format: 'mm/dd/yyyy',
-        };
-        columnDef.valueFormatter = (params: any) => {
-          if (!params.data) return '';
-          const rawValue = params.data[field];
-          return this.gridConfigService.formatDateToMMDDYYYY(rawValue);
-        };
-        columnDef.valueParser = (params: any) => {
-          if (!params.newValue) return '';
-          return this.gridConfigService.convertDateEditorValueToString(params.newValue);
-        };
-        columnDef.valueSetter = (params: any) => {
-          const field = params.colDef.field as string;
-          const dateStr = params.newValue
-            ? this.gridConfigService.convertDateEditorValueToString(params.newValue)
-            : '';
-          params.data[field] = dateStr;
-          return true;
-        };
-      }
-
-      columns.push(columnDef);
-    });
-
-    const dynamicSkuColumns = this.gridService.createSkuColumns({
-      columnMapping,
-      constraintsData: this.constraintsData,
-      isSkuFilterReadOnly: () => this.isSkuFilterReadOnly(),
-      isSbomMode: () => this.isSbomMode(),
-      isEbomMode: () => this.isEbomMode(),
-      isMaterialMbomMode: () => this.isMaterialMbomMode(),
-      canDisconnectForRow: (data) => this.canDisconnectForRow(data),
-      isSkuDisconnected: (row, skuField) => this.isSkuDisconnected(row, skuField),
-      isSkuEditableForDisconnect: (skuField) => this.isSkuEditableForDisconnect(skuField),
-      getDataCellStyle: (params) => this.getDataCellStyle(params),
-      getFeatureValue: (data) => this.utilService.getFeatureValue(data),
-      renderHierarchicalCell: () => '',
-      getHierarchicalCellStyle: (params) => this.getHierarchicalCellStyle(params),
-      getFilteredSkuInfo: () => this.getFilteredSkuInfo(),
-      shouldHighlightRow: (data) => this.gridService.shouldHighlightRow(data),
-      renderNewRowSkuCell: (params) => this.renderNewRowSkuCell(params),
-      utilService: this.utilService,
-    });
-
-    const allColumns = [...columns, ...dynamicSkuColumns];
-    return allColumns;
-  }
-
 
   /**
    * Check if we're in SBOM mode
@@ -1205,7 +867,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
 
     if (this.rowData && this.rowData.length > 0) {
-      this.applyHierarchicalSearch();
+      this.applyGridSearch();
     }
 
     this.applyActionsColumnWidth(this.actionsColumnWidth);
@@ -1243,19 +905,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     return this.gridService.getVisibleColumnsForPanel(this.getColumnVisibilityConfig());
   }
 
-  /**
-   * Get the actual column order from ag-grid
-   * Returns columns in their current display order
-   */
-  private getCurrentColumnOrder(): string[] {
-    if (!this.gridApi) return [];
-    const allColumns = this.gridApi.getColumns();
-    if (!allColumns) return [];
-    return allColumns
-      .map((col) => col.getColId())
-      .filter((id): id is string => typeof id === 'string' && id !== '');
-  }
-
   onColumnMouseDown(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     if (target.closest('input[type="checkbox"]') || target.closest('label')) {
@@ -1278,7 +927,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  onDragEnd(event: DragEvent): void {
+  onDragEnd(_event: DragEvent): void {
     this.stopAutoScroll();
 
     this.draggedColumn = null;
@@ -1587,7 +1236,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
 
   /**
-   * Filter hierarchical data based on SKU filter selection
+   * Filter tree data based on SKU filter selection
    *
    * Applies to ALL filters except "all":
    * - MBOM: "hdEditable", "hdViewOnly", "nonHdSource"
@@ -1601,7 +1250,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
    *
    * This ensures rows with empty SKU columns are filtered out for all SKU views.
    */
-  private filterHierarchicalDataBySkuFilter(data: any[]): any[] {
+  private filterDataBySkuFilter(data: any[]): any[] {
     return this.gridService.filterHierarchicalDataBySkuFilter(data, {
       getBomType: () => this.dataService.getBomType() || DEFAULT_BOM_TYPE,
       getFilteredSkuInfo: () => this.getFilteredSkuInfo(),
@@ -1611,253 +1260,44 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  private applyGrouping(): void {
-    const newRows: any[] = [];
-    const seenNewRowIds = new Set<number>();
-    if (this.displayData && Array.isArray(this.displayData)) {
-      let currentSection: { section?: string; sectionDisplayName?: string } = {};
-      const lastRowIdBySection = new Map<string, string | number>();
-
-      // Pass 1: collect last real row id per section (ignore new rows)
-      this.displayData.forEach((row) => {
-        if (row?.isSectionHeader) {
-          currentSection = {
-            section: row.section,
-            sectionDisplayName: row.sectionDisplayName,
-          };
-          return;
-        }
-
-        if (
-          row &&
-          !row.isSectionHeader &&
-          !row.isGroupHeader &&
-          !row.isMaterialHeader &&
-          !row.isNewRow
-        ) {
-          const resolvedSection = row.section || currentSection.section;
-          const anchorId = this.getRowAnchorId(row);
-          if (resolvedSection && anchorId !== null && anchorId !== undefined && anchorId !== '') {
-            lastRowIdBySection.set(resolvedSection, anchorId);
-          }
-        }
-      });
-
-      // Pass 2: normalize new rows + collect
-      currentSection = {};
-      this.displayData.forEach((row) => {
-        if (row?.isSectionHeader) {
-          currentSection = {
-            section: row.section,
-            sectionDisplayName: row.sectionDisplayName,
-          };
-          return;
-        }
-
-        const resolvedSection = row?.section || currentSection.section;
-        const resolvedSectionDisplay = row?.sectionDisplayName || currentSection.sectionDisplayName;
-
-        if (
-          row &&
-          !row.isSectionHeader &&
-          !row.isGroupHeader &&
-          !row.isMaterialHeader &&
-          row.isNewRow
-        ) {
-          const resolvedInternalSection =
-            row.insertAfterSection ||
-            this.resolveSectionInternalName(row) ||
-            resolvedSection;
-
-          if (resolvedInternalSection) {
-            row.section = resolvedInternalSection;
-          }
-
-          if (!row.insertAfterSection && resolvedInternalSection) {
-            row.insertAfterSection = resolvedInternalSection;
-          }
-
-          if (!row.sectionDisplayName) {
-            const sectionDetails = this.dataService.getApiData()?.sectionDetails || {};
-            if (resolvedInternalSection && sectionDetails[resolvedInternalSection]) {
-              row.sectionDisplayName = sectionDetails[resolvedInternalSection];
-            } else if (resolvedSectionDisplay) {
-              row.sectionDisplayName = resolvedSectionDisplay;
-            }
-          }
-
-          if (
-            !row.insertAfterRowId &&
-            row.insertAfterSection &&
-            lastRowIdBySection.has(row.insertAfterSection)
-          ) {
-            row.insertAfterRowId = lastRowIdBySection.get(row.insertAfterSection);
-          }
-
-          newRows.push(row);
-          if (row.newRowId !== undefined && row.newRowId !== null) {
-            seenNewRowIds.add(row.newRowId);
-          }
-        }
-      });
-    }
-
-    this.rowManagementService.getNewRows().forEach((row) => {
-      if (
-        row?.isNewRow &&
-        !row.isSectionHeader &&
-        !row.isGroupHeader &&
-        !row.isMaterialHeader &&
-        row.newRowId !== undefined &&
-        row.newRowId !== null &&
-        !seenNewRowIds.has(row.newRowId)
-      ) {
-        newRows.push(row);
-        seenNewRowIds.add(row.newRowId);
-      }
-    });
-
-    let hierarchicalData = this.rowData;
+  private buildDataForGrouping(): any[] {
+    let treeData = this.rowData;
     if (this.searchText && this.searchText.trim() !== '') {
-      hierarchicalData = this.filterHierarchicalData(this.rowData, this.searchText);
+      treeData = this.filterDataBySearch(this.rowData, this.searchText);
     }
+    return this.filterDataBySkuFilter(treeData);
+  }
 
-    hierarchicalData = this.filterHierarchicalDataBySkuFilter(hierarchicalData);
-
-    const applyGroupState = (items: any[]): any[] => {
-      return items.map((item) => {
-        const newItem = { ...item };
-
-        if (newItem.isSectionHeader) {
-          newItem.isExpanded = newItem.isExpanded ?? true;
-        }
-
-        if (newItem.isGroupHeader && newItem.groupKey) {
-          const savedState = this.groupExpandedState.get(newItem.groupKey);
-          newItem.isExpanded = savedState ?? true;
-        }
-
-        if (newItem.children && Array.isArray(newItem.children)) {
-          newItem.children = applyGroupState(newItem.children);
-        }
-
-        return newItem;
-      });
-    };
+  private applyGrouping(): void {
+    const newRows = this.gridColumnsService.collectNewRowsForGrouping({
+      displayData: this.displayData,
+      storedNewRows: this.rowManagementService.getNewRows().values(),
+      resolveSectionInternalName: (row) => this.resolveSectionInternalName(row),
+      getRowAnchorId: (row) => this.getRowAnchorId(row),
+      sectionDetails: this.dataService.getApiData()?.sectionDetails || {},
+    });
+    const treeData = this.buildDataForGrouping();
 
     if (this.activeGroupFields.length > 0) {
-      const cacheKey = `${this.activeGroupFields.map((g) => g.field).sort().join('|')}|${(this.searchText || '').trim()}|${this.selectedSkuFilter}|${this.rowData.length}`;
-      let groupedHierarchicalData: any[];
+      let groupedTreeData = this.gridConfigService.groupHierarchicalData(
+        treeData,
+        this.activeGroupFields,
+      );
 
-      if (this._groupedCache?.key === cacheKey) {
-        groupedHierarchicalData = this._groupedCache.grouped;
-      } else {
-        groupedHierarchicalData = this.gridConfigService.groupHierarchicalData(
-          hierarchicalData,
-          this.activeGroupFields,
-        );
-        this._groupedCache = { key: cacheKey, grouped: groupedHierarchicalData };
-      }
-
-      groupedHierarchicalData = applyGroupState(groupedHierarchicalData);
-      this.displayData = this.flattenHierarchicalData(groupedHierarchicalData);
+      groupedTreeData = this.gridColumnsService.applySavedGroupState(
+        groupedTreeData,
+        this.groupExpandedState,
+      );
+      this.displayData = this.flattenDisplayData(groupedTreeData);
     } else {
-      this._groupedCache = null;
-      this.displayData = this.flattenHierarchicalData(hierarchicalData);
+      this.displayData = this.flattenDisplayData(treeData);
       this.groupExpandedState.clear();
     }
 
-    const lastInsertIndexByAnchor = new Map<string, number>();
-
-    newRows.forEach((newRow) => {
-      const sectionKey = newRow.insertAfterSection || newRow.section;
-      const anchorId = newRow.insertAfterRowId;
-
-      if (anchorId !== undefined && anchorId !== null && anchorId !== '') {
-        let anchorIndex = -1;
-        let headerIndex = -1;
-        if (sectionKey) {
-          headerIndex = this.displayData.findIndex(
-            (row) => row?.isSectionHeader && row.section === sectionKey,
-          );
-        }
-
-        if (headerIndex !== -1) {
-          let nextHeaderIndex = this.displayData.length;
-          for (let i = headerIndex + 1; i < this.displayData.length; i++) {
-            if (this.displayData[i]?.isSectionHeader) {
-              nextHeaderIndex = i;
-              break;
-            }
-          }
-
-          for (let i = headerIndex + 1; i < nextHeaderIndex; i++) {
-            const row = this.displayData[i];
-            if (!row || row.isSectionHeader || row.isMaterialHeader || row.isGroupHeader) continue;
-            const candidateId =
-              row.materialKey ??
-              row.newRowId ??
-              row[FIELD_PART_NUMBER] ??
-              row.part ??
-              null;
-            if (candidateId === null || candidateId === undefined || candidateId === '') continue;
-            if (`${candidateId}` !== `${anchorId}`) continue;
-            anchorIndex = i;
-            break;
-          }
-        } else {
-          anchorIndex = this.displayData.findIndex((row) => {
-            if (!row || row.isSectionHeader || row.isMaterialHeader || row.isGroupHeader) return false;
-            const candidateId =
-              row.materialKey ??
-              row.newRowId ??
-              row[FIELD_PART_NUMBER] ??
-              row.part ??
-              null;
-            if (candidateId === null || candidateId === undefined || candidateId === '') return false;
-            if (`${candidateId}` !== `${anchorId}`) return false;
-            return true;
-          });
-        }
-        if (anchorIndex !== -1) {
-          const anchorKey = `${sectionKey ?? ''}::${anchorId}`;
-          const insertAt =
-            lastInsertIndexByAnchor.get(anchorKey) ?? anchorIndex;
-          this.displayData.splice(insertAt + 1, 0, newRow);
-          lastInsertIndexByAnchor.set(anchorKey, insertAt + 1);
-          return;
-        }
-      }
-
-      if (sectionKey) {
-        const headerIndex = this.displayData.findIndex(
-          (row) => row?.isSectionHeader && row.section === sectionKey,
-        );
-        if (headerIndex === -1) {
-          return;
-        }
-        const headerRow = this.displayData[headerIndex];
-        if (headerRow?.isExpanded === false) {
-          return;
-        }
-
-        let insertIndex = headerIndex;
-        while (insertIndex + 1 < this.displayData.length) {
-          const nextRow = this.displayData[insertIndex + 1];
-          if (nextRow?.isNewRow && nextRow.section === sectionKey) {
-            insertIndex++;
-            continue;
-          }
-          break;
-        }
-        this.displayData.splice(insertIndex + 1, 0, newRow);
-        return;
-      }
-
-      const insertAfter = newRow.insertAfter;
-      if (insertAfter !== undefined && insertAfter >= 0 && insertAfter < this.displayData.length) {
-        this.displayData.splice(insertAfter + 1, 0, newRow);
-      }
+    this.gridColumnsService.insertNewRowsIntoDisplayData({
+      displayData: this.displayData,
+      newRows,
+      getRowAnchorId: (row) => this.getRowAnchorId(row),
     });
 
     if (this.gridApi) {
@@ -2438,25 +1878,18 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     this.gridApi.forEachNode((node: any) => {
       const data = node?.data;
-      if (!data || this.utilService.isHeaderRow(data)) return;
-      const hasBomFields =
-        data[FIELD_PART_NUMBER] !== undefined ||
-        data.bomLinkPart !== undefined ||
-        data.bomLinkFeature !== undefined ||
-        data.quantity !== undefined ||
-        data.qty !== undefined;
-      const isDataRow =
-        data.isDirectRow ||
-        data.isSubRow ||
-        data.isNewRow ||
-        (data.materialKey && !data.isSectionHeader && !data.isMaterialHeader) ||
-        (hasBomFields && !data.isSectionHeader && !data.isMaterialHeader && !data.isGroupHeader);
-      if (isDataRow) dataRows.push(data);
+      if (this.utilService.isDataRowForValidation(data)) {
+        dataRows.push(data);
+      }
     });
 
     if (this.displayData?.length) {
       this.displayData.forEach((row) => {
-        if (row.isNewRow && !this.utilService.isHeaderRow(row) && !dataRows.some((r) => r === row || (r.newRowId !== undefined && r.newRowId === row.newRowId))) {
+        if (
+          row.isNewRow &&
+          this.utilService.isDataRowForValidation(row) &&
+          !dataRows.some((r) => r === row || (r.newRowId !== undefined && r.newRowId === row.newRowId))
+        ) {
           dataRows.push(row);
         }
       });
@@ -2746,7 +2179,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
 
     this.searchTextDebounceTimer = setTimeout(() => {
-      this.applyHierarchicalSearch();
+      this.applyGridSearch();
     }, 300);
   }
 
@@ -2754,7 +2187,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   clearSearch(): void {
     this.searchText = '';
-    this.applyHierarchicalSearch();
+    this.applyGridSearch();
     if (this.searchTextDebounceTimer) {
       clearTimeout(this.searchTextDebounceTimer);
     }
@@ -2796,13 +2229,28 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     return false;
   }
 
-
   private handleDateColumnClick(event: any): void {
-    event.api.startEditingCell({
-      rowIndex: event.rowIndex,
-      colKey: event.column.getId(),
-      rowPinned: event.rowPinned,
-    });
+    const editingCells = event?.api?.getEditingCells?.() ?? [];
+    const targetColId = event?.column?.getId?.() ?? event?.colDef?.field ?? '';
+    const alreadyEditingSameCell =
+      Array.isArray(editingCells) &&
+      editingCells.some((cell: any) => {
+        const editingColId =
+          cell?.column?.getColId?.() ??
+          cell?.column?.getId?.() ??
+          cell?.colId ??
+          '';
+        const sameRow = cell?.rowIndex === event?.rowIndex && cell?.rowPinned === event?.rowPinned;
+        return sameRow && editingColId === targetColId;
+      });
+
+    if (!alreadyEditingSameCell) {
+      event.api.startEditingCell({
+        rowIndex: event.rowIndex,
+        colKey: event.column.getId(),
+        rowPinned: event.rowPinned,
+      });
+    }
 
     const openPickerFromActiveEditor = (): boolean => {
       const editors = event.api.getCellEditorInstances({
@@ -2953,7 +2401,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
 
-  private filterHierarchicalData(data: any[], searchText: string): any[] {
+  private filterDataBySearch(data: any[], searchText: string): any[] {
     return this.gridService.filterHierarchicalData(data, searchText, {
       getBomType: () => this.dataService.getBomType() || DEFAULT_BOM_TYPE,
       getFilteredSkuInfo: () => this.getFilteredSkuInfo(),
@@ -2963,7 +2411,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  public applyHierarchicalSearch(): void {
+  public applyGridSearch(): void {
     this.applyGrouping();
   }
 
@@ -2993,7 +2441,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     return value;
   }
 
-  private sortHierarchicalData(data: any[], sortModel: any[]): any[] {
+  private sortDataTree(data: any[], sortModel: any[]): any[] {
     if (!sortModel || sortModel.length === 0) {
       return data;
     }
@@ -3054,28 +2502,28 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     return sortedData;
   }
 
-  public applyHierarchicalSort(params: any): void {
+  public applyGridSort(_params: any): void {
     if (!this.gridApi) return;
 
     setTimeout(() => {
       const sortModel = this.gridApi.getColumnState().filter((col: any) => col.sort);
 
       if (!sortModel || sortModel.length === 0) {
-        this.applyHierarchicalSearch();
+        this.applyGridSearch();
         return;
       }
 
       let dataToSort = this.rowData;
       if (this.searchText && this.searchText.trim() !== '') {
-        dataToSort = this.filterHierarchicalData(this.rowData, this.searchText);
+        dataToSort = this.filterDataBySearch(this.rowData, this.searchText);
       }
 
       if (!dataToSort || dataToSort.length === 0) {
         return;
       }
 
-      const sortedData = this.sortHierarchicalData(dataToSort, sortModel);
-      const flatData = this.flattenHierarchicalData(sortedData);
+      const sortedData = this.sortDataTree(dataToSort, sortModel);
+      const flatData = this.flattenDisplayData(sortedData);
       this.displayData = flatData;
 
       this.gridApi.setGridOption('rowData', flatData);
@@ -3087,7 +2535,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }, 10);
   }
 
-  private buildMbomHierarchy(data: any): any[] {
+  private buildMbomTreeData(data: any): any[] {
     const sections: Record<string, any[]> = {};
     const sectionDisplayNameMap: Record<string, string> = {};
 
@@ -3221,10 +2669,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     return result;
   }
 
-  transformToHierarchicalData(data: any): any[] {
-    const hierarchicalData: any[] = [];
+  transformToTreeData(data: any): any[] {
+    const treeData: any[] = [];
 
-    const sections = this.buildMbomHierarchy(data);
+    const sections = this.buildMbomTreeData(data);
 
     sections.forEach((section: any) => {
       const sectionRow: any = {
@@ -3294,14 +2742,14 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         }
       });
 
-      hierarchicalData.push(sectionRow);
+      treeData.push(sectionRow);
     });
 
-    if (hierarchicalData.length === 0) {
-      return hierarchicalData;
+    if (treeData.length === 0) {
+      return treeData;
     }
 
-    return hierarchicalData;
+    return treeData;
   }
 
   /**
@@ -3543,8 +2991,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
    * clear it from editedRows/editedFields and invalidRowIds so Save can become disabled and validation is cleared.
    */
   private clearRowEditStateIfReverted(rowId: string | number, row?: any): void {
-    const prefix = String(rowId) + '|';
-    const hasOtherDisconnects = [...this.disconnectedSkuKeys].some((k) => k.startsWith(prefix));
+    const rowToken = row ? this.getDisconnectRowToken(row) : String(rowId);
+    const rowIdToken = String(rowId);
+    const hasOtherDisconnects = [...this.disconnectedSkuKeys].some(
+      (k) => k.startsWith(`${rowToken}|`) || k.startsWith(`${rowIdToken}|`)
+    );
     if (hasOtherDisconnects) return;
 
     const variants = this.utilService.getIdVariants(rowId);
@@ -3612,33 +3063,37 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  /** Revert one disconnected SKU from the panel (by key "rowId|skuField"). */
-  reconnectSkuByKey(key: string): void {
-    if (!key || !this.gridApi) return;
-    const idx = key.indexOf('|');
-    if (idx <= 0) return;
-    const rowId = key.slice(0, idx);
-    const skuField = key.slice(idx + 1);
-    if (!this.disconnectedSkuKeys.has(key)) return;
+  /** Revert one disconnected SKU from the panel item. */
+  reconnectSkuFromPanel(
+    item: { key: string; row?: any; skuField?: string },
+    event?: Event
+  ): void {
+    event?.preventDefault();
+    event?.stopPropagation();
 
-    this.disconnectedSkuKeys.delete(key);
-    if (this.disconnectedSkuKeys.size === 0) this.hasDisconnectEdits = false;
+    const panelKey = String(item?.key || '');
+    if (!panelKey) return;
 
-    let targetNode: any = null;
-    this.gridApi.forEachNode((node: any) => {
-      const data = node?.data;
-      if (!data) return;
-      const id =
-        data.materialKey ?? data.newRowId ?? data[FIELD_PART_NUMBER] ?? data.part ?? '';
-      if (String(id) === String(rowId)) {
-        targetNode = node;
-      }
-    });
-    this.clearRowEditStateIfReverted(rowId, targetNode?.data);
+    const wasDeleted = this.disconnectedSkuKeys.delete(panelKey);
+    if (!wasDeleted) return;
 
-    if (targetNode) {
+    if (this.disconnectedSkuKeys.size === 0) {
+      this.hasDisconnectEdits = false;
+    }
+
+    const row = item?.row;
+    const skuField = item?.skuField;
+    const rowId =
+      row?.materialKey ??
+      row?.newRowId ??
+      row?.[FIELD_PART_NUMBER] ??
+      row?.part;
+    if (rowId !== undefined && rowId !== null && String(rowId).trim() !== '') {
+      this.clearRowEditStateIfReverted(rowId, row);
+    }
+
+    if (this.gridApi && skuField) {
       this.gridApi.refreshCells({
-        rowNodes: [targetNode],
         columns: [skuField, ...COLUMNS_REFRESH_ACTIONS],
         force: true,
       });
@@ -3672,14 +3127,23 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /** Key for disconnectedSkuKeys: rowId|skuField. Used for strikethrough and payload. */
+  private getDisconnectRowToken(row: any): string {
+    const stableId = row?.materialKey ?? row?.newRowId;
+    if (stableId !== undefined && stableId !== null && String(stableId).trim() !== '') {
+      return String(stableId);
+    }
+
+    const part = String(row?.[FIELD_PART_NUMBER] ?? row?.part ?? '').trim();
+    const section = String(row?.section ?? '').trim();
+    if (section && part) {
+      return `${section}::${part}`;
+    }
+    return part;
+  }
+
+  /** Key for disconnectedSkuKeys: rowToken|skuField. Used for strikethrough and payload. */
   getDisconnectedKey(row: any, skuField: string): string {
-    const rowId =
-      row?.materialKey ??
-      row?.newRowId ??
-      row?.[FIELD_PART_NUMBER] ??
-      row?.part ??
-      '';
-    return `${rowId}|${skuField}`;
+    return `${this.getDisconnectRowToken(row)}|${skuField}`;
   }
 
   isSkuDisconnected(row: any, skuField: string): boolean {
@@ -3713,9 +3177,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.showDisconnectedSkusPanel = false;
   }
 
-  /** List of disconnected SKUs for the panel: part, skuId, and key for revert. */
-  getDisconnectedSkuList(): { part: string; skuId: string; key: string }[] {
-    const list: { part: string; skuId: string; key: string }[] = [];
+  /** List of disconnected SKUs for the panel: part, skuId, and reconnect metadata. */
+  getDisconnectedSkuList(): { part: string; skuId: string; key: string; row: any; skuField: string }[] {
+    const list: { part: string; skuId: string; key: string; row: any; skuField: string }[] = [];
     if (!this.gridApi || this.disconnectedSkuKeys.size === 0) return list;
     const skuInfo = this.getFilteredSkuInfo();
 
@@ -3727,7 +3191,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         const skuField = `sku${sku.skuId}`;
         const key = this.getDisconnectedKey(row, skuField);
         if (this.disconnectedSkuKeys.has(key)) {
-          list.push({ part, skuId: String(sku.skuId), key });
+          list.push({ part, skuId: String(sku.skuId), key, row, skuField });
         }
       });
     });

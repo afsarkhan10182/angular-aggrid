@@ -1,5 +1,5 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy, Inject } from '@angular/core';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ICellEditorAngularComp } from 'ag-grid-angular';
 import {
@@ -24,7 +24,6 @@ import {
   FIELD_BOM_LINK_END_DATE,
 } from '../../constants';
 import { DataService } from '../../services/data.service';
-import { UtilService } from '../../services/util.service';
 import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators';
 import { of, Subject, Subscription } from 'rxjs';
 
@@ -84,7 +83,7 @@ export class AutocompleteCellEditorComponent
   private _searchRequestId = 0;
   private _loadMoreRequestId = 0;
 
-  constructor(private utilService: UtilService) {
+  constructor(@Inject(DOCUMENT) private readonly document: Document) {
     this.dataService = null as any;
   }
 
@@ -877,7 +876,7 @@ export class AutocompleteCellEditorComponent
       this.fetchAllPartsForDropdowns(partValue, material);
     }
     if (!this.isPartNumberSearch && materialValue) {
-      this.fetchAllMaterialsForDropdowns(materialValue, material);
+      this.fetchAllMaterialsForDropdowns(material);
     }
 
     const skuInfoPart = this.dataService?.getSkuInfo();
@@ -1165,7 +1164,7 @@ export class AutocompleteCellEditorComponent
       dropdownElement.style.opacity = '1';
 
       const inputRect = inputElement.getBoundingClientRect();
-      const container = inputElement.offsetParent || document.body;
+      const container = inputElement.offsetParent || this.document.body;
       const containerRect = container.getBoundingClientRect();
 
       const relativeTop = inputRect.bottom - containerRect.top + 2;
@@ -1179,7 +1178,7 @@ export class AutocompleteCellEditorComponent
 
       const actualDropdownHeight =
         dropdownElement.offsetHeight || dropdownElement.scrollHeight || 200;
-      const viewportHeight = window.innerHeight;
+      const viewportHeight = this.document.defaultView?.innerHeight || 0;
       const dropdownHeight = Math.min(actualDropdownHeight, 200);
 
       if (inputRect.bottom + dropdownHeight > viewportHeight) {
@@ -1189,7 +1188,7 @@ export class AutocompleteCellEditorComponent
         }
       }
 
-      const viewportWidth = window.innerWidth;
+      const viewportWidth = this.document.defaultView?.innerWidth || 0;
       const dropdownWidth = inputRect.width;
 
       if (inputRect.left + dropdownWidth > viewportWidth) {
@@ -1200,7 +1199,7 @@ export class AutocompleteCellEditorComponent
 
       // Force reflow to ensure positioning is applied
       dropdownElement.offsetHeight;
-    } catch (error) {
+    } catch {
       this.positionDropdownFallback();
     }
   }
@@ -1211,15 +1210,13 @@ export class AutocompleteCellEditorComponent
     }
 
     const dropdownElement = this.dropdown.nativeElement;
-    const inputElement = this.input.nativeElement;
-
     dropdownElement.style.top = '100%';
     dropdownElement.style.left = '0';
     dropdownElement.style.width = '100%';
     dropdownElement.style.position = 'absolute';
   }
 
-  private fetchAllMaterialsForDropdowns(materialName: string, selectedMaterial: any): void {
+  private fetchAllMaterialsForDropdowns(selectedMaterial: any): void {
     if (!this.params || !this.params.node || !selectedMaterial?.flatInstance) return;
 
     const fi = selectedMaterial.flatInstance;
@@ -1352,8 +1349,7 @@ export class AutocompleteCellEditorComponent
           }
         }
       },
-      error: (error) => {
-      },
+      error: () => {},
     });
     this.subscriptions.push(materialsSub);
   }

@@ -25,7 +25,7 @@ import {
   FIELD_QTY,
 } from '../constants';
 import { DataService } from './data.service';
-import { GridConfigService } from './grid-config.service';
+import { GridConfigService } from './grid/grid-config.service';
 import { UtilService } from './util.service';
 
 export interface TransformGridDataToApiOptions {
@@ -706,9 +706,13 @@ export class PayloadTransformService {
       }
 
       const rowHasDisconnect =
-        disconnectedSkuKeys &&
-        getDisconnectedKey &&
-        [...disconnectedSkuKeys].some((k) => k.startsWith(String(rowId) + '|'));
+        !!disconnectedSkuKeys &&
+        disconnectedSkuKeys.size > 0 &&
+        ((!!getDisconnectedKey &&
+          skuInfo.some((sku: any) =>
+            disconnectedSkuKeys.has(getDisconnectedKey(currentRow, `sku${sku.skuId}`))
+          )) ||
+          [...disconnectedSkuKeys].some((k) => k.startsWith(String(rowId) + '|')));
       if (rowHasDisconnect) {
         bomLink.disconnect = true;
       }

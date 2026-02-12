@@ -9,8 +9,10 @@ import {
   ElementRef,
   AfterViewInit,
   OnDestroy,
+  Renderer2,
+  Inject,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
 import { IconComponent } from '../icon/icon.component';
@@ -29,8 +31,7 @@ import {
   COL_ACTIONS,
 } from '../../constants';
 import { DataService } from '../../services/data.service';
-import { GridConfigService } from '../../services/grid-config.service';
-import { MassEditService } from '../../services/mass-edit.service';
+import { GridConfigService } from '../../services/grid/grid-config.service';
 import { UtilService } from '../../services/util.service';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
@@ -82,6 +83,7 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
   private massEditSearchSubjects: { [field: string]: Subject<string> } = {};
   private massEditSubscriptions: Subscription[] = [];
   private massEditInputElements: { [field: string]: HTMLInputElement } = {};
+  private massEditScrollCleanupFns: Array<() => void> = [];
 
   public get hasEditedRows(): boolean {
     return this.editedRows.size > 0;
@@ -90,8 +92,9 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
   constructor(
     private readonly dataService: DataService,
     private readonly gridConfigService: GridConfigService,
-    private readonly massEditService: MassEditService,
-    private readonly utilService: UtilService
+    private readonly utilService: UtilService,
+    private readonly renderer: Renderer2,
+    @Inject(DOCUMENT) private readonly document: Document,
   ) {}
 
   ngOnInit(): void {
@@ -141,7 +144,7 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
           const hasError = params.data?.materialColorId && this.rowErrors[params.data.materialColorId];
           if (hasError) {
             const errorMessage = this.rowErrors[params.data.materialColorId];
-            const escapedMessage = this.escapeHtml(errorMessage);
+            const escapedMessage = this.utilService.escapeHtml(errorMessage);
             return `<div class="actions-cell-content"><span class="validation-error-icon" title="${escapedMessage}" aria-label="Row error">ⓘ</span></div>`;
           }
           return '';
@@ -393,20 +396,66 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
     this.modalClose.emit();
   }
 
+  private getGridRowsByMaterialColorId(): Map<string, any> {
+    const rowsById = new Map<string, any>();
+    this.gridApi.forEachNode((node) => {
+      const id = node.data?.materialColorId;
+      if (id !== null && id !== undefined) {
+        rowsById.set(String(id), node.data);
+      }
+    });
+    return rowsById;
+  }
+
+  private applyResponseInstances(
+    instances: { [key: string]: any } | undefined,
+    options: { skipIds?: Set<string>; clearEditedState?: boolean } = {}
+  ): void {
+    if (!instances || typeof instances !== 'object') return;
+
+    Object.keys(instances).forEach((materialColorId) => {
+      if (options.skipIds?.has(materialColorId)) {
+        return;
+      }
+
+      const updatedData = instances[materialColorId];
+      const rowIndex = this.rowData.findIndex((row) => row.materialColorId === materialColorId);
+      if (rowIndex < 0) return;
+
+      this.rowData[rowIndex] = {
+        ...this.rowData[rowIndex],
+        ...updatedData,
+        materialColorId,
+      };
+
+      if (options.clearEditedState) {
+        this.editedRows.delete(materialColorId);
+        this.editedFields.delete(materialColorId);
+      }
+    });
+  }
+
+  private showAutoHideSuccessMessage(message: string): void {
+    this.successMessage = message;
+    this.showSuccessMessage = true;
+    this.notifyGridLayoutChange();
+
+    setTimeout(() => {
+      this.showSuccessMessage = false;
+      this.notifyGridLayoutChange();
+    }, 5000);
+  }
+
   saveModal(): void {
     if (!this.gridApi) return;
     this.gridApi.stopEditing();
     if (this.editedRows.size === 0) return;
 
     const instances: { [key: string]: any } = {};
+    const rowsByMaterialColorId = this.getGridRowsByMaterialColorId();
     
     this.editedRows.forEach((materialColorId) => {
-      let currentRow: any = null;
-      this.gridApi.forEachNode((node) => {
-        if (node.data?.materialColorId === materialColorId) {
-          currentRow = node.data;
-        }
-      });
+      const currentRow = rowsByMaterialColorId.get(String(materialColorId));
 
       if (!currentRow) {
         return;
@@ -448,34 +497,19 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
           
           this.showSuccessMessage = false;
 
-          if (response?.instances && typeof response.instances === 'object') {
-            Object.keys(response.instances).forEach((materialColorId) => {
-              if (!this.rowErrors[materialColorId]) {
-                const updatedData = response.instances[materialColorId];
-                const rowIndex = this.rowData.findIndex((row) => row.materialColorId === materialColorId);
-                if (rowIndex >= 0) {
-                  this.rowData[rowIndex] = {
-                    ...this.rowData[rowIndex],
-                    ...updatedData,
-                    materialColorId,
-                  };
-                  this.editedRows.delete(materialColorId);
-                  this.editedFields.delete(materialColorId);
-                }
-              }
-            });
-          }
+          this.applyResponseInstances(response?.instances, {
+            skipIds: new Set(Object.keys(this.rowErrors)),
+            clearEditedState: true,
+          });
 
-          const successCount = response?.instances ? Object.keys(response.instances).length : 0;
+          const successCount = response?.instances
+            ? Object.keys(response.instances).filter((id) => !this.rowErrors[id]).length
+            : 0;
           if (successCount > 0) {
             this.dataSaved.emit();
-            this.successMessage = `${successCount} row${successCount > 1 ? 's' : ''} saved successfully.`;
-            this.showSuccessMessage = true;
-            this.notifyGridLayoutChange();
-            setTimeout(() => {
-              this.showSuccessMessage = false;
-              this.notifyGridLayoutChange();
-            }, 5000);
+            this.showAutoHideSuccessMessage(
+              `${successCount} row${successCount > 1 ? 's' : ''} saved successfully.`
+            );
           } else {
             this.showSuccessMessage = false;
           }
@@ -506,19 +540,7 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
         } else {
           this.applyActionsColumnWidth(this.computeActionsColumnWidth());
           // No errors - update row data with saved instances (modal stays open)
-          if (response?.instances && typeof response.instances === 'object') {
-            Object.keys(response.instances).forEach((materialColorId) => {
-              const updatedData = response.instances[materialColorId];
-              const rowIndex = this.rowData.findIndex((row) => row.materialColorId === materialColorId);
-              if (rowIndex >= 0) {
-                this.rowData[rowIndex] = {
-                  ...this.rowData[rowIndex],
-                  ...updatedData,
-                  materialColorId, // Ensure materialColorId is preserved
-                };
-              }
-            });
-          }
+          this.applyResponseInstances(response?.instances);
 
           // Clear edited rows
           this.editedRows.clear();
@@ -531,16 +553,11 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
           
           // Show success message
           const savedCount = Object.keys(response.instances || {}).length;
-          this.successMessage = savedCount === 1 
-            ? 'Material color saved successfully!' 
-            : `${savedCount} material colors saved successfully!`;
-          this.showSuccessMessage = true;
-          this.notifyGridLayoutChange();
-          
-          setTimeout(() => {
-            this.showSuccessMessage = false;
-            this.notifyGridLayoutChange();
-          }, 5000);
+          this.showAutoHideSuccessMessage(
+            savedCount === 1
+              ? 'Material color saved successfully!'
+              : `${savedCount} material colors saved successfully!`
+          );
           
           // Get all current row data for emit
           const allRowData: any[] = [];
@@ -620,6 +637,7 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
     this.massEditMode = false;
     this.massEditValues = {};
     this.cleanupMassEditAutocomplete();
+    this.cleanupMassEditScrollSync();
     this.notifyGridLayoutChange();
   }
 
@@ -728,7 +746,7 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
       
       // Ensure input is focused and cursor is positioned
       setTimeout(() => {
-        if (inputElement !== document.activeElement) {
+        if (inputElement !== this.document.activeElement) {
           inputElement.focus();
         }
         // Position cursor at end of text if there's a value
@@ -759,8 +777,8 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
     if (!inputElement || !this.massEditAutocomplete[field]) return;
 
     const inputRect = inputElement.getBoundingClientRect();
-    const viewportHeight = window.innerHeight;
-    const viewportWidth = window.innerWidth;
+    const viewportHeight = this.document.defaultView?.innerHeight || 0;
+    const viewportWidth = this.document.defaultView?.innerWidth || 0;
     const dropdownHeight = 200; // max-height
 
     // Calculate position below input
@@ -986,12 +1004,6 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
     return colDef?.width || 200;
   }
 
-  private escapeHtml(text: string): string {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-
   private computeActionsColumnWidth(): number {
     return this.hasErrors() ? this.actionsColumnErrorWidth : this.actionsColumnCompactWidth;
   }
@@ -1059,6 +1071,7 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
 
   ngOnDestroy(): void {
     this.cleanupMassEditAutocomplete();
+    this.cleanupMassEditScrollSync();
     
     // Cleanup ResizeObserver
     if ((this as any)._resizeObserver) {
@@ -1067,24 +1080,33 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
   }
 
   private setupMassEditScrollSync(): void {
-    if (!this.gridApi || !this.massEditHeaderRow) return;
+    this.cleanupMassEditScrollSync();
 
-    const gridContainer = document.querySelector('.modal-grid-container .ag-body-viewport');
+    if (!this.gridApi || !this.massEditHeaderRow || !this.modalGridContainer) return;
+
+    const gridContainer = this.modalGridContainer.nativeElement.querySelector(
+      '.ag-body-viewport',
+    ) as HTMLElement | null;
     const headerRow = this.massEditHeaderRow.nativeElement;
 
-    if (!gridContainer) return;
+    if (!gridContainer || !headerRow) return;
 
-    // Sync grid scroll to header row
-    gridContainer.addEventListener('scroll', () => {
+    const gridScrollUnlisten = this.renderer.listen(gridContainer, 'scroll', () => {
       headerRow.scrollLeft = gridContainer.scrollLeft;
     });
 
-    // Sync header row scroll to grid
-    headerRow.addEventListener('scroll', () => {
+    const headerScrollUnlisten = this.renderer.listen(headerRow, 'scroll', () => {
       if (gridContainer.scrollLeft !== headerRow.scrollLeft) {
         gridContainer.scrollLeft = headerRow.scrollLeft;
       }
     });
+
+    this.massEditScrollCleanupFns.push(gridScrollUnlisten, headerScrollUnlisten);
+  }
+
+  private cleanupMassEditScrollSync(): void {
+    this.massEditScrollCleanupFns.forEach((cleanup) => cleanup());
+    this.massEditScrollCleanupFns = [];
   }
 
 }

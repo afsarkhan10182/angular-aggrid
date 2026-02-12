@@ -34,7 +34,7 @@
                 placeholder="Search All Columns"
                 [(ngModel)]="searchText"
                 (input)="onSearchTextChange()"
-                (keyup.enter)="applyHierarchicalSearch()"
+                (keyup.enter)="applyGridSearch()"
                 #searchInput
               />
               <button
@@ -48,7 +48,7 @@
             </div>
             <button
               class="search-filter-btn"
-              (click)="applyHierarchicalSearch()"
+              (click)="applyGridSearch()"
               [disabled]="!searchText"
               title="Search"
             >
@@ -226,7 +226,12 @@
       <div class="disconnected-skus-chips">
         <span *ngFor="let item of getDisconnectedSkuList()" class="disconnected-skus-chip">
           {{ item.part }} → {{ item.skuId }}
-          <button type="button" class="disconnected-skus-chip-undo" (click)="reconnectSkuByKey(item.key)" title="Reconnect">&#8617;</button>
+          <button
+            type="button"
+            class="disconnected-skus-chip-undo"
+            (pointerdown)="reconnectSkuFromPanel(item, $event)"
+            title="Reconnect"
+          >&#8617;</button>
         </span>
       </div>
     </div>

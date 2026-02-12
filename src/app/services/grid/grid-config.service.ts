@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { GridApi, GridOptions, IRowNode } from 'ag-grid-community';
+import { Injectable, Renderer2, RendererFactory2 } from '@angular/core';
+import { GridApi, GridOptions, IRowNode, getGridElement } from 'ag-grid-community';
 import {
   EBOM_CORE_FIELDS,
   EBOM_SERVICE_FIELDS,
@@ -16,8 +16,7 @@ import {
   FIELD_BOM_LINK_SPEC_SHEET_EXTRA,
   SBOM_EDITABLE_FIELDS,
   NEW_ROW_EDITABLE_FIELDS,
-} from '../constants';
-import { DataService } from './data.service';
+} from '../../constants';
 
 export interface GroupConfig {
   field: string;
@@ -28,7 +27,28 @@ export interface GroupConfig {
   providedIn: 'root',
 })
 export class GridConfigService {
-  constructor(private readonly dataService: DataService) {}
+  private readonly renderer: Renderer2;
+
+  constructor(rendererFactory: RendererFactory2) {
+    this.renderer = rendererFactory.createRenderer(null, null);
+  }
+
+  private getGridContainer(gridApi: GridApi): HTMLElement | null {
+    const gridRoot = getGridElement(gridApi) as HTMLElement | undefined;
+    if (!gridRoot) {
+      return null;
+    }
+    return (gridRoot.closest('.ag-theme-alpine') as HTMLElement | null) || gridRoot;
+  }
+
+  private addCaptureListener(
+    container: Element,
+    type: string,
+    handler: EventListener
+  ): () => void {
+    container.addEventListener(type, handler, true);
+    return () => container.removeEventListener(type, handler, true);
+  }
 
   getDefaultColDef() {
     const defaultColDef = {
@@ -76,18 +96,23 @@ export class GridConfigService {
     if (!gridApi) return;
 
     setTimeout(() => {
-      const horizontalScrollViewport = document.querySelector(
-        '.ag-body-horizontal-scroll-viewport'
-      ) as HTMLElement;
-
-      if (horizontalScrollViewport) {
-        horizontalScrollViewport.style.overflowX = 'auto';
-        horizontalScrollViewport.style.overflowY = 'hidden';
+      const gridContainer = this.getGridContainer(gridApi);
+      if (!gridContainer) {
+        return;
       }
 
-      const bodyViewport = document.querySelector('.ag-body-viewport') as HTMLElement;
+      const horizontalScrollViewport = gridContainer.querySelector(
+        '.ag-body-horizontal-scroll-viewport',
+      ) as HTMLElement | null;
+
+      if (horizontalScrollViewport) {
+        this.renderer.setStyle(horizontalScrollViewport, 'overflowX', 'auto');
+        this.renderer.setStyle(horizontalScrollViewport, 'overflowY', 'hidden');
+      }
+
+      const bodyViewport = gridContainer.querySelector('.ag-body-viewport') as HTMLElement | null;
       if (bodyViewport) {
-        bodyViewport.style.overflowX = 'auto';
+        this.renderer.setStyle(bodyViewport, 'overflowX', 'auto');
       }
     }, 100);
   }
@@ -184,15 +209,6 @@ export class GridConfigService {
   }
 
   /**
-   * Date formatter function for AG Grid valueFormatter (MM/DD/YYYY format)
-   * @param params - AG Grid params object
-   * @returns Formatted date string
-   */
-  dateFormatter(params: any): string {
-    return this.formatDateToMMDDYYYY(params.value);
-  }
-
-  /**
    * Format last saved time
    */
   formatLastSavedTime(date: Date): string {
@@ -210,198 +226,41 @@ export class GridConfigService {
   }
 
   /**
-   * Generate expired entries for testing
-   */
-  generateExpiredEntries(dataService: DataService): any[] {
-    const expiredEntries = [
-      {
-        part: '5000001',
-        supplier: 'Expired Supplier 1',
-        color: 'Red',
-        feature: 'Expired Frame',
-        startDate: '01/01/2023',
-        endDate: '12/31/2023',
-        qty: 5,
-        isExpired: true,
-      },
-      {
-        part: '5000002',
-        supplier: 'Expired Supplier 2',
-        color: 'Orange',
-        feature: 'Expired Hardware',
-        startDate: '02/01/2023',
-        endDate: '11/30/2023',
-        qty: 3,
-        isExpired: true,
-      },
-      {
-        part: '5000003',
-        supplier: 'Expired Supplier 3',
-        color: 'Yellow',
-        feature: 'Expired Label',
-        startDate: '03/01/2023',
-        endDate: '10/31/2023',
-        qty: 8,
-        isExpired: true,
-      },
-    ];
-
-    const skuInfo = dataService.getSkuInfo();
-    expiredEntries.forEach((entry) => {
-      skuInfo.forEach((sku) => {
-        (entry as any)[`sku${sku.skuId}`] = '';
-      });
-    });
-
-    return expiredEntries;
-  }
-
-  /**
-   * Initialize clickable parts (random selection)
-   */
-  initializeClickableParts(rowData: any[]): Set<number> {
-    const clickableParts = new Set<number>();
-
-    const dataRows = rowData.filter(
-      (row) => !row.isSectionHeader && !row.isMaterialHeader && !row.isBranchHeader && row.part
-    );
-
-    const first20Parts = dataRows.slice(0, 20).map((row) => row.part.toString());
-    const clickableCount = Math.floor(first20Parts.length * 0.3);
-
-    for (let i = 0; i < clickableCount; i++) {
-      const randomIndex = Math.floor(Math.random() * first20Parts.length);
-      clickableParts.add(Number.parseInt(first20Parts[randomIndex], 10));
-    }
-
-    return clickableParts;
-  }
-
-  /**
    * Get unique features from row data
    */
   getUniqueFeatures(rowData: any[]): string[] {
-    const features = new Set<string>();
-    rowData.forEach((row) => {
-      if (
-        row.feature &&
-        !row.isNewRow &&
-        !row.isSectionHeader &&
-        !row.isMaterialHeader &&
-        !row.isBranchHeader
-      ) {
-        features.add(row.feature);
-      }
-    });
-    return Array.from(features).sort((a, b) => a.localeCompare(b));
-  }
-
-  /**
-   * Get available part numbers
-   */
-  getAvailablePartNumbers(rowData: any[]): string[] {
-    const partNumbers = new Set<string>();
-    rowData.forEach((row) => {
-      if (
-        !row.isNewRow &&
-        !row.isSectionHeader &&
-        !row.isMaterialHeader &&
-        !row.isBranchHeader &&
-        row.part
-      ) {
-        partNumbers.add(row.part.toString());
-      }
-    });
-    return Array.from(partNumbers).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-  }
-
-  /**
-   * Get available materials
-   */
-  getAvailableMaterials(rowData: any[]): string[] {
-    const materials = new Set<string>();
-    rowData.forEach((row) => {
-      if (
-        row.material &&
-        !row.isNewRow &&
-        !row.isSectionHeader &&
-        !row.isMaterialHeader &&
-        !row.isBranchHeader
-      ) {
-        materials.add(row.material.toString());
-      }
-    });
-    return Array.from(materials).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    return this.getUniqueLookupValues(rowData, 'feature');
   }
 
   /**
    * Get unique suppliers
    */
   getUniqueSuppliers(rowData: any[]): string[] {
-    const suppliers = new Set<string>();
-    rowData.forEach((row) => {
-      if (
-        row.supplier &&
-        !row.isNewRow &&
-        !row.isSectionHeader &&
-        !row.isMaterialHeader &&
-        !row.isBranchHeader
-      ) {
-        suppliers.add(row.supplier);
-      }
-    });
-    return Array.from(suppliers).sort((a, b) => a.localeCompare(b));
+    return this.getUniqueLookupValues(rowData, 'supplier');
   }
 
   /**
    * Get unique colors
    */
   getUniqueColors(rowData: any[]): string[] {
-    const colors = new Set<string>();
+    return this.getUniqueLookupValues(rowData, 'color');
+  }
+
+  private getUniqueLookupValues(rowData: any[], field: string): string[] {
+    const uniqueValues = new Set<string>();
     rowData.forEach((row) => {
+      const value = row?.[field];
       if (
-        row.color &&
+        value &&
         !row.isNewRow &&
         !row.isSectionHeader &&
         !row.isMaterialHeader &&
         !row.isBranchHeader
       ) {
-        colors.add(row.color);
+        uniqueValues.add(String(value));
       }
     });
-    return Array.from(colors).sort((a, b) => a.localeCompare(b));
-  }
-
-  /**
-   * Search part numbers (for future API integration)
-   */
-  async searchPartNumbers(searchTerm: string, rowData: any[]): Promise<string[]> {
-    const allParts = this.getAvailablePartNumbers(rowData);
-    if (!searchTerm) {
-      return allParts.slice(0, 5);
-    }
-
-    return allParts.filter((part) => part.includes(searchTerm)).slice(0, 5);
-  }
-
-  /**
-   * Apply quick filter
-   */
-  applyQuickFilter(gridApi: GridApi, searchText: string): void {
-    if (!gridApi) return;
-    gridApi.setGridOption('quickFilterText', searchText);
-  }
-
-  /**
-   * Clear search
-   */
-  clearSearch(gridApi: GridApi, componentInstance: any): void {
-    componentInstance.searchText = '';
-    this.applyQuickFilter(gridApi, componentInstance.searchText);
-
-    if (componentInstance.searchTextDebounceTimer) {
-      clearTimeout(componentInstance.searchTextDebounceTimer);
-    }
+    return Array.from(uniqueValues).sort((a, b) => a.localeCompare(b));
   }
 
   /**
@@ -465,7 +324,7 @@ export class GridConfigService {
       onFirstDataRendered: (params) => {
         this.setupRowHoverSync(params.api);
       },
-      onRowSelected: (params) => {},
+      onRowSelected: () => {},
       onSelectionChanged: (params) => {
         if (componentInstance.onSelectionChanged) {
           componentInstance.onSelectionChanged(params);
@@ -520,8 +379,8 @@ export class GridConfigService {
           params.node.data[params.colDef.field] = params.newValue;
         }
       },
-      onCellEditingStarted: (params) => {},
-      onCellMouseOver: (params) => {},
+      onCellEditingStarted: () => {},
+      onCellMouseOver: () => {},
       onCellEditingStopped: (params) => {
         if (
           params.data &&
@@ -583,11 +442,11 @@ export class GridConfigService {
           event.preventDefault();
         }
       },
-      onFilterChanged: (params) => {},
-      onFilterModified: (params) => {},
+      onFilterChanged: () => {},
+      onFilterModified: () => {},
       onSortChanged: (params) => {
-        if (componentInstance.applyHierarchicalSort) {
-          componentInstance.applyHierarchicalSort(params);
+        if (componentInstance.applyGridSort) {
+          componentInstance.applyGridSort(params);
         }
       },
     };
@@ -606,7 +465,12 @@ export class GridConfigService {
    * - Works with AG Grid's virtual scrolling and row updates
    */
   private setupRowHoverSync(gridApi: GridApi): void {
-    const gridElement = document.querySelector('.ag-theme-alpine');
+    const previousCleanup = (gridApi as any)._hoverSyncCleanup as (() => void) | undefined;
+    if (typeof previousCleanup === 'function') {
+      previousCleanup();
+    }
+
+    const gridElement = this.getGridContainer(gridApi);
     if (!gridElement) return;
 
     const mainBody = gridElement.querySelector('.ag-body-viewport');
@@ -615,11 +479,7 @@ export class GridConfigService {
 
     if (!mainBody) return;
 
-    const eventHandlers: Array<{
-      container: Element;
-      type: string;
-      handler: EventListener;
-    }> = [];
+    const cleanupFns: Array<() => void> = [];
 
     const syncHover = (rowIndex: number | null, add: boolean) => {
       if (rowIndex === null || rowIndex === undefined) return;
@@ -688,19 +548,13 @@ export class GridConfigService {
       const mouseEnterHandler = createMouseEnterHandler();
       const mouseLeaveHandler = createMouseLeaveHandler();
 
-      container.addEventListener('mouseenter', mouseEnterHandler, true);
-      container.addEventListener('mouseleave', mouseLeaveHandler, true);
-
-      eventHandlers.push(
-        { container, type: 'mouseenter', handler: mouseEnterHandler },
-        { container, type: 'mouseleave', handler: mouseLeaveHandler }
-      );
+      cleanupFns.push(this.addCaptureListener(container, 'mouseenter', mouseEnterHandler));
+      cleanupFns.push(this.addCaptureListener(container, 'mouseleave', mouseLeaveHandler));
     });
 
     (gridApi as any)._hoverSyncCleanup = () => {
-      eventHandlers.forEach(({ container, type, handler }) => {
-        container.removeEventListener(type, handler, true);
-      });
+      cleanupFns.forEach((cleanup) => cleanup());
+      cleanupFns.length = 0;
     };
   }
 
@@ -781,42 +635,6 @@ export class GridConfigService {
     }
 
     return NEW_ROW_EDITABLE_FIELDS.includes(field);
-  }
-
-  // Grouping Methods (merged from GroupByService)
-  /**
-   * Groups data by specified fields and creates group header rows
-   * Preserves section headers and material headers while grouping data rows
-   */
-  groupData(data: any[], groupFields: GroupConfig[]): any[] {
-    if (!groupFields || groupFields.length === 0) {
-      return data;
-    }
-
-    const result: any[] = [];
-    let currentDataGroup: any[] = [];
-
-    data.forEach((row) => {
-      if (row.isSectionHeader || row.isMaterialHeader || row.isGroupHeader) {
-        if (currentDataGroup.length > 0) {
-          const grouped = this.createNestedGroups(currentDataGroup, groupFields, 0);
-          const flattened = this.flattenGroupedData(grouped);
-          result.push(...flattened);
-          currentDataGroup = [];
-        }
-        result.push(row);
-      } else {
-        currentDataGroup.push(row);
-      }
-    });
-
-    if (currentDataGroup.length > 0) {
-      const grouped = this.createNestedGroups(currentDataGroup, groupFields, 0);
-      const flattened = this.flattenGroupedData(grouped);
-      result.push(...flattened);
-    }
-
-    return result;
   }
 
   /**
@@ -917,82 +735,6 @@ export class GridConfigService {
   }
 
   /**
-   * Flattens grouped data structure respecting expand/collapse state
-   */
-  flattenGroupedData(grouped: any[]): any[] {
-    const result: any[] = [];
-
-    grouped.forEach((item) => {
-      if (item.isGroupHeader) {
-        result.push(item);
-        if (item.isExpanded && item.children) {
-          item.children.forEach((child: any) => {
-            if (child.isGroupHeader) {
-              const nested = this.flattenGroupedData([child]);
-              result.push(...nested);
-            } else {
-              result.push(child);
-            }
-          });
-        }
-      } else {
-        result.push(item);
-      }
-    });
-
-    return result;
-  }
-
-  /**
-   * Toggles group expand/collapse state
-   */
-  toggleGroup(data: any[], groupKey: string): any[] {
-    const findAndToggle = (items: any[]): any[] => {
-      return items.map((item) => {
-        if (item.isGroupHeader && item.groupKey === groupKey) {
-          return {
-            ...item,
-            isExpanded: !item.isExpanded,
-          };
-        }
-        if (item.children && Array.isArray(item.children)) {
-          return {
-            ...item,
-            children: findAndToggle(item.children),
-          };
-        }
-        return item;
-      });
-    };
-
-    return findAndToggle(data);
-  }
-
-  /**
-   * Removes grouping and returns original flat data
-   */
-  ungroupData(groupedData: any[]): any[] {
-    return groupedData.filter((row) => !row.isGroupHeader);
-  }
-
-  /**
-   * Gets unique values for a field (useful for group by dropdown)
-   */
-  getUniqueValues(data: any[], field: string): any[] {
-    const values = new Set<any>();
-    data.forEach((row) => {
-      if (row[field] !== null && row[field] !== undefined && !row.isGroupHeader) {
-        values.add(row[field]);
-      }
-    });
-    return Array.from(values).sort((a, b) => {
-      if (a === null || a === undefined) return 1;
-      if (b === null || b === undefined) return -1;
-      return String(a).localeCompare(String(b));
-    });
-  }
-
-  /**
    * Gets count of items in a group
    */
   getGroupCount(groupHeader: any): number {
@@ -1014,7 +756,7 @@ export class GridConfigService {
   }
 
   /**
-   * Groups hierarchical data (sections -> materials)
+   * Groups tree data (sections -> materials)
    * Groups the children of each section based on the group fields
    */
   groupHierarchicalData(sections: any[], groupFields: GroupConfig[]): any[] {

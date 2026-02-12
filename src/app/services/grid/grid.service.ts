@@ -14,16 +14,16 @@ import {
   HEADER_FEATURE,
   FIELD_BOM_LINK_FEATURE,
   FIELD_PART_NUMBER,
-  FIELD_PTCBOM_PART_MARK_UP_DISPLAY_NAME,
   FIELD_HAS_LINKED_BOM,
   PLACEHOLDER_SEARCH_BOM_FEATURES,
-} from '../constants';
-import { Injectable } from '@angular/core';
+} from '../../constants';
+import { DOCUMENT } from '@angular/common';
+import { Inject, Injectable } from '@angular/core';
 import { ColDef, GridApi } from 'ag-grid-community';
-import { DataService } from './data.service';
+import { DataService } from '../data.service';
 import { GridConfigService } from './grid-config.service';
-import { UtilService, ExtendedColDef } from './util.service';
-import { AutocompleteCellEditorComponent } from '../components/autocomplete-cell-editor/autocomplete-cell-editor.component';
+import { UtilService, ExtendedColDef } from '../util.service';
+import { AutocompleteCellEditorComponent } from '../../components/autocomplete-cell-editor/autocomplete-cell-editor.component';
 
 export interface HierarchicalDataConfig {
   getBomType: () => string;
@@ -82,6 +82,7 @@ export class GridService {
     private readonly dataService: DataService,
     private readonly gridConfigService: GridConfigService,
     private readonly utilService: UtilService,
+    @Inject(DOCUMENT) private readonly document: Document,
   ) {}
 
   flattenHierarchicalData(data: any[], config: HierarchicalDataConfig): any[] {
@@ -216,17 +217,20 @@ export class GridService {
     data: any[],
     config: HierarchicalDataConfig,
   ): any[] {
-    if (config.selectedSkuFilter === 'all') {
-      return data;
+    const bomType = config.getBomType();
+    const isSbom = bomType === BOM_TYPE_SBOM;
+    const shouldApplySkuFilter = config.selectedSkuFilter !== 'all';
+
+    let visibleSkuIds: Set<string> = new Set();
+    if (shouldApplySkuFilter) {
+      const visibleSkus = config.getFilteredSkuInfo();
+      visibleSkuIds = new Set<string>(
+        visibleSkus.map((sku) => String(sku.skuId || '').trim()).filter((id: string) => id !== ''),
+      );
     }
 
-    const visibleSkus = config.getFilteredSkuInfo();
-    const visibleSkuIds = new Set<string>(
-      visibleSkus.map((sku) => String(sku.skuId || '').trim()).filter((id: string) => id !== ''),
-    );
-
-    if (visibleSkuIds.size === 0) {
-      return data;
+    if (shouldApplySkuFilter && visibleSkuIds.size === 0) {
+      return [];
     }
 
     const filterRows = (rows: any[]): any[] => {
@@ -245,7 +249,11 @@ export class GridService {
             return filteredRow;
           }
 
-          if (config.hasSkuInExistingResponse(row, visibleSkuIds)) {
+          if (this.shouldSkipSbomNode(row, isSbom) || !this.shouldIncludeNode(row)) {
+            return null;
+          }
+
+          if (!shouldApplySkuFilter || config.hasSkuInExistingResponse(row, visibleSkuIds)) {
             const filteredRow = { ...row };
             if (row.children && Array.isArray(row.children)) {
               filteredRow.children = filterRows(row.children);
@@ -653,31 +661,9 @@ export class GridService {
     return utilService.getDataDefaultStyle(baseStyle, hasPartForRefSku);
   }
 
-  createCheckboxColumn(): ExtendedColDef {
-    return {
-      headerName: '',
-      field: COL_CHECKBOX,
-      colId: COL_CHECKBOX,
-      width: 40,
-      minWidth: 40,
-      maxWidth: 40,
-      pinned: 'left',
-      resizable: false,
-      sortable: false,
-      filter: false,
-      suppressHeaderMenuButton: true,
-      suppressMovable: true,
-      context: {
-        excludeFromExport: true,
-      },
-    };
-  }
-
   createActionsColumn(
     isAddRowEnabled: () => boolean,
-    getGroupCount: (data: any) => number,
     hasVisibleChildren: (params: any) => boolean,
-    getBomType: () => string,
     checkboxSelection?: (params: any) => boolean,
   ): ExtendedColDef {
     const hasCheckbox = (params: any) =>
@@ -784,10 +770,10 @@ export class GridService {
       }
 
       if (isSbom) {
-        const isMbomLineItem = child.ptcbomPartMarkUp === 'enumMBOM001';
+        const isMbomLineItem = child.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM;
         const specSheetExtra = String(child.bomLinkSpecSheetExtra || '').trim();
 
-        if (!isMbomLineItem && specSheetExtra === 'No') {
+        if (!isMbomLineItem && specSheetExtra === VALUE_SPEC_NO) {
           return false;
         }
       }
@@ -853,71 +839,6 @@ export class GridService {
     };
   }
 
-  createStandardColumn(
-    field: string,
-    headerName: string,
-    config: ColumnDefinitionConfig,
-  ): ColDef {
-    const columnDef: ColDef = {
-      headerName: headerName,
-      field: field,
-      width: 150,
-      minWidth: 100,
-      sortable: true,
-      resizable: true,
-      hide: field === FIELD_PTCBOM_PART_MARK_UP_DISPLAY_NAME,
-      cellRenderer: (params: any) => {
-        if (
-          params.data.isSectionHeader ||
-          params.data.isBranchHeader ||
-          params.data.isGroupHeader
-        ) {
-          return '';
-        }
-        const columnWidth = params.column?.getActualWidth() || columnDef.width || 150;
-        const cellStyle = config.getDataCellStyle(params);
-        const textColor = cellStyle?.color || undefined;
-
-        return config.utilService.createCellContentWithTooltip(
-          params.value,
-          columnWidth,
-          textColor,
-        );
-      },
-      tooltipValueGetter: (params: any) => {
-        if (params.value === null || params.value === undefined) return null;
-        return String(params.value);
-      },
-      cellStyle: (params: any) => {
-        return config.getDataCellStyle(params);
-      },
-      editable: (params: any) => {
-        if (!params.data || params.data.isSectionHeader) {
-          return false;
-        }
-        if (params.data.isNewRow) {
-          return this.gridConfigService.isFieldEditableForNewRow(
-            field,
-            config.isSkuFilterReadOnly,
-            config.isSbomMode,
-            config.isEbomMode,
-            config.isMaterialMbomMode,
-          );
-        }
-        return this.gridConfigService.isFieldEditableInSbom(
-          field,
-          params.data,
-          config.isSkuFilterReadOnly,
-          config.isSbomMode,
-          config.isEbomMode,
-          config.isMaterialMbomMode,
-        );
-      },
-    };
-
-    return columnDef;
-  }
-
   createSkuColumns(config: ColumnDefinitionConfig): ColDef[] {
     const originalSkuInfo = this.dataService.getSkuInfo();
     const skuInfoMap = new Map<string, any>();
@@ -944,17 +865,17 @@ export class GridService {
       };
     });
 
+    const documentRef = this.document;
+
     class SkuHeaderComponent {
       private eGui!: HTMLDivElement;
-      private params: any;
 
       init(params: any) {
-        this.params = params;
         const lines = params.lines || [];
         const bomName = params.bomName || '';
         const fullText = lines.join('\n');
 
-        this.eGui = document.createElement('div');
+        this.eGui = documentRef.createElement('div');
         this.eGui.className = 'sku-header-wrapper';
         const tooltipText =
           bomName && bomName.trim() !== '' ? `${fullText}\nBOM Name - ${bomName}` : fullText;
@@ -962,7 +883,7 @@ export class GridService {
         this.eGui.style.userSelect = 'none';
 
         lines.forEach((line: string) => {
-          const div = document.createElement('div');
+          const div = documentRef.createElement('div');
           div.className = 'sku-line';
           div.textContent = line;
           div.removeAttribute('title');
@@ -974,7 +895,7 @@ export class GridService {
         return this.eGui;
       }
 
-      refresh(params: any) {
+      refresh(_params: any) {
         return false;
       }
 

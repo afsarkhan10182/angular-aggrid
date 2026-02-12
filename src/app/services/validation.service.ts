@@ -12,12 +12,7 @@ import {
   MSG_VALIDATION_REQUIRED_FIELDS,
   MSG_NO_SKUS_SELECTED,
   MSG_SKU_SELECTION,
-  MSG_DUPLICATE_PART_SKU,
   MSG_DUPLICATE_FEATURE_SKU_SECTION,
-  MSG_DUPLICATE_PART_FEATURE_SKU,
-  MSG_DUPLICATE_FEATURE_AND_PART,
-  MSG_DUPLICATE_PART_NUMBER_SKU,
-  MSG_DUPLICATE_PART_NUMBER_SKU_MULTIPLE,
   MSG_DUPLICATE_SECTION_PART_SKU,
   MSG_DUPLICATE_FEATURE_SKU_SECTION_ONE,
   MSG_DUPLICATE_FEATURE_FOR_SKU,
@@ -134,7 +129,7 @@ export class ValidationService {
   }
 
   /**
-   * Recursively find all new rows in hierarchical data structure
+   * Recursively find all new rows in tree data structure
    */
   private findNewRows(rows: any[]): any[] {
     const newRows: any[] = [];
@@ -337,7 +332,7 @@ export class ValidationService {
       return { isValid: true, message: '', selectedSkuCount: 0 };
     }
 
-    const { count, skuIds } = this.countSkusWithValues(row, skuInfo);
+    const { count } = this.countSkusWithValues(row, skuInfo);
 
     if (count === 0) {
       const rowId = this.getValidationRowId(row);
@@ -884,7 +879,6 @@ export class ValidationService {
       let foundDuplicate = false;
       const duplicateSkus: string[] = [];
       let duplicateType: DuplicateType = null;
-      let errorMessage = '';
 
       for (const skuId of rowSkus.skuIds) {
         if (isSbom) {
@@ -935,13 +929,11 @@ export class ValidationService {
               duplicateSkus.push(skuId);
               foundDuplicate = true;
               duplicateType = DUPLICATE_TYPE_DUPLICATE_PART;
-              errorMessage = MSG_DUPLICATE_PART_NUMBER_SKU;
               break;
             } else if (hiddenRecords.length > 1) {
               duplicateSkus.push(skuId);
               foundDuplicate = true;
               duplicateType = DUPLICATE_TYPE_DUPLICATE_PART;
-              errorMessage = MSG_DUPLICATE_PART_NUMBER_SKU_MULTIPLE;
               break;
             }
           } else {
@@ -981,7 +973,6 @@ export class ValidationService {
               duplicateSkus.push(skuId);
               foundDuplicate = true;
               duplicateType = DUPLICATE_TYPE_DUPLICATE_PART;
-              errorMessage = MSG_DUPLICATE_PART_SKU;
               break;
             }
           }
@@ -1027,7 +1018,6 @@ export class ValidationService {
             duplicateSkus.push(skuId);
             foundDuplicate = true;
             duplicateType = DUPLICATE_TYPE_FEATURE_UNIQUENESS;
-            errorMessage = MSG_DUPLICATE_FEATURE_SKU_SECTION;
             break;
           } else if (recordCount === 1) {
             const matchingRecord = matchingRecords[0];
@@ -1039,13 +1029,11 @@ export class ValidationService {
                 duplicateSkus.push(skuId);
                 foundDuplicate = true;
                 duplicateType = DUPLICATE_TYPE_DUPLICATE_FEATURE;
-                errorMessage = MSG_DUPLICATE_FEATURE_SKU_SECTION;
                 break;
               }
               duplicateSkus.push(skuId);
               foundDuplicate = true;
               duplicateType = DUPLICATE_TYPE_DUPLICATE_PART;
-              errorMessage = MSG_DUPLICATE_FEATURE_AND_PART;
               break;
             }
           }

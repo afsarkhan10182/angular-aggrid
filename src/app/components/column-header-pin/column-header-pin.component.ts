@@ -7,10 +7,11 @@ import {
   ElementRef,
   ViewChild,
   HostListener,
-  Injectable,
   ChangeDetectorRef,
+  Inject,
+  Renderer2,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { IHeaderParams } from 'ag-grid-community';
 import { IHeaderAngularComp } from 'ag-grid-angular';
 import { IconComponent } from '../icon/icon.component';
@@ -40,7 +41,7 @@ class MenuStateService {
   template: `
     <div class="simple-pin-header">
       <div class="header-content-wrapper">
-        <div class="header-text ag-header-cell-text" (click)="onSortClick($event)">
+        <div class="header-text ag-header-cell-text" (click)="onSortClick()">
           {{ displayName }}
         </div>
         <div class="header-controls">
@@ -402,7 +403,11 @@ export class ColumnHeaderPinComponent
   @ViewChild('menuButton') menuButton!: ElementRef;
   @ViewChild('dropdown') dropdown!: ElementRef;
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private readonly renderer: Renderer2,
+    @Inject(DOCUMENT) private readonly document: Document,
+  ) {}
 
   ngOnInit(): void {
     this.updateDisplayName();
@@ -427,8 +432,8 @@ export class ColumnHeaderPinComponent
   moveDropdownToBody(): void {
     if (this.dropdown && this.isMenuOpen) {
       const el = this.dropdown.nativeElement;
-      if (el && el.parentElement !== document.body) {
-        document.body.appendChild(el);
+      if (el && el.parentElement !== this.document.body) {
+        this.renderer.appendChild(this.document.body, el);
       }
     }
   }
@@ -437,22 +442,26 @@ export class ColumnHeaderPinComponent
     this.params = params;
     this.updateDisplayName();
     this.updatePinnedState();
-
-    const field = params.column?.getColDef()?.field;
-    const colId = params.column?.getColId();
-    this.showMenuButton = field !== COL_ACTIONS && field !== COL_CHECKBOX && colId !== COL_ACTIONS && colId !== COL_CHECKBOX;
+    this.updateMenuButtonVisibility();
   }
 
   refresh(params: IHeaderParams): boolean {
     this.params = params;
     this.updateDisplayName();
     this.updatePinnedState();
-    
-    const field = params.column?.getColDef()?.field;
-    const colId = params.column?.getColId();
-    this.showMenuButton = field !== COL_ACTIONS && field !== COL_CHECKBOX && colId !== COL_ACTIONS && colId !== COL_CHECKBOX;
+    this.updateMenuButtonVisibility();
     
     return true;
+  }
+
+  private updateMenuButtonVisibility(): void {
+    const field = this.params?.column?.getColDef()?.field;
+    const colId = this.params?.column?.getColId();
+    this.showMenuButton =
+      field !== COL_ACTIONS &&
+      field !== COL_CHECKBOX &&
+      colId !== COL_ACTIONS &&
+      colId !== COL_CHECKBOX;
   }
 
   updateDisplayName(): void {
@@ -476,7 +485,7 @@ export class ColumnHeaderPinComponent
     }
   }
 
-  onSortClick(event: MouseEvent): void {
+  onSortClick(): void {
     if (!this.params?.column || !this.params?.api) {
       return;
     }
@@ -549,16 +558,16 @@ export class ColumnHeaderPinComponent
     this.isMenuOpen = false;
     if (
       this.dropdown?.nativeElement &&
-      this.dropdown.nativeElement.parentElement === document.body
+      this.dropdown.nativeElement.parentElement === this.document.body
     ) {
-      document.body.removeChild(this.dropdown.nativeElement);
+      this.renderer.removeChild(this.document.body, this.dropdown.nativeElement);
     }
     this.dropdownStyle = {};
     MenuStateService.clearOpenMenu(this);
   }
 
-  @HostListener('document:click', ['$event'])
-  handleClickOutside(event: Event): void {
+  @HostListener('document:pointerdown', ['$event'])
+  handleGlobalPointerDown(event: Event): void {
     if (this.isMenuOpen) {
       const target = event.target as Node;
       const isClickInsideMenuContainer = this.menuContainer?.nativeElement?.contains(target);
@@ -570,9 +579,9 @@ export class ColumnHeaderPinComponent
     }
   }
 
-  @HostListener('window:scroll', ['$event'])
-  @HostListener('window:resize', ['$event'])
-  handleScrollOrResize(event: Event): void {
+  @HostListener('window:scroll')
+  @HostListener('window:resize')
+  handleScrollOrResize(): void {
     if (this.isMenuOpen) {
       this.closeMenu();
     }

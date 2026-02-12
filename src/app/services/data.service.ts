@@ -28,7 +28,8 @@ import {
   SKU_FILTER_EMPTY_EDITABLE,
   LABEL_ALL,
 } from '../constants';
-import { Injectable } from '@angular/core';
+import { Inject, Injectable } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, map, catchError, throwError, of } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -148,6 +149,7 @@ export class DataService {
     private readonly http: HttpClient,
     private readonly sessionService: SessionService,
     private readonly utilService: UtilService,
+    @Inject(DOCUMENT) private readonly document: Document,
   ) {}
 
   /**
@@ -738,8 +740,8 @@ export class DataService {
     if (fromJsp != null && String(fromJsp).trim() !== '') {
       return fromJsp;
     }
-    const fromUrl = typeof window !== 'undefined' && window.location?.search
-      ? new URLSearchParams(window.location.search).get(PARAM_BOM_TYPE)
+    const fromUrl = this.document.defaultView?.location?.search
+      ? new URLSearchParams(this.document.defaultView.location.search).get(PARAM_BOM_TYPE)
       : null;
     if (fromUrl != null && String(fromUrl).trim() !== '') {
       return fromUrl;
@@ -762,7 +764,7 @@ export class DataService {
       return hostFromJsp;
     }
 
-    const protocol = globalThis.location.protocol;
+    const protocol = this.document.location?.protocol || 'https:';
     return `${protocol}//${hostFromJsp}`;
   }
   /**

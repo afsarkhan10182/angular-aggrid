@@ -27,7 +27,7 @@ import {
 import { Injectable } from '@angular/core';
 import { GridApi } from 'ag-grid-community';
 import { DataService } from './data.service';
-import { GridConfigService } from './grid-config.service';
+import { GridConfigService } from './grid/grid-config.service';
 
 @Injectable({
   providedIn: 'root',
@@ -718,16 +718,16 @@ export class RowManagementService {
     componentInstance: any,
     editedRows: Set<string | number>
   ): void {
-    if (responseData && componentInstance.transformToHierarchicalData) {
+    if (responseData && componentInstance.transformToTreeData) {
       try {
-        const updatedHierarchicalData = componentInstance.transformToHierarchicalData(responseData);
+        const updatedHierarchicalData = componentInstance.transformToTreeData(responseData);
         componentInstance.rowData = updatedHierarchicalData;
         componentInstance.displayData = [];
-        if (componentInstance.applyHierarchicalSearch) {
-          componentInstance.applyHierarchicalSearch();
+        if (componentInstance.applyGridSearch) {
+          componentInstance.applyGridSearch();
         }
       } catch (error) {
-        console.warn('Failed to apply hierarchical search after save, using local update:', error);
+        console.warn('Failed to apply grid search after save, using local update:', error);
         this.updateLocalRowDataAfterSave(rowData, componentInstance, editedRows);
       }
     } else {
@@ -760,8 +760,8 @@ export class RowManagementService {
       suppressFlash: false,
     });
     setTimeout(() => {
-      if (componentInstance.applyHierarchicalSearch) {
-        componentInstance.applyHierarchicalSearch();
+      if (componentInstance.applyGridSearch) {
+        componentInstance.applyGridSearch();
       }
       gridApi.refreshCells({ force: true });
     }, 100);

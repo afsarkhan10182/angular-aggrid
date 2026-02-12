@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { GridApi } from 'ag-grid-community';
-import { GridConfigService } from './grid-config.service';
-import { DataService } from './data.service';
+import { GridConfigService } from './grid/grid-config.service';
 import {
   ENUM_MBOM_LINE_ITEM,
   COL_CHECKBOX,
@@ -64,10 +63,7 @@ interface TrackEditedFieldsParams {
   providedIn: 'root',
 })
 export class MassEditService {
-  constructor(
-    private readonly gridConfigService: GridConfigService,
-    private readonly dataService: DataService
-  ) {}
+  constructor(private readonly gridConfigService: GridConfigService) {}
 
   populateMassEditFields(
     selectedRows: any[],

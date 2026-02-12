@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { Inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -30,7 +31,7 @@ export class SessionService {
     }
 
     // Otherwise, use the current page's protocol (http or https)
-    const protocol = globalThis.location.protocol; // Returns "http:" or "https:"
+    const protocol = this.document.location?.protocol || 'https:'; // Returns "http:" or "https:"
     return `${protocol}//${hostFromJsp}`;
   }
 
@@ -54,7 +55,11 @@ export class SessionService {
 
   private csrfToken: string | null = null;
 
-  constructor(private readonly http: HttpClient, private readonly utilService: UtilService) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly utilService: UtilService,
+    @Inject(DOCUMENT) private readonly document: Document,
+  ) {}
 
   getCsrfToken(): Observable<string> {
     return this.http.get<any>(this.getAuthUrl()).pipe(

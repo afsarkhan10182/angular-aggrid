@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Inject, Injectable } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { GridApi, ColDef } from 'ag-grid-community';
 import {
   BOM_TYPE_MBOM,
@@ -21,6 +22,8 @@ export interface ExtendedColDef extends ColDef {
   providedIn: 'root',
 })
 export class UtilService {
+  constructor(@Inject(DOCUMENT) private readonly document: Document) {}
+
   /**
    * Convert date from MM/DD/YYYY format to API format (YYYY/M/D)
    * Example: "10/30/2025" -> "2025/10/30"
@@ -99,9 +102,14 @@ export class UtilService {
    */
   escapeHtml(text: string): string {
     if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    const htmlEscapeMap: Record<string, string> = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    };
+    return String(text).replace(/[&<>"']/g, (char) => htmlEscapeMap[char] || char);
   }
 
   /**
@@ -210,7 +218,7 @@ export class UtilService {
   }
 
   getJspDataAttribute(attributeName: string): string | null {
-    const angularRoot = document.getElementById('angular-root');
+    const angularRoot = this.document.getElementById('angular-root');
     return angularRoot?.getAttribute(attributeName) || null;
   }
 
@@ -603,18 +611,18 @@ export class UtilService {
   findAllNewRows(rowData: any[], displayData?: any[]): any[] {
     const newRows: any[] = [];
 
-    const findInHierarchy = (rows: any[]) => {
+    const traverseTreeRows = (rows: any[]) => {
       rows.forEach((row) => {
         if (row.isNewRow && !this.isHeaderRow(row)) {
           newRows.push(row);
         }
         if (row.children && Array.isArray(row.children)) {
-          findInHierarchy(row.children);
+          traverseTreeRows(row.children);
         }
       });
     };
 
-    findInHierarchy(rowData);
+    traverseTreeRows(rowData);
 
     if (displayData && Array.isArray(displayData)) {
       displayData.forEach((row: any) => {
@@ -630,6 +638,21 @@ export class UtilService {
     return newRows;
   }
 
+  isDataRowForValidation(row: any): boolean {
+    if (this.isHeaderRow(row)) {
+      return false;
+    }
+
+    const hasBomFields =
+      row[FIELD_PART_NUMBER] !== undefined ||
+      row.bomLinkPart !== undefined ||
+      row.bomLinkFeature !== undefined ||
+      row.quantity !== undefined ||
+      row.qty !== undefined;
+
+    return !!(row.isDirectRow || row.isSubRow || row.isNewRow || row.materialKey || hasBomFields);
+  }
+
   /**
    * Find all data rows (existing + new) for validation on save.
    * Excludes section/group/material/branch headers.
@@ -640,20 +663,7 @@ export class UtilService {
     const collect = (rows: any[]) => {
       if (!Array.isArray(rows)) return;
       rows.forEach((row) => {
-        if (this.isHeaderRow(row)) return;
-        const hasBomFields =
-          row[FIELD_PART_NUMBER] !== undefined ||
-          row.bomLinkPart !== undefined ||
-          row.bomLinkFeature !== undefined ||
-          row.quantity !== undefined ||
-          row.qty !== undefined;
-        const isDataRow =
-          row.isDirectRow ||
-          row.isSubRow ||
-          row.isNewRow ||
-          (row.materialKey && !row.isSectionHeader && !row.isMaterialHeader) ||
-          (hasBomFields && !row.isSectionHeader && !row.isMaterialHeader && !row.isGroupHeader);
-        if (isDataRow) {
+        if (this.isDataRowForValidation(row)) {
           dataRows.push(row);
         }
         if (row.children?.length) collect(row.children);
@@ -663,7 +673,11 @@ export class UtilService {
 
     if (displayData?.length) {
       displayData.forEach((row) => {
-        if (row.isNewRow && !this.isHeaderRow(row) && !dataRows.some((r) => r === row || (r.newRowId !== undefined && r.newRowId === row.newRowId))) {
+        if (
+          row.isNewRow &&
+          this.isDataRowForValidation(row) &&
+          !dataRows.some((r) => r === row || (r.newRowId !== undefined && r.newRowId === row.newRowId))
+        ) {
           dataRows.push(row);
         }
       });

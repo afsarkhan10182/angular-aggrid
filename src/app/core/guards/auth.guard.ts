@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
-import { CanActivate, Router } from '@angular/router';
-import { Observable, of } from 'rxjs';
+import { CanActivate } from '@angular/router';
 import { SessionService } from '../../services/session.service';
 import { environment } from '../../../environments/environment';
 
@@ -8,17 +7,13 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root',
 })
 export class AuthGuard implements CanActivate {
-  constructor(private sessionService: SessionService, private router: Router) {}
+  constructor(private sessionService: SessionService) {}
 
-  canActivate(): Observable<boolean> {
+  canActivate(): boolean {
     if (!environment.enableHttpBasicAuth) {
-      return of(true);
+      return true;
     }
 
-    if (this.sessionService.isAuthenticated()) {
-      return of(true);
-    }
-
-    return of(false);
+    return this.sessionService.isAuthenticated();
   }
 }

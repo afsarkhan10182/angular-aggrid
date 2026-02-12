@@ -2,8 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ICellRendererAngularComp } from 'ag-grid-angular';
-import { GridService } from '../../services/grid.service';
-import { GridConfigService } from '../../services/grid-config.service';
+import { GridService } from '../../services/grid/grid.service';
+import { GridConfigService } from '../../services/grid/grid-config.service';
 import { UtilService } from '../../services/util.service';
 import { DataService } from '../../services/data.service';
 
