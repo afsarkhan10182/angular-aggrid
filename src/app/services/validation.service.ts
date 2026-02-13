@@ -33,6 +33,7 @@ import {
   LABEL_QUANTITY,
 } from '../constants';
 import { DataService } from './data.service';
+import { SkuService } from './sku.service';
 
 export interface RequiredField {
   keys: string[];
@@ -56,6 +57,15 @@ export type DuplicateType =
   | typeof DUPLICATE_TYPE_DUPLICATE_PART
   | null;
 
+const DUPLICATE_TYPE_ERROR_MESSAGE_MAP: Readonly<Record<string, string>> = {
+  [DUPLICATE_TYPE_FEATURE_UNIQUENESS]: MSG_DUPLICATE_FEATURE_SKU_SECTION_ONE,
+  [DUPLICATE_TYPE_DUPLICATE_FEATURE]: MSG_DUPLICATE_FEATURE_SKU_SECTION,
+  [DUPLICATE_TYPE_DUPLICATE_PART]: MSG_DUPLICATE_SECTION_PART_SKU,
+  [DUPLICATE_TYPE_NOT_ENUM_MBOM_001]: MSG_DUPLICATE_FEATURE_FOR_SKU,
+  [DUPLICATE_TYPE_ENUM_MBOM_001]: MSG_DUPLICATE_FEATURE_AND_PART_FOR_SKU,
+  [DUPLICATE_TYPE_SBOM]: MSG_DUPLICATE_FEATURE_AND_PART_FOR_SKU,
+};
+
 export interface ValidationResult {
   isValid: boolean;
   message: string;
@@ -72,7 +82,10 @@ export interface SkuValidationResult {
   providedIn: 'root',
 })
 export class ValidationService {
-  constructor(private dataService: DataService) {}
+  constructor(
+    private readonly dataService: DataService,
+    private readonly skuService: SkuService,
+  ) {}
   /**
    * Default required fields for new BOM rows (from constants)
    */
@@ -288,32 +301,6 @@ export class ValidationService {
   }
 
   /**
-   * Count how many SKUs have values in a row
-   * @param row - The row to check
-   * @param skuInfo - Array of SKU info objects with skuId property
-   * @returns Object with count and array of SKU IDs that have values
-   */
-  private countSkusWithValues(row: any, skuInfo: any[]): { count: number; skuIds: string[] } {
-    let count = 0;
-    const skuIds: string[] = [];
-
-    skuInfo.forEach((sku) => {
-      const skuFieldName = `sku${sku.skuId}`;
-      const skuValue = row[skuFieldName];
-
-      if (skuValue !== undefined && skuValue !== null && skuValue !== '') {
-        const stringValue = String(skuValue).trim();
-        if (stringValue !== '') {
-          count++;
-          skuIds.push(sku.skuId);
-        }
-      }
-    });
-
-    return { count, skuIds };
-  }
-
-  /**
    * Validate SKU selection for a new row
    * At least 1 SKU must be selected (have a value) before submit
    * @param row - The row to validate
@@ -332,7 +319,7 @@ export class ValidationService {
       return { isValid: true, message: '', selectedSkuCount: 0 };
     }
 
-    const { count } = this.countSkusWithValues(row, skuInfo);
+    const { count } = this.skuService.countSkusWithValues(row, skuInfo);
 
     if (count === 0) {
       const rowId = this.getValidationRowId(row);
@@ -366,15 +353,16 @@ export class ValidationService {
       return { isValid: true, message: '' };
     }
 
-    const { count: selectedCount, skuIds: selectedSkuIds } = this.countSkusWithValues(row, skuInfo);
+    const {
+      count: selectedCount,
+      skuIds: selectedSkuIds,
+    } = this.skuService.countSkusWithValues(row, skuInfo);
 
     if (selectedCount === 0) {
       return { isValid: false, message: MSG_NO_SKUS_SELECTED };
     }
 
-    const payloadSkuIds = payloadSkus
-      .map((sku) => String(sku.skuId || sku.skuNumber || ''))
-      .filter((id) => id !== '');
+    const payloadSkuIds = this.skuService.getPayloadSkuIds(payloadSkus);
 
     if (selectedCount === 1) {
       if (payloadSkuIds.length !== 1) {
@@ -514,27 +502,11 @@ export class ValidationService {
         // Extract SKU IDs from bomLink.skus array
         // IMPORTANT: Include SKU IDs even if value is empty for duplicate validation
         // We check for duplicate SKU IDs, not duplicate SKU values
-        const skuIdsFromApi: string[] = [];
-        if (bomLink.skus && Array.isArray(bomLink.skus)) {
-          bomLink.skus.forEach((sku: any) => {
-            if (sku && sku.skuId) {
-              const skuId = String(sku.skuId).trim();
-              if (skuId !== '') {
-                skuIdsFromApi.push(skuId);
-                const skuFieldName = `sku${sku.skuId}`;
-                if (
-                  sku.value !== undefined &&
-                  sku.value !== null &&
-                  String(sku.value).trim() !== ''
-                ) {
-                  rowLike[skuFieldName] = sku.value;
-                } else {
-                  rowLike[skuFieldName] = '';
-                }
-              }
-            }
-          });
-        }
+        const skuIdsFromApi = this.skuService.populateRowSkuFieldsFromSkus(
+          rowLike,
+          bomLink.skus,
+          { includeEmptyValues: true },
+        );
 
         // If no SKU IDs found, skip this row
         if (skuIdsFromApi.length === 0) continue;
@@ -575,23 +547,8 @@ export class ValidationService {
             }
           });
 
-          bomLink.skus.forEach((sku: any) => {
-            if (
-              sku &&
-              sku.skuId &&
-              sku.value !== undefined &&
-              sku.value !== null &&
-              String(sku.value).trim() !== ''
-            ) {
-              const skuFieldName = `sku${sku.skuId}`;
-              if (
-                existingRow[skuFieldName] === undefined ||
-                existingRow[skuFieldName] === null ||
-                String(existingRow[skuFieldName]).trim() === ''
-              ) {
-                existingRow[skuFieldName] = sku.value;
-              }
-            }
+          this.skuService.populateRowSkuFieldsFromSkus(existingRow, bomLink.skus, {
+            mergeOnlyWhenTargetEmpty: true,
           });
         } else {
           existingRows.push(rowLike);
@@ -633,7 +590,7 @@ export class ValidationService {
           continue;
         }
 
-        const rowSkus = this.countSkusWithValues(row, skuInfo);
+        const rowSkus = this.skuService.countSkusWithValues(row, skuInfo);
         if (rowSkus.count === 0 || rowSkus.skuIds.length === 0) {
           continue;
         }
@@ -716,7 +673,7 @@ export class ValidationService {
       }
 
       const allSkuIds = row._allSkuIds || [];
-      const rowSkus = this.countSkusWithValues(row, skuInfo);
+      const rowSkus = this.skuService.countSkusWithValues(row, skuInfo);
       const skuIdsToUse = allSkuIds.length > 0 ? allSkuIds : rowSkus.skuIds;
 
       if (skuIdsToUse.length === 0) {
@@ -806,25 +763,18 @@ export class ValidationService {
 
         if (!section || !bomLinkFeature) continue;
 
-        if (bomLink.skus && Array.isArray(bomLink.skus)) {
-          bomLink.skus.forEach((sku: any) => {
-            if (sku && sku.skuId) {
-              const skuId = String(sku.skuId).trim();
-              if (skuId !== '') {
-                if (!featureUniquenessMap.has(section)) {
-                  featureUniquenessMap.set(section, new Map());
-                }
-                const sectionMap = featureUniquenessMap.get(section)!;
+        this.skuService.getSkuIdsFromBomLink(bomLink).forEach((skuId: string) => {
+          if (!featureUniquenessMap.has(section)) {
+            featureUniquenessMap.set(section, new Map());
+          }
+          const sectionMap = featureUniquenessMap.get(section)!;
 
-                if (!sectionMap.has(skuId)) {
-                  sectionMap.set(skuId, new Set());
-                }
-                const featureSet = sectionMap.get(skuId)!;
-                featureSet.add(bomLinkFeature);
-              }
-            }
-          });
-        }
+          if (!sectionMap.has(skuId)) {
+            sectionMap.set(skuId, new Set());
+          }
+          const featureSet = sectionMap.get(skuId)!;
+          featureSet.add(bomLinkFeature);
+        });
       }
     }
     const invalidRows: InvalidRow[] = [];
@@ -871,7 +821,7 @@ export class ValidationService {
         continue;
       }
 
-      const rowSkus = this.countSkusWithValues(row, skuInfo);
+      const rowSkus = this.skuService.countSkusWithValues(row, skuInfo);
       if (rowSkus.count === 0) {
         continue;
       }
@@ -900,9 +850,7 @@ export class ValidationService {
                 const hasSkus = bomLink.skus && Array.isArray(bomLink.skus);
 
                 if (isSectionMatch && isPartMatch && isEmptyFeatureMatch && hasSkus) {
-                  const hasMatchingSku = bomLink.skus.some(
-                    (sku: any) => sku && sku.skuId && String(sku.skuId).trim() === skuId
-                  );
+                  const hasMatchingSku = this.skuService.bomLinkHasSkuId(bomLink, skuId);
 
                   if (hasMatchingSku) {
                     matchingRecords.push({
@@ -953,9 +901,7 @@ export class ValidationService {
                 const hasSkus = bomLink.skus && Array.isArray(bomLink.skus);
 
                 if (isSectionMatch && isFeatureMatch && isPartMatch && hasSkus) {
-                  const hasMatchingSku = bomLink.skus.some(
-                    (sku: any) => sku && sku.skuId && String(sku.skuId).trim() === skuId
-                  );
+                  const hasMatchingSku = this.skuService.bomLinkHasSkuId(bomLink, skuId);
 
                   if (hasMatchingSku) {
                     matchingRecords.push({
@@ -994,9 +940,7 @@ export class ValidationService {
                 bomLink.skus &&
                 Array.isArray(bomLink.skus)
               ) {
-                const hasMatchingSku = bomLink.skus.some(
-                  (sku: any) => sku && sku.skuId && String(sku.skuId).trim() === skuId
-                );
+                const hasMatchingSku = this.skuService.bomLinkHasSkuId(bomLink, skuId);
 
                 if (hasMatchingSku) {
                   matchingRecords.push({
@@ -1054,19 +998,10 @@ export class ValidationService {
     let finalErrorMessage = 'Duplicate Part for the chosen Feature and SKU';
     if (invalidRows.length > 0) {
       const firstDuplicate = invalidRows[0] as any;
-      if (firstDuplicate.duplicateType === DUPLICATE_TYPE_FEATURE_UNIQUENESS) {
-        finalErrorMessage = MSG_DUPLICATE_FEATURE_SKU_SECTION_ONE;
-      } else if (firstDuplicate.duplicateType === DUPLICATE_TYPE_DUPLICATE_FEATURE) {
-        finalErrorMessage = MSG_DUPLICATE_FEATURE_SKU_SECTION;
-      } else if (firstDuplicate.duplicateType === DUPLICATE_TYPE_DUPLICATE_PART) {
-        finalErrorMessage = MSG_DUPLICATE_SECTION_PART_SKU;
-      } else if (firstDuplicate.duplicateType === DUPLICATE_TYPE_NOT_ENUM_MBOM_001) {
-        finalErrorMessage = MSG_DUPLICATE_FEATURE_FOR_SKU;
-      } else if (firstDuplicate.duplicateType === DUPLICATE_TYPE_ENUM_MBOM_001) {
-        finalErrorMessage = MSG_DUPLICATE_FEATURE_AND_PART_FOR_SKU;
-      } else if (firstDuplicate.duplicateType === DUPLICATE_TYPE_SBOM) {
-        finalErrorMessage = MSG_DUPLICATE_FEATURE_AND_PART_FOR_SKU;
-      }
+      const duplicateType = firstDuplicate.duplicateType;
+      finalErrorMessage = duplicateType
+        ? DUPLICATE_TYPE_ERROR_MESSAGE_MAP[duplicateType] ?? finalErrorMessage
+        : finalErrorMessage;
     }
 
     const result = {

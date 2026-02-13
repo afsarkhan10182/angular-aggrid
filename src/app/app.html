@@ -539,20 +539,61 @@
   </div>
 
   <!-- Linked BOM Modal -->
-  <app-linked-bom-modal
-    *ngIf="showLinkedBomModal"
-    [partData]="selectedLinkedBomData"
-    [skuData]="selectedLinkedBomSkuData"
-    (modalClose)="closeLinkedBomModal()"
-  >
-  </app-linked-bom-modal>
+  @if (showLinkedBomModal) {
+    @defer (when showLinkedBomModal) {
+      <app-linked-bom-modal
+        [partData]="selectedLinkedBomData"
+        [skuData]="selectedLinkedBomSkuData"
+        [isLoading]="isLinkedBomLoading"
+        (modalClose)="closeLinkedBomModal()"
+      >
+      </app-linked-bom-modal>
+    } @loading {
+      <div class="modal-overlay" (click)="closeLinkedBomModal()">
+        <div class="modal-container modal-shell" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Linked BOM</h3>
+            <button class="close-button" (click)="closeLinkedBomModal()" aria-label="Close">
+              <app-icon name="times" size="14"></app-icon>
+            </button>
+          </div>
+          <div class="modal-content modal-shell-body">
+            <div class="modal-loading-state">
+              <div class="modal-loader" aria-hidden="true"></div>
+              <p class="modal-loading-text">Opening linked BOM...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  }
 
   <!-- Service Data Manager Modal -->
-  <app-service-data-manager-modal
-    *ngIf="showServiceDataManagerModal"
-    [materialColorIds]="serviceDataManagerModalMaterialColorIds"
-    (modalClose)="closeServiceDataManagerModal()"
-    (dataSaved)="onServiceDataManagerModalDataSaved()"
-  >
-  </app-service-data-manager-modal>
+  @if (showServiceDataManagerModal) {
+    @defer (when showServiceDataManagerModal) {
+      <app-service-data-manager-modal
+        [materialColorIds]="serviceDataManagerModalMaterialColorIds"
+        (modalClose)="closeServiceDataManagerModal()"
+        (dataSaved)="onServiceDataManagerModalDataSaved()"
+      >
+      </app-service-data-manager-modal>
+    } @loading {
+      <div class="modal-overlay" (click)="closeServiceDataManagerModal()">
+        <div class="modal-container modal-shell" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Service Data Manager</h3>
+            <button class="close-button" (click)="closeServiceDataManagerModal()" aria-label="Close">
+              <app-icon name="times" size="14"></app-icon>
+            </button>
+          </div>
+          <div class="modal-content modal-shell-body">
+            <div class="modal-loading-state">
+              <div class="modal-loader" aria-hidden="true"></div>
+              <p class="modal-loading-text">Opening service data manager...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  }
 </div>

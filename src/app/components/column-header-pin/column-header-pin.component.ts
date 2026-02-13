@@ -17,6 +17,12 @@ import { IHeaderAngularComp } from 'ag-grid-angular';
 import { IconComponent } from '../icon/icon.component';
 import { COL_ACTIONS, COL_CHECKBOX } from '../../constants';
 
+const SORT_TRANSITION_MAP: Readonly<Record<string, 'asc' | 'desc' | null>> = {
+  '': 'asc',
+  asc: 'desc',
+  desc: null,
+};
+
 class MenuStateService {
   private static currentOpenMenu: ColumnHeaderPinComponent | null = null;
 
@@ -465,13 +471,10 @@ export class ColumnHeaderPinComponent
   }
 
   updateDisplayName(): void {
-    if (this.params?.displayName) {
-      this.displayName = this.params.displayName;
-    } else if (this.params?.column?.getColDef()?.headerName) {
-      this.displayName = this.params.column.getColDef().headerName || '';
-    } else {
-      this.displayName = '';
-    }
+    this.displayName =
+      this.params?.displayName ||
+      this.params?.column?.getColDef()?.headerName ||
+      '';
   }
 
   updatePinnedState(): void {
@@ -498,15 +501,7 @@ export class ColumnHeaderPinComponent
     }
 
     const currentSort = column.getSort();
-
-    let newSort: 'asc' | 'desc' | null = null;
-    if (!currentSort) {
-      newSort = 'asc';
-    } else if (currentSort === 'asc') {
-      newSort = 'desc';
-    } else {
-      newSort = null;
-    }
+    const newSort = SORT_TRANSITION_MAP[currentSort || ''] ?? null;
 
     const columnId = column.getColId();
     if (newSort) {

@@ -1,5 +1,6 @@
 import { Injectable, Renderer2, RendererFactory2 } from '@angular/core';
 import { GridApi, GridOptions, IRowNode, getGridElement } from 'ag-grid-community';
+import { SkuService } from '../sku.service';
 import {
   EBOM_CORE_FIELDS,
   EBOM_SERVICE_FIELDS,
@@ -18,6 +19,22 @@ import {
   NEW_ROW_EDITABLE_FIELDS,
 } from '../../constants';
 
+const ACTION_COLUMN_FIELDS = new Set<string>([COL_ACTIONS, COL_CHECKBOX]);
+const FALLBACK_NON_SBOM_EDITABLE_FIELDS = new Set<string>([
+  FIELD_BOM_LINK_START_DATE,
+  FIELD_BOM_LINK_END_DATE,
+  FIELD_QUANTITY,
+]);
+const SBOM_NEW_ROW_DISABLED_FIELDS = new Set<string>([
+  FIELD_BOM_LINK_SPEC_SHEET_EXTRA,
+  FIELD_BOM_LINK_FEATURE,
+  FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
+]);
+const GROUP_LEVEL_CLASS_MAP: Readonly<Record<number, string>> = {
+  0: 'group-level-0',
+  1: 'group-level-1',
+};
+
 export interface GroupConfig {
   field: string;
   headerName: string;
@@ -29,7 +46,10 @@ export interface GroupConfig {
 export class GridConfigService {
   private readonly renderer: Renderer2;
 
-  constructor(rendererFactory: RendererFactory2) {
+  constructor(
+    rendererFactory: RendererFactory2,
+    private readonly skuService: SkuService,
+  ) {
     this.renderer = rendererFactory.createRenderer(null, null);
   }
 
@@ -399,7 +419,7 @@ export class GridConfigService {
         });
       },
       onCellClicked: (params) => {
-        if (params.colDef.field === COL_ACTIONS || params.colDef.field === COL_CHECKBOX) {
+        if (ACTION_COLUMN_FIELDS.has(String(params.colDef.field || ''))) {
           return;
         }
 
@@ -426,7 +446,7 @@ export class GridConfigService {
         if (
           event.ctrlKey &&
           event.key === 'v' &&
-          (colDef?.field?.startsWith('sku') ?? false) &&
+          this.skuService.isSkuField(colDef?.field) &&
           params.data?.isNewRow
         ) {
           // Prevent paste if SKU column is disabled (not editable)
@@ -488,17 +508,10 @@ export class GridConfigService {
       const allRows = gridElement.querySelectorAll(`.ag-row[row-index="${rowIndex}"]`);
 
       allRows.forEach((rowElement) => {
-        if (rowNode) {
-          if (add && !rowNode.isSelected() && !rowNode.data?.isSectionHeader) {
-            rowElement.classList.add('ag-row-hover');
-          } else {
-            rowElement.classList.remove('ag-row-hover');
-          }
-        } else if (add) {
-          rowElement.classList.add('ag-row-hover');
-        } else {
-          rowElement.classList.remove('ag-row-hover');
-        }
+        const shouldAddHoverClass = rowNode
+          ? add && !rowNode.isSelected() && !rowNode.data?.isSectionHeader
+          : add;
+        rowElement.classList.toggle('ag-row-hover', shouldAddHoverClass);
       });
     };
 
@@ -581,7 +594,7 @@ export class GridConfigService {
     }
 
     if (!isSbomMode()) {
-      return [FIELD_BOM_LINK_START_DATE, FIELD_BOM_LINK_END_DATE, FIELD_QUANTITY].includes(field);
+      return FALLBACK_NON_SBOM_EDITABLE_FIELDS.has(field);
     }
 
     const isMbomLineItem = rowData?.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM;
@@ -594,7 +607,7 @@ export class GridConfigService {
     // For SBOM: Disable bomLinkIncludeInSpecSheet if bomLinkSpecSheetExtra exists
     if (field === FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET) {
       const specSheetExtra = rowData?.bomLinkSpecSheetExtra;
-      if (specSheetExtra !== undefined && specSheetExtra !== null && String(specSheetExtra).trim() !== '') {
+      if (this.hasDisplayValue(specSheetExtra)) {
         return false;
       }
     }
@@ -621,16 +634,7 @@ export class GridConfigService {
       return core || autopopulated || serviceField;
     }
 
-    if (isSbomMode() && field === FIELD_BOM_LINK_SPEC_SHEET_EXTRA) {
-      return false;
-    }
-
-    if (isSbomMode() && field === FIELD_BOM_LINK_FEATURE) {
-      return false;
-    }
-
-    // For SBOM: Disable bomLinkIncludeInSpecSheet for new rows
-    if (isSbomMode() && field === FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET) {
+    if (isSbomMode() && SBOM_NEW_ROW_DISABLED_FIELDS.has(field)) {
       return false;
     }
 
@@ -734,6 +738,10 @@ export class GridConfigService {
     return result;
   }
 
+  private hasDisplayValue(value: any): boolean {
+    return value !== undefined && value !== null && String(value).trim() !== '';
+  }
+
   /**
    * Gets count of items in a group
    */
@@ -825,13 +833,7 @@ export class GridConfigService {
   private addGroupRowClasses(classes: string[], data: any): void {
     if (data.isGroupHeader) {
       classes.push('group-header-row');
-      if (data.groupLevel === 0) {
-        classes.push('group-level-0');
-      } else if (data.groupLevel === 1) {
-        classes.push('group-level-1');
-      } else {
-        classes.push('group-level-2');
-      }
+      classes.push(GROUP_LEVEL_CLASS_MAP[data.groupLevel] || 'group-level-2');
     }
   }
 

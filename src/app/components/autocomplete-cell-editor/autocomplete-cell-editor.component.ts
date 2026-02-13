@@ -19,11 +19,10 @@ import {
   COLUMNS_REFRESH_AFTER_PART,
   PART_FIELD_KEYS,
   EDITABLE_AUTOPOPULATED_FIELDS,
-  FIELD_QUANTITY,
-  FIELD_BOM_LINK_START_DATE,
-  FIELD_BOM_LINK_END_DATE,
+  PART_LOOKUP_POPULATED_FIELDS,
 } from '../../constants';
 import { DataService } from '../../services/data.service';
+import { SkuService } from '../../services/sku.service';
 import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators';
 import { of, Subject, Subscription } from 'rxjs';
 
@@ -83,7 +82,10 @@ export class AutocompleteCellEditorComponent
   private _searchRequestId = 0;
   private _loadMoreRequestId = 0;
 
-  constructor(@Inject(DOCUMENT) private readonly document: Document) {
+  constructor(
+    @Inject(DOCUMENT) private readonly document: Document,
+    private readonly skuService: SkuService,
+  ) {
     this.dataService = null as any;
   }
 
@@ -886,27 +888,36 @@ export class AutocompleteCellEditorComponent
       const shouldLimitSkuUpdate = isExistingRow && this.isPartNumberSearch;
       const previousPartValue = (this.lastPartValueBeforeSelection || '').trim();
 
-      skuInfoPart.forEach((sku) => {
-        const skuFieldName = `sku${sku.skuId}`;
-        if (shouldLimitSkuUpdate) {
-          if (!previousPartValue) return;
-          const currentSkuValue = String(originalData[skuFieldName] ?? '').trim();
-          if (currentSkuValue !== previousPartValue) {
-            return;
+      const skuUpdates = this.skuService.buildSkuFieldUpdates({
+        skuInfo: skuInfoPart,
+        fillWithPartNumber: true,
+        partNumberValue: partValue,
+      });
+      this.skuService.applySkuFieldUpdates({
+        row: this.params?.node?.data,
+        updates: skuUpdates,
+        setDataValue: (fieldName, value) => this.params.node.setDataValue(fieldName, value),
+        shouldApply: (update) => {
+          if (shouldLimitSkuUpdate) {
+            if (!previousPartValue) return false;
+            const currentSkuValue = String(originalData[update.fieldName] ?? '').trim();
+            if (currentSkuValue !== previousPartValue) {
+              return false;
+            }
           }
-        }
-        if (originalData[skuFieldName] !== partValue) {
-          this.params.node.setDataValue(skuFieldName, partValue);
-        }
+          return originalData[update.fieldName] !== update.value;
+        },
       });
     } else if (material.skus && Array.isArray(material.skus) && skuInfoPart?.length > 0) {
-      skuInfoPart.forEach((sku) => {
-        const skuFieldName = `sku${sku.skuId}`;
-        const matchingSku = material.skus.find((s: any) => s.skuId === sku.skuId);
-        const skuValue = matchingSku ? matchingSku.value : '';
-        if (originalData[skuFieldName] !== skuValue) {
-          this.params.node.setDataValue(skuFieldName, skuValue);
-        }
+      const skuUpdates = this.skuService.buildSkuFieldUpdates({
+        skuInfo: skuInfoPart,
+        sourceSkus: material.skus,
+      });
+      this.skuService.applySkuFieldUpdates({
+        row: this.params?.node?.data,
+        updates: skuUpdates,
+        setDataValue: (fieldName, value) => this.params.node.setDataValue(fieldName, value),
+        shouldApply: (update) => originalData[update.fieldName] !== update.value,
       });
     }
     } finally {
@@ -944,15 +955,7 @@ export class AutocompleteCellEditorComponent
     if (existingPart) {
       const partData = existingPart[BOM_LINK_KEY];
       if (this.params && this.params.node) {
-        const fieldsToPopulate = [
-          FIELD_SUPPLIER,
-          FIELD_COLOR_DESCRIPTION,
-          FIELD_BOM_LINK_FEATURE,
-          FIELD_MATERIAL_DESCRIPTION,
-          FIELD_BOM_LINK_START_DATE,
-          FIELD_BOM_LINK_END_DATE,
-          FIELD_QUANTITY,
-        ];
+        const fieldsToPopulate = PART_LOOKUP_POPULATED_FIELDS;
 
         const oldData = { ...this.params.node.data };
 
@@ -967,18 +970,17 @@ export class AutocompleteCellEditorComponent
         const skuInfo = dataService.getSkuInfo();
         const skuAutoFillWithPartNumber = dataService.getBomType() === BOM_TYPE_EBOM;
         const partNumberForSkus = partData?.[FIELD_PART_NUMBER] ?? '';
-        skuInfo.forEach((sku: any) => {
-          const skuFieldName = `sku${sku.skuId}`;
-          const newSkuValue = skuAutoFillWithPartNumber
-            ? partNumberForSkus
-            : (() => {
-                const matchingSku = partData.skus?.find((s: any) => s.skuId === sku.skuId);
-                return matchingSku ? matchingSku.value : '';
-              })();
-
-          if (oldData[skuFieldName] !== newSkuValue) {
-            this.params.node.setDataValue(skuFieldName, newSkuValue);
-          }
+        const skuUpdates = this.skuService.buildSkuFieldUpdates({
+          skuInfo,
+          fillWithPartNumber: skuAutoFillWithPartNumber,
+          partNumberValue: partNumberForSkus,
+          sourceSkus: partData.skus,
+        });
+        this.skuService.applySkuFieldUpdates({
+          row: this.params?.node?.data,
+          updates: skuUpdates,
+          setDataValue: (fieldName, value) => this.params.node.setDataValue(fieldName, value),
+          shouldApply: (update) => oldData[update.fieldName] !== update.value,
         });
 
         const partIdentifier = partData?.[FIELD_PART_NUMBER];

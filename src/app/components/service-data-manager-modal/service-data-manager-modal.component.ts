@@ -32,10 +32,13 @@ import {
 } from '../../constants';
 import { DataService } from '../../services/data.service';
 import { GridConfigService } from '../../services/grid/grid-config.service';
+import { RowManagementService } from '../../services/row-management.service';
 import { UtilService } from '../../services/util.service';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
+
+const COMPACT_COLUMN_FIELDS = new Set<string>([FIELD_PART_NUMBER, FIELD_MATERIAL_COLOR_STATUS]);
 
 @Component({
   selector: 'app-service-data-manager-modal',
@@ -72,6 +75,8 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
   public successMessage: string = '';
   public showSuccessMessage: boolean = false;
   public isSaving: boolean = false;
+  public isLoading = false;
+  public loadErrorMessage: string = '';
   public selectedRowCount = 0;
   private readonly serviceLookupFields = new Set<string>([
     FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT,
@@ -92,6 +97,7 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
   constructor(
     private readonly dataService: DataService,
     private readonly gridConfigService: GridConfigService,
+    private readonly rowManagementService: RowManagementService,
     private readonly utilService: UtilService,
     private readonly renderer: Renderer2,
     @Inject(DOCUMENT) private readonly document: Document,
@@ -167,13 +173,14 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
       const headerName = columns[field];
       const isDisabled = disabledFields.has(field);
       const isDropdown = dropdownFields.has(field);
+      const isCompactColumnField = COMPACT_COLUMN_FIELDS.has(field);
       const isPartNumberField = field === FIELD_PART_NUMBER;
 
       const colDef: ColDef = {
         headerName: headerName,
         field: field,
-        width: isPartNumberField || field === FIELD_MATERIAL_COLOR_STATUS ? 140 : 200,
-        minWidth: isPartNumberField || field === FIELD_MATERIAL_COLOR_STATUS ? 120 : 150,
+        width: isCompactColumnField ? 140 : 200,
+        minWidth: isCompactColumnField ? 120 : 150,
         editable: !isDisabled,
         sortable: true,
         filter: true,
@@ -288,8 +295,21 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
 
           const fieldName = params.colDef?.field;
           if (!fieldName) return;
-          const newValue = this.getComparableFieldValue(fieldName, params.newValue);
-          this.syncEditedState(materialColorId, fieldName, newValue);
+          const newValue = this.rowManagementService.getComparableFieldValue(
+            fieldName,
+            params.newValue,
+            this.serviceLookupFields,
+          );
+          this.rowManagementService.syncEditedState({
+            materialColorId,
+            fieldName,
+            newValue,
+            rowData: this.rowData,
+            originalRowValues: this.originalRowValues,
+            editedRows: this.editedRows,
+            editedFields: this.editedFields,
+            serviceLookupFields: this.serviceLookupFields,
+          });
 
           const rowIndex = this.rowData.findIndex((row) => row.materialColorId === materialColorId);
           if (rowIndex >= 0) {
@@ -317,61 +337,6 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
     };
   }
 
-  private isServiceLookupField(fieldName: string): boolean {
-    return this.serviceLookupFields.has(fieldName);
-  }
-
-  private normalizeEditValue(value: any): string {
-    if (value === null || value === undefined) return '';
-    return String(value).trim();
-  }
-
-  private getComparableFieldValue(fieldName: string, value: any): any {
-    if (this.isServiceLookupField(fieldName)) {
-      return value || '';
-    }
-    return value;
-  }
-
-  private ensureOriginalRowSnapshot(materialColorId: string, fallbackRow?: any): any {
-    if (!this.originalRowValues.has(materialColorId)) {
-      const sourceRow = this.rowData.find((row) => row.materialColorId === materialColorId) || fallbackRow;
-      if (sourceRow) {
-        this.originalRowValues.set(materialColorId, { ...sourceRow });
-      }
-    }
-    return this.originalRowValues.get(materialColorId);
-  }
-
-  private syncEditedState(
-    materialColorId: string,
-    fieldName: string,
-    newValue: any,
-    fallbackRow?: any
-  ): boolean {
-    const originalRow = this.ensureOriginalRowSnapshot(materialColorId, fallbackRow);
-    const originalValue = this.getComparableFieldValue(fieldName, originalRow?.[fieldName]);
-    const normalizedOriginal = this.normalizeEditValue(originalValue);
-    const normalizedNew = this.normalizeEditValue(this.getComparableFieldValue(fieldName, newValue));
-    const hasChanged = normalizedOriginal !== normalizedNew;
-
-    if (hasChanged) {
-      this.editedRows.add(materialColorId);
-      if (!this.editedFields.has(materialColorId)) {
-        this.editedFields.set(materialColorId, new Set());
-      }
-      this.editedFields.get(materialColorId)!.add(fieldName);
-    } else if (this.editedFields.has(materialColorId)) {
-      this.editedFields.get(materialColorId)!.delete(fieldName);
-      if (this.editedFields.get(materialColorId)!.size === 0) {
-        this.editedRows.delete(materialColorId);
-        this.editedFields.delete(materialColorId);
-      }
-    }
-
-    return hasChanged;
-  }
-
   handleCloseClick(): void {
     if (this.hasEditedRows) {
       const confirmed = confirm(
@@ -396,45 +361,6 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
     this.modalClose.emit();
   }
 
-  private getGridRowsByMaterialColorId(): Map<string, any> {
-    const rowsById = new Map<string, any>();
-    this.gridApi.forEachNode((node) => {
-      const id = node.data?.materialColorId;
-      if (id !== null && id !== undefined) {
-        rowsById.set(String(id), node.data);
-      }
-    });
-    return rowsById;
-  }
-
-  private applyResponseInstances(
-    instances: { [key: string]: any } | undefined,
-    options: { skipIds?: Set<string>; clearEditedState?: boolean } = {}
-  ): void {
-    if (!instances || typeof instances !== 'object') return;
-
-    Object.keys(instances).forEach((materialColorId) => {
-      if (options.skipIds?.has(materialColorId)) {
-        return;
-      }
-
-      const updatedData = instances[materialColorId];
-      const rowIndex = this.rowData.findIndex((row) => row.materialColorId === materialColorId);
-      if (rowIndex < 0) return;
-
-      this.rowData[rowIndex] = {
-        ...this.rowData[rowIndex],
-        ...updatedData,
-        materialColorId,
-      };
-
-      if (options.clearEditedState) {
-        this.editedRows.delete(materialColorId);
-        this.editedFields.delete(materialColorId);
-      }
-    });
-  }
-
   private showAutoHideSuccessMessage(message: string): void {
     this.successMessage = message;
     this.showSuccessMessage = true;
@@ -451,25 +377,13 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
     this.gridApi.stopEditing();
     if (this.editedRows.size === 0) return;
 
-    const instances: { [key: string]: any } = {};
-    const rowsByMaterialColorId = this.getGridRowsByMaterialColorId();
-    
-    this.editedRows.forEach((materialColorId) => {
-      const currentRow = rowsByMaterialColorId.get(String(materialColorId));
-
-      if (!currentRow) {
-        return;
-      }
-
-      const editedFieldsForRow = this.editedFields.get(materialColorId);
-      if (!editedFieldsForRow || editedFieldsForRow.size === 0) {
-        return;
-      }
-
-      const instanceData = this.dataService.buildMaterialColorInstanceData(currentRow, editedFieldsForRow);
-      if (Object.keys(instanceData).length > 0) {
-        instances[materialColorId] = instanceData;
-      }
+    const rowsByMaterialColorId = this.rowManagementService.buildRowsByMaterialColorId(this.gridApi);
+    const instances = this.rowManagementService.buildEditedInstances({
+      editedRows: this.editedRows,
+      editedFields: this.editedFields,
+      rowsByMaterialColorId,
+      buildInstanceData: (currentRow, editedFieldsForRow) =>
+        this.dataService.buildMaterialColorInstanceData(currentRow, editedFieldsForRow),
     });
 
     if (Object.keys(instances).length === 0) return;
@@ -497,7 +411,11 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
           
           this.showSuccessMessage = false;
 
-          this.applyResponseInstances(response?.instances, {
+          this.rowManagementService.applyResponseInstances({
+            instances: response?.instances,
+            rowData: this.rowData,
+            editedRows: this.editedRows,
+            editedFields: this.editedFields,
             skipIds: new Set(Object.keys(this.rowErrors)),
             clearEditedState: true,
           });
@@ -540,7 +458,12 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
         } else {
           this.applyActionsColumnWidth(this.computeActionsColumnWidth());
           // No errors - update row data with saved instances (modal stays open)
-          this.applyResponseInstances(response?.instances);
+          this.rowManagementService.applyResponseInstances({
+            instances: response?.instances,
+            rowData: this.rowData,
+            editedRows: this.editedRows,
+            editedFields: this.editedFields,
+          });
 
           // Clear edited rows
           this.editedRows.clear();
@@ -584,42 +507,62 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
   }
 
   private loadMaterialColors(): void {
-    if (!Array.isArray(this.materialColorIds) || this.materialColorIds.length === 0) return;
+    this.isLoading = true;
+    this.loadErrorMessage = '';
+    this.rowData = [];
+    this.rowErrors = {};
+
+    if (!Array.isArray(this.materialColorIds) || this.materialColorIds.length === 0) {
+      this.isLoading = false;
+      return;
+    }
 
     const idsString = this.materialColorIds.join(',');
-    this.dataService.searchMaterialColors(idsString).subscribe((response: any) => {
-      const instances = response?.instances;
-      const columns = response?.columns;
-      
-      if (!instances || typeof instances !== 'object') return;
+    this.dataService.searchMaterialColors(idsString).subscribe({
+      next: (response: any) => {
+        const instances = response?.instances;
+        const columns = response?.columns;
 
-      if (columns && typeof columns === 'object') {
-        this.columnDefs = this.buildColumnDefs(columns);
-        if (this.gridApi) {
-          this.gridApi.setGridOption('columnDefs', this.columnDefs);
+        if (!instances || typeof instances !== 'object') {
+          this.isLoading = false;
+          this.loadErrorMessage = 'Failed to load service data.';
+          return;
         }
-      }
 
-      this.rowData = Object.keys(instances).map((materialColorId) => {
-        const rowData = {
-          materialColorId,
-          ...instances[materialColorId],
-          isSelected: false,
-        };
-        this.originalRowValues.set(materialColorId, { ...rowData });
-        return rowData;
-      });
+        if (columns && typeof columns === 'object') {
+          this.columnDefs = this.buildColumnDefs(columns);
+          if (this.gridApi) {
+            this.gridApi.setGridOption('columnDefs', this.columnDefs);
+          }
+        }
 
-      this.editedRows.clear();
-      this.editedFields.clear();
-      this.selectedRowCount = 0;
-      this.applyActionsColumnWidth(this.computeActionsColumnWidth());
+        this.rowData = Object.keys(instances).map((materialColorId) => {
+          const rowData = {
+            materialColorId,
+            ...instances[materialColorId],
+            isSelected: false,
+          };
+          this.originalRowValues.set(materialColorId, { ...rowData });
+          return rowData;
+        });
 
-      if (this.gridApi) {
-        this.gridApi.setGridOption('rowData', this.rowData);
-      }
+        this.editedRows.clear();
+        this.editedFields.clear();
+        this.selectedRowCount = 0;
+        this.applyActionsColumnWidth(this.computeActionsColumnWidth());
 
-      setTimeout(() => this.notifyGridLayoutChange(), 100);
+        if (this.gridApi) {
+          this.gridApi.setGridOption('rowData', this.rowData);
+        }
+
+        this.isLoading = false;
+        setTimeout(() => this.notifyGridLayoutChange(), 100);
+      },
+      error: (error: any) => {
+        this.isLoading = false;
+        this.loadErrorMessage =
+          error?.error?.message || error?.message || 'Failed to load service data.';
+      },
     });
   }
 
@@ -721,15 +664,19 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
     if (this.massEditSearchSubjects[field]) {
       this.massEditSearchSubjects[field].next(value);
     }
-    
+
+    const autocompleteState = this.massEditAutocomplete[field];
+    if (!autocompleteState) return;
+
     // Close dropdown if value is cleared
-    if (!value && this.massEditAutocomplete[field]) {
-      this.massEditAutocomplete[field].showDropdown = false;
-      this.massEditAutocomplete[field].selectedIndex = -1;
-    } else if (value && this.massEditAutocomplete[field]) {
-      // Position dropdown when it shows
-      setTimeout(() => this.positionMassEditDropdown(field), 0);
+    if (!value) {
+      autocompleteState.showDropdown = false;
+      autocompleteState.selectedIndex = -1;
+      return;
     }
+
+    // Position dropdown when it shows
+    setTimeout(() => this.positionMassEditDropdown(field), 0);
   }
 
   /**
@@ -808,19 +755,19 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
     const autocomplete = this.massEditAutocomplete[field];
     if (!autocomplete) return;
 
-    switch (event.key) {
-      case 'ArrowDown':
+    const keyHandlers: Record<string, () => void> = {
+      ArrowDown: () => {
         event.preventDefault();
         autocomplete.selectedIndex = Math.min(
           autocomplete.selectedIndex + 1,
           autocomplete.options.length - 1
         );
-        break;
-      case 'ArrowUp':
+      },
+      ArrowUp: () => {
         event.preventDefault();
         autocomplete.selectedIndex = Math.max(autocomplete.selectedIndex - 1, -1);
-        break;
-      case 'Enter':
+      },
+      Enter: () => {
         event.preventDefault();
         if (autocomplete.selectedIndex >= 0 && autocomplete.selectedIndex < autocomplete.options.length) {
           this.selectMassEditOption(field, autocomplete.options[autocomplete.selectedIndex]);
@@ -829,12 +776,14 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
         } else {
           this.closeMassEditDropdown(field);
         }
-        break;
-      case 'Escape':
+      },
+      Escape: () => {
         event.preventDefault();
         this.closeMassEditDropdown(field);
-        break;
-    }
+      },
+    };
+
+    keyHandlers[event.key]?.();
   }
 
   selectMassEditOption(field: string, option: string): void {
@@ -895,7 +844,12 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
           if (!materialColorId) return;
 
           // Capture baseline once before any field updates for this row.
-          this.ensureOriginalRowSnapshot(materialColorId, rowData);
+          this.rowManagementService.ensureOriginalRowSnapshot({
+            materialColorId,
+            rowData: this.rowData,
+            originalRowValues: this.originalRowValues,
+            fallbackRow: rowData,
+          });
           const wasRowEdited = this.editedRows.has(materialColorId);
           let rowValueChanged = false;
           let rowTouched = false;
@@ -910,18 +864,31 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
 
             rowTouched = true;
 
-            const normalizedCurrent = this.normalizeEditValue(
-              this.getComparableFieldValue(field, rowData[field]),
-            );
-            const normalizedNew = this.normalizeEditValue(this.getComparableFieldValue(field, value));
-
-            if (normalizedCurrent !== normalizedNew) {
-              rowData[field] = this.getComparableFieldValue(field, value);
+            if (this.rowManagementService.hasComparableValueChanged({
+              fieldName: field,
+              currentValue: rowData[field],
+              newValue: value,
+              serviceLookupFields: this.serviceLookupFields,
+            })) {
+              rowData[field] = this.rowManagementService.getComparableFieldValue(
+                field,
+                value,
+                this.serviceLookupFields,
+              );
               rowValueChanged = true;
               columnsToUpdate.add(field);
             }
 
-            this.syncEditedState(materialColorId, field, value);
+            this.rowManagementService.syncEditedState({
+              materialColorId,
+              fieldName: field,
+              newValue: value,
+              rowData: this.rowData,
+              originalRowValues: this.originalRowValues,
+              editedRows: this.editedRows,
+              editedFields: this.editedFields,
+              serviceLookupFields: this.serviceLookupFields,
+            });
           });
 
           const isRowEditedNow = this.editedRows.has(materialColorId);
@@ -953,26 +920,16 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
 
   getEditableFields(): string[] {
     const disabledFields = this.getDisabledFields();
-    
-    return this.columnDefs
-      .filter((col) => {
-        // Must have a field name
-        if (!col.field) return false;
-        
-        // Must be editable (not in disabled fields)
-        if (disabledFields.has(col.field)) return false;
-        
-        // Must use AutocompleteCellEditorComponent
-        if (col.cellEditor !== AutocompleteCellEditorComponent) return false;
-        
-        // Must have isServiceSearch: true in cellEditorParams
-        const cellEditorParams = typeof col.cellEditorParams === 'function' 
-          ? col.cellEditorParams({} as any) 
-          : col.cellEditorParams;
-        
-        return cellEditorParams?.isServiceSearch === true;
-      })
-      .map((col) => col.field!);
+
+    return this.rowManagementService.getEditableServiceFields(
+      this.columnDefs,
+      disabledFields,
+      AutocompleteCellEditorComponent,
+    );
+  }
+
+  private getColumnDefByField(field: string): ColDef | undefined {
+    return this.columnDefs.find((col) => col.field === field);
   }
 
   onSelectionChanged(params: any): void {
@@ -980,27 +937,20 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
   }
 
   isDropdownField(field: string): boolean {
-    const colDef = this.columnDefs.find((col) => col.field === field);
-    if (!colDef) return false;
-    
-    // Must use AutocompleteCellEditorComponent
-    if (colDef.cellEditor !== AutocompleteCellEditorComponent) return false;
-    
-    // Must have isServiceSearch: true in cellEditorParams
-    const cellEditorParams = typeof colDef.cellEditorParams === 'function' 
-      ? colDef.cellEditorParams({} as any) 
-      : colDef.cellEditorParams;
-    
-    return cellEditorParams?.isServiceSearch === true;
+    const colDef = this.getColumnDefByField(field);
+    return this.rowManagementService.isServiceSearchColumn(
+      colDef,
+      AutocompleteCellEditorComponent,
+    );
   }
 
   getColumnHeaderName(field: string): string {
-    const colDef = this.columnDefs.find((col) => col.field === field);
+    const colDef = this.getColumnDefByField(field);
     return colDef?.headerName || field;
   }
 
   getColumnWidth(field: string): number {
-    const colDef = this.columnDefs.find((col) => col.field === field);
+    const colDef = this.getColumnDefByField(field);
     return colDef?.width || 200;
   }
 
@@ -1013,6 +963,16 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
     this.gridApi.setColumnWidths([{ key: COL_ACTIONS, newWidth: width }], false);
   }
 
+  private refreshActionsErrorUi(): void {
+    this.applyActionsColumnWidth(this.computeActionsColumnWidth());
+    if (!this.gridApi) return;
+    this.gridApi.refreshCells({
+      force: true,
+      columns: [COL_ACTIONS],
+    });
+    this.gridApi.redrawRows();
+  }
+
   getRowError(materialColorId: string): string | null {
     return this.rowErrors[materialColorId] || null;
   }
@@ -1020,14 +980,7 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
   clearRowError(materialColorId: string): void {
     if (this.rowErrors[materialColorId]) {
       delete this.rowErrors[materialColorId];
-      this.applyActionsColumnWidth(this.computeActionsColumnWidth());
-      if (this.gridApi) {
-        this.gridApi.refreshCells({ 
-          force: true,
-          columns: [COL_ACTIONS] // Refresh actions column (checkbox + validation icon)
-        });
-        this.gridApi.redrawRows();
-      }
+      this.refreshActionsErrorUi();
       if (!this.hasErrors()) {
         this.notifyGridLayoutChange();
       }
@@ -1036,14 +989,7 @@ export class ServiceDataManagerModalComponent implements OnInit, AfterViewInit, 
 
   clearAllErrors(): void {
     this.rowErrors = {};
-    this.applyActionsColumnWidth(this.computeActionsColumnWidth());
-    if (this.gridApi) {
-      this.gridApi.refreshCells({ 
-        force: true,
-        columns: [COL_ACTIONS] // Refresh actions column (checkbox + validation icon)
-      });
-      this.gridApi.redrawRows();
-    }
+    this.refreshActionsErrorUi();
     this.notifyGridLayoutChange();
   }
 

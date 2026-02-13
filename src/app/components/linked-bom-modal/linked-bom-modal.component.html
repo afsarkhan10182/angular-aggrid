@@ -36,48 +36,55 @@
 
     <!-- Modal Content -->
     <div class="modal-content">
-      <!-- BOM Instances Table -->
-      <div class="key-value-table-card" *ngIf="hasInstances()">
-        <div class="card-header">
-          <h3>Material Details</h3>
-        </div>
-        <div class="table-container">
-          <table class="key-value-table">
-            <thead>
-              <tr>
-                <th *ngFor="let key of getColumnKeys()" [attr.data-column]="key">
-                  {{ getColumns()[key] }}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let instance of getInstances()">
-                <td *ngFor="let key of getColumnKeys()" class="value-cell" [attr.data-column]="key">
-                  {{ getCellValue(instance, key) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      <div *ngIf="isLoading" class="modal-loading-state" aria-live="polite">
+        <div class="modal-loader" aria-hidden="true"></div>
+        <p class="modal-loading-text">Loading linked BOM data...</p>
       </div>
 
-      <!-- Empty Instances State - Show centered message when instances array exists but is empty -->
-      <div *ngIf="!hasInstances() && partData?.instances" class="empty-state empty-instances-state">
-        <div class="empty-icon">
-          <svg
-            width="48"
-            height="48"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-          >
-            <path d="M9 12l2 2 4-4"></path>
-            <circle cx="12" cy="12" r="9"></circle>
-          </svg>
+      <ng-container *ngIf="!isLoading">
+        <!-- BOM Instances Table -->
+        <div class="key-value-table-card" *ngIf="hasInstances()">
+          <div class="card-header">
+            <h3>Material Details</h3>
+          </div>
+          <div class="table-container">
+            <table class="key-value-table">
+              <thead>
+                <tr>
+                  <th *ngFor="let key of getColumnKeys()" [attr.data-column]="key">
+                    {{ getColumns()[key] }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let instance of getInstances()">
+                  <td *ngFor="let key of getColumnKeys()" class="value-cell" [attr.data-column]="key">
+                    {{ getCellValue(instance, key) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-        <h4>No Material BOM lineitems found for the material</h4>
-      </div>
+
+        <!-- Empty Instances State - Show centered message when instances array exists but is empty -->
+        <div *ngIf="!hasInstances() && partData?.instances" class="empty-state empty-instances-state">
+          <div class="empty-icon">
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path d="M9 12l2 2 4-4"></path>
+              <circle cx="12" cy="12" r="9"></circle>
+            </svg>
+          </div>
+          <h4>No Material BOM lineitems found for the material</h4>
+        </div>
+      </ng-container>
 
       <!-- SKU Portfolio section removed as per requirement to follow API columns -->
     </div>

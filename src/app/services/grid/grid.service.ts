@@ -22,6 +22,7 @@ import { Inject, Injectable } from '@angular/core';
 import { ColDef, GridApi } from 'ag-grid-community';
 import { DataService } from '../data.service';
 import { GridConfigService } from './grid-config.service';
+import { SkuService } from '../sku.service';
 import { UtilService, ExtendedColDef } from '../util.service';
 import { AutocompleteCellEditorComponent } from '../../components/autocomplete-cell-editor/autocomplete-cell-editor.component';
 
@@ -81,6 +82,7 @@ export class GridService {
   constructor(
     private readonly dataService: DataService,
     private readonly gridConfigService: GridConfigService,
+    private readonly skuService: SkuService,
     private readonly utilService: UtilService,
     @Inject(DOCUMENT) private readonly document: Document,
   ) {}
@@ -224,9 +226,7 @@ export class GridService {
     let visibleSkuIds: Set<string> = new Set();
     if (shouldApplySkuFilter) {
       const visibleSkus = config.getFilteredSkuInfo();
-      visibleSkuIds = new Set<string>(
-        visibleSkus.map((sku) => String(sku.skuId || '').trim()).filter((id: string) => id !== ''),
-      );
+      visibleSkuIds = this.skuService.createAllowedSkuIdSet(visibleSkus);
     }
 
     if (shouldApplySkuFilter && visibleSkuIds.size === 0) {
@@ -581,9 +581,7 @@ export class GridService {
   shouldHighlightRow(data: any): boolean {
     if (!data) return false;
     const refSkuId = this.dataService.getRefSkuId();
-    if (!refSkuId) return false;
-    const refSkuFieldName = `sku${refSkuId}`;
-    return !!(data[refSkuFieldName] && String(data[refSkuFieldName]).trim() !== '');
+    return this.skuService.hasRefSkuValue(data, refSkuId);
   }
 
   getHighlightColor(data: any, config: CellRenderingConfig): string | undefined {
@@ -859,7 +857,7 @@ export class GridService {
         color: sku.color,
         size: sku.size1,
         destination: sku.destination,
-        fieldName: `sku${sku.skuId}`,
+        fieldName: this.skuService.toFieldName(sku.skuId),
         hasData: true,
         isDisabled: isDisabled,
       };
@@ -1163,12 +1161,12 @@ export class GridService {
     canDisconnect: boolean,
     isDisconnected: boolean
   ): string {
-    let actionBtn = '';
-    if (canDisconnect) {
-      actionBtn = `<button type="button" class="sku-disconnect-btn" data-action="disconnect-sku" data-sku-field="${this.utilService.escapeHtml(skuField)}" title="Disconnect SKU">&#10005;</button>`;
-    } else if (isDisconnected) {
-      actionBtn = `<button type="button" class="sku-reconnect-btn" data-action="reconnect-sku" data-sku-field="${this.utilService.escapeHtml(skuField)}" title="Reconnect">&#8617;</button>`;
-    }
+    const escapedSkuField = this.utilService.escapeHtml(skuField);
+    const actionBtn = canDisconnect
+      ? `<button type="button" class="sku-disconnect-btn" data-action="disconnect-sku" data-sku-field="${escapedSkuField}" title="Disconnect SKU">&#10005;</button>`
+      : isDisconnected
+        ? `<button type="button" class="sku-reconnect-btn" data-action="reconnect-sku" data-sku-field="${escapedSkuField}" title="Reconnect">&#8617;</button>`
+        : '';
 
     const textClasses = [
       'sku-cell-text',

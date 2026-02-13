@@ -34,7 +34,28 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, map, catchError, throwError, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { SessionService } from './session.service';
+import { SkuService } from './sku.service';
 import { UtilService } from './util.service';
+
+type MaterialColorFieldValueConfig = {
+  idKey: string;
+  valueKey: string;
+};
+
+const MATERIAL_COLOR_FIELD_VALUE_MAP: Readonly<Record<string, MaterialColorFieldValueConfig>> = {
+  [FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT]: {
+    idKey: 'materialColorServiceEquivalentId',
+    valueKey: 'materialColorServiceEquivalent',
+  },
+  [FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE]: {
+    idKey: 'materialColorServiceSubstituteOneId',
+    valueKey: 'materialColorServiceSubstituteOne',
+  },
+  [FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_TWO]: {
+    idKey: 'materialColorServiceSubstituteTwoId',
+    valueKey: 'materialColorServiceSubstituteTwo',
+  },
+};
 
 export interface BomLinkSku {
   product: string;
@@ -148,6 +169,7 @@ export class DataService {
   constructor(
     private readonly http: HttpClient,
     private readonly sessionService: SessionService,
+    private readonly skuService: SkuService,
     private readonly utilService: UtilService,
     @Inject(DOCUMENT) private readonly document: Document,
   ) {}
@@ -629,15 +651,10 @@ export class DataService {
   ): { [key: string]: any } {
     const instanceData: { [key: string]: any } = {};
     editedFieldsForRow.forEach((fieldName) => {
-      if (fieldName === FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT) {
-        instanceData[fieldName] = row.materialColorServiceEquivalentId || row.materialColorServiceEquivalent || '';
-      } else if (fieldName === FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE) {
-        instanceData[fieldName] = row.materialColorServiceSubstituteOneId || row.materialColorServiceSubstituteOne || '';
-      } else if (fieldName === FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_TWO) {
-        instanceData[fieldName] = row.materialColorServiceSubstituteTwoId || row.materialColorServiceSubstituteTwo || '';
-      } else {
-        instanceData[fieldName] = row[fieldName] ?? '';
-      }
+      const valueConfig = MATERIAL_COLOR_FIELD_VALUE_MAP[fieldName];
+      instanceData[fieldName] = valueConfig
+        ? row[valueConfig.idKey] || row[valueConfig.valueKey] || ''
+        : row[fieldName] ?? '';
     });
     return instanceData;
   }
@@ -719,14 +736,14 @@ export class DataService {
     const skuInfo = this.getSkuInfo();
 
     return skuInfo
-      .filter((sku) => partRow[`sku${sku.skuId}`])
+      .filter((sku) => this.skuService.hasValue(this.skuService.getValue(partRow, sku.skuId)))
       .map((sku) => ({
         skuNumber: sku.skuId,
         product: sku.product,
         manufacturer: sku.manufacturer,
         color: sku.color,
         size: sku.size1,
-        value: partRow[`sku${sku.skuId}`],
+        value: this.skuService.getValue(partRow, sku.skuId),
         partNumber: String(partRow?.[FIELD_PART_NUMBER] ?? ''),
       }));
   }

@@ -15,6 +15,7 @@ export class LinkedBomModalComponent {
   @Input() partData: any = {};
   // Kept for parent-template compatibility even though this modal view doesn't render SKU cards now.
   @Input() skuData: any[] = [];
+  @Input() isLoading = false;
   @Output() modalClose = new EventEmitter<void>();
 
   @HostListener('document:keydown.escape')
@@ -74,7 +75,7 @@ export class LinkedBomModalComponent {
       return String(materialMasterId);
     }
 
-    return '';
+    return 'Material Details';
   }
 
   getCellValue(instance: any, key: string): string {

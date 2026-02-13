@@ -132,15 +132,21 @@ export class MassEditService {
     isEbomMode: () => boolean,
     isMaterialMbomMode?: () => boolean
   ): void {
-    if (isMbomMode() || isEbomMode() || isMaterialMbomMode?.()) {
+    const isPrimaryEditableMode = isMbomMode() || isEbomMode() || isMaterialMbomMode?.();
+    if (isPrimaryEditableMode) {
       this.setQuantityIfSame(selectedRows, state);
-    } else if (isSbomMode()) {
-      const hasMbomRows = selectedRows.some(
-        (row: any) => row?.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM
-      );
-      if (!hasMbomRows) {
-        this.setQuantityIfSame(selectedRows, state);
-      }
+      return;
+    }
+
+    if (!isSbomMode()) {
+      return;
+    }
+
+    const hasMbomRows = selectedRows.some(
+      (row: any) => row?.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM
+    );
+    if (!hasMbomRows) {
+      this.setQuantityIfSame(selectedRows, state);
     }
   }
 

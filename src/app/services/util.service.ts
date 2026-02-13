@@ -2,8 +2,6 @@ import { Inject, Injectable } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { GridApi, ColDef } from 'ag-grid-community';
 import {
-  BOM_TYPE_MBOM,
-  BOM_TYPE_SBOM,
   EXCLUDED_FIELDS_EXPORT,
   EXCEL_HEADER_SECTION,
   EXCEL_SHEET_NAME,
@@ -22,7 +20,9 @@ export interface ExtendedColDef extends ColDef {
   providedIn: 'root',
 })
 export class UtilService {
-  constructor(@Inject(DOCUMENT) private readonly document: Document) {}
+  constructor(
+    @Inject(DOCUMENT) private readonly document: Document,
+  ) {}
 
   /**
    * Convert date from MM/DD/YYYY format to API format (YYYY/M/D)
@@ -502,81 +502,6 @@ export class UtilService {
     );
   }
 
-  extractRowData(row: any): { section: string; feature: string; partNumber: string } {
-    return {
-      section: row.section || '',
-      feature: String(row.bomLinkFeature || '').trim(),
-      partNumber: String(row?.[FIELD_PART_NUMBER] || '').trim(),
-    };
-  }
-
-  extractInstanceData(bomLink: any): { section: string; feature: string; partNumber: string } {
-    return {
-      section: bomLink.sectionInternalName || bomLink.section || '',
-      feature: String(bomLink.bomLinkFeature || '').trim(),
-      partNumber: String(bomLink?.[FIELD_PART_NUMBER] || '').trim(),
-    };
-  }
-
-  /**
-   * Determine if part number matching is required based on BOM type
-   * @param bomType - BOM type ('SBOM' or 'MBOM')
-   * @param rowPartNumber - Part number from row
-   * @param instancePartNumber - Part number from instance
-   * @returns True if part matching is required
-   */
-  shouldRequirePartMatch(bomType: string, rowPartNumber: string, instancePartNumber: string): boolean {
-    if (bomType === BOM_TYPE_SBOM) {
-      return true;
-    }
-
-    if (bomType === BOM_TYPE_MBOM) {
-      const rowHasPartNumber = !!(rowPartNumber && String(rowPartNumber).trim() !== '');
-      const instanceHasPartNumber = !!(instancePartNumber && String(instancePartNumber).trim() !== '');
-      return rowHasPartNumber && instanceHasPartNumber;
-    }
-
-    return false;
-  }
-
-  instanceHasTargetSku(bomLink: any, targetSkuIds: Set<string>): boolean {
-    if (!bomLink.skus || !Array.isArray(bomLink.skus)) {
-      return false;
-    }
-
-    const instanceSkuIds = new Set(
-      bomLink.skus
-        .map((sku: any) => (sku?.skuId ? String(sku.skuId).trim() : ''))
-        .filter((id: string) => id !== '')
-    );
-
-    for (const targetSkuId of targetSkuIds) {
-      const normalizedTargetId = String(targetSkuId).trim();
-      if (instanceSkuIds.has(normalizedTargetId)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  /**
-   * Check if row has target SKU values
-   * @param row - Row data object
-   * @param targetSkuIds - Set of target SKU IDs to check
-   * @returns True if row has any target SKU value
-   */
-  rowHasTargetSkuValue(row: any, targetSkuIds: Set<string>): boolean {
-    for (const targetSkuId of targetSkuIds) {
-      const skuFieldName = `sku${targetSkuId}`;
-      const skuValue = row[skuFieldName];
-      if (skuValue !== undefined && skuValue !== null && String(skuValue).trim() !== '') {
-        return true;
-      }
-    }
-    return false;
-  }
-
   isActionsColumn(params: any): boolean {
     const fieldName = params.colDef?.field;
     const colId = params.column?.getColId() || params.colDef?.colId || fieldName;
@@ -585,6 +510,50 @@ export class UtilService {
 
   getRowId(row: any): string | number | null {
     return row.materialKey || row.newRowId || row[FIELD_PART_NUMBER] || row.part || null;
+  }
+
+  /**
+   * Build section+part composite identifier used as a secondary edit-state key.
+   */
+  getCompositeSectionPartId(row: any): string | null {
+    if (!row) return null;
+    const part = row[FIELD_PART_NUMBER] ?? row.part;
+    if (!row.section || !part) return null;
+    return `${row.section}::${part}`;
+  }
+
+  /**
+   * Stable row token for disconnect state:
+   * materialKey/newRowId first, then section::part, then part fallback.
+   */
+  getStableRowToken(row: any): string {
+    if (!row) return '';
+
+    const stableId = row?.materialKey ?? row?.newRowId;
+    if (stableId !== undefined && stableId !== null && String(stableId).trim() !== '') {
+      return String(stableId);
+    }
+
+    const compositeId = this.getCompositeSectionPartId(row);
+    if (compositeId) return compositeId;
+
+    const part = row?.[FIELD_PART_NUMBER] ?? row?.part;
+    return part !== undefined && part !== null ? String(part).trim() : '';
+  }
+
+  /**
+   * Find a grid node by strict data object reference.
+   */
+  findNodeByDataReference(gridApi: GridApi | null | undefined, targetData: any): any | null {
+    if (!gridApi || !targetData) return null;
+
+    let targetNode: any = null;
+    gridApi.forEachNode((node: any) => {
+      if (node.data === targetData) {
+        targetNode = node;
+      }
+    });
+    return targetNode;
   }
 
   createAutocompleteFilter(): (searchValue: string, options: string[]) => string[] {

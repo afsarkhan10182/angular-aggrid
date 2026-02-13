@@ -10,9 +10,18 @@ import {
   FIELD_FEATURE,
   FIELD_BOM_LINK_FEATURE,
   FIELD_BOM_LINK_PART,
+  FIELD_BOM_LINK_COUNTRY_OF_ORIGIN,
+  FIELD_BOM_LINK_SPEC_SHEET_EXTRA,
+  FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
+  FIELD_BOM_LINK_START_DATE,
+  FIELD_BOM_LINK_END_DATE,
   FIELD_PART_NUMBER,
   FIELD_MATERIAL,
   FIELD_MATERIAL_DESCRIPTION,
+  FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE,
+  FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_TWO,
+  FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT,
+  FIELD_QUANTITY,
   FIELD_SUPPLIER,
   FIELD_COLOR,
   FIELD_COLOR_DESCRIPTION,
@@ -117,23 +126,14 @@ export class GridColumnsService {
     featureCol.cellRendererParams = {};
     columns.push(featureCol);
 
-    Object.keys(columnMapping).forEach((field) => {
-      if (field === FIELD_FEATURE || field === FIELD_BOM_LINK_FEATURE) {
-        return;
-      }
-
-      if (field === 'bomLinkCountryOfOrigin') {
-        const headerName = columnMapping[field];
-        columns.push({
-          headerName,
-          field,
+    const specialColumnBuilders: Partial<Record<string, () => ColDef>> = {
+      [FIELD_BOM_LINK_COUNTRY_OF_ORIGIN]: () =>
+        this.createAutocompleteColumn({
+          headerName: columnMapping[FIELD_BOM_LINK_COUNTRY_OF_ORIGIN],
+          field: FIELD_BOM_LINK_COUNTRY_OF_ORIGIN,
           width: 180,
           minWidth: 140,
-          sortable: true,
-          cellRenderer: (params: any) => context.renderDataCellContent(params, 180),
-          tooltipValueGetter: (params: any) => context.getCellTooltipValue(params),
-          cellStyle: (params: any) => context.getDataCellStyle(params),
-          editable: (params: any) => context.isFieldEditable(field, params),
+          context,
           cellEditor: AutocompleteCellEditorComponent,
           cellEditorParams: () => ({
             placeholder: 'search countries...',
@@ -142,22 +142,14 @@ export class GridColumnsService {
               dataService: this.dataService,
             },
           }),
-        });
-        return;
-      }
-
-      if (field === 'bomLinkSpecSheetExtra') {
-        const headerName = columnMapping[field];
-        columns.push({
-          headerName,
-          field,
+        }),
+      [FIELD_BOM_LINK_SPEC_SHEET_EXTRA]: () =>
+        this.createAutocompleteColumn({
+          headerName: columnMapping[FIELD_BOM_LINK_SPEC_SHEET_EXTRA],
+          field: FIELD_BOM_LINK_SPEC_SHEET_EXTRA,
           width: 150,
           minWidth: 100,
-          sortable: true,
-          cellRenderer: (params: any) => context.renderDataCellContent(params, 150),
-          tooltipValueGetter: (params: any) => context.getCellTooltipValue(params),
-          cellStyle: (params: any) => context.getDataCellStyle(params),
-          editable: (params: any) => context.isFieldEditable(field, params),
+          context,
           cellEditor: AutocompleteCellEditorComponent,
           cellEditorParams: {
             values: ['', 'Yes', 'No'],
@@ -168,22 +160,14 @@ export class GridColumnsService {
               return options.filter((opt) => opt.toLowerCase().includes(lower));
             },
           },
-        });
-        return;
-      }
-
-      if (field === 'bomLinkIncludeInSpecSheet') {
-        const headerName = columnMapping[field];
-        columns.push({
-          headerName,
-          field,
+        }),
+      [FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET]: () =>
+        this.createAutocompleteColumn({
+          headerName: columnMapping[FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET],
+          field: FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
           width: 150,
           minWidth: 100,
-          sortable: true,
-          cellRenderer: (params: any) => context.renderDataCellContent(params, 150),
-          tooltipValueGetter: (params: any) => context.getCellTooltipValue(params),
-          cellStyle: (params: any) => context.getDataCellStyle(params),
-          editable: (params: any) => context.isFieldEditable(field, params),
+          context,
           cellEditor: AutocompleteCellEditorComponent,
           cellEditorParams: () => {
             const values = ['', ...this.dataService.getIncludeInSpecSheetOptions(context.constraintsData)];
@@ -193,7 +177,15 @@ export class GridColumnsService {
               filterFunction: this.utilService.createAutocompleteFilter(),
             };
           },
-        });
+        }),
+    };
+
+    Object.keys(columnMapping).forEach((field) => {
+      if (field === FIELD_FEATURE || field === FIELD_BOM_LINK_FEATURE) return;
+
+      const specialColumnBuilder = specialColumnBuilders[field];
+      if (specialColumnBuilder) {
+        columns.push(specialColumnBuilder());
         return;
       }
 
@@ -213,190 +205,24 @@ export class GridColumnsService {
         editable: (params: any) => context.isFieldEditable(field, params),
       };
 
-      if (field === FIELD_BOM_LINK_PART || field === FIELD_PART_NUMBER) {
-        columnDef.cellEditor = AutocompleteCellEditorComponent;
-        columnDef.cellEditorParams = () => ({
-          placeholder: 'search part numbers...',
-          useApiSearch: true,
-          isPartNumberSearch: true,
-          context: {
-            dataService: this.dataService,
-          },
-        });
-        columnDef.valueSetter = (params: any) => {
-          if (!params.data || !params.colDef?.field) return false;
-          const fieldName = params.colDef.field;
-          const newVal = params.newValue == null || params.newValue === '' ? '' : String(params.newValue).trim();
-          params.data[fieldName] = newVal;
-          if (fieldName === FIELD_PART_NUMBER) {
-            params.data.part = newVal;
-            params.data.bomLinkPart = newVal;
-          } else {
-            params.data.part = newVal;
-            params.data[FIELD_PART_NUMBER] = newVal;
-          }
-          if (newVal === '') {
-            context.clearAutopopulateFieldsForRow(params.data);
-            params.api?.refreshCells({ rowNodes: [params.node], force: true });
-          }
-          return true;
-        };
-      } else if (
-        field === 'materialColorServiceSubstituteOne' ||
-        field === 'materialColorServiceSubstituteTwo' ||
-        field === 'materialColorServiceEquivalent'
-      ) {
-        columnDef.cellEditor = AutocompleteCellEditorComponent;
-        columnDef.cellEditorParams = () => ({
-          placeholder: 'search services...',
-          isServiceSearch: true,
-          context: { dataService: this.dataService },
-        });
-      } else if (field === FIELD_MATERIAL || field === FIELD_MATERIAL_DESCRIPTION) {
-        columnDef.cellEditor = AutocompleteCellEditorComponent;
-        columnDef.cellEditorParams = () => ({
-          placeholder: 'search materials...',
-          useApiSearch: true,
-          context: {
-            dataService: this.dataService,
-          },
-        });
-      } else if (field === 'quantity') {
-        columnDef.cellEditor = 'agNumberCellEditor';
-        columnDef.cellEditorParams = {
-          min: 0,
-          step: 'any',
-        };
-        columnDef.editable = (params: any) => {
-          if (
-            params.data &&
-            (params.data.isExpired ||
-              params.data.isSectionHeader ||
-              params.data.isGroupHeader ||
-              params.data.isMaterialHeader ||
-              params.data.isBranchHeader)
-          ) {
-            return false;
-          }
-          return context.isFieldEditable(field, params);
-        };
-        columnDef.valueSetter = (params: any) => {
-          if (!params.data || !params.colDef?.field) return false;
-          const v = params.newValue;
-          params.data[params.colDef.field] =
-            v === null || v === undefined || v === '' ? '' : String(v);
-          return true;
-        };
-      } else if (
-        field === FIELD_SUPPLIER ||
-        field === FIELD_COLOR ||
-        field === FIELD_COLOR_DESCRIPTION ||
-        field === FIELD_FEATURE
-      ) {
-        const isColorField = field === FIELD_COLOR || field === FIELD_COLOR_DESCRIPTION;
-
-        if (field === FIELD_SUPPLIER || isColorField) {
-          columnDef.cellEditor = AutocompleteCellEditorComponent;
-
-          if (isColorField) {
-            columnDef.valueGetter = (params: any) =>
-              params.data?.colorDescription || params.data?.color || '';
-            columnDef.valueSetter = (params: any) => {
-              if (!params.data) return false;
-              params.data.color = params.newValue || '';
-              params.data.colorDescription = params.newValue || '';
-              return true;
-            };
-          }
-
-          columnDef.cellEditorParams = (params: any) => {
-            const nodeData = params.node?.data || params.data || {};
-            let values: string[] = [];
-
-            if (field === FIELD_SUPPLIER) {
-              values =
-                nodeData._availableSuppliers && Array.isArray(nodeData._availableSuppliers)
-                  ? nodeData._availableSuppliers
-                  : this.gridConfigService.getUniqueSuppliers(context.rowData);
-            } else if (isColorField) {
-              values =
-                nodeData._availableColors && Array.isArray(nodeData._availableColors)
-                  ? nodeData._availableColors
-                  : this.gridConfigService.getUniqueColors(context.rowData);
-            }
-
-            return {
-              values,
-              placeholder: `search ${isColorField ? 'color' : field}...`,
-              context: { dataService: this.dataService },
-            };
-          };
-        } else {
-          columnDef.cellEditor = 'agTextCellEditor';
-          columnDef.cellEditorParams = () => {
-            return {
-              values: this.gridConfigService.getUniqueFeatures(context.rowData),
-              placeholder: `search ${field}...`,
-            };
-          };
-        }
-      } else if (field === 'bomLinkStartDate' || field === 'bomLinkEndDate') {
-        columnDef.filter = false;
-        columnDef.cellEditor = 'agDateCellEditor';
-        columnDef.editable = (params: any) => {
-          if (
-            params.data &&
-            (params.data.isSectionHeader ||
-              params.data.isGroupHeader ||
-              params.data.isBranchHeader ||
-              params.data.isMaterialHeader)
-          ) {
-            return false;
-          }
-          return context.isFieldEditable(field, params);
-        };
-        columnDef.cellRenderer = (params: any) => {
-          let formattedValue = '';
-          if (columnDef.valueFormatter && typeof columnDef.valueFormatter === 'function') {
-            formattedValue = columnDef.valueFormatter(params) || '';
-          }
-          return context.renderDataCellContent(
-            params,
-            Number(columnDef.width ?? 150),
-            formattedValue,
-          );
-        };
-        columnDef.valueGetter = (params: any) => {
-          if (!params.data) return undefined;
-          const value = params.data[field];
-          if (!value || value === '') return undefined;
-          if (value instanceof Date) return value;
-          return this.gridConfigService.parseDateString(String(value)) || undefined;
-        };
-        columnDef.cellEditorParams = {
-          browserDatePicker: true,
-          minValidYear: 2000,
-          maxValidYear: 2050,
-          format: 'mm/dd/yyyy',
-        };
-        columnDef.valueFormatter = (params: any) => {
-          if (!params.data) return '';
-          const rawValue = params.data[field];
-          return this.gridConfigService.formatDateToMMDDYYYY(rawValue);
-        };
-        columnDef.valueParser = (params: any) => {
-          if (!params.newValue) return '';
-          return this.gridConfigService.convertDateEditorValueToString(params.newValue);
-        };
-        columnDef.valueSetter = (params: any) => {
-          const field = params.colDef.field as string;
-          const dateStr = params.newValue
-            ? this.gridConfigService.convertDateEditorValueToString(params.newValue)
-            : '';
-          params.data[field] = dateStr;
-          return true;
-        };
-      }
+      const fieldCustomizers: Partial<Record<string, () => void>> = {
+        [FIELD_BOM_LINK_PART]: () => this.configurePartNumberColumn(columnDef, context),
+        [FIELD_PART_NUMBER]: () => this.configurePartNumberColumn(columnDef, context),
+        [FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE]: () => this.configureServiceSearchColumn(columnDef),
+        [FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_TWO]: () => this.configureServiceSearchColumn(columnDef),
+        [FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT]: () => this.configureServiceSearchColumn(columnDef),
+        [FIELD_MATERIAL]: () => this.configureMaterialSearchColumn(columnDef),
+        [FIELD_MATERIAL_DESCRIPTION]: () => this.configureMaterialSearchColumn(columnDef),
+        [FIELD_QUANTITY]: () => this.configureQuantityColumn(columnDef, field, context),
+        [FIELD_SUPPLIER]: () => this.configureSupplierColorFeatureColumn(columnDef, field, context),
+        [FIELD_COLOR]: () => this.configureSupplierColorFeatureColumn(columnDef, field, context),
+        [FIELD_COLOR_DESCRIPTION]: () => this.configureSupplierColorFeatureColumn(columnDef, field, context),
+        [FIELD_FEATURE]: () => this.configureSupplierColorFeatureColumn(columnDef, field, context),
+        [FIELD_BOM_LINK_START_DATE]: () => this.configureDateColumn(columnDef, field, context),
+        [FIELD_BOM_LINK_END_DATE]: () => this.configureDateColumn(columnDef, field, context),
+      };
+      const customizeField = fieldCustomizers[field];
+      if (customizeField) customizeField();
 
       columns.push(columnDef);
     });
@@ -422,6 +248,229 @@ export class GridColumnsService {
     });
 
     return [...columns, ...dynamicSkuColumns];
+  }
+
+  private createAutocompleteColumn(options: {
+    headerName: string;
+    field: string;
+    width: number;
+    minWidth: number;
+    context: GridColumnsBuildContext;
+    cellEditor: any;
+    cellEditorParams: any;
+  }): ColDef {
+    const { headerName, field, width, minWidth, context, cellEditor, cellEditorParams } = options;
+    return {
+      headerName,
+      field,
+      width,
+      minWidth,
+      sortable: true,
+      cellRenderer: (params: any) => context.renderDataCellContent(params, width),
+      tooltipValueGetter: (params: any) => context.getCellTooltipValue(params),
+      cellStyle: (params: any) => context.getDataCellStyle(params),
+      editable: (params: any) => context.isFieldEditable(field, params),
+      cellEditor,
+      cellEditorParams,
+    };
+  }
+
+  private configurePartNumberColumn(
+    columnDef: ColDef,
+    context: GridColumnsBuildContext,
+  ): void {
+    columnDef.cellEditor = AutocompleteCellEditorComponent;
+    columnDef.cellEditorParams = () => ({
+      placeholder: 'search part numbers...',
+      useApiSearch: true,
+      isPartNumberSearch: true,
+      context: {
+        dataService: this.dataService,
+      },
+    });
+    columnDef.valueSetter = (params: any) => {
+      if (!params.data || !params.colDef?.field) return false;
+      const fieldName = params.colDef.field;
+      const newVal = params.newValue == null || params.newValue === '' ? '' : String(params.newValue).trim();
+      params.data[fieldName] = newVal;
+      if (fieldName === FIELD_PART_NUMBER) {
+        params.data.part = newVal;
+        params.data.bomLinkPart = newVal;
+      } else {
+        params.data.part = newVal;
+        params.data[FIELD_PART_NUMBER] = newVal;
+      }
+      if (newVal === '') {
+        context.clearAutopopulateFieldsForRow(params.data);
+        params.api?.refreshCells({ rowNodes: [params.node], force: true });
+      }
+      return true;
+    };
+  }
+
+  private configureServiceSearchColumn(columnDef: ColDef): void {
+    columnDef.cellEditor = AutocompleteCellEditorComponent;
+    columnDef.cellEditorParams = () => ({
+      placeholder: 'search services...',
+      isServiceSearch: true,
+      context: { dataService: this.dataService },
+    });
+  }
+
+  private configureMaterialSearchColumn(columnDef: ColDef): void {
+    columnDef.cellEditor = AutocompleteCellEditorComponent;
+    columnDef.cellEditorParams = () => ({
+      placeholder: 'search materials...',
+      useApiSearch: true,
+      context: {
+        dataService: this.dataService,
+      },
+    });
+  }
+
+  private configureQuantityColumn(
+    columnDef: ColDef,
+    field: string,
+    context: GridColumnsBuildContext,
+  ): void {
+    columnDef.cellEditor = 'agNumberCellEditor';
+    columnDef.cellEditorParams = {
+      min: 0,
+      step: 'any',
+    };
+    columnDef.editable = (params: any) => {
+      if (
+        params.data &&
+        (params.data.isExpired ||
+          params.data.isSectionHeader ||
+          params.data.isGroupHeader ||
+          params.data.isMaterialHeader ||
+          params.data.isBranchHeader)
+      ) {
+        return false;
+      }
+      return context.isFieldEditable(field, params);
+    };
+    columnDef.valueSetter = (params: any) => {
+      if (!params.data || !params.colDef?.field) return false;
+      const v = params.newValue;
+      params.data[params.colDef.field] = v === null || v === undefined || v === '' ? '' : String(v);
+      return true;
+    };
+  }
+
+  private configureSupplierColorFeatureColumn(
+    columnDef: ColDef,
+    field: string,
+    context: GridColumnsBuildContext,
+  ): void {
+    const isColorField = field === FIELD_COLOR || field === FIELD_COLOR_DESCRIPTION;
+    if (field !== FIELD_SUPPLIER && !isColorField) {
+      columnDef.cellEditor = 'agTextCellEditor';
+      columnDef.cellEditorParams = () => ({
+        values: this.gridConfigService.getUniqueFeatures(context.rowData),
+        placeholder: `search ${field}...`,
+      });
+      return;
+    }
+
+    columnDef.cellEditor = AutocompleteCellEditorComponent;
+
+    if (isColorField) {
+      columnDef.valueGetter = (params: any) =>
+        params.data?.colorDescription || params.data?.color || '';
+      columnDef.valueSetter = (params: any) => {
+        if (!params.data) return false;
+        params.data.color = params.newValue || '';
+        params.data.colorDescription = params.newValue || '';
+        return true;
+      };
+    }
+
+    columnDef.cellEditorParams = (params: any) => {
+      const nodeData = params.node?.data || params.data || {};
+      let values: string[] = [];
+
+      if (field === FIELD_SUPPLIER) {
+        values =
+          nodeData._availableSuppliers && Array.isArray(nodeData._availableSuppliers)
+            ? nodeData._availableSuppliers
+            : this.gridConfigService.getUniqueSuppliers(context.rowData);
+      } else if (isColorField) {
+        values =
+          nodeData._availableColors && Array.isArray(nodeData._availableColors)
+            ? nodeData._availableColors
+            : this.gridConfigService.getUniqueColors(context.rowData);
+      }
+
+      return {
+        values,
+        placeholder: `search ${isColorField ? 'color' : field}...`,
+        context: { dataService: this.dataService },
+      };
+    };
+  }
+
+  private configureDateColumn(
+    columnDef: ColDef,
+    field: string,
+    context: GridColumnsBuildContext,
+  ): void {
+    columnDef.filter = false;
+    columnDef.cellEditor = 'agDateCellEditor';
+    columnDef.editable = (params: any) => {
+      if (
+        params.data &&
+        (params.data.isSectionHeader ||
+          params.data.isGroupHeader ||
+          params.data.isBranchHeader ||
+          params.data.isMaterialHeader)
+      ) {
+        return false;
+      }
+      return context.isFieldEditable(field, params);
+    };
+    columnDef.cellRenderer = (params: any) => {
+      let formattedValue = '';
+      if (columnDef.valueFormatter && typeof columnDef.valueFormatter === 'function') {
+        formattedValue = columnDef.valueFormatter(params) || '';
+      }
+      return context.renderDataCellContent(
+        params,
+        Number(columnDef.width ?? 150),
+        formattedValue,
+      );
+    };
+    columnDef.valueGetter = (params: any) => {
+      if (!params.data) return undefined;
+      const value = params.data[field];
+      if (!value || value === '') return undefined;
+      if (value instanceof Date) return value;
+      return this.gridConfigService.parseDateString(String(value)) || undefined;
+    };
+    columnDef.cellEditorParams = {
+      browserDatePicker: true,
+      minValidYear: 2000,
+      maxValidYear: 2050,
+      format: 'mm/dd/yyyy',
+    };
+    columnDef.valueFormatter = (params: any) => {
+      if (!params.data) return '';
+      const rawValue = params.data[field];
+      return this.gridConfigService.formatDateToMMDDYYYY(rawValue);
+    };
+    columnDef.valueParser = (params: any) => {
+      if (!params.newValue) return '';
+      return this.gridConfigService.convertDateEditorValueToString(params.newValue);
+    };
+    columnDef.valueSetter = (params: any) => {
+      const fieldName = params.colDef.field as string;
+      const dateStr = params.newValue
+        ? this.gridConfigService.convertDateEditorValueToString(params.newValue)
+        : '';
+      params.data[fieldName] = dateStr;
+      return true;
+    };
   }
 
   collectNewRowsForGrouping(config: CollectNewRowsForGroupingConfig): any[] {

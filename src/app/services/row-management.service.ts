@@ -20,14 +20,42 @@ import {
   FIELD_QTY,
   FIELD_BOM_LINK_SPEC_SHEET_EXTRA,
   FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
-  FIELD_SUPPLIER,
-  FIELD_COLOR_DESCRIPTION,
-  FIELD_MATERIAL_DESCRIPTION,
+  PART_LOOKUP_POPULATED_FIELDS,
 } from '../constants';
 import { Injectable } from '@angular/core';
-import { GridApi } from 'ag-grid-community';
+import { ColDef, GridApi } from 'ag-grid-community';
 import { DataService } from './data.service';
 import { GridConfigService } from './grid/grid-config.service';
+import { SkuService } from './sku.service';
+
+const QUANTITY_FIELD_SET = new Set<string>([FIELD_QUANTITY, FIELD_QTY]);
+const DATE_FIELD_SET = new Set<string>([
+  FIELD_BOM_LINK_START_DATE,
+  FIELD_BOM_LINK_END_DATE,
+  FIELD_START_DATE,
+  FIELD_END_DATE,
+]);
+
+const resolvePartValue = (original: any): any =>
+  original[FIELD_PART_NUMBER] ?? original[FIELD_BOM_LINK_PART] ?? original[FIELD_PART];
+const resolveFeatureValue = (original: any): any =>
+  original[FIELD_BOM_LINK_FEATURE] ?? original[FIELD_FEATURE];
+
+const ORIGINAL_VALUE_RESOLVERS: Readonly<Record<string, (original: any) => any>> = {
+  [FIELD_PART_NUMBER]: resolvePartValue,
+  [FIELD_PART]: resolvePartValue,
+  [FIELD_BOM_LINK_PART]: resolvePartValue,
+  [FIELD_BOM_LINK_FEATURE]: resolveFeatureValue,
+  [FIELD_FEATURE]: resolveFeatureValue,
+  [FIELD_BOM_LINK_START_DATE]: (original) => original[FIELD_BOM_LINK_START_DATE],
+  [FIELD_START_DATE]: (original) => original[FIELD_BOM_LINK_START_DATE],
+  [FIELD_BOM_LINK_END_DATE]: (original) => original[FIELD_BOM_LINK_END_DATE],
+  [FIELD_END_DATE]: (original) => original[FIELD_BOM_LINK_END_DATE],
+  [FIELD_QUANTITY]: (original) => original[FIELD_QUANTITY],
+  [FIELD_QTY]: (original) => original[FIELD_QUANTITY],
+  [FIELD_BOM_LINK_SPEC_SHEET_EXTRA]: (original) => original[FIELD_BOM_LINK_SPEC_SHEET_EXTRA],
+  [FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET]: (original) => original[FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET],
+};
 
 @Injectable({
   providedIn: 'root',
@@ -37,7 +65,10 @@ export class RowManagementService {
   private readonly newRows = new Map<number, any>();
   private lastSavedAt: Date | null = null;
 
-  constructor(private readonly gridConfigService: GridConfigService) {
+  constructor(
+    private readonly gridConfigService: GridConfigService,
+    private readonly skuService: SkuService,
+  ) {
     const savedTimestamp = localStorage.getItem(LS_KEY_LAST_SAVED_AT);
     if (savedTimestamp) {
       this.lastSavedAt = new Date(savedTimestamp);
@@ -71,6 +102,362 @@ export class RowManagementService {
   setLastSavedAt(date: Date): void {
     this.lastSavedAt = date;
     localStorage.setItem(LS_KEY_LAST_SAVED_AT, date.toISOString());
+  }
+
+  /**
+   * Store original values for existing rows and reset edited-field tracking.
+   * Kept in RowManagementService to keep row state responsibilities in one place.
+   */
+  captureOriginalValues(
+    rowData: any[],
+    originalRowValues: Map<string | number, any>,
+    editedFields: Map<string | number, Set<string>>,
+  ): void {
+    originalRowValues.clear();
+    editedFields.clear();
+
+    const processRow = (row: any): void => {
+      if (
+        row.isNewRow ||
+        row.isSectionHeader ||
+        row.isGroupHeader ||
+        row.isMaterialHeader ||
+        row.isBranchHeader
+      ) {
+        return;
+      }
+      const rowId = row.materialKey || row.newRowId || row[FIELD_PART_NUMBER] || row.part;
+      if (!rowId) return;
+
+      const originalValues = {
+        [FIELD_PART_NUMBER]: String(row[FIELD_PART_NUMBER] || row.part || row.bomLinkPart || ''),
+        bomLinkPart: String(row.bomLinkPart || row[FIELD_PART_NUMBER] || row.part || ''),
+        bomLinkFeature: String(row.bomLinkFeature || row.feature || ''),
+        bomLinkStartDate: String(row.bomLinkStartDate || row.startDate || ''),
+        bomLinkEndDate: String(row.bomLinkEndDate || row.endDate || ''),
+        quantity: String(row.quantity || row.qty || ''),
+        bomLinkSpecSheetExtra: String(row.bomLinkSpecSheetExtra || ''),
+        bomLinkIncludeInSpecSheet: String(row.bomLinkIncludeInSpecSheet || ''),
+      };
+
+      originalRowValues.set(rowId, originalValues);
+      if (row.section && (row[FIELD_PART_NUMBER] || row.part)) {
+        originalRowValues.set(
+          `${row.section}::${row[FIELD_PART_NUMBER] || row.part}`,
+          originalValues,
+        );
+      }
+
+      if (row.children && Array.isArray(row.children)) {
+        row.children.forEach((child: any) => processRow(child));
+      }
+    };
+
+    rowData.forEach((sectionRow: any) => {
+      if (sectionRow.children) {
+        sectionRow.children.forEach((child: any) => processRow(child));
+      }
+    });
+  }
+
+  /**
+   * Determine whether a row should be treated as touched/edited.
+   */
+  isRowTouched(row: any, editedRows: Set<string | number>): boolean {
+    if (row?.isNewRow) return true;
+
+    const uniqueId = row?.materialKey ?? row?.newRowId;
+    if (uniqueId != null) {
+      const variants = this.getIdVariants(uniqueId);
+      for (const id of variants) {
+        if (editedRows.has(id)) return true;
+      }
+      return false;
+    }
+
+    const rowId = row?.[FIELD_PART_NUMBER] ?? row?.part;
+    if (rowId == null) return false;
+
+    const variants = this.getIdVariants(rowId);
+    for (const id of variants) {
+      if (editedRows.has(id)) return true;
+    }
+
+    const compositeId =
+      row?.section && (row[FIELD_PART_NUMBER] ?? row.part)
+        ? `${row.section}::${row[FIELD_PART_NUMBER] ?? row.part}`
+        : null;
+    if (compositeId && editedRows.has(compositeId)) return true;
+
+    return false;
+  }
+
+  /**
+   * Clear edited-state markers for a row when disconnect edits are fully reverted.
+   */
+  clearRowEditStateIfReverted(options: {
+    rowId: string | number;
+    row?: any;
+    disconnectedSkuKeys: Set<string>;
+    editedRows: Set<string | number>;
+    editedFields: Map<string | number, Set<string>>;
+    invalidRowIds: Set<string | number>;
+    getDisconnectRowToken: (row: any) => string;
+  }): void {
+    const {
+      rowId,
+      row,
+      disconnectedSkuKeys,
+      editedRows,
+      editedFields,
+      invalidRowIds,
+      getDisconnectRowToken,
+    } = options;
+
+    const rowToken = row ? getDisconnectRowToken(row) : String(rowId);
+    const rowIdToken = String(rowId);
+    const hasOtherDisconnects = [...disconnectedSkuKeys].some(
+      (k) => k.startsWith(`${rowToken}|`) || k.startsWith(`${rowIdToken}|`),
+    );
+    if (hasOtherDisconnects) return;
+
+    const variants = this.getIdVariants(rowId);
+    const hasEditedFields = [...variants].some((id) => (editedFields.get(id)?.size ?? 0) > 0);
+    if (row) {
+      const compositeId =
+        row.section && (row[FIELD_PART_NUMBER] ?? row.part)
+          ? `${row.section}::${row[FIELD_PART_NUMBER] ?? row.part}`
+          : null;
+      if (compositeId && (editedFields.get(compositeId)?.size ?? 0) > 0) return;
+    }
+    if (hasEditedFields) return;
+
+    variants.forEach((id) => {
+      editedRows.delete(id);
+      editedFields.delete(id);
+      invalidRowIds.delete(id);
+    });
+
+    if (row) {
+      const compositeId =
+        row.section && (row[FIELD_PART_NUMBER] ?? row.part)
+          ? `${row.section}::${row[FIELD_PART_NUMBER] ?? row.part}`
+          : null;
+      if (compositeId) {
+        editedRows.delete(compositeId);
+        editedFields.delete(compositeId);
+        invalidRowIds.delete(compositeId);
+      }
+      row.validation = { isValid: true, missingFields: [], skuErrors: [] };
+    }
+  }
+
+  normalizeEditValue(value: any): string {
+    if (value === null || value === undefined) return '';
+    return String(value).trim();
+  }
+
+  getComparableFieldValue(fieldName: string, value: any, serviceLookupFields: Set<string>): any {
+    if (serviceLookupFields.has(fieldName)) {
+      return value || '';
+    }
+    return value;
+  }
+
+  hasComparableValueChanged(options: {
+    fieldName: string;
+    currentValue: any;
+    newValue: any;
+    serviceLookupFields: Set<string>;
+  }): boolean {
+    const { fieldName, currentValue, newValue, serviceLookupFields } = options;
+    const normalizedCurrent = this.normalizeEditValue(
+      this.getComparableFieldValue(fieldName, currentValue, serviceLookupFields),
+    );
+    const normalizedNew = this.normalizeEditValue(
+      this.getComparableFieldValue(fieldName, newValue, serviceLookupFields),
+    );
+    return normalizedCurrent !== normalizedNew;
+  }
+
+  ensureOriginalRowSnapshot(options: {
+    materialColorId: string;
+    rowData: any[];
+    originalRowValues: Map<string | number, any>;
+    fallbackRow?: any;
+  }): any {
+    const { materialColorId, rowData, originalRowValues, fallbackRow } = options;
+
+    if (!originalRowValues.has(materialColorId)) {
+      const sourceRow = rowData.find((row) => row.materialColorId === materialColorId) || fallbackRow;
+      if (sourceRow) {
+        originalRowValues.set(materialColorId, { ...sourceRow });
+      }
+    }
+
+    return originalRowValues.get(materialColorId);
+  }
+
+  syncEditedState(options: {
+    materialColorId: string;
+    fieldName: string;
+    newValue: any;
+    rowData: any[];
+    fallbackRow?: any;
+    originalRowValues: Map<string | number, any>;
+    editedRows: Set<string | number>;
+    editedFields: Map<string | number, Set<string>>;
+    serviceLookupFields: Set<string>;
+  }): boolean {
+    const {
+      materialColorId,
+      fieldName,
+      newValue,
+      rowData,
+      fallbackRow,
+      originalRowValues,
+      editedRows,
+      editedFields,
+      serviceLookupFields,
+    } = options;
+
+    const originalRow = this.ensureOriginalRowSnapshot({
+      materialColorId,
+      rowData,
+      originalRowValues,
+      fallbackRow,
+    });
+    const hasChanged = this.hasComparableValueChanged({
+      fieldName,
+      currentValue: originalRow?.[fieldName],
+      newValue,
+      serviceLookupFields,
+    });
+
+    if (hasChanged) {
+      editedRows.add(materialColorId);
+      if (!editedFields.has(materialColorId)) {
+        editedFields.set(materialColorId, new Set());
+      }
+      editedFields.get(materialColorId)!.add(fieldName);
+    } else if (editedFields.has(materialColorId)) {
+      editedFields.get(materialColorId)!.delete(fieldName);
+      if (editedFields.get(materialColorId)!.size === 0) {
+        editedRows.delete(materialColorId);
+        editedFields.delete(materialColorId);
+      }
+    }
+
+    return hasChanged;
+  }
+
+  buildRowsByMaterialColorId(gridApi: GridApi | undefined): Map<string, any> {
+    const rowsById = new Map<string, any>();
+    if (!gridApi) return rowsById;
+
+    gridApi.forEachNode((node) => {
+      const id = node.data?.materialColorId;
+      if (id !== null && id !== undefined) {
+        rowsById.set(String(id), node.data);
+      }
+    });
+    return rowsById;
+  }
+
+  buildEditedInstances(options: {
+    editedRows: Set<string | number>;
+    editedFields: Map<string | number, Set<string>>;
+    rowsByMaterialColorId: Map<string, any>;
+    buildInstanceData: (row: any, editedFieldsForRow: Set<string>) => any;
+  }): { [key: string]: any } {
+    const { editedRows, editedFields, rowsByMaterialColorId, buildInstanceData } = options;
+    const instances: { [key: string]: any } = {};
+
+    editedRows.forEach((materialColorIdRaw) => {
+      const materialColorId = String(materialColorIdRaw);
+      const currentRow = rowsByMaterialColorId.get(materialColorId);
+      if (!currentRow) {
+        return;
+      }
+
+      const editedFieldsForRow = editedFields.get(materialColorIdRaw) || editedFields.get(materialColorId);
+      if (!editedFieldsForRow || editedFieldsForRow.size === 0) {
+        return;
+      }
+
+      const instanceData = buildInstanceData(currentRow, editedFieldsForRow);
+      if (instanceData && Object.keys(instanceData).length > 0) {
+        instances[materialColorId] = instanceData;
+      }
+    });
+
+    return instances;
+  }
+
+  applyResponseInstances(options: {
+    instances: { [key: string]: any } | undefined;
+    rowData: any[];
+    editedRows: Set<string | number>;
+    editedFields: Map<string | number, Set<string>>;
+    skipIds?: Set<string>;
+    clearEditedState?: boolean;
+  }): void {
+    const { instances, rowData, editedRows, editedFields, skipIds, clearEditedState } = options;
+    if (!instances || typeof instances !== 'object') return;
+
+    const indexById = new Map<string, number>();
+    rowData.forEach((row, index) => {
+      if (row?.materialColorId !== undefined && row?.materialColorId !== null) {
+        indexById.set(String(row.materialColorId), index);
+      }
+    });
+
+    Object.keys(instances).forEach((materialColorId) => {
+      if (skipIds?.has(materialColorId)) {
+        return;
+      }
+
+      const rowIndex = indexById.get(materialColorId);
+      if (rowIndex === undefined) return;
+
+      rowData[rowIndex] = {
+        ...rowData[rowIndex],
+        ...instances[materialColorId],
+        materialColorId,
+      };
+
+      if (clearEditedState) {
+        editedRows.delete(materialColorId);
+        editedRows.delete(Number(materialColorId));
+        editedFields.delete(materialColorId);
+        editedFields.delete(Number(materialColorId));
+      }
+    });
+  }
+
+  isServiceSearchColumn(colDef: ColDef | undefined, editorComponent: any): boolean {
+    if (!colDef) return false;
+    if (colDef.cellEditor !== editorComponent) return false;
+
+    const cellEditorParams = typeof colDef.cellEditorParams === 'function'
+      ? colDef.cellEditorParams({} as any)
+      : colDef.cellEditorParams;
+
+    return cellEditorParams?.isServiceSearch === true;
+  }
+
+  getEditableServiceFields(
+    columnDefs: ColDef[],
+    disabledFields: Set<string>,
+    editorComponent: any,
+  ): string[] {
+    return columnDefs
+      .filter((col) => {
+        if (!col.field) return false;
+        if (disabledFields.has(col.field)) return false;
+        return this.isServiceSearchColumn(col, editorComponent);
+      })
+      .map((col) => col.field!);
   }
 
   /**
@@ -114,8 +501,8 @@ export class RowManagementService {
     }
 
     const skuInfo = dataService.getSkuInfo();
-    skuInfo.forEach((sku) => {
-      newRow[`sku${sku.skuId}`] = '';
+    this.skuService.getFieldNames(skuInfo).forEach((skuFieldName) => {
+      newRow[skuFieldName] = '';
     });
 
     const bomType = dataService.getBomType();
@@ -264,7 +651,7 @@ export class RowManagementService {
     }
 
     const fieldName = params.colDef?.field;
-    if (!fieldName?.startsWith('sku')) {
+    if (!this.skuService.isSkuField(fieldName)) {
       return;
     }
 
@@ -352,14 +739,14 @@ export class RowManagementService {
       return this.normalizeStringValue(fieldName, value);
     }
     if (value instanceof Date) return value.getTime();
-    if (typeof value === 'number' && (fieldName === 'quantity' || fieldName === 'qty')) return value;
+    if (typeof value === 'number' && this.isQuantityField(fieldName)) return value;
     return value;
   }
 
   private normalizeStringValue(fieldName: string, value: string): any {
     const trimmed = value.trim();
     if (trimmed === '') return '';
-    if (fieldName === 'quantity' || fieldName === 'qty') {
+    if (this.isQuantityField(fieldName)) {
       const num = Number.parseFloat(trimmed);
       return Number.isNaN(num) ? trimmed : num;
     }
@@ -370,13 +757,12 @@ export class RowManagementService {
     return trimmed;
   }
 
+  private isQuantityField(fieldName: string): boolean {
+    return QUANTITY_FIELD_SET.has(fieldName);
+  }
+
   private isDateField(fieldName: string): boolean {
-    return (
-      fieldName === FIELD_BOM_LINK_START_DATE ||
-      fieldName === FIELD_BOM_LINK_END_DATE ||
-      fieldName === FIELD_START_DATE ||
-      fieldName === FIELD_END_DATE
-    );
+    return DATE_FIELD_SET.has(fieldName);
   }
 
   private getOriginalForField(
@@ -396,17 +782,8 @@ export class RowManagementService {
       null;
     if (!original) return undefined;
 
-    if (fieldName === FIELD_PART_NUMBER || fieldName === FIELD_PART || fieldName === FIELD_BOM_LINK_PART)
-      return original[FIELD_PART_NUMBER] ?? original[FIELD_BOM_LINK_PART] ?? original[FIELD_PART];
-    if (fieldName === FIELD_BOM_LINK_FEATURE || fieldName === FIELD_FEATURE)
-      return original[FIELD_BOM_LINK_FEATURE] ?? original[FIELD_FEATURE];
-    if (fieldName === FIELD_BOM_LINK_START_DATE || fieldName === FIELD_START_DATE) return original[FIELD_BOM_LINK_START_DATE];
-    if (fieldName === FIELD_BOM_LINK_END_DATE || fieldName === FIELD_END_DATE) return original[FIELD_BOM_LINK_END_DATE];
-    if (fieldName === FIELD_QUANTITY || fieldName === FIELD_QTY) return original[FIELD_QUANTITY];
-    if (fieldName === FIELD_BOM_LINK_SPEC_SHEET_EXTRA) return original[FIELD_BOM_LINK_SPEC_SHEET_EXTRA];
-    if (fieldName === FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET) return original[FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET];
-
-    return undefined;
+    const resolver = ORIGINAL_VALUE_RESOLVERS[fieldName];
+    return resolver ? resolver(original) : undefined;
   }
 
   private isFieldChanged(
@@ -543,15 +920,7 @@ export class RowManagementService {
         const bomLink = existingPart[BOM_LINK_KEY];
         const existingPartData = bomLink as any;
 
-        const fieldsToPopulate = [
-          FIELD_SUPPLIER,
-          FIELD_COLOR_DESCRIPTION,
-          FIELD_BOM_LINK_FEATURE,
-          FIELD_MATERIAL_DESCRIPTION,
-          FIELD_BOM_LINK_START_DATE,
-          FIELD_BOM_LINK_END_DATE,
-          FIELD_QUANTITY,
-        ];
+        const fieldsToPopulate = PART_LOOKUP_POPULATED_FIELDS;
         const oldData = { ...params.node.data };
 
         fieldsToPopulate.forEach((fieldName) => {
@@ -573,21 +942,18 @@ export class RowManagementService {
 
         const skuInfo = dataService.getSkuInfo();
         const isEbom = dataService.getBomType() === BOM_TYPE_EBOM;
-        skuInfo.forEach((sku) => {
-          const skuFieldName = `sku${sku.skuId}`;
-          const newSkuValue = isEbom
-            ? (params.newValue ?? '')
-            : (() => {
-                const matchingSku = existingPartData.skus?.find((s: any) => s.skuId === sku.skuId);
-                return matchingSku ? matchingSku.value : '';
-              })();
-
-          if (oldData[skuFieldName] !== newSkuValue) {
-            params.node.setDataValue(skuFieldName, newSkuValue);
-            if (params.node.data) {
-              params.node.data[skuFieldName] = newSkuValue;
-            }
-          }
+        const skuUpdates = this.skuService.buildSkuFieldUpdates({
+          skuInfo,
+          fillWithPartNumber: isEbom,
+          partNumberValue: params.newValue ?? '',
+          sourceSkus: existingPartData.skus,
+        });
+        this.skuService.applySkuFieldUpdates({
+          row: params.node.data,
+          updates: skuUpdates,
+          setDataValue: (fieldName, value) => params.node.setDataValue(fieldName, value),
+          syncRowObject: !!params.node.data,
+          shouldApply: (update) => oldData[update.fieldName] !== update.value,
         });
 
         setTimeout(() => {

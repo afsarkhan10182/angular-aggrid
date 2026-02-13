@@ -6,6 +6,7 @@ import { GridService } from '../../services/grid/grid.service';
 import { GridConfigService } from '../../services/grid/grid-config.service';
 import { UtilService } from '../../services/util.service';
 import { DataService } from '../../services/data.service';
+import { SkuService } from '../../services/sku.service';
 
 @Component({
   selector: 'app-hierarchical-cell-renderer',
@@ -24,6 +25,7 @@ export class HierarchicalCellRendererComponent implements ICellRendererAngularCo
     private readonly gridConfigService: GridConfigService,
     private readonly utilService: UtilService,
     private readonly dataService: DataService,
+    private readonly skuService: SkuService,
     private readonly sanitizer: DomSanitizer,
   ) {}
 
@@ -48,28 +50,29 @@ export class HierarchicalCellRendererComponent implements ICellRendererAngularCo
     const parent = this.params?.context?.componentParent as any;
     if (!action || !parent) return;
 
-    if (action === 'add-row') {
-      const section = actionEl.getAttribute('data-section');
-      if (section) {
-        parent.addRowForSection(section);
-      }
-    } else if (action === 'toggle-section') {
-      const section = actionEl.getAttribute('data-section');
-      if (section) {
-        parent.toggleSection(section);
-      }
-    } else if (action === 'toggle-group') {
-      const groupKey = actionEl.getAttribute('data-group-key');
-      if (groupKey) {
-        parent.toggleGroup(groupKey);
-      }
-    } else if (action === 'toggle-material') {
-      const section = actionEl.getAttribute('data-section') || undefined;
-      const materialIdentifier = actionEl.getAttribute('data-material-identifier') || undefined;
-      const materialIndexRaw = actionEl.getAttribute('data-material-index');
-      const materialIndex = materialIndexRaw ? Number(materialIndexRaw) : undefined;
-      parent.toggleMaterial(section, materialIdentifier, materialIndex);
-    }
+    const handlers: Record<string, () => void> = {
+      'add-row': () => {
+        const section = actionEl.getAttribute('data-section');
+        if (section) parent.addRowForSection(section);
+      },
+      'toggle-section': () => {
+        const section = actionEl.getAttribute('data-section');
+        if (section) parent.toggleSection(section);
+      },
+      'toggle-group': () => {
+        const groupKey = actionEl.getAttribute('data-group-key');
+        if (groupKey) parent.toggleGroup(groupKey);
+      },
+      'toggle-material': () => {
+        const section = actionEl.getAttribute('data-section') || undefined;
+        const materialIdentifier = actionEl.getAttribute('data-material-identifier') || undefined;
+        const materialIndexRaw = actionEl.getAttribute('data-material-index');
+        const materialIndex = materialIndexRaw ? Number(materialIndexRaw) : undefined;
+        parent.toggleMaterial(section, materialIdentifier, materialIndex);
+      },
+    };
+
+    handlers[action]?.();
 
     event.preventDefault();
     event.stopPropagation();
@@ -131,7 +134,6 @@ export class HierarchicalCellRendererComponent implements ICellRendererAngularCo
   private shouldHighlightRow(data: any): boolean {
     if (!data) return false;
     const refSkuId = this.dataService.getRefSkuId();
-    const refSkuFieldName = `sku${refSkuId}`;
-    return !!(data[refSkuFieldName] && String(data[refSkuFieldName]).trim() !== '');
+    return this.skuService.hasRefSkuValue(data, refSkuId);
   }
 }

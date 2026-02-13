@@ -240,6 +240,11 @@
   color: #1e293b;
 }
 
+.modal-loading-state {
+  min-height: 320px;
+  margin: 0;
+}
+
 .modal-content::-webkit-scrollbar {
   width: 6px;
 }

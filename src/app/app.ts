@@ -13,7 +13,7 @@ import {
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef, GridApi, GridOptions, getGridElement } from 'ag-grid-community';
+import { ColDef, ColumnState, GridApi, GridOptions, getGridElement } from 'ag-grid-community';
 import { Subscription } from 'rxjs';
 import { AutocompleteCellEditorComponent } from './components/autocomplete-cell-editor/autocomplete-cell-editor.component';
 import { IconComponent } from './components/icon/icon.component';
@@ -29,14 +29,15 @@ import { SessionService } from './services/session.service';
 import { ValidationService } from './services/validation.service';
 import { UtilService, ExtendedColDef } from './services/util.service';
 import { GridColumnsService } from './services/grid/grid-columns.service';
+import { GridDataTransformService } from './services/grid/grid-data-transform.service';
 import {
   PayloadTransformService,
   TransformGridDataToApiOptions,
 } from './services/payload-transform.service';
 import { MassEditService, MassEditState } from './services/mass-edit.service';
+import { SkuService } from './services/sku.service';
 import { environment } from '../environments/environment';
 import {
-  BOM_LINK_KEY,
   BOM_TYPE_EBOM,
   BOM_TYPE_MBOM,
   BOM_TYPE_SBOM,
@@ -49,12 +50,14 @@ import {
   ENUM_MBOM_LINE_ITEM,
   FIELD_ACTIONS,
   FIELD_BOM_LINK_SPEC_SHEET_EXTRA,
+  FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
+  FIELD_BOM_LINK_START_DATE,
+  FIELD_BOM_LINK_END_DATE,
   FIELD_BOM_LINK_FEATURE,
   FIELD_BOM_LINK_PART,
   FIELD_PART_NUMBER,
   FIELD_MATERIAL,
   FIELD_MATERIAL_DESCRIPTION,
-  FIELD_HAS_LINKED_BOM,
   LS_KEY_SHOW_EXPIRED_DATA,
   NOTIFICATION_TYPE_ERROR,
   NOTIFICATION_TYPE_ERROR_PERSISTENT,
@@ -75,7 +78,16 @@ import type {
   SkuFilterOption,
   MbomSkuFilterOption,
   SbomSkuFilterOption,
+  SkuInfo,
 } from './services/data.service';
+
+const PART_NUMBER_EDIT_FIELDS = new Set<string>([FIELD_BOM_LINK_PART, FIELD_PART_NUMBER]);
+const MATERIAL_CLICK_FIELDS = new Set<string>([FIELD_MATERIAL, FIELD_MATERIAL_DESCRIPTION]);
+const DATE_EDIT_FIELDS = new Set<string>([FIELD_BOM_LINK_START_DATE, FIELD_BOM_LINK_END_DATE]);
+const SPEC_SHEET_EDIT_FIELDS = new Set<string>([
+  FIELD_BOM_LINK_SPEC_SHEET_EXTRA,
+  FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
+]);
 
 @Component({
   selector: 'app-root',
@@ -116,6 +128,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public showLinkedBomModal = false;
   public selectedLinkedBomData: any = {};
   public selectedLinkedBomSkuData: any[] = [];
+  public isLinkedBomLoading = false;
   public showServiceDataManagerModal = false;
   public serviceDataManagerModalMaterialColorIds: string[] = [];
   public searchText: string = '';
@@ -181,6 +194,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public activeGroupFields: GroupConfig[] = []; // Currently active group fields
   public availableGroupFields: GroupConfig[] = []; // Available columns for grouping
   private readonly groupExpandedState: Map<string, boolean> = new Map(); // Track group expand/collapse state
+  private linkedBomRequestId = 0;
 
   constructor(
     public dataService: DataService,
@@ -191,8 +205,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     private readonly validationService: ValidationService,
     private readonly utilService: UtilService,
     private readonly gridColumnsService: GridColumnsService,
+    private readonly gridDataTransformService: GridDataTransformService,
     private readonly payloadTransformService: PayloadTransformService,
     private readonly massEditService: MassEditService,
+    private readonly skuService: SkuService,
     @Inject(DOCUMENT) private readonly document: Document,
     private readonly renderer: Renderer2,
   ) {
@@ -874,7 +890,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   isSkuColumn(col: any): boolean {
-    return col.field && (col.field.startsWith('sku') || col.field.startsWith(FIELD_ACTIONS));
+    return col.field && (this.skuService.isSkuField(col.field) || col.field.startsWith(FIELD_ACTIONS));
   }
 
   toggleExpiredData(): void {
@@ -1172,66 +1188,14 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
    * Must verify SKU exists in original API response instances for this specific row
    */
   private hasSkuInExistingResponse(row: any, targetSkuIds: Set<string>): boolean {
-    if (this.utilService.isHeaderRow(row)) {
-      return true;
-    }
-
-    if (row?.isNewRow) {
-      return false;
-    }
-
     const apiData = this.dataService.getApiData();
-    if (!apiData?.instances || !Array.isArray(apiData.instances)) {
-      return false;
-    }
-
-    const matchedInstance = this.findMatchingInstance(row, apiData.instances, targetSkuIds);
-    if (!matchedInstance) {
-      return false;
-    }
-
-    return this.utilService.rowHasTargetSkuValue(row, targetSkuIds);
-  }
-
-
-  private findMatchingInstance(row: any, instances: any[], targetSkuIds: Set<string>): any {
-    const rowData = this.utilService.extractRowData(row);
-    const bomType = this.dataService.getBomType() ?? '';
-
-    for (const instance of instances) {
-      const bomLink = instance[BOM_LINK_KEY];
-      if (!bomLink) continue;
-
-      if (!this.matchesRowCriteria(bomLink, rowData, bomType)) {
-        continue;
-      }
-
-      if (!this.utilService.instanceHasTargetSku(bomLink, targetSkuIds)) {
-        continue;
-      }
-
-      return bomLink;
-    }
-
-    return null;
-  }
-
-
-  private matchesRowCriteria(bomLink: any, rowData: { section: string; feature: string; partNumber: string }, bomType: string): boolean {
-    const instanceData = this.utilService.extractInstanceData(bomLink);
-
-    const isSectionMatch = instanceData.section === rowData.section;
-    const isFeatureMatch = instanceData.feature === rowData.feature;
-
-    if (!isSectionMatch || !isFeatureMatch) {
-      return false;
-    }
-
-    if (!this.utilService.shouldRequirePartMatch(bomType, rowData.partNumber, instanceData.partNumber)) {
-      return true;
-    }
-
-    return String(instanceData.partNumber).trim() === String(rowData.partNumber).trim();
+    return this.skuService.hasSkuInExistingResponse({
+      row,
+      targetSkuIds,
+      instances: apiData?.instances,
+      bomType: this.dataService.getBomType() ?? '',
+      isHeaderRow: (candidateRow) => this.utilService.isHeaderRow(candidateRow),
+    });
   }
 
 
@@ -1319,12 +1283,14 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (this.handleDisconnectButton(event, target, isReadOnlySkuFilter)) return;
     if (this.handleReconnectButton(event, target, isReadOnlySkuFilter)) return;
 
-    if (event.colDef.field === COL_ACTIONS) {
+    const clickedField = event.colDef?.field as string | undefined;
+
+    if (clickedField === COL_ACTIONS) {
       this.handleActionsColumnClick(event);
       return;
     }
 
-    if (event.colDef.field === FIELD_MATERIAL || event.colDef.field === FIELD_MATERIAL_DESCRIPTION) {
+    if (this.isMaterialClickField(clickedField)) {
       this.handleMaterialColumnClick(event);
       return;
     }
@@ -1372,12 +1338,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.gridApi.forEachNode((node: any) => {
       const row = node?.data;
       if (!row?.materialColorId) return;
-      const rowId =
-        row.materialKey ?? row.newRowId ?? row[FIELD_PART_NUMBER] ?? row.part ?? '';
-      const compositeId =
-        row.section && (row[FIELD_PART_NUMBER] || row.part)
-          ? `${row.section}::${row[FIELD_PART_NUMBER] || row.part}`
-          : null;
+      const rowId = this.utilService.getRowId(row) ?? '';
+      const compositeId = this.utilService.getCompositeSectionPartId(row);
       const isEdited =
         this.editedRows.has(rowId) ||
         (compositeId && this.editedRows.has(compositeId)) ||
@@ -1440,7 +1402,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private handlePartNumberFieldClick(event: any): boolean {
-    if (event.colDef.field === FIELD_BOM_LINK_PART || event.colDef.field === FIELD_PART_NUMBER) {
+    if (this.isPartNumberEditField(event.colDef?.field)) {
       event.api.startEditingCell({
         rowIndex: event.rowIndex,
         colKey: event.column.getId(),
@@ -1473,7 +1435,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (isReadOnlySkuFilter || event.colDef?.isDisabled) {
       return true;
     }
-    if (event.colDef.field?.startsWith('sku') && event.data?.isNewRow) {
+    if (this.skuService.isSkuField(event.colDef.field) && event.data?.isNewRow) {
       this.rowManagementService.pastePartNumber(event, this);
     }
     return true;
@@ -1489,7 +1451,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (isReadOnlySkuFilter) {
       return true;
     }
-    if (event.colDef.field?.startsWith('sku') && event.data?.isNewRow) {
+    if (this.skuService.isSkuField(event.colDef.field) && event.data?.isNewRow) {
       this.rowManagementService.clearSkuValue(event, this);
     }
     return true;
@@ -1525,13 +1487,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (!event.data || event.data.isSectionHeader) return;
 
     const field = event.colDef.field;
-    if (!field || field === COL_ACTIONS || field.startsWith('sku')) return;
+    if (!field || field === COL_ACTIONS || this.skuService.isSkuField(field)) return;
 
-    const isDateColumn = field === 'bomLinkStartDate' || field === 'bomLinkEndDate';
-    const isSpecSheetField =
-      field === 'bomLinkSpecSheetExtra' || field === 'bomLinkIncludeInSpecSheet';
-    const isAutocompleteField =
-      isSpecSheetField || field === FIELD_MATERIAL_DESCRIPTION || field === FIELD_MATERIAL;
+    const isDateColumn = this.isDateEditField(field);
+    const isSpecSheetField = this.isSpecSheetEditField(field);
+    const isAutocompleteField = isSpecSheetField || this.isMaterialClickField(field);
 
     const isEditable =
       !isReadOnlySkuFilter &&
@@ -1559,23 +1519,55 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  private isPartNumberEditField(field: string | undefined): boolean {
+    return !!field && PART_NUMBER_EDIT_FIELDS.has(field);
+  }
+
+  private isMaterialClickField(field: string | undefined): boolean {
+    return !!field && MATERIAL_CLICK_FIELDS.has(field);
+  }
+
+  private isDateEditField(field: string): boolean {
+    return DATE_EDIT_FIELDS.has(field);
+  }
+
+  private isSpecSheetEditField(field: string): boolean {
+    return SPEC_SHEET_EDIT_FIELDS.has(field);
+  }
+
   private handleActionsColumnClick(event: any): void {
     const target = event.event?.target as HTMLElement;
+    if (!target) return;
 
-    if (target?.classList.contains('add-row-btn')) {
-      const rowIndex = event.rowIndex;
-      if (rowIndex !== null && rowIndex !== undefined) {
-        this.addRowAfter(rowIndex);
-      }
-    } else if (target?.classList.contains('delete-row-btn')) {
-      const partId = target.dataset['partId'];
-      const newRowId = target.dataset['newRowId'];
+    const actionHandlers: Record<string, () => void> = {
+      'add-row-btn': () => {
+        const rowIndex = event.rowIndex;
+        if (rowIndex !== null && rowIndex !== undefined) {
+          this.addRowAfter(rowIndex);
+        }
+      },
+      'delete-row-btn': () => this.handleDeleteRowAction(target),
+    };
 
-      if (newRowId) {
-        this.deleteRowById(Number.parseInt(newRowId));
-      } else if (partId) {
-        this.deleteRow(partId);
+    for (const [className, handler] of Object.entries(actionHandlers)) {
+      if (target.classList.contains(className)) {
+        handler();
+        return;
       }
+    }
+  }
+
+  private handleDeleteRowAction(target: HTMLElement): void {
+    const partId = target.dataset['partId'];
+    const newRowId = target.dataset['newRowId'];
+
+    if (newRowId) {
+      this.deleteRowById(Number.parseInt(newRowId));
+      return;
+    }
+
+    if (partId) {
+      this.deleteRow(partId);
     }
   }
 
@@ -1602,9 +1594,23 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
+    const requestId = ++this.linkedBomRequestId;
+    this.selectedLinkedBomData = {
+      material: materialData?.material || materialData?.materialDescription || materialData?.materialMasterId || '',
+      instances: [],
+      columns: {},
+    };
+    this.selectedLinkedBomSkuData = [];
+    this.isLinkedBomLoading = true;
+    this.showLinkedBomModal = true;
+
     const sub = this.dataService.getComplexBOM(String(materialMasterId).trim()).subscribe({
       next: (bomData: any) => {
+        if (requestId !== this.linkedBomRequestId) return;
+
         if (!bomData || typeof bomData !== 'object') {
+          this.isLinkedBomLoading = false;
+          this.showLinkedBomModal = false;
           this.showNotification('Failed to load linked BOM details.', NOTIFICATION_TYPE_ERROR);
           return;
         }
@@ -1615,9 +1621,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           columns: bomData.columns && typeof bomData.columns === 'object' ? bomData.columns : {},
         };
         this.selectedLinkedBomSkuData = [];
-        this.showLinkedBomModal = true;
+        this.isLinkedBomLoading = false;
       },
       error: (error: any) => {
+        if (requestId !== this.linkedBomRequestId) return;
+
+        this.isLinkedBomLoading = false;
+        this.showLinkedBomModal = false;
         const message =
           error?.error?.message ||
           error?.message ||
@@ -1629,6 +1639,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   closeLinkedBomModal(): void {
+    this.linkedBomRequestId++;
+    this.isLinkedBomLoading = false;
     this.showLinkedBomModal = false;
     this.selectedLinkedBomData = {};
     this.selectedLinkedBomSkuData = [];
@@ -1825,14 +1837,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
               this.gridApi?.forEachNode((node: any) => {
                 const row = node?.data;
                 if (row?.materialColorId === materialColorId) {
-                  const rid =
-                    row.materialKey ?? row.newRowId ?? row[FIELD_PART_NUMBER] ?? row.part;
+                  const rid = this.utilService.getRowId(row);
                   if (rid) this.invalidRowIds.add(rid);
-                  if (row.section && (row[FIELD_PART_NUMBER] || row.part)) {
-                    this.invalidRowIds.add(
-                      `${row.section}::${row[FIELD_PART_NUMBER] || row.part}`,
-                    );
-                  }
+                  const compositeId = this.utilService.getCompositeSectionPartId(row);
+                  if (compositeId) this.invalidRowIds.add(compositeId);
                 }
               });
             });
@@ -1902,27 +1910,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
    * Uses the row's unique id (materialKey or newRowId) so another row with same Part/Section but different SKU is not considered touched.
    */
   private isRowTouched(row: any): boolean {
-    if (row?.isNewRow) return true;
-    const uniqueId = row?.materialKey ?? row?.newRowId;
-    if (uniqueId != null) {
-      const variants = this.utilService.getIdVariants(uniqueId);
-      for (const id of variants) {
-        if (this.editedRows.has(id)) return true;
-      }
-      return false;
-    }
-    const rowId = row?.[FIELD_PART_NUMBER] ?? row?.part;
-    if (rowId == null) return false;
-    const variants = this.utilService.getIdVariants(rowId);
-    for (const id of variants) {
-      if (this.editedRows.has(id)) return true;
-    }
-    const compositeId =
-      row?.section && (row[FIELD_PART_NUMBER] ?? row.part)
-        ? `${row.section}::${row[FIELD_PART_NUMBER] ?? row.part}`
-        : null;
-    if (compositeId && this.editedRows.has(compositeId)) return true;
-    return false;
+    return this.rowManagementService.isRowTouched(row, this.editedRows);
   }
 
   private createEditorCleanup(
@@ -2429,84 +2417,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     return colId;
   }
 
-  private getSortValue(row: any, field: string): any {
-    if (!row || !field) return null;
-
-    const value = row[field];
-
-    if (value === null || value === undefined) {
-      return null;
-    }
-
-    return value;
-  }
-
-  private sortDataTree(data: any[], sortModel: any[]): any[] {
-    if (!sortModel || sortModel.length === 0) {
-      return data;
-    }
-
-    const sortedData: any[] = [];
-    const sortColId = sortModel[0].colId;
-    const sortField = this.getFieldNameFromColId(sortColId) || sortModel[0].field || sortColId;
-    const sortDirection = sortModel[0].sort as 'asc' | 'desc';
-
-    data.forEach((sectionRow) => {
-      if (!sectionRow.isSectionHeader) {
-        return;
-      }
-
-      const sortedSection: any = {
-        ...sectionRow,
-        children: [],
-      };
-
-      if (
-        sectionRow.children &&
-        Array.isArray(sectionRow.children) &&
-        sectionRow.children.length > 0
-      ) {
-        const sortedChildren = [...sectionRow.children].sort((a: any, b: any) => {
-          const aValue = this.getSortValue(a, sortField);
-          const bValue = this.getSortValue(b, sortField);
-
-          return this.utilService.compareValues(aValue, bValue, sortDirection);
-        });
-
-        sortedChildren.forEach((child: any) => {
-          if (child.isMaterialHeader) {
-            const sortedMaterialHeader: any = {
-              ...child,
-              children: [],
-            };
-
-            if (child.children && Array.isArray(child.children) && child.children.length > 0) {
-              const sortedSubChildren = [...child.children].sort((a: any, b: any) => {
-                const aValue = this.getSortValue(a, sortField);
-                const bValue = this.getSortValue(b, sortField);
-                return this.utilService.compareValues(aValue, bValue, sortDirection);
-              });
-              sortedMaterialHeader.children = sortedSubChildren;
-            }
-
-            sortedSection.children.push(sortedMaterialHeader);
-          } else if (child.isDirectRow) {
-            sortedSection.children.push(child);
-          }
-        });
-      }
-
-      sortedData.push(sortedSection);
-    });
-
-    return sortedData;
-  }
-
-  public applyGridSort(_params: any): void {
+  public applyGridSort(_params: unknown): void {
     if (!this.gridApi) return;
 
     setTimeout(() => {
-      const sortModel = this.gridApi.getColumnState().filter((col: any) => col.sort);
+      const sortModel = this.gridApi.getColumnState().filter((col: ColumnState) => !!col.sort);
 
       if (!sortModel || sortModel.length === 0) {
         this.applyGridSearch();
@@ -2522,7 +2437,16 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         return;
       }
 
-      const sortedData = this.sortDataTree(dataToSort, sortModel);
+      const sortColId = sortModel[0].colId;
+      const sortField = this.getFieldNameFromColId(sortColId || '') || sortColId;
+      const sortDirection = sortModel[0].sort as 'asc' | 'desc';
+
+      const sortedData = this.gridDataTransformService.sortTreeDataByField(
+        dataToSort,
+        sortField,
+        sortDirection,
+        (a, b, direction) => this.utilService.compareValues(a, b, direction),
+      );
       const flatData = this.flattenDisplayData(sortedData);
       this.displayData = flatData;
 
@@ -2535,221 +2459,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }, 10);
   }
 
-  private buildMbomTreeData(data: any): any[] {
-    const sections: Record<string, any[]> = {};
-    const sectionDisplayNameMap: Record<string, string> = {};
-
-    const processedItems = data.instances
-      .filter((item: any) => {
-        const bomLink = item[BOM_LINK_KEY];
-        if (!bomLink) return false;
-
-        const hasPartNumber =
-          bomLink?.[FIELD_PART_NUMBER] && String(bomLink[FIELD_PART_NUMBER]).trim() !== '';
-
-        let isCorrectMarkup = true;
-        if (this.dataService.getBomType() === BOM_TYPE_MBOM) {
-          isCorrectMarkup = bomLink.ptcbomPartMarkUp === 'enumMBOM001';
-        }
-
-        return hasPartNumber && isCorrectMarkup;
-      })
-      .map((item: any) => {
-        const bomLink = item[BOM_LINK_KEY];
-        // Prefer the true internal name if provided by API. Using display text as a key
-        // can cause non-unique matches and "wrong section toggles".
-        const sectionInternalName = bomLink.sectionInternalName || bomLink.section; // e.g., "enumSection001"
-        const sectionDisplayName = bomLink.sectionDisplayName; // e.g., "Fuselage"
-
-        // Build mapping of internal name to display name
-        if (sectionInternalName && sectionDisplayName) {
-          sectionDisplayNameMap[sectionInternalName] = sectionDisplayName;
-        }
-
-        return {
-          ...bomLink,
-          part: bomLink[FIELD_PART_NUMBER],
-          [FIELD_PART_NUMBER]: bomLink[FIELD_PART_NUMBER],
-          skus: bomLink.skus,
-          linkedBom: bomLink.linkedBom,
-          quantity: bomLink.quantity ? Number(bomLink.quantity).toFixed(1) : bomLink.quantity,
-          qty: bomLink.qty ? Number(bomLink.qty).toFixed(1) : bomLink.qty,
-          section: sectionInternalName,
-          sectionDisplayName: sectionDisplayName,
-        };
-      });
-
-    processedItems.forEach((item: any, index: number) => {
-      const sectionInternalName = item.section;
-      if (!sections[sectionInternalName]) {
-        sections[sectionInternalName] = [];
-      }
-
-      // Add every instance as a separate row - no deduplication
-      const material = {
-        ...item,
-        materialKey: `${item[FIELD_PART_NUMBER]}_${index}`, // Simple unique key for identification
-        allSkus: item.skus,
-        part: item[FIELD_PART_NUMBER],
-        [FIELD_PART_NUMBER]: item[FIELD_PART_NUMBER],
-        linkedBom: item.linkedBom,
-        section: sectionInternalName,
-        sectionDisplayName: item.sectionDisplayName,
-      };
-      sections[sectionInternalName].push(material);
-    });
-
-    const result: Array<{ section: string; sectionDisplayName: string; materials: any[] }> = [];
-    const sectionOrder: string[] = Array.isArray(data.sectionOrder) ? data.sectionOrder : [];
-
-    const displayToInternalMap = new Map<string, string[]>();
-    Object.keys(sectionDisplayNameMap).forEach((internalName) => {
-      const displayName = sectionDisplayNameMap[internalName];
-      if (!displayName) return;
-      const current = displayToInternalMap.get(displayName) ?? [];
-      if (!current.includes(internalName)) {
-        current.push(internalName);
-      }
-      displayToInternalMap.set(displayName, current);
-    });
-
-    /**
-     * Sort function: by Feature (bomLinkFeature) first, then by Part# (partNumber)
-     * This ensures consistent ordering within each section
-     */
-    const sortMaterials = (a: any, b: any): number => {
-      const featureA = a.bomLinkFeature.toLowerCase().trim();
-      const featureB = b.bomLinkFeature.toLowerCase().trim();
-
-      if (featureA !== featureB) {
-        return featureA.localeCompare(featureB);
-      }
-
-      const partA = String(a?.[FIELD_PART_NUMBER] ?? '').toLowerCase().trim();
-      const partB = String(b?.[FIELD_PART_NUMBER] ?? '').toLowerCase().trim();
-
-      return partA.localeCompare(partB);
-    };
-
-    // Show ALL sections from sectionOrder, even if they have no materials
-    sectionOrder.forEach((sectionDisplayName, idx) => {
-      const internalNames = displayToInternalMap.get(sectionDisplayName) ?? [];
-
-      const resolvedInternalNames =
-        internalNames.length > 0 ? internalNames : [`__missing_section__${idx}`];
-
-      resolvedInternalNames.forEach((sectionInternalName) => {
-        const sectionItems = sections[sectionInternalName] || [];
-        const sortedMaterials = [...sectionItems].sort(sortMaterials);
-        result.push({
-          section: sectionInternalName,
-          sectionDisplayName: sectionDisplayName,
-          materials: sortedMaterials,
-        });
-      });
-    });
-
-    // Also include sections that are not in sectionOrder but exist in data
-    Object.keys(sections).forEach((sectionInternalName) => {
-      const sectionDisplayName = sectionDisplayNameMap[sectionInternalName] || sectionInternalName;
-      if (!sectionOrder.includes(sectionDisplayName)) {
-        const sectionItems = sections[sectionInternalName];
-        if (sectionItems && sectionItems.length > 0) {
-          const sortedMaterials = [...sectionItems].sort(sortMaterials);
-          const sectionObj = {
-            section: sectionInternalName,
-            sectionDisplayName: sectionDisplayName,
-            materials: sortedMaterials,
-          };
-          result.push(sectionObj);
-        }
-      }
-    });
-
-    return result;
-  }
-
   transformToTreeData(data: any): any[] {
-    const treeData: any[] = [];
-
-    const sections = this.buildMbomTreeData(data);
-
-    sections.forEach((section: any) => {
-      const sectionRow: any = {
-        section: section.section,
-        sectionDisplayName: section.sectionDisplayName,
-        isSectionHeader: true,
-        isExpanded: true,
-        children: [],
-        level: 0,
-      };
-
-      section.materials.forEach((material: any, materialIndex: number) => {
-        const hasChildren = material.children && material.children.length > 0;
-
-        if (hasChildren) {
-          const materialRow: any = {
-            ...material,
-            section: section.section,
-            sectionDisplayName: section.sectionDisplayName,
-            material: material.part,
-            materialIndex: materialIndex,
-            allSkus: material.allSkus,
-            isMaterialHeader: true,
-            isExpanded: true,
-            children: [],
-            level: 1,
-            parent: sectionRow,
-            [FIELD_HAS_LINKED_BOM]:
-              material.linkedBom === '1' ||
-              material.linkedBom === 1 ||
-              material.linkedBom === true ||
-              (material.linkedBom && material.linkedBom !== ''),
-          };
-
-          this.addSkuDataToRow(materialRow, material);
-
-          material.children.forEach((child: any) => {
-            const childRow = {
-              ...child,
-              isSubRow: true,
-              level: 2,
-              parent: materialRow,
-              section: section.section,
-              sectionDisplayName: section.sectionDisplayName,
-            };
-            this.addSkuDataToRow(childRow, child);
-            materialRow.children.push(childRow);
-          });
-
-          sectionRow.children.push(materialRow);
-        } else {
-          const directRow = {
-            ...material,
-            section: section.section,
-            sectionDisplayName: section.sectionDisplayName,
-            isDirectRow: true,
-            level: 1,
-            parent: sectionRow,
-            [FIELD_HAS_LINKED_BOM]:
-              material.linkedBom === '1' ||
-              material.linkedBom === 1 ||
-              material.linkedBom === true ||
-              (material.linkedBom && material.linkedBom !== ''),
-          };
-          this.addSkuDataToRow(directRow, material);
-          sectionRow.children.push(directRow);
-        }
-      });
-
-      treeData.push(sectionRow);
-    });
-
-    if (treeData.length === 0) {
-      return treeData;
-    }
-
-    return treeData;
+    return this.gridDataTransformService.transformToTreeData(
+      data,
+      this.dataService.getBomType(),
+      this.dataService.getSkuInfo(),
+    );
   }
 
   /**
@@ -2757,64 +2472,17 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
    * Only stores values for editable fields: startDate, endDate, quantity
    */
   private storeOriginalValues(): void {
-    this.originalRowValues.clear();
-    this.editedFields.clear();
-
-    const processRow = (row: any) => {
-      if (
-        row.isNewRow ||
-        row.isSectionHeader ||
-        row.isGroupHeader ||
-        row.isMaterialHeader ||
-        row.isBranchHeader
-      ) {
-        return;
-      }
-      const rowId = row.materialKey || row.newRowId || row[FIELD_PART_NUMBER] || row.part;
-      if (!rowId) return;
-
-      const originalValues: any = {
-        [FIELD_PART_NUMBER]: String(row[FIELD_PART_NUMBER] || row.part || row.bomLinkPart || ''),
-        bomLinkPart: String(row.bomLinkPart || row[FIELD_PART_NUMBER] || row.part || ''),
-        bomLinkFeature: String(row.bomLinkFeature || row.feature || ''),
-        bomLinkStartDate: String(row.bomLinkStartDate || row.startDate || ''),
-        bomLinkEndDate: String(row.bomLinkEndDate || row.endDate || ''),
-        quantity: String(row.quantity || row.qty || ''),
-        bomLinkSpecSheetExtra: String(row.bomLinkSpecSheetExtra || ''),
-        bomLinkIncludeInSpecSheet: String(row.bomLinkIncludeInSpecSheet || ''),
-      };
-
-      this.originalRowValues.set(rowId, originalValues);
-      if (row.section && (row[FIELD_PART_NUMBER] || row.part)) {
-        this.originalRowValues.set(`${row.section}::${row[FIELD_PART_NUMBER] || row.part}`, originalValues);
-      }
-
-      if (row.children && Array.isArray(row.children)) {
-        row.children.forEach((child: any) => processRow(child));
-      }
-    };
-
-    this.rowData.forEach((sectionRow: any) => {
-      if (sectionRow.children) {
-        sectionRow.children.forEach((child: any) => processRow(child));
-      }
-    });
-  }
-
-  private addSkuDataToRow(itemRow: any, originalItem: any): void {
-    const skuInfo = this.dataService.getSkuInfo();
-
-    skuInfo.forEach((sku) => {
-      const fieldName = `sku${sku.skuId}`;
-      const matchingSku = originalItem.skus.find((s: any) => s.skuId === sku.skuId);
-      itemRow[fieldName] = matchingSku ? matchingSku.value : '';
-    });
+    this.rowManagementService.captureOriginalValues(
+      this.rowData,
+      this.originalRowValues,
+      this.editedFields,
+    );
   }
 
   /**
    * Build skus array from row SKU fields (reusable helper)
    */
-  private buildSkusArrayFromRow(row: any, skuInfo: any[]): any[] {
+  private buildSkusArrayFromRow(row: any, skuInfo: SkuInfo[]): any[] {
     return this.payloadTransformService.buildSkusArrayFromRow(row, skuInfo, this.rowData);
   }
   /**
@@ -2964,19 +2632,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.hasDisconnectEdits = true;
     this.showDisconnectedSkusPanel = true;
     this.disconnectedSkuKeys.add(this.getDisconnectedKey(rowData, skuField));
-    const rowId =
-      rowData.materialKey ??
-      rowData.newRowId ??
-      rowData[FIELD_PART_NUMBER] ??
-      rowData.part;
+    const rowId = this.utilService.getRowId(rowData);
     if (rowId) this.editedRows.add(rowId);
 
-    let targetNode: any = null;
-    this.gridApi.forEachNode((node: any) => {
-      if (node.data === rowData) {
-        targetNode = node;
-      }
-    });
+    const targetNode = this.utilService.findNodeByDataReference(this.gridApi, rowData);
     if (targetNode) {
       this.gridApi.refreshCells({
         rowNodes: [targetNode],
@@ -2991,43 +2650,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
    * clear it from editedRows/editedFields and invalidRowIds so Save can become disabled and validation is cleared.
    */
   private clearRowEditStateIfReverted(rowId: string | number, row?: any): void {
-    const rowToken = row ? this.getDisconnectRowToken(row) : String(rowId);
-    const rowIdToken = String(rowId);
-    const hasOtherDisconnects = [...this.disconnectedSkuKeys].some(
-      (k) => k.startsWith(`${rowToken}|`) || k.startsWith(`${rowIdToken}|`)
-    );
-    if (hasOtherDisconnects) return;
-
-    const variants = this.utilService.getIdVariants(rowId);
-    const hasEditedFields = [...variants].some(
-      (id) => (this.editedFields.get(id)?.size ?? 0) > 0
-    );
-    if (row) {
-      const compositeId =
-        row.section && (row[FIELD_PART_NUMBER] ?? row.part)
-          ? `${row.section}::${row[FIELD_PART_NUMBER] ?? row.part}`
-          : null;
-      if (compositeId && (this.editedFields.get(compositeId)?.size ?? 0) > 0) return;
-    }
-    if (hasEditedFields) return;
-
-    variants.forEach((id) => {
-      this.editedRows.delete(id);
-      this.editedFields.delete(id);
-      this.invalidRowIds.delete(id);
+    this.rowManagementService.clearRowEditStateIfReverted({
+      rowId,
+      row,
+      disconnectedSkuKeys: this.disconnectedSkuKeys,
+      editedRows: this.editedRows,
+      editedFields: this.editedFields,
+      invalidRowIds: this.invalidRowIds,
+      getDisconnectRowToken: (r) => this.getDisconnectRowToken(r),
     });
-    if (row) {
-      const compositeId =
-        row.section && (row[FIELD_PART_NUMBER] ?? row.part)
-          ? `${row.section}::${row[FIELD_PART_NUMBER] ?? row.part}`
-          : null;
-      if (compositeId) {
-        this.editedRows.delete(compositeId);
-        this.editedFields.delete(compositeId);
-        this.invalidRowIds.delete(compositeId);
-      }
-      row.validation = { isValid: true, missingFields: [], skuErrors: [] };
-    }
   }
 
   /** Revert a disconnect: remove from disconnectedSkuKeys so the SKU is no longer marked for disconnect on save. */
@@ -3043,17 +2674,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.disconnectedSkuKeys.delete(key);
     if (this.disconnectedSkuKeys.size === 0) this.hasDisconnectEdits = false;
 
-    const rowId =
-      rowData.materialKey ??
-      rowData.newRowId ??
-      rowData[FIELD_PART_NUMBER] ??
-      rowData.part;
-    this.clearRowEditStateIfReverted(rowId, rowData);
+    const rowId = this.utilService.getRowId(rowData);
+    if (rowId !== null) {
+      this.clearRowEditStateIfReverted(rowId, rowData);
+    }
 
-    let targetNode: any = null;
-    this.gridApi.forEachNode((node: any) => {
-      if (node.data === rowData) targetNode = node;
-    });
+    const targetNode = this.utilService.findNodeByDataReference(this.gridApi, rowData);
     if (targetNode) {
       this.gridApi.refreshCells({
         rowNodes: [targetNode],
@@ -3083,11 +2709,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     const row = item?.row;
     const skuField = item?.skuField;
-    const rowId =
-      row?.materialKey ??
-      row?.newRowId ??
-      row?.[FIELD_PART_NUMBER] ??
-      row?.part;
+    const rowId = this.utilService.getRowId(row);
     if (rowId !== undefined && rowId !== null && String(rowId).trim() !== '') {
       this.clearRowEditStateIfReverted(rowId, row);
     }
@@ -3128,22 +2750,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   /** Key for disconnectedSkuKeys: rowId|skuField. Used for strikethrough and payload. */
   private getDisconnectRowToken(row: any): string {
-    const stableId = row?.materialKey ?? row?.newRowId;
-    if (stableId !== undefined && stableId !== null && String(stableId).trim() !== '') {
-      return String(stableId);
-    }
-
-    const part = String(row?.[FIELD_PART_NUMBER] ?? row?.part ?? '').trim();
-    const section = String(row?.section ?? '').trim();
-    if (section && part) {
-      return `${section}::${part}`;
-    }
-    return part;
+    return this.utilService.getStableRowToken(row);
   }
 
   /** Key for disconnectedSkuKeys: rowToken|skuField. Used for strikethrough and payload. */
   getDisconnectedKey(row: any, skuField: string): string {
-    return `${this.getDisconnectRowToken(row)}|${skuField}`;
+    return this.skuService.buildDisconnectedKey(this.getDisconnectRowToken(row), skuField);
   }
 
   isSkuDisconnected(row: any, skuField: string): boolean {
@@ -3152,25 +2764,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   /** True if SKU (from skuInfo) has isEditable === true; only then show disconnect cross and allow disconnect action. */
   isSkuEditableForDisconnect(skuField: string): boolean {
-    const skuInfo = this.getFilteredSkuInfo();
-    const sku = skuInfo.find((s: any) => `sku${s.skuId}` === skuField);
-    return sku?.isEditable === true;
+    return this.skuService.isSkuEditableForDisconnect(this.getFilteredSkuInfo(), skuField);
   }
 
   /** For tooltip: list of SKU names/labels that have values in this row. */
   getConnectedSkuLabelsForRow(row: any): string[] {
-    if (!row) return [];
-    const skuInfo = this.getFilteredSkuInfo();
-    const labels: string[] = [];
-    skuInfo.forEach((sku: any) => {
-      const skuField = `sku${sku.skuId}`;
-      const val = row[skuField];
-      if (val != null && String(val).trim() !== '') {
-        const label = sku.skuName || sku.name || sku.skuId || skuField;
-        labels.push(label);
-      }
-    });
-    return labels;
+    return this.skuService.getConnectedSkuLabelsForRow(row, this.getFilteredSkuInfo());
   }
 
   closeDisconnectedSkusPanel(): void {
@@ -3179,23 +2778,13 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   /** List of disconnected SKUs for the panel: part, skuId, and reconnect metadata. */
   getDisconnectedSkuList(): { part: string; skuId: string; key: string; row: any; skuField: string }[] {
-    const list: { part: string; skuId: string; key: string; row: any; skuField: string }[] = [];
-    if (!this.gridApi || this.disconnectedSkuKeys.size === 0) return list;
-    const skuInfo = this.getFilteredSkuInfo();
-
-    this.gridApi.forEachNode((node: any) => {
-      const row = node?.data;
-      if (!row || (!row.isDirectRow && !row.isSubRow && !row.isNewRow)) return;
-      const part = String(row[FIELD_PART_NUMBER] ?? row.part ?? '—').trim() || '—';
-      skuInfo.forEach((sku: any) => {
-        const skuField = `sku${sku.skuId}`;
-        const key = this.getDisconnectedKey(row, skuField);
-        if (this.disconnectedSkuKeys.has(key)) {
-          list.push({ part, skuId: String(sku.skuId), key, row, skuField });
-        }
-      });
+    return this.skuService.getDisconnectedSkuList({
+      gridApi: this.gridApi,
+      skuInfo: this.getFilteredSkuInfo(),
+      disconnectedSkuKeys: this.disconnectedSkuKeys,
+      getDisconnectedKey: (row, skuField) => this.getDisconnectedKey(row, skuField),
+      isEligibleRow: (row) => !!row && (row.isDirectRow || row.isSubRow || row.isNewRow),
     });
-    return list;
   }
 
   closeMassEditMode(): void {
@@ -3275,7 +2864,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     const selectedNodes = this.gridApi.getSelectedNodes();
     const skuInfo = this.getFilteredSkuInfo();
-    const skuFields: string[] = skuInfo.map((sku) => `sku${sku.skuId}`);
+    const skuFields: string[] = this.skuService.getFieldNames(skuInfo);
     const nodesToUpdate: any[] = [];
 
     selectedNodes.forEach((node: any) => {
@@ -3288,8 +2877,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       skuFields.forEach((skuField) => {
         if (
           this.isSkuEditableForDisconnect(skuField) &&
-          rowData[skuField] != null &&
-          String(rowData[skuField]).trim() !== ''
+          this.skuService.hasValue(rowData[skuField])
         ) {
           this.disconnectedSkuKeys.add(this.getDisconnectedKey(rowData, skuField));
           hasChanges = true;
@@ -3299,11 +2887,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       if (hasChanges) {
         this.hasDisconnectEdits = true;
         this.showDisconnectedSkusPanel = true;
-        const rowId =
-          rowData.materialKey ??
-          rowData.newRowId ??
-          rowData[FIELD_PART_NUMBER] ??
-          rowData.part;
+        const rowId = this.utilService.getRowId(rowData);
         if (rowId) this.editedRows.add(rowId);
         nodesToUpdate.push(node);
       }

@@ -26,6 +26,7 @@ import {
 } from '../constants';
 import { DataService } from './data.service';
 import { GridConfigService } from './grid/grid-config.service';
+import { SkuService } from './sku.service';
 import { UtilService } from './util.service';
 
 export interface TransformGridDataToApiOptions {
@@ -44,6 +45,7 @@ export class PayloadTransformService {
     private readonly dataService: DataService,
     private readonly utilService: UtilService,
     private readonly gridConfigService: GridConfigService,
+    private readonly skuService: SkuService,
   ) {}
 
   private resolveChildId(row: any): string | null {
@@ -78,28 +80,22 @@ export class PayloadTransformService {
     options?: { disconnectedSkuKeys?: Set<string>; getDisconnectedKey?: (row: any, skuField: string) => string }
   ): any[] {
     const skus: any[] = [];
-    const allowedSkuIds = new Set<string>(skuInfo.map((sku: any) => String(sku.skuId)));
+    const allowedSkuIds = this.skuService.createAllowedSkuIdSet(skuInfo);
     const isNewRow = row.isNewRow;
     const disconnectedSkuKeys = options?.disconnectedSkuKeys;
     const getDisconnectedKey = options?.getDisconnectedKey;
     const getSkuValue = (skuFieldName: string): any => {
-      if (
-        disconnectedSkuKeys &&
-        getDisconnectedKey &&
-        disconnectedSkuKeys.has(getDisconnectedKey(row, skuFieldName))
-      ) {
-        return '';
-      }
-      return row[skuFieldName];
+      const disconnectedKey =
+        disconnectedSkuKeys && getDisconnectedKey ? getDisconnectedKey(row, skuFieldName) : undefined;
+      return this.skuService.getSkuValueWithDisconnectState({
+        row,
+        skuFieldName,
+        disconnectedSkuKeys,
+        disconnectedKey,
+      });
     };
 
     if (isNewRow) {
-      const hasSkuValue = (v: any) => {
-        if (v === undefined || v === null) return false;
-        const s = String(v).trim();
-        return s !== '';
-      };
-
       let resolvedSection = row.section || '';
       resolvedSection = this.resolveSectionFromRow(row, apiData, resolvedSection);
 
@@ -126,26 +122,19 @@ export class PayloadTransformService {
       }
 
       const hasMatchingRows = matchingRows.length > 0;
-      let hasAnySkuValue = false;
-      skuInfo.forEach((sku) => {
-        const skuFieldName = `sku${sku.skuId}`;
-        const skuValue = row[skuFieldName];
-        if (hasSkuValue(skuValue)) {
-          hasAnySkuValue = true;
-        }
-      });
+      const hasAnySkuValue = this.skuService.hasAnySelectedSku(row, skuInfo);
 
       skuInfo.forEach((sku) => {
-        const skuFieldName = `sku${sku.skuId}`;
-        const skuValue = row[skuFieldName];
+        const skuFieldName = this.skuService.toFieldName(sku.skuId);
+        const skuValue = getSkuValue(skuFieldName);
 
-        if (!hasAnySkuValue || hasSkuValue(skuValue)) {
+        if (!hasAnySkuValue || this.skuService.hasValue(skuValue)) {
           let existingSku: any = null;
 
           if (hasMatchingRows) {
             for (const matchRow of matchingRows) {
               if (matchRow.allSkus && Array.isArray(matchRow.allSkus)) {
-                existingSku = matchRow.allSkus.find((s: any) => s.skuId === sku.skuId);
+                existingSku = this.skuService.findMatchingSku(matchRow.allSkus, sku.skuId);
                 if (existingSku) {
                   break;
                 }
@@ -201,11 +190,9 @@ export class PayloadTransformService {
                   : true;
 
                 if (isSectionMatch && isFeatureMatch && isPartMatch) {
-                  if (bomLink.skus && Array.isArray(bomLink.skus)) {
-                    existingSku = bomLink.skus.find((s: any) => s.skuId === sku.skuId);
-                    if (existingSku) {
-                      break;
-                    }
+                  existingSku = this.skuService.findMatchingSku(bomLink.skus, sku.skuId);
+                  if (existingSku) {
+                    break;
                   }
                 }
               }
@@ -228,10 +215,10 @@ export class PayloadTransformService {
     } else {
       if (!row.allSkus || !Array.isArray(row.allSkus) || row.allSkus.length === 0) {
         skuInfo.forEach((sku) => {
-          const skuFieldName = `sku${sku.skuId}`;
+          const skuFieldName = this.skuService.toFieldName(sku.skuId);
           const skuValue = getSkuValue(skuFieldName);
 
-          if (skuValue !== undefined && skuValue !== null && String(skuValue).trim() !== '') {
+          if (this.skuService.hasValue(skuValue)) {
             skus.push({
               ...sku,
               value: String(skuValue),
@@ -243,16 +230,16 @@ export class PayloadTransformService {
       }
 
       row.allSkus.forEach((originalSku: any) => {
-        if (!allowedSkuIds.has(String(originalSku.skuId))) {
+        if (!allowedSkuIds.has(this.skuService.normalizeSkuId(originalSku.skuId))) {
           return;
         }
-        const skuFieldName = `sku${originalSku.skuId}`;
+        const skuFieldName = this.skuService.toFieldName(originalSku.skuId);
         const currentValue = getSkuValue(skuFieldName);
 
         skus.push({
           ...originalSku,
           value:
-            currentValue !== undefined && currentValue !== null && String(currentValue).trim() !== ''
+            this.skuService.hasValue(currentValue)
               ? String(currentValue)
               : originalSku.value || '',
         });
@@ -427,7 +414,7 @@ export class PayloadTransformService {
     const skuInfo = Array.isArray(skuInfoOverride)
       ? skuInfoOverride
       : this.dataService.getSkuInfo();
-    const allowedSkuIds = new Set<string>(skuInfo.map((sku: any) => String(sku.skuId)));
+    const allowedSkuIds = this.skuService.createAllowedSkuIdSet(skuInfo);
     const bomType = this.dataService.getBomTypeFromResponse() || this.dataService.getBomType();
     const isEbom = bomType === BOM_TYPE_EBOM || bomType === BOM_TYPE_MATERIALMBOM;
 
@@ -669,20 +656,22 @@ export class PayloadTransformService {
 
         if (row.allSkus && Array.isArray(row.allSkus) && row.allSkus.length > 0) {
           const filteredSkus = row.allSkus.filter((originalSku: any) =>
-            allowedSkuIds.has(String(originalSku.skuId))
+            allowedSkuIds.has(this.skuService.normalizeSkuId(originalSku.skuId))
           );
           bomLink.skus = filteredSkus.map((originalSku: any) => {
-            const skuFieldName = `sku${originalSku.skuId}`;
-            const isDisconnected =
-              disconnectedSkuKeys &&
-              getDisconnectedKey &&
-              disconnectedSkuKeys.has(getDisconnectedKey(currentRow, skuFieldName));
-            const rawValue = currentRow[skuFieldName];
-            const currentValue = isDisconnected
-              ? ''
-              : rawValue !== undefined && rawValue !== null
-                ? String(rawValue)
-                : originalSku.value || '';
+            const skuFieldName = this.skuService.toFieldName(originalSku.skuId);
+            const disconnectedKey =
+              disconnectedSkuKeys && getDisconnectedKey
+                ? getDisconnectedKey(currentRow, skuFieldName)
+                : undefined;
+            const rawValue = this.skuService.getSkuValueWithDisconnectState({
+              row: currentRow,
+              skuFieldName,
+              disconnectedSkuKeys,
+              disconnectedKey,
+            });
+            const currentValue =
+              rawValue !== undefined && rawValue !== null ? String(rawValue) : originalSku.value || '';
 
             return {
               ...originalSku,
@@ -709,9 +698,12 @@ export class PayloadTransformService {
         !!disconnectedSkuKeys &&
         disconnectedSkuKeys.size > 0 &&
         ((!!getDisconnectedKey &&
-          skuInfo.some((sku: any) =>
-            disconnectedSkuKeys.has(getDisconnectedKey(currentRow, `sku${sku.skuId}`))
-          )) ||
+          this.skuService.hasDisconnectedSkuForRow({
+            row: currentRow,
+            skuInfo,
+            disconnectedSkuKeys,
+            getDisconnectedKey,
+          })) ||
           [...disconnectedSkuKeys].some((k) => k.startsWith(String(rowId) + '|')));
       if (rowHasDisconnect) {
         bomLink.disconnect = true;
@@ -763,8 +755,9 @@ export class PayloadTransformService {
     const uniqueSkusMap = new Map<string, any>();
 
     skuInfoData.forEach((sku: any) => {
-      if (sku.skuId && allowedSkuIds.has(String(sku.skuId))) {
-        uniqueSkusMap.set(sku.skuId, { ...sku });
+      const normalizedSkuId = this.skuService.normalizeSkuId(sku?.skuId);
+      if (normalizedSkuId && allowedSkuIds.has(normalizedSkuId)) {
+        uniqueSkusMap.set(normalizedSkuId, { ...sku });
       }
     });
 
@@ -772,9 +765,10 @@ export class PayloadTransformService {
       const bomLink = instance[BOM_LINK_KEY];
       if (bomLink.skus && Array.isArray(bomLink.skus)) {
         bomLink.skus.forEach((sku: any) => {
-          if (sku.skuId && allowedSkuIds.has(String(sku.skuId))) {
-            if (!uniqueSkusMap.has(sku.skuId)) {
-              uniqueSkusMap.set(sku.skuId, { ...sku });
+          const normalizedSkuId = this.skuService.normalizeSkuId(sku?.skuId);
+          if (normalizedSkuId && allowedSkuIds.has(normalizedSkuId)) {
+            if (!uniqueSkusMap.has(normalizedSkuId)) {
+              uniqueSkusMap.set(normalizedSkuId, { ...sku });
             }
           }
         });
