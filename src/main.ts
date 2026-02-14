@@ -23,6 +23,7 @@ import {
   RowStyleModule,
   TooltipModule,
   ColumnHoverModule,
+  HighlightChangesModule,
 } from 'ag-grid-community';
 import { environment } from './environments/environment';
 
@@ -48,6 +49,7 @@ ModuleRegistry.registerModules([
   RowStyleModule,
   TooltipModule,
   ColumnHoverModule,
+  HighlightChangesModule,
 ]);
 
 bootstrapApplication(App, appConfig).catch((err) => {
