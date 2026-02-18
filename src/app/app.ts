@@ -112,7 +112,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public draggedColumn: ExtendedColDef | null = null;
   public draggedColumnIndex: number = -1;
   public dragOverIndex: number = -1;
-  public panelColumnOrder: ExtendedColDef[] = []; // Track column order in panel
+  public panelColumnOrder: ExtendedColDef[] = []; // Used by moveColumn; kept in sync from grid
   private autoScrollInterval: any = null;
   private readonly AUTO_SCROLL_THRESHOLD = 50; // pixels from edge
   private readonly AUTO_SCROLL_SPEED = 10; // pixels per interval
@@ -121,7 +121,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('toggleBtn') toggleBtn!: ElementRef;
   @ViewChild('groupByPanel') groupByPanel!: ElementRef;
   @ViewChild('groupByBtn') groupByBtn!: ElementRef;
-  @ViewChild('skuFilterDropdown') skuFilterDropdown!: ElementRef;
   @ViewChild('columnCheckboxes') columnCheckboxes!: ElementRef;
   @ViewChild('actionDropdown') actionDropdown!: ElementRef;
   public showExpiredData = false;
@@ -141,15 +140,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public bomNamesFull: string = '';
   public bomType: string = '';
   public selectedSkuFilter: SkuFilterOption = 'all';
-  public showSkuFilterDropdown = false;
+  public isSkuFilterSelectOpen = false;
   public showActionDropdown = false;
-  public get mbomSkuFilterOptions(): Array<{ label: string; value: MbomSkuFilterOption }> {
-    return this.dataService.getMbomSkuFilterOptions();
-  }
-
-  public get sbomSkuFilterOptions(): Array<{ label: string; value: SbomSkuFilterOption }> {
-    return this.dataService.getSbomSkuFilterOptions();
-  }
+  public readonly mbomSkuFilterOptions: Array<{ label: string; value: MbomSkuFilterOption }>;
+  public readonly sbomSkuFilterOptions: Array<{ label: string; value: SbomSkuFilterOption }>;
 
   public get skuFilterOptions(): Array<{ label: string; value: SkuFilterOption }> {
     return this.isMbomMode() ? this.mbomSkuFilterOptions : this.sbomSkuFilterOptions;
@@ -212,6 +206,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     @Inject(DOCUMENT) private readonly document: Document,
     private readonly renderer: Renderer2,
   ) {
+    this.mbomSkuFilterOptions = this.dataService.getMbomSkuFilterOptions();
+    this.sbomSkuFilterOptions = this.dataService.getSbomSkuFilterOptions();
+
     this.gridOptions.context = {
       componentParent: this,
       dataService: this.dataService,
@@ -638,25 +635,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     );
   }
 
-  public toggleSkuFilterDropdown(): void {
-    this.showSkuFilterDropdown = !this.showSkuFilterDropdown;
-  }
-
-  public selectSkuFilterOption(option: SkuFilterOption): void {
-    if (this.dataService.isSkuFilterOptionDisabled(option, () => this.isMbomMode())) {
-      return;
-    }
-
-    this.selectedSkuFilter = option;
-    this.showSkuFilterDropdown = false;
-    this.onSkuFilterChange();
-  }
-
   public onSkuFilterChange(): void {
-    this.showSkuFilterDropdown = false;
-    if (
-      this.dataService.isSkuFilterOptionDisabled(this.selectedSkuFilter, () => this.isMbomMode())
-    ) {
+    this.isSkuFilterSelectOpen = false;
+
+    if (this.dataService.isSkuFilterOptionDisabled(this.selectedSkuFilter, () => this.isMbomMode())) {
       this.selectedSkuFilter = 'all';
     }
 
@@ -673,6 +655,16 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         this.massEditMode = false;
       }
     }
+  }
+
+  public onSkuFilterSelectPointerDown(event: PointerEvent): void {
+    if (event.button === 0) {
+      this.isSkuFilterSelectOpen = true;
+    }
+  }
+
+  public onSkuFilterSelectBlur(): void {
+    this.isSkuFilterSelectOpen = false;
   }
 
   /**
@@ -921,6 +913,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     return this.gridService.getVisibleColumnsForPanel(this.getColumnVisibilityConfig());
   }
 
+  trackByColumnField(_index: number, col: ExtendedColDef): string {
+    return col?.field ?? col?.colId ?? '';
+  }
+
   onColumnMouseDown(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     if (target.closest('input[type="checkbox"]') || target.closest('label')) {
@@ -1080,7 +1076,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
 
     const targetColumn = visibleColumns[targetIndex];
-    if (!targetColumn?.field) {
+    const targetColumnId = targetColumn?.field ?? targetColumn?.colId;
+    if (!targetColumnId) {
       this.resetDragState();
       return;
     }
@@ -1110,7 +1107,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const target = event.target as Element;
     this.utilService.handlePanelClickOutside(target, this.showColumnVisibilityPanel, this.columnPanel, this.toggleBtn, (value) => { this.showColumnVisibilityPanel = value; });
     this.utilService.handlePanelClickOutside(target, this.showGroupByPanel, this.groupByPanel, this.groupByBtn, (value) => { this.showGroupByPanel = value; });
-    this.utilService.handleDropdownClickOutside(target, this.showSkuFilterDropdown, this.skuFilterDropdown, (value) => { this.showSkuFilterDropdown = value; });
     this.utilService.handleDropdownClickOutside(target, this.showActionDropdown, this.actionDropdown, (value) => { this.showActionDropdown = value; });
   }
 
@@ -2343,8 +2339,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
         childList: true,
         subtree: true,
       });
-    } catch (e) {
-      console.warn('MutationObserver creation failed:', e);
+    } catch {
       cleanup();
     }
 

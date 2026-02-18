@@ -1093,7 +1093,6 @@ export class RowManagementService {
           componentInstance.applyGridSearch();
         }
       } catch (error) {
-        console.warn('Failed to apply grid search after save, using local update:', error);
         this.updateLocalRowDataAfterSave(rowData, componentInstance, editedRows);
       }
     } else {

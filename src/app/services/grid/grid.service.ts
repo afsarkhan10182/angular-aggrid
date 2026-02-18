@@ -19,7 +19,7 @@ import {
 } from '../../constants';
 import { DOCUMENT } from '@angular/common';
 import { Inject, Injectable } from '@angular/core';
-import { ColDef, GridApi } from 'ag-grid-community';
+import { ColDef, ColumnState, GridApi } from 'ag-grid-community';
 import { DataService } from '../data.service';
 import { GridConfigService } from './grid-config.service';
 import { SkuService } from '../sku.service';
@@ -968,69 +968,78 @@ export class GridService {
     });
   }
 
-  getVisibleColumnsForPanel(config: ColumnVisibilityConfig): ExtendedColDef[] {
-    if (config.panelColumnOrder.length > 0) {
-      return config.panelColumnOrder.filter(
-        (col) =>
-          col?.field &&
-          !config.isSkuColumn(col) &&
-          !config.isFieldGrouped(col.field) &&
-          col.field !== COL_CHECKBOX,
-      );
-    }
+  /**
+   * Same filter as the panel list: only columns that are shown in the Visible Columns panel.
+   * Used so panel order updates use the same list as the displayed list (indices match).
+   */
+  private getColumnId(col?: { field?: string; colId?: string } | null): string | null {
+    return col?.field ?? col?.colId ?? null;
+  }
 
-    if (!config.gridApi) {
-      const columns = config.allColumns.filter(
-        (col) => col.field && !config.isSkuColumn(col) && !config.isFieldGrouped(col.field),
-      );
-      config.setPanelColumnOrder([...columns]);
-      return columns;
-    }
+  private isPanelEligibleColumn(config: ColumnVisibilityConfig, col?: ExtendedColDef | null): boolean {
+    const colId = this.getColumnId(col);
+    if (!colId || !col) return false;
+    return !config.isSkuColumn(col) && !config.isFieldGrouped(colId) && colId !== COL_CHECKBOX;
+  }
 
-    const gridColumns = config.gridApi.getColumns();
-    if (!gridColumns || gridColumns.length === 0) {
-      const columns = config.allColumns.filter(
-        (col) => col.field && !config.isSkuColumn(col) && !config.isFieldGrouped(col.field),
-      );
-      config.setPanelColumnOrder([...columns]);
-      return columns;
-    }
-
+  private getColumnDefMap(columns: ExtendedColDef[]): Map<string, ExtendedColDef> {
     const colDefMap = new Map<string, ExtendedColDef>();
-    config.allColumns.forEach((colDef) => {
-      const field = colDef.field || colDef.colId;
-      if (field) {
-        colDefMap.set(field, colDef);
+    columns.forEach((colDef) => {
+      const colId = this.getColumnId(colDef);
+      if (colId) {
+        colDefMap.set(colId, colDef);
       }
     });
+    return colDefMap;
+  }
 
-    const orderedColumns = gridColumns
-      .map((gridCol) => {
-        const colId = gridCol.getColId();
-        return colDefMap.get(colId);
-      })
-      .filter((colDef): colDef is ExtendedColDef => {
-        if (!colDef?.field) return false;
-        return (
-          !config.isSkuColumn(colDef) &&
-          !config.isFieldGrouped(colDef.field) &&
-          colDef.field !== COL_CHECKBOX
-        );
+  private getPanelColumnIdsFromState(
+    config: ColumnVisibilityConfig,
+    columnState: ColumnState[],
+    colDefMap: Map<string, ExtendedColDef>,
+  ): string[] {
+    return columnState
+      .map((state) => state.colId)
+      .filter((colId) => {
+        const colDef = colDefMap.get(colId);
+        return this.isPanelEligibleColumn(config, colDef);
       });
+  }
 
-    config.setPanelColumnOrder([...orderedColumns]);
-    return orderedColumns;
+  private getPanelVisibleColumns(config: ColumnVisibilityConfig, fromColumns: ExtendedColDef[]): ExtendedColDef[] {
+    return fromColumns.filter((col) => this.isPanelEligibleColumn(config, col));
+  }
+
+  /**
+   * Always use the grid as the source of truth for column order.
+   * Returns columns in the same order as AG Grid column state.
+   */
+  getVisibleColumnsForPanel(config: ColumnVisibilityConfig): ExtendedColDef[] {
+    if (config.gridApi) {
+      const columnState = config.gridApi.getColumnState();
+      if (columnState && columnState.length > 0) {
+        const colDefMap = this.getColumnDefMap(config.allColumns);
+        const panelColumnIds = this.getPanelColumnIdsFromState(config, columnState, colDefMap);
+        return panelColumnIds
+          .map((colId) => colDefMap.get(colId))
+          .filter((colDef): colDef is ExtendedColDef => !!colDef);
+      }
+    }
+
+    if (config.panelColumnOrder.length > 0) {
+      return this.getPanelVisibleColumns(config, config.panelColumnOrder);
+    }
+
+    return this.getPanelVisibleColumns(config, config.allColumns);
   }
 
   selectAllColumns(config: ColumnVisibilityConfig): void {
     if (!config.gridApi) return;
 
-    const columnsToShow = config.allColumns.filter(
-      (col) => col.field && !config.isSkuColumn(col) && !config.isFieldGrouped(col.field),
-    );
+    const columnsToShow = this.getPanelVisibleColumns(config, config.allColumns);
     const fieldsToShow = columnsToShow
-      .map((col) => col.field)
-      .filter((field): field is string => field !== undefined && field !== null);
+      .map((col) => this.getColumnId(col))
+      .filter((field): field is string => !!field);
 
     if (fieldsToShow.length > 0) {
       config.gridApi.setColumnsVisible(fieldsToShow, true);
@@ -1043,12 +1052,10 @@ export class GridService {
   clearAllColumns(config: ColumnVisibilityConfig): void {
     if (!config.gridApi) return;
 
-    const columnsToHide = config.allColumns.filter(
-      (col) => col.field && !config.isSkuColumn(col) && !config.isFieldGrouped(col.field),
-    );
+    const columnsToHide = this.getPanelVisibleColumns(config, config.allColumns);
     const fieldsToHide = columnsToHide
-      .map((col) => col.field)
-      .filter((field): field is string => field !== undefined && field !== null);
+      .map((col) => this.getColumnId(col))
+      .filter((field): field is string => !!field);
 
     if (fieldsToHide.length > 0) {
       config.gridApi.setColumnsVisible(fieldsToHide, false);
@@ -1065,10 +1072,11 @@ export class GridService {
   ): void {
     if (!config.gridApi) return;
 
+    const colId = this.getColumnId(col);
     if (col.isVirtual) {
       col.hide = !visible;
-    } else if (col.field) {
-      config.gridApi.setColumnsVisible([col.field], visible);
+    } else if (colId) {
+      config.gridApi.setColumnsVisible([colId], visible);
       col.hide = !visible;
     }
   }
@@ -1080,33 +1088,67 @@ export class GridService {
     targetIndex: number,
     config: ColumnVisibilityConfig,
   ): void {
-    if (!config.gridApi || !draggedCol.field || !targetCol.field) return;
+    if (!config.gridApi) return;
 
-    const allColumns = config.gridApi.getColumns();
-    if (!allColumns || allColumns.length === 0) return;
+    const draggedColId = draggedCol.field ?? draggedCol.colId;
+    const targetColId = targetCol.field ?? targetCol.colId;
+    if (!draggedColId || !targetColId || draggedColId === targetColId) return;
 
-    const draggedColObj = config.gridApi.getColumn(draggedCol.field);
-    const targetColObj = config.gridApi.getColumn(targetCol.field);
+    const columnState = config.gridApi.getColumnState();
+    if (!columnState || columnState.length === 0) return;
 
-    if (!draggedColObj || !targetColObj) return;
+    const colDefMap = this.getColumnDefMap(config.allColumns);
+    const panelOrderFromGrid = this.getPanelColumnIdsFromState(config, columnState, colDefMap);
 
-    const draggedIndexInGrid = allColumns.indexOf(draggedColObj);
-    const targetIndexInGrid = allColumns.indexOf(targetColObj);
+    if (panelOrderFromGrid.length === 0) return;
 
-    if (draggedIndexInGrid === -1 || targetIndexInGrid === -1) return;
+    const fromIndexInPanel = panelOrderFromGrid.indexOf(draggedColId);
+    const toIndexInPanel = panelOrderFromGrid.indexOf(targetColId);
+    const fromIndex = fromIndexInPanel !== -1 ? fromIndexInPanel : draggedIndex;
+    const toIndex = toIndexInPanel !== -1 ? toIndexInPanel : targetIndex;
 
-    const newIndex =
-      draggedIndexInGrid < targetIndexInGrid
-        ? targetIndexInGrid + 1
-        : targetIndexInGrid;
+    if (
+      fromIndex < 0 ||
+      toIndex < 0 ||
+      fromIndex >= panelOrderFromGrid.length ||
+      toIndex >= panelOrderFromGrid.length
+    ) {
+      return;
+    }
 
-    config.gridApi.moveColumns([draggedColObj], newIndex);
+    const reorderedPanelIds = [...panelOrderFromGrid];
+    const [movedColId] = reorderedPanelIds.splice(fromIndex, 1);
+    if (!movedColId) return;
+    reorderedPanelIds.splice(toIndex, 0, movedColId);
 
-    const newPanelOrder = [...config.panelColumnOrder];
-    const draggedItem = newPanelOrder[draggedIndex];
-    newPanelOrder.splice(draggedIndex, 1);
-    newPanelOrder.splice(targetIndex, 0, draggedItem);
-    config.setPanelColumnOrder(newPanelOrder);
+    // Apply order to the full column state so AG Grid header order changes reliably.
+    const panelIdSet = new Set(panelOrderFromGrid);
+    let panelCursor = 0;
+    const reorderedFullIds = columnState.map((state) => {
+      if (!panelIdSet.has(state.colId)) {
+        return state.colId;
+      }
+      const reorderedId = reorderedPanelIds[panelCursor];
+      panelCursor += 1;
+      return reorderedId ?? state.colId;
+    });
+
+    const stateById = new Map<string, ColumnState>(
+      columnState.map((state) => [state.colId, state]),
+    );
+    const reorderedState = reorderedFullIds
+      .map((colId) => stateById.get(colId))
+      .filter((state): state is ColumnState => !!state);
+
+    config.gridApi.applyColumnState({
+      state: reorderedState,
+      applyOrder: true,
+    });
+
+    const reorderedPanelDefs = reorderedPanelIds
+      .map((colId) => colDefMap.get(colId))
+      .filter((colDef): colDef is ExtendedColDef => !!colDef);
+    config.setPanelColumnOrder(reorderedPanelDefs);
   }
 
   private renderSkuCell(params: any, config: any): string {

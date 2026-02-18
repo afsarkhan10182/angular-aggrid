@@ -419,15 +419,25 @@
   background-color: #fee2e2 !important;
 }
 
-/* Search Filter Section Styling */
-.search-filter-section {
+/* Search Filter Section Styling - :host scopes to app so these override global and prevent overlap */
+:host .controls-section {
+  position: relative;
+  z-index: 3000;
+  overflow: visible;
+}
+
+:host .search-filter-section {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: visible;
 }
 
-.search-filter-container {
+:host .search-filter-container {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -439,9 +449,11 @@
   transition: all 0.2s ease;
   white-space: nowrap;
   max-width: 320px;
+  min-width: 0;
+  flex-shrink: 0;
 }
 
-.sku-filter-container {
+:host .sku-filter-container {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -452,20 +464,25 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
   white-space: nowrap;
-  max-width: 320px;
+  max-width: none;
+  min-width: 0;
+  flex-shrink: 0;
+  overflow: visible;
+  position: relative;
+  z-index: 3010;
 }
 
-.search-filter-container:hover {
+:host .search-filter-container:hover {
   border-color: #3b82f6;
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
 }
 
-.sku-filter-container:hover {
+:host .sku-filter-container:hover {
   border-color: #3b82f6;
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
 }
 
-.search-input-wrapper {
+:host .search-input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
@@ -476,120 +493,80 @@
   transition: all 0.2s ease;
   flex: 1;
   height: 30px;
-  min-width: 200px;
+  min-width: 120px;
+  max-width: 100%;
 }
 
-.sku-filter-label {
+:host .sku-filter-label {
   font-size: 13px;
   font-weight: 600;
   color: #374151;
+  flex-shrink: 0;
 }
 
-.sku-filter-dropdown {
+:host .sku-filter-select-wrapper {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 200px;
+  min-width: 200px;
+  max-width: 200px;
 }
 
-.sku-filter-trigger {
+:host .sku-filter-select {
   height: 30px;
   border: 1px solid #e5e7eb;
   border-radius: 4px;
   background: #f9fafb;
   font-size: 13px;
-  padding: 0 8px;
+  padding: 0 30px 0 8px;
   color: #111827;
   outline: none;
   cursor: pointer;
-  min-width: 180px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  line-height: 1.2;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
-.sku-filter-trigger:focus {
+:host .sku-filter-select:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
-.sku-filter-trigger-label {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+:host .sku-filter-select option:disabled {
+  color: #9ca3af;
 }
 
-.sku-filter-caret {
-  font-size: 16px;
-  color: #6b7280;
-  transition: transform 0.2s ease;
-  display: inline-block;
-}
-
-.sku-filter-caret.rotated {
-  transform: rotate(180deg);
-}
-
-.sku-filter-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  z-index: 20;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
-  padding: 4px 0;
-  max-height: 220px;
-  overflow-y: auto;
-  list-style: none;
-  margin: 0;
-}
-
-.sku-filter-option {
-  margin: 0;
-  padding: 0;
-}
-
-.sku-filter-option-button {
-  width: 100%;
-  padding: 6px 10px;
-  font-size: 13px;
-  color: #111827;
-  cursor: pointer;
-  white-space: nowrap;
-  text-align: left;
-  background: transparent;
-  border: none;
-  outline: none;
-}
-
-.sku-filter-option:hover .sku-filter-option-button,
-.sku-filter-option.selected .sku-filter-option-button {
-  background: #f0f9ff;
-  color: #1e40af;
-}
-
-.sku-filter-option.selected .sku-filter-option-button {
+:host .sku-filter-select option:checked {
+  background: #dbeafe;
+  color: #1e3a8a;
   font-weight: 600;
 }
 
-.sku-filter-option.disabled .sku-filter-option-button {
-  color: #9ca3af;
-  cursor: not-allowed;
-  background: transparent;
+:host .sku-filter-select-arrow {
+  position: absolute;
+  right: 8px;
+  color: #6b7280;
+  pointer-events: none;
+  transition: transform 0.2s ease;
 }
 
-.sku-filter-option.disabled:hover .sku-filter-option-button {
-  background: transparent;
+:host .sku-filter-select-wrapper.open .sku-filter-select-arrow {
+  transform: rotate(180deg);
 }
 
-.search-input-wrapper:focus-within {
+:host .search-input-wrapper:focus-within {
   border-color: #3b82f6;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
-.search-input {
+:host .search-input {
   width: 100%;
+  min-width: 0;
   border: none;
   outline: none;
   font-size: 13px;
@@ -600,12 +577,12 @@
   padding-left: 10px;
 }
 
-.search-input::placeholder {
+:host .search-input::placeholder {
   color: #9ca3af;
   font-style: normal;
 }
 
-.clear-search-btn {
+:host .clear-search-btn {
   position: absolute;
   right: 6px;
   top: 50%;
@@ -624,12 +601,12 @@
   height: 20px;
 }
 
-.clear-search-btn:hover {
+:host .clear-search-btn:hover {
   background: #f3f4f6;
   color: #374151;
 }
 
-.search-filter-btn {
+:host .search-filter-btn {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
   border: none;
@@ -648,20 +625,21 @@
   height: 30px;
   width: 30px;
   min-width: 30px;
+  flex-shrink: 0;
 }
 
-.search-filter-btn:hover:not(:disabled) {
+:host .search-filter-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
   transform: translateY(-1px);
 }
 
-.search-filter-btn:active:not(:disabled) {
+:host .search-filter-btn:active:not(:disabled) {
   transform: translateY(0);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.search-filter-btn:disabled {
+:host .search-filter-btn:disabled {
   background: #d1d5db;
   color: #9ca3af;
   cursor: not-allowed;
@@ -669,13 +647,13 @@
   transform: none;
 }
 
-/* Responsive adjustments for the controls row */
-.controls-row {
+/* Responsive adjustments for the controls row - :host ensures app.css wins over global */
+:host .controls-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: nowrap;
-  gap: 30px;
+  flex-wrap: wrap;
+  gap: 16px;
   margin-bottom: 16px;
   padding: 12px 16px;
   background: #fafbfc;
@@ -684,8 +662,73 @@
   min-height: 60px;
 }
 
+/* Prevent search and SKU view overlapping: allow wrap and shrink */
+@media (max-width: 1200px) and (min-width: 769px) {
+  :host .controls-row {
+    gap: 12px;
+  }
+
+  :host .left-controls-group {
+    min-width: 0;
+    flex-basis: 100%;
+  }
+
+  :host .right-controls-group {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  :host .search-filter-section {
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
+  }
+
+  :host .search-filter-container {
+    max-width: 100%;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  :host .sku-filter-container {
+    max-width: 100%;
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+
+  :host .search-input-wrapper {
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 768px) {
+  :host .search-filter-section {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  :host .search-filter-container,
+  :host .sku-filter-container {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  :host .sku-filter-select-wrapper {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  :host .sku-filter-select {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
 /* Left Controls Group - Criteria and Search */
-.left-controls-group {
+:host .left-controls-group {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -694,9 +737,9 @@
   flex-shrink: 1;
 }
 
-.criteria-display {
+:host .criteria-display {
   flex: 0 1 auto;
-  min-width: 200px;
+  min-width: 120px;
   max-width: 500px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -706,25 +749,25 @@
 }
 
 /* Right Controls Group - Show Expired, Last Saved, Save */
-.right-controls-group {
+:host .right-controls-group {
   display: flex;
   align-items: center;
   gap: 12px;
   flex: 0 0 auto;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   white-space: nowrap;
 }
 
-.search-filter-section {
-  flex: 0 0 auto;
+:host .search-filter-section {
+  flex: 1 1 auto;
   display: flex;
   justify-content: flex-start;
-  max-width: 350px;
+  max-width: 100%;
   min-width: 0;
   gap: 10px;
 }
 
-.save-section {
+:host .save-section {
   flex: 0 0 auto;
   display: flex;
   align-items: center;

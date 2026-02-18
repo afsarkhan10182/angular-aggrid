@@ -56,47 +56,28 @@
             </button>
           </div>
           <div class="sku-filter-container" *ngIf="isMbomMode() && !isEbomMode() && !isMaterialMbomMode()">
-            <label class="sku-filter-label" for="sku-filter-trigger">SKU Views:</label>
-            <div #skuFilterDropdown class="sku-filter-dropdown">
-              <button
-                id="sku-filter-trigger"
-                type="button"
-                class="sku-filter-trigger"
-                (click)="toggleSkuFilterDropdown()"
-                [attr.aria-expanded]="showSkuFilterDropdown"
-                [attr.aria-haspopup]="true"
-                [attr.aria-controls]="showSkuFilterDropdown ? 'sku-filter-menu' : null"
-                aria-label="SKU filter dropdown"
+            <label class="sku-filter-label" for="sku-filter-select">SKU Views:</label>
+            <div class="sku-filter-select-wrapper" [class.open]="isSkuFilterSelectOpen">
+              <select
+                id="sku-filter-select"
+                class="sku-filter-select"
+                [(ngModel)]="selectedSkuFilter"
+                (pointerdown)="onSkuFilterSelectPointerDown($event)"
+                (change)="onSkuFilterChange()"
+                (blur)="onSkuFilterSelectBlur()"
+                (keydown.escape)="onSkuFilterSelectBlur()"
+                aria-label="SKU filter"
               >
-                <span class="sku-filter-trigger-label">
-                  {{ getSkuFilterLabel(selectedSkuFilter) }}
-                </span>
-                <span class="sku-filter-caret" [class.rotated]="showSkuFilterDropdown" aria-hidden="true">▾</span>
-              </button>
-              <ul
-                *ngIf="showSkuFilterDropdown"
-                id="sku-filter-menu"
-                class="sku-filter-menu"
-                aria-label="SKU filter options"
-              >
-                <li
+                <option
                   *ngFor="let option of skuFilterOptions"
-                  class="sku-filter-option"
-                  [class.selected]="option.value === selectedSkuFilter"
-                  [class.disabled]="isSkuFilterOptionDisabled(option.value)"
-                  [attr.title]="getSkuFilterOptionTooltip(option.value)"
+                  [value]="option.value"
+                  [disabled]="isSkuFilterOptionDisabled(option.value)"
+                  [title]="getSkuFilterOptionTooltip(option.value)"
                 >
-                  <button
-                    type="button"
-                    class="sku-filter-option-button"
-                    [disabled]="isSkuFilterOptionDisabled(option.value)"
-                    (click)="selectSkuFilterOption(option.value)"
-                    [attr.aria-selected]="option.value === selectedSkuFilter"
-                  >
-                    {{ option.label }}
-                  </button>
-                </li>
-              </ul>
+                  {{ option.label }}
+                </option>
+              </select>
+              <app-icon name="chevron-down" size="14" class="sku-filter-select-arrow"></app-icon>
             </div>
           </div>
         </div>
@@ -414,7 +395,7 @@
               (drop)="onDrop($event)"
               (dragleave)="stopAutoScroll()"
             >
-              <ng-container *ngFor="let col of getVisibleColumnsForPanel(); let i = index">
+              <ng-container *ngFor="let col of getVisibleColumnsForPanel(); let i = index; trackBy: trackByColumnField">
                 <!-- Drop indicator line -->
                 <div
                   *ngIf="dragOverIndex === i && draggedColumnIndex !== i && draggedColumnIndex < i"
