@@ -302,13 +302,7 @@
         <div class="ag-grid-container">
           <ag-grid-angular
             style="width: 100%"
-            [style.height]="
-              (massEditMode || hasDisconnectedSkusPanelVisible)
-                ? 'calc(100vh - 350px)'
-                : !!saveMessage
-                  ? 'calc(100vh - 250px)'
-                  : 'calc(100vh - 200px)'
-            "
+            [style.height]="gridViewportHeight"
             class="ag-theme-alpine"
             [gridOptions]="gridOptions"
             [columnDefs]="columnDefs"

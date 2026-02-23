@@ -177,6 +177,23 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     return this.isSbomMode() && this.disconnectedSkuKeys.size > 0 && this.showDisconnectedSkusPanel;
   }
 
+  private readonly gridHeightOffsets = {
+    default: 200,
+    withSaveMessage: 250,
+    withEditPanels: 350,
+  } as const;
+
+  public get gridViewportHeight(): string {
+    const offset =
+      this.massEditMode || this.hasDisconnectedSkusPanelVisible
+        ? this.gridHeightOffsets.withEditPanels
+        : this.saveMessage
+          ? this.gridHeightOffsets.withSaveMessage
+          : this.gridHeightOffsets.default;
+
+    return `max(320px, calc(100dvh - ${offset}px))`;
+  }
+
   public gridOptions: GridOptions = {} as GridOptions;
 
   public defaultColDef: any;
@@ -896,6 +913,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     } else {
       this.showColumnVisibilityPanel = !this.showColumnVisibilityPanel;
       if (this.showColumnVisibilityPanel) {
+        this.showGroupByPanel = false;
         this.panelColumnOrder = [];
       }
     }
@@ -1120,6 +1138,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   toggleGroupByPanel(): void {
     this.showGroupByPanel = !this.showGroupByPanel;
+    if (this.showGroupByPanel) {
+      this.showColumnVisibilityPanel = false;
+    }
   }
 
   addGroupField(field: GroupConfig): void {

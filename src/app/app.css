@@ -433,6 +433,7 @@
   gap: 10px;
   flex-wrap: wrap;
   min-width: 0;
+  max-width: 100%;
   flex: 1 1 auto;
   overflow: visible;
 }
@@ -472,11 +473,7 @@
   z-index: 3010;
 }
 
-:host .search-filter-container:hover {
-  border-color: #3b82f6;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
-}
-
+:host .search-filter-container:hover,
 :host .sku-filter-container:hover {
   border-color: #3b82f6;
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
@@ -756,15 +753,6 @@
   flex: 0 0 auto;
   flex-wrap: wrap;
   white-space: nowrap;
-}
-
-:host .search-filter-section {
-  flex: 1 1 auto;
-  display: flex;
-  justify-content: flex-start;
-  max-width: 100%;
-  min-width: 0;
-  gap: 10px;
 }
 
 :host .save-section {

@@ -1,7 +1,29 @@
 @import 'ag-grid-community/styles/ag-grid.css';
 @import 'ag-grid-community/styles/ag-theme-alpine.css';
 
-/* Basic reset */
+/* -----------------------------------------------------------------------------
+ * 00. Design Tokens
+ * -------------------------------------------------------------------------- */
+:root {
+  --app-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --color-bg-page: #f8fafc;
+  --color-bg-surface: #ffffff;
+  --color-bg-surface-alt: #f1f5f9;
+  --color-border-subtle: #e2e8f0;
+  --color-border-muted: #cbd5e1;
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #374151;
+  --color-text-muted: #64748b;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-raised: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --transition-standard: all 0.2s ease;
+}
+
+/* -----------------------------------------------------------------------------
+ * 01. Global Reset & Base
+ * -------------------------------------------------------------------------- */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -16,22 +38,41 @@ body {
   overflow: hidden;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: #f8fafc;
-  color: #1e293b;
+app-root {
+  display: block;
+  height: 100%;
 }
 
-/* App layout - Full viewport, no scroll */
+body {
+  font-family: var(--app-font-family);
+  background-color: var(--color-bg-page);
+  color: var(--color-text-primary);
+}
+
+/* -----------------------------------------------------------------------------
+ * 02. App Shell
+ * -------------------------------------------------------------------------- */
 .app-container {
   max-width: 1600px;
   margin: 0 auto;
   padding: 20px;
-  background: white;
+  background: var(--color-bg-surface);
   height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+/* Show outer page scroll only on narrower layouts where controls wrap */
+@media (max-width: 1300px) {
+  .app-container {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .app-header {
@@ -39,11 +80,11 @@ body {
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   padding: 8px 16px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border-subtle);
   position: relative;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, var(--color-bg-page) 0%, var(--color-bg-surface-alt) 100%);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
   gap: 8px;
   flex-shrink: 0;
 }
@@ -51,7 +92,7 @@ body {
 .app-header h2 {
   font-size: 20px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--color-text-primary);
   margin: 0;
   text-align: center;
   grid-column: 2;
@@ -80,19 +121,19 @@ body {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
   font-size: 14px;
-  color: #374151;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
+  color: var(--color-text-secondary);
+  box-shadow: var(--shadow-soft);
+  transition: var(--transition-standard);
 }
 
 .user-info:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: var(--color-bg-page);
+  border-color: var(--color-border-muted);
+  box-shadow: var(--shadow-raised);
 }
 
 .user-info i {
@@ -102,14 +143,14 @@ body {
 
 .username {
   font-weight: 500;
-  color: #1e293b;
+  color: var(--color-text-primary);
 }
 
 .nav-button {
   padding: 6px 12px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-standard);
   font-size: 13px;
   font-weight: 500;
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
@@ -132,17 +173,19 @@ body {
   box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
 }
 
-/* Controls Section - Clean layout */
+/* -----------------------------------------------------------------------------
+ * 03. Top Controls
+ * -------------------------------------------------------------------------- */
 .controls-section {
-  background: #f8fafc;
-  border-radius: 6px;
+  background: var(--color-bg-page);
+  border-radius: var(--radius-md);
   padding: 16px;
   margin-bottom: 0;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border-subtle);
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-raised);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -157,11 +200,11 @@ body {
 
 .criteria-display {
   padding: 10px 14px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  background: var(--color-bg-page);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
   font-size: 14px;
-  color: #374151;
+  color: var(--color-text-secondary);
   font-weight: 500;
   flex: 1;
   min-width: 300px;
@@ -182,11 +225,11 @@ body {
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
+  background: var(--color-bg-page);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
   font-size: 13px;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-weight: 500;
   min-width: 180px;
   max-width: 350px;
@@ -218,7 +261,7 @@ body {
   color: white;
   border: none;
   padding: 6px 12px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -259,10 +302,10 @@ body {
   justify-content: space-between;
   padding: 8px 16px;
   margin: 8px 0;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   font-size: 14px;
   font-weight: 500;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-raised);
   animation: slideInDown 0.3s ease-out;
   min-height: auto;
   line-height: 1.4;
@@ -303,7 +346,7 @@ body {
   color: inherit;
   cursor: pointer;
   padding: 4px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 16px;
   opacity: 0.8;
   transition: opacity 0.2s;
@@ -550,7 +593,7 @@ body {
   pointer-events: auto;
   width: 14px;
   height: 14px;
-  margin: 0;
+  margin: 0 6px 0 0;
   flex-shrink: 0;
 }
 
@@ -576,13 +619,6 @@ body {
 .column-checkbox label:hover {
   color: #3b82f6;
   background: #f8fafc;
-}
-
-.column-checkbox input[type='checkbox'] {
-  margin-right: 6px;
-  cursor: pointer;
-  width: 14px;
-  height: 14px;
 }
 
 /* AG Grid Section - Container for grid + toggle button */
@@ -831,17 +867,6 @@ body {
 .ag-theme-alpine .ag-popup-parent {
   z-index: 999999 !important;
   overflow: visible !important;
-}
-
-/* Let AG Grid use its default filter styling - only ensure visibility */
-/* Remove all custom filter styling to use AG Grid defaults */
-
-/* Filter input focus states */
-.ag-theme-alpine .ag-filter-body input:focus,
-.ag-theme-alpine .ag-filter-body select:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
 /* Filter icon styling */
@@ -1823,7 +1848,7 @@ div.ag-header-cell[col-id='actions'] {
   top: 60px; /* Below the toggle button */
   right: 40px; /* Next to the toggle button, not overlapping columns */
   z-index: 10000;
-  max-height: calc(100vh - 150px);
+  max-height: calc(100dvh - 150px);
   overflow-y: auto;
 }
 
@@ -1984,7 +2009,9 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
   font-weight: 700 !important;
   text-align: left !important;
   line-height: 1.4 !important;
-  display: block !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100%;
   padding: 4px 0 !important;
   margin: 0 !important;
   white-space: normal !important;
@@ -2287,21 +2314,8 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
   top: 190px;
   right: 40px;
   z-index: 10000;
-  max-height: calc(100vh - 150px);
+  max-height: calc(100dvh - 150px);
   overflow-y: auto;
-}
-
-.group-by-panel .column-visibility-panel::after {
-  content: '';
-  position: absolute;
-  top: -6px;
-  right: 52px;
-  width: 0;
-  height: 0;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-bottom: 6px solid white;
-  z-index: 2;
 }
 
 .active-groups-section {
@@ -2450,8 +2464,10 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
 /* Responsive improvements */
 @media (max-width: 768px) {
   .app-container {
+    height: 100dvh;
+    min-height: 100dvh;
     padding: 15px;
-    margin: 10px;
+    margin: 0;
   }
 
   /* Mobile header improvements */
@@ -2545,14 +2561,31 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
   }
 
   /* Adjust grid toggle button for mobile */
+  .side-buttons-wrapper {
+    gap: 8px;
+  }
+
   .grid-toggle-button-container {
     width: 28px;
   }
 
   .grid-toggle-columns-btn {
     width: 26px;
-    height: 60px;
+    height: 108px;
+    min-height: 108px;
     font-size: 10px;
+    overflow: hidden;
+  }
+
+  .toggle-button-content {
+    gap: 4px;
+    padding: 6px 2px;
+  }
+
+  .toggle-button-text {
+    font-size: 9px;
+    line-height: 1.2;
+    letter-spacing: 0.5px;
   }
 
   .grid-column-visibility-panel-container {
@@ -2580,7 +2613,7 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
 @media (max-width: 480px) {
   .app-container {
     padding: 10px;
-    margin: 5px;
+    margin: 0;
   }
 
   .app-header {
@@ -2603,6 +2636,11 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
 
   .search-input-wrapper {
     min-width: 120px;
+  }
+
+  .grid-toggle-columns-btn {
+    height: 96px;
+    min-height: 96px;
   }
 
   .search-input {
@@ -2823,13 +2861,6 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
     transform: rotate(360deg);
   }
 }
-/* Non-SKU header cell text - flex column layout */
-.ag-theme-alpine .ag-header-cell:not([col-id*='sku']) .ag-header-cell-text {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-
 /* SKU header wrapper - container for multi-line header */
 .sku-header-wrapper {
   display: flex !important;
