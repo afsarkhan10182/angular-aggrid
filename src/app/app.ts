@@ -1,4 +1,5 @@
 import {
+  ChangeDetectorRef,
   Component,
   OnInit,
   OnDestroy,
@@ -222,6 +223,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     private readonly skuService: SkuService,
     @Inject(DOCUMENT) private readonly document: Document,
     private readonly renderer: Renderer2,
+    private readonly cdr: ChangeDetectorRef,
   ) {
     this.mbomSkuFilterOptions = this.dataService.getMbomSkuFilterOptions();
     this.sbomSkuFilterOptions = this.dataService.getSbomSkuFilterOptions();
@@ -282,6 +284,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       onRowClicked: (params: any) => {
         this.onRowClicked(params);
       },
+      onColumnMoved: () => this.refreshVisibleColumnsPanel(),
+      onColumnVisible: () => this.refreshVisibleColumnsPanel(),
     };
 
     this.checkAuthentication();
@@ -910,6 +914,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (col && event) {
       const visible = (event.target as HTMLInputElement).checked;
       this.gridService.toggleColumnVisibility(col, visible, this.getColumnVisibilityConfig());
+      this.refreshVisibleColumnsPanel();
     } else {
       this.showColumnVisibilityPanel = !this.showColumnVisibilityPanel;
       if (this.showColumnVisibilityPanel) {
@@ -921,18 +926,37 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   selectAllColumns(): void {
     this.gridService.selectAllColumns(this.getColumnVisibilityConfig());
+    this.refreshVisibleColumnsPanel();
   }
 
   clearAllColumns(): void {
     this.gridService.clearAllColumns(this.getColumnVisibilityConfig());
+    this.refreshVisibleColumnsPanel();
   }
 
   getVisibleColumnsForPanel(): ExtendedColDef[] {
     return this.gridService.getVisibleColumnsForPanel(this.getColumnVisibilityConfig());
   }
 
+  refreshVisibleColumnsPanel(): void {
+    this.cdr.detectChanges();
+  }
+
+  onVisibleColumnsPanelFocusOut(event: FocusEvent): void {
+    const panel = this.columnPanel?.nativeElement as HTMLElement | undefined;
+    if (!panel) return;
+    try {
+      const relatedTarget = event.relatedTarget as Node | null;
+      if (!relatedTarget || !panel.contains(relatedTarget)) {
+        this.refreshVisibleColumnsPanel();
+      }
+    } catch {
+      this.refreshVisibleColumnsPanel();
+    }
+  }
+
   trackByColumnField(_index: number, col: ExtendedColDef): string {
-    return col?.field ?? col?.colId ?? '';
+    return col?.field ?? col?.colId ?? `col-${_index}`;
   }
 
   onColumnMouseDown(event: MouseEvent): void {
@@ -1109,6 +1133,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     );
 
     this.resetDragState();
+    this.refreshVisibleColumnsPanel();
   }
 
   /**

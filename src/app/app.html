@@ -365,8 +365,10 @@
         >
           <div
             class="column-visibility-panel"
+            tabindex="-1"
             (click)="$event.stopPropagation()"
             (keydown.escape)="showColumnVisibilityPanel = false"
+            (focusout)="onVisibleColumnsPanelFocusOut($event)"
           >
             <div class="column-visibility-header">
               <h4>Visible Columns</h4>

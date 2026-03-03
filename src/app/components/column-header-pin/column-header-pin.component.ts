@@ -17,6 +17,13 @@ import { IHeaderAngularComp } from 'ag-grid-angular';
 import { IconComponent } from '../icon/icon.component';
 import { COL_ACTIONS, COL_CHECKBOX } from '../../constants';
 
+const MENU_WIDTH = 200;
+
+const SORT_ARROW_PATHS: Readonly<Record<'asc' | 'desc', string>> = {
+  asc: 'M12 19V5M5 12l7-7 7 7',
+  desc: 'M12 5v14M5 12l7 7 7-7',
+};
+
 const SORT_TRANSITION_MAP: Readonly<Record<string, 'asc' | 'desc' | null>> = {
   '': 'asc',
   asc: 'desc',
@@ -52,7 +59,7 @@ class MenuStateService {
         </div>
         <div class="header-controls">
           <div class="sort-indicator" *ngIf="sortState">
-            <span *ngIf="sortState === 'asc'" class="modern-arrow">
+            <span class="modern-arrow">
               <svg
                 width="10"
                 height="12"
@@ -63,21 +70,7 @@ class MenuStateService {
                 stroke-linecap="round"
                 stroke-linejoin="round"
               >
-                <path d="M12 19V5M5 12l7-7 7 7" />
-              </svg>
-            </span>
-            <span *ngIf="sortState === 'desc'" class="modern-arrow">
-              <svg
-                width="10"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="3.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M12 5v14M5 12l7 7 7-7" />
+                <path [attr.d]="sortArrowPaths[sortState]" />
               </svg>
             </span>
           </div>
@@ -105,27 +98,27 @@ class MenuStateService {
               #dropdown
             >
               <div class="menu-item" (click)="pinColumn('left', $event)">
-                <span class="menu-icon"
-                  ><app-icon name="thumbtack" size="14" [style.transform]="'rotate(-45deg)'"></app-icon
-                ></span>
+                <span class="menu-icon" style="transform: rotate(-45deg)">
+                  <app-icon name="thumbtack" size="16"></app-icon>
+                </span>
                 <span class="menu-text">Pin Left</span>
                 <span class="menu-check" *ngIf="pinnedSide === 'left'">✓</span>
               </div>
               <div class="menu-item" (click)="pinColumn('right', $event)">
-                <span class="menu-icon"
-                  ><app-icon name="thumbtack" size="14" [style.transform]="'rotate(45deg)'"></app-icon
-                ></span>
+                <span class="menu-icon" style="transform: rotate(45deg)">
+                  <app-icon name="thumbtack" size="16"></app-icon>
+                </span>
                 <span class="menu-text">Pin Right</span>
                 <span class="menu-check" *ngIf="pinnedSide === 'right'">✓</span>
               </div>
               <div class="menu-item" (click)="pinColumn(null, $event)">
-                <span class="menu-icon"><app-icon name="ban" size="14"></app-icon></span>
+                <span class="menu-icon"><app-icon name="ban" size="16"></app-icon></span>
                 <span class="menu-text">No Pin</span>
                 <span class="menu-check" *ngIf="!pinnedSide">✓</span>
               </div>
               <div class="menu-divider"></div>
               <div class="menu-item" (click)="autosizeColumn($event)">
-                <span class="menu-icon"><app-icon name="arrows-alt-h" size="14"></app-icon></span>
+                <span class="menu-icon"><app-icon name="arrows-alt-h" size="16"></app-icon></span>
                 <span class="menu-text">Autosize This Column</span>
               </div>
             </div>
@@ -295,8 +288,8 @@ class MenuStateService {
         border-radius: 8px;
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 10px 10px -5px rgba(0, 0, 0, 0.06),
           0 0 0 1px rgba(55, 65, 81, 0.08);
-        min-width: 200px;
-        max-width: 200px;
+        min-width: ${MENU_WIDTH}px;
+        max-width: ${MENU_WIDTH}px;
         z-index: 99999; /* High z-index to float over everything */
         padding: 6px;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -304,6 +297,7 @@ class MenuStateService {
         transform-origin: top left;
         pointer-events: auto;
         backdrop-filter: blur(8px);
+        overflow: visible;
       }
 
       @keyframes menuPopup {
@@ -330,7 +324,7 @@ class MenuStateService {
         border-radius: 6px;
         margin-bottom: 2px;
         position: relative;
-        overflow: hidden;
+        overflow: visible;
       }
 
       .menu-item:last-child {
@@ -350,15 +344,19 @@ class MenuStateService {
       }
 
       .menu-icon {
-        width: 18px;
-        margin-right: 10px;
+        width: 28px;
+        min-width: 28px;
+        height: 24px;
+        margin-right: 8px;
         color: #6b7280;
         display: flex;
         justify-content: center;
         align-items: center;
-        font-size: 13px;
+        flex-shrink: 0;
+        overflow: visible;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       }
+
 
       .menu-item:hover .menu-icon {
         color: #374151;
@@ -402,8 +400,10 @@ export class ColumnHeaderPinComponent
   pinnedSide: 'left' | 'right' | null = null;
   showMenuButton: boolean = true;
   sortState: 'asc' | 'desc' | null = null;
-  isMenuOpen: boolean = false;
-  dropdownStyle: any = {};
+  isMenuOpen = false;
+  dropdownStyle: Record<string, string> = {};
+
+  readonly sortArrowPaths = SORT_ARROW_PATHS;
 
   @ViewChild('menuContainer') menuContainer!: ElementRef;
   @ViewChild('menuButton') menuButton!: ElementRef;
@@ -534,12 +534,18 @@ export class ColumnHeaderPinComponent
     this.isMenuOpen = true;
     this.cdr.detectChanges();
 
-    if (this.menuButton && this.menuButton.nativeElement) {
+    if (this.menuButton?.nativeElement) {
       const buttonRect = this.menuButton.nativeElement.getBoundingClientRect();
+      const viewportWidth = this.document.documentElement?.clientWidth ?? window.innerWidth;
+      const spaceOnRight = viewportWidth - buttonRect.left;
+      const openToLeft = spaceOnRight < MENU_WIDTH;
 
       this.dropdownStyle = {
         top: `${buttonRect.bottom + 4}px`,
-        left: `${buttonRect.left}px`,
+        ...(openToLeft
+          ? { right: `${viewportWidth - buttonRect.right}px`, left: 'auto' }
+          : { left: `${buttonRect.left}px`, right: 'auto' }),
+        transformOrigin: openToLeft ? 'top right' : 'top left',
         position: 'fixed',
         zIndex: '99999',
         display: 'block',
@@ -607,7 +613,6 @@ export class ColumnHeaderPinComponent
       return;
     }
 
-    const column = this.params.column;
-    this.params.api.autoSizeColumns([column]);
+    this.params.api.autoSizeColumns([this.params.column]);
   }
 }
