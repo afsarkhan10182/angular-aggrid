@@ -135,17 +135,42 @@
 }
 
 
+.modal-grid-wrapper {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
 .modal-grid-container {
-  flex: 1; /* Take remaining space */
-  min-height: 0; /* CRITICAL: allows grid container to shrink below content size */
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  border-right: none; /* Attach to side strip like main grid */
+  border-radius: 6px 0 0 6px;
   overflow: hidden;
   background: white;
   position: relative;
   z-index: 1;
+}
+
+/* Side strip uses global .side-buttons-wrapper and .grid-toggle-columns-btn from styles.css */
+.modal-grid-wrapper .side-buttons-wrapper {
+  flex-shrink: 0;
+}
+
+/* Column visibility panel - inside .modal-grid-wrapper so it positions within the modal, not the viewport */
+.modal-grid-wrapper .modal-column-panel {
+  position: absolute;
+  top: 60px;
+  right: 36px;
+  z-index: 10000;
+  max-height: min(400px, calc(100% - 80px));
+  overflow-y: auto;
 }
 
 /* AG Grid fills container - uses flexbox layout */

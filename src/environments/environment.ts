@@ -23,5 +23,6 @@ export const environment = {
     includeInSpecSheet: '/api/IncludeInSpecSheet.json',
     /** Single source for material-colors search: part search, material search, and search by IDs (same response structure). */
     materialColorsSearch: '/api/serviceDataModal.json',
+    partEditSearch: '/api/parts-edit.json',
   },
 };

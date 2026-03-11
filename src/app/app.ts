@@ -22,6 +22,7 @@ import { ColumnHeaderPinComponent } from './components/column-header-pin/column-
 import { HierarchicalCellRendererComponent } from './components/hierarchical-cell-renderer/hierarchical-cell-renderer.component';
 import { LinkedBomModalComponent } from './components/linked-bom-modal/linked-bom-modal.component';
 import { ServiceDataManagerModalComponent } from './components/service-data-manager-modal/service-data-manager-modal.component';
+import { PartEditModalComponent } from './components/part-edit-modal/part-edit-modal.component';
 import { DataService } from './services/data.service';
 import { GridConfigService, GroupConfig } from './services/grid/grid-config.service';
 import { GridService, ColumnVisibilityConfig } from './services/grid/grid.service';
@@ -59,6 +60,7 @@ import {
   FIELD_PART_NUMBER,
   FIELD_MATERIAL,
   FIELD_MATERIAL_DESCRIPTION,
+  FIELD_MATERIAL_COLOR_STATUS,
   LS_KEY_SHOW_EXPIRED_DATA,
   NOTIFICATION_TYPE_ERROR,
   NOTIFICATION_TYPE_ERROR_PERSISTENT,
@@ -100,6 +102,7 @@ const SPEC_SHEET_EDIT_FIELDS = new Set<string>([
     IconComponent,
     LinkedBomModalComponent,
     ServiceDataManagerModalComponent,
+    PartEditModalComponent,
   ],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
@@ -131,6 +134,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public isLinkedBomLoading = false;
   public showServiceDataManagerModal = false;
   public serviceDataManagerModalMaterialColorIds: string[] = [];
+  public showPartEditModal = false;
+  public partEditModalMaterialColorIds: string[] = [];
   public searchText: string = '';
   public saveMessage: string = '';
   public saveMessageType: string = '';
@@ -721,6 +726,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     return this.getCurrentBomType() === BOM_TYPE_MATERIALMBOM;
   }
 
+  public isPartEditMode(): boolean {
+    return this.isEbomMode() || this.isMaterialMbomMode();
+  }
+
   public getBomComposerTitle(): string {
     const bomType = this.getCurrentBomType();
     
@@ -1145,6 +1154,25 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.draggedColumnIndex = -1;
   }
 
+  private stopGridEditingSafely(): void {
+    try {
+      this.gridApi?.stopEditing?.();
+    } catch {
+      // ignore
+    }
+  }
+
+  private forceRefreshGridCells(): void {
+    if (this.gridApi) {
+      this.gridApi.refreshCells({ force: true });
+    }
+  }
+
+  private isColumnUserVisible(field: string): boolean {
+    const colDef = this.columnDefs.find((col) => col.field === field);
+    return !!(colDef && !colDef.hide);
+  }
+
   @HostListener('document:click', ['$event'])
   handleClickOutside(event: Event): void {
     const target = event.target as Element;
@@ -1186,8 +1214,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.activeGroupFields = this.activeGroupFields.filter((g) => g.field !== field.field);
 
     if (this.gridApi && field.field) {
-      const colDef = this.columnDefs.find((col) => col.field === field.field);
-      if (colDef && !colDef.hide) {
+      if (this.isColumnUserVisible(field.field)) {
         this.gridApi.setColumnsVisible([field.field], true);
       }
     }
@@ -1203,8 +1230,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     if (this.gridApi && groupedFields.length > 0) {
       groupedFields.forEach((field) => {
-        const colDef = this.columnDefs.find((col) => col.field === field);
-        if (colDef && !colDef.hide) {
+        if (this.isColumnUserVisible(field)) {
           this.gridApi.setColumnsVisible([field], true);
         }
       });
@@ -1913,9 +1939,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private refreshGridForValidationErrors(): void {
-    if (this.gridApi) {
-      this.gridApi.refreshCells({ force: true });
-    }
+    this.forceRefreshGridCells();
   }
 
   /**
@@ -2157,15 +2181,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       }
     }
 
-    try {
-      this.gridApi?.stopEditing?.();
-    } catch {}
+    this.stopGridEditingSafely();
 
     this.rowManagementService.deleteRowById(newRowId, this.displayData, this.gridApi);
 
-    if (this.gridApi) {
-      this.gridApi.refreshCells({ force: true });
-    }
+    this.forceRefreshGridCells();
   }
 
   deleteRow(partId: string): void {
@@ -2177,17 +2197,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       }
     }
 
-    try {
-      this.gridApi?.stopEditing?.();
-    } catch {
-      // ignore
-    }
+    this.stopGridEditingSafely();
 
     this.rowManagementService.deleteRow(partId, this.displayData, this.gridApi);
 
-    if (this.gridApi) {
-      this.gridApi.refreshCells({ force: true });
-    }
+    this.forceRefreshGridCells();
   }
 
   getLastSavedText(): string {
@@ -2223,18 +2237,22 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  private rowMatchesSearch(row: any, searchText: string): boolean {
+  private rowMatchesSearch(
+    row: any,
+    searchText: string,
+  ): boolean {
     if (!searchText || searchText.trim() === '') {
       return true;
     }
 
     const searchLower = searchText.toLowerCase().trim();
     const visibleFields = this.getVisibleColumnFields();
-      const fieldsToSearch = visibleFields.length > 0 ? visibleFields : this.utilService.getAllSearchableFields(row);
+    const fieldsToSearch =
+      visibleFields.length > 0 ? visibleFields : this.utilService.getAllSearchableFields(row);
     const excludedFields = this.utilService.getExcludedSearchFields();
 
     for (const key of fieldsToSearch) {
-      if (excludedFields.has(key) || !row.hasOwnProperty(key)) {
+      if (excludedFields.has(key) || !Object.prototype.hasOwnProperty.call(row, key)) {
         continue;
       }
 
@@ -2841,24 +2859,30 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   openMassEdit(): void {
-    if (this.selectedRows.size > 1) {
-      this.massEditMode = true;
-      const massEditState = this.massEditService.populateMassEditFields(
-        Array.from(this.selectedRows),
-        () => this.isMbomMode(),
-        () => this.isSbomMode(),
-        () => this.isEbomMode(),
-        () => this.isMaterialMbomMode(),
-      );
-      this.massEditStartDate = massEditState.startDate;
-      this.massEditEndDate = massEditState.endDate;
-      this.massEditQuantity = massEditState.quantity;
-      this.massEditIncludeInSpecSheet = massEditState.includeInSpecSheet;
+    if (this.selectedRows.size <= 1) {
+      this.showNotification('Select more than 1 row to Mass Edit.', NOTIFICATION_TYPE_INFO);
+      return;
     }
+
+    this.massEditMode = true;
+    const massEditState = this.massEditService.populateMassEditFields(
+      Array.from(this.selectedRows),
+      () => this.isMbomMode(),
+      () => this.isSbomMode(),
+      () => this.isEbomMode(),
+      () => this.isMaterialMbomMode(),
+    );
+    this.massEditStartDate = massEditState.startDate;
+    this.massEditEndDate = massEditState.endDate;
+    this.massEditQuantity = massEditState.quantity;
+    this.massEditIncludeInSpecSheet = massEditState.includeInSpecSheet;
   }
 
   openServiceDataManagerModal(): void {
-    if (this.selectedRows.size === 0) return;
+    if (this.selectedRows.size <= 1) {
+      this.showNotification('Select more than 1 row to for Service Data Manager.', NOTIFICATION_TYPE_INFO);
+      return;
+    }
 
     // Check for unsaved changes in the main grid
     const hasEditedRows = this.editedRows.size > 0;
@@ -2882,14 +2906,73 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     });
 
     this.serviceDataManagerModalMaterialColorIds = Array.from(ids);
-    if (this.serviceDataManagerModalMaterialColorIds.length === 0) return;
+    if (this.serviceDataManagerModalMaterialColorIds.length === 0) {
+      this.showNotification('Selected rows do not contain Material Color IDs.', NOTIFICATION_TYPE_INFO);
+      return;
+    }
 
     this.showServiceDataManagerModal = true;
+  }
+
+  openPartEditModal(): void {
+    if (this.selectedRows.size === 0) {
+      this.showNotification('Select at least 1 row to Edit Parts.', NOTIFICATION_TYPE_INFO);
+      return;
+    }
+
+    const selectedRows = Array.from(this.selectedRows);
+    const hasNonReleased = selectedRows.some((row: any) => !this.isReleasedState(row));
+    if (hasNonReleased) {
+      this.showNotification(
+        'Select only rows with Released state to Edit Parts.',
+        NOTIFICATION_TYPE_INFO,
+      );
+      return;
+    }
+
+    const hasEditedRows = this.editedRows.size > 0;
+    const hasNewRows = this.rowData.some(
+      (row: any) =>
+        row?.isNewRow === true && !row?.isSectionHeader && !row?.isGroupHeader && !row?.isMaterialHeader,
+    );
+    if (hasEditedRows || hasNewRows) {
+      const message = 'Any unsaved changes in the BOM Composer will be lost. Do you want to continue?';
+      const proceed = confirm(message);
+      if (!proceed) {
+        return;
+      }
+    }
+
+    const ids = new Set<string>();
+    selectedRows.forEach((row: any) => {
+      const id = row?.materialColorId;
+      if (typeof id === 'string' && id.trim()) {
+        ids.add(id.trim());
+      }
+    });
+    this.partEditModalMaterialColorIds = Array.from(ids);
+    if (this.partEditModalMaterialColorIds.length === 0) {
+      this.showNotification('Selected rows do not contain Material Color IDs.', NOTIFICATION_TYPE_INFO);
+      return;
+    }
+
+    this.showPartEditModal = true;
+  }
+
+  private isReleasedState(row: any): boolean {
+    const state = String(row?.[FIELD_MATERIAL_COLOR_STATUS] ?? '').trim().toLowerCase();
+    if (!state) return false;
+    return state === 'released' || state === 'release' || state.startsWith('release');
   }
 
   closeServiceDataManagerModal(): void {
     this.showServiceDataManagerModal = false;
     this.serviceDataManagerModalMaterialColorIds = [];
+  }
+
+  closePartEditModal(): void {
+    this.showPartEditModal = false;
+    this.partEditModalMaterialColorIds = [];
   }
 
   onServiceDataManagerModalDataSaved(): void {
@@ -2899,9 +2982,20 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.loadData();
   }
 
+  onPartEditModalDataSaved(): void {
+    this.editedRows.clear();
+    this.editedFields.clear();
+    this.originalRowValues.clear();
+    this.loadData();
+  }
+
   bulkDisconnectFromSkus(): void {
     if (this.isSkuFilterReadOnly() || !this.isSbomMode()) return;
-    if (this.selectedRows.size === 0 || !this.gridApi) return;
+    if (this.selectedRows.size === 0) {
+      this.showNotification('Select at least 1 row to disconnect SKUs.', NOTIFICATION_TYPE_INFO);
+      return;
+    }
+    if (!this.gridApi) return;
 
     const selectedNodes = this.gridApi.getSelectedNodes();
     const skuInfo = this.getFilteredSkuInfo();

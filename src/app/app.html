@@ -118,45 +118,41 @@
               <app-icon name="file-excel" size="14"></app-icon>
               <span>Export</span>
             </button>
-            <!-- Mass Edit - Enabled when more than 1 selected -->
+            <!-- Mass Edit -->
             <button
               (click)="openMassEdit(); closeActionDropdown()"
               class="action-dropdown-item"
-              [class.disabled]="selectedRows.size <= 1"
-              [disabled]="selectedRows.size <= 1"
-              [title]="
-                selectedRows.size <= 1
-                  ? 'Select more than 1 row to enable Mass Edit'
-                  : 'Mass Edit Selected Rows'
-              "
+              title="Mass Edit Selected Rows"
             >
-              <app-icon name="edit" size="14"></app-icon>
+              <app-icon name="layer-group" size="14"></app-icon>
               <span>Mass Edit</span>
             </button>
-            <!-- Service Data Manager - Enabled when more than 1 selected (SBOM only) -->
+            <!-- Service Data Manager - SBOM only -->
             <button
               *ngIf="isSbomMode()"
               (click)="openServiceDataManagerModal(); closeActionDropdown()"
               class="action-dropdown-item"
-              [class.disabled]="selectedRows.size <= 1"
-              [disabled]="selectedRows.size <= 1"
-              [title]="
-                selectedRows.size <= 1
-                  ? 'Select more than 1 row to enable Service Data Manager'
-                  : 'Service Data Manager'
-              "
+              title="Service Data Manager"
             >
               <app-icon name="cog" size="14"></app-icon>
               <span>Service Data Manager</span>
             </button>
-            <!-- Disconnect All SKUs - SBOM only; disabled when no row selected, tooltip when disabled -->
+            <!-- Edit Parts - EBOM and MATERIALMBOM -->
+            <button
+              *ngIf="isPartEditMode()"
+              (click)="openPartEditModal(); closeActionDropdown()"
+              class="action-dropdown-item"
+              title="Edit Parts"
+            >
+              <app-icon name="edit" size="14"></app-icon>
+              <span>Edit Parts</span>
+            </button>
+            <!-- Disconnect All SKUs - SBOM only -->
             <button
               *ngIf="isSbomMode()"
               (click)="bulkDisconnectFromSkus(); closeActionDropdown()"
               class="action-dropdown-item"
-              [class.disabled]="selectedRows.size === 0"
-              [disabled]="selectedRows.size === 0"
-              [attr.title]="selectedRows.size === 0 ? 'Select at least one checkbox' : null"
+              title="Disconnect All SKUs"
             >
               <span>Disconnect All SKUs</span>
             </button>
@@ -567,6 +563,35 @@
             <div class="modal-loading-state">
               <div class="modal-loader" aria-hidden="true"></div>
               <p class="modal-loading-text">Opening service data manager...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  }
+
+  <!-- Part Edit Modal -->
+  @if (showPartEditModal) {
+    @defer (when showPartEditModal) {
+      <app-part-edit-modal
+        [materialColorIds]="partEditModalMaterialColorIds"
+        (modalClose)="closePartEditModal()"
+        (dataSaved)="onPartEditModalDataSaved()"
+      >
+      </app-part-edit-modal>
+    } @loading {
+      <div class="modal-overlay" (click)="closePartEditModal()">
+        <div class="modal-container modal-shell" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Part Edit</h3>
+            <button class="close-button" (click)="closePartEditModal()" aria-label="Close">
+              <app-icon name="times" size="14"></app-icon>
+            </button>
+          </div>
+          <div class="modal-content modal-shell-body">
+            <div class="modal-loading-state">
+              <div class="modal-loader" aria-hidden="true"></div>
+              <p class="modal-loading-text">Opening part edit...</p>
             </div>
           </div>
         </div>

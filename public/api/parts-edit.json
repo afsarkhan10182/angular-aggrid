@@ -1,0 +1,39 @@
+ { 
+  "instances": {
+    "OR:com.lcs.wc.material.LCSMaterialColor:554762": {
+      "MaterialSupplierAttributes": {
+        "materialSupplierPrimaryUOM": ""
+      },
+      "material": "BOSCH POWERTUBE 625 VERTICAL BLACK; US VARIANT",
+      "color": "BK - Black(TK-0101)",
+      "MaterialColorAttributes": {
+        "materialColorPrintCopy": "Bosch PowerTube 625Wh",
+        "materialColorSixtyCharacterDescription": "",
+        "materialColorThirtyCharacterDescription": "BTRY BSH BAT-625 POWERTUB-V-US",
+        "materialColorBrand": ""
+      },
+      "colorId": "537913",
+      "materialColorId": "OR:com.lcs.wc.material.LCSMaterialColor:554762",
+      "supplier": "Robert Bosch GMBH Supplier Buyer",
+      "materialSupplierId": "VR:com.lcs.wc.material.LCSMaterialSupplier:554751",
+      "childId": "554750",
+      "MaterialAttributes": {
+        "materialAttachmentType": ""
+      },
+      "materiaColorId": "VR:com.lcs.wc.material.LCSMaterial:533364"
+    }
+  },
+  "materialColorIds": "OR:com.lcs.wc.material.LCSMaterialColor:554762",
+  "columns": {
+    "materialColorPartNumber": "Part #",
+    "material": "Material",
+    "supplier": "Supplier",
+    "color": "Color",
+    "materialAttachmentType": "Attachment Type",
+    "materialSupplierPrimaryUOM": "Primary UOM",
+    "materialColorThirtyCharacterDescription": "30 Character Description",
+    "materialColorSixtyCharacterDescription": "60 Character Description",
+    "materialColorBrand": "Brand",
+    "materialColorPrintCopy": "Print Copy"
+  }
+}

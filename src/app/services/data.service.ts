@@ -158,6 +158,7 @@ export interface MaterialColorsSearchPayload {
 /** Payload for fetch-by-IDs on material-colors/search (single endpoint). */
 export interface ByIdsPayload {
   materialColorIds: string;
+  bomType?: string;
 }
 
 @Injectable({
@@ -626,6 +627,17 @@ export class DataService {
     return this.postMaterialColorsSearch(payload);
   }
 
+  private getBomTypeForPayload(): string {
+    return this.getBomTypeFromResponse() || this.getBomType() || DEFAULT_BOM_TYPE;
+  }
+
+  private postPartEdits(payload: ByIdsPayload): Observable<any> {
+    const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/material-colors/part-edits`;
+    const urlWithQuery = payload.bomType ? `${apiUrl}?${PARAM_BOM_TYPE}=${payload.bomType}` : apiUrl;
+    const body = { materialColorIds: payload.materialColorIds };
+    return this.http.post<any>(urlWithQuery, body, { headers: this.buildHttpHeaders() });
+  }
+
   /**
    * Search/Fetch Material Colors by IDs
    * Uses single endpoint: POST .../material-colors/search with payload { materialColorIds }.
@@ -637,6 +649,22 @@ export class DataService {
       return this.http.get<any>(mockUrl, { headers: this.buildHttpHeaders() });
     }
     return this.materialColorsSearchByIds(materialColorIds);
+  }
+
+  /**
+   * Load Part Edit modal data by selected material color ids.
+   * Mock: /api/parts-edit.json
+   * API: reuses material-colors/search by ids payload shape.
+   */
+  searchPartEditData(materialColorIds: string): Observable<any> {
+    if (environment.useMockApi) {
+      const mockUrl = environment.mockApiEndpoints.partEditSearch;
+      return this.http.get<any>(mockUrl, { headers: this.buildHttpHeaders() });
+    }
+    return this.postPartEdits({
+      materialColorIds,
+      bomType: this.getBomTypeForPayload(),
+    });
   }
 
   /**
@@ -679,6 +707,26 @@ export class DataService {
       catchError((error: HttpErrorResponse) => {
         return throwError(() => error);
       }),
+    );
+  }
+
+  /**
+   * Save Part Edit modal changes.
+   * Mock returns success; API reuses saveMaterialColors endpoint contract.
+   */
+  savePartEditData(payload: { instances: { [key: string]: any }; materialColorIds?: string }): Observable<any> {
+    if (environment.useMockApi) {
+      return of({ instances: payload.instances || {}, success: true });
+    }
+    const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/material-colors/part-edits`;
+    const requestPayload = {
+      instances: payload.instances || {},
+      materialColorIds: payload.materialColorIds || '',
+      bomType: this.getBomTypeForPayload(),
+    };
+    return this.http.put<any>(apiUrl, requestPayload, { headers: this.buildHttpHeaders() }).pipe(
+      map((response) => response || { success: true }),
+      catchError((error: HttpErrorResponse) => throwError(() => error)),
     );
   }
 

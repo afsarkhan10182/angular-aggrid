@@ -102,7 +102,7 @@
                 "materialColorSixtyCharacterDescription": "2020RIM_2020RIM",
                 "section": "enumSection001",
                 "materialSupplierPrimaryUOM": "inch",
-                "materialColorState": "",
+                "materialColorState": "Released",
                 "materialColorServiceDescription": "",
                 "bomLinkStartDate": "01/14/2026",
                 "supplier": "Diamant Grad GC",
@@ -1845,5 +1845,5 @@
             "skuName": "BR Brown 40"
         }
     ],
-    "bomType": "SBOM"
+    "bomType": "EBOM"
 }

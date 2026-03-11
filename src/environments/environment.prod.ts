@@ -18,5 +18,6 @@ export const environment = {
     complexMaterial: '/api/materialmodal.json',
     includeInSpecSheet: '/api/IncludeInSpecSheet.json',
     materialColorsSearch: '/api/serviceDataModal.json',
+    partEditSearch: '/api/parts-edit.json',
   },
 };

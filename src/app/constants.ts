@@ -3,7 +3,7 @@ export const BOM_TYPE_EBOM = 'EBOM';
 export const BOM_TYPE_MBOM = 'MBOM';
 export const BOM_TYPE_SBOM = 'SBOM';
 export const BOM_TYPE_MATERIALMBOM = 'MATERIALMBOM';
-export const DEFAULT_BOM_TYPE = BOM_TYPE_SBOM;
+export const DEFAULT_BOM_TYPE = BOM_TYPE_EBOM;
 export const BOM_LINK_KEY = 'bom-link';
 export const ENUM_MBOM_LINE_ITEM = 'enumMBOM001';
 export const VALUE_SPEC_YES = 'Yes';
@@ -248,6 +248,14 @@ export const SERVICE_DATA_MANAGER_MODAL_DROPDOWN_FIELDS: readonly string[] = [
   FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE,
   FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_TWO,
   FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT,
+];
+
+// Part Edit modal field configuration.
+export const PART_EDIT_MODAL_DISABLED_FIELDS: readonly string[] = [
+  FIELD_PART_NUMBER,
+  FIELD_MATERIAL,
+  FIELD_SUPPLIER,
+  FIELD_COLOR,
 ];
 
 // Payload field rename map for API submission.
