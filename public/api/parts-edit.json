@@ -1,39 +1,88 @@
- { 
-  "instances": {
-    "OR:com.lcs.wc.material.LCSMaterialColor:554762": {
-      "MaterialSupplierAttributes": {
-        "materialSupplierPrimaryUOM": ""
-      },
-      "material": "BOSCH POWERTUBE 625 VERTICAL BLACK; US VARIANT",
-      "color": "BK - Black(TK-0101)",
-      "MaterialColorAttributes": {
-        "materialColorPrintCopy": "Bosch PowerTube 625Wh",
-        "materialColorSixtyCharacterDescription": "",
-        "materialColorThirtyCharacterDescription": "BTRY BSH BAT-625 POWERTUB-V-US",
-        "materialColorBrand": ""
-      },
-      "colorId": "537913",
-      "materialColorId": "OR:com.lcs.wc.material.LCSMaterialColor:554762",
-      "supplier": "Robert Bosch GMBH Supplier Buyer",
-      "materialSupplierId": "VR:com.lcs.wc.material.LCSMaterialSupplier:554751",
-      "childId": "554750",
-      "MaterialAttributes": {
-        "materialAttachmentType": ""
-      },
-      "materiaColorId": "VR:com.lcs.wc.material.LCSMaterial:533364"
+{
+    "instances": {
+        "OR:com.lcs.wc.material.LCSMaterialColor:1112177": {
+            "MaterialSupplierAttributes": {
+                "materialSupplierPrimaryUOM": ""
+            },
+            "material": "00.3018.201.001; EP POWERPACK 2 BATTERY",
+            "color": "Baja Smoke",
+            "MaterialColorAttributes": {
+                "materialColorPrintCopy": "",
+                "materialColorSixtyCharacterDescription": "test",
+                "materialColorThirtyCharacterDescription": "hello",
+                "materialColorPartNumber": "2030WHEELFT_100",
+                "materialColorBrand": ""
+            },
+            "colorId": "208864",
+            "materialColorId": "OR:com.lcs.wc.material.LCSMaterialColor:1112177",
+            "supplier": "Beto Engineering and Marketing Co Primary Supplier Name",
+            "materialSupplierId": "VR:com.lcs.wc.material.LCSMaterialSupplier:1112166",
+            "childId": "1112165",
+            "materialId": "VR:com.lcs.wc.material.LCSMaterial:538168",
+            "MaterialAttributes": {
+                "materialAttachmentType": ""
+            }
+        }
+    },
+    "materialColorIds": "OR:com.lcs.wc.material.LCSMaterialColor:1112177",
+    "columns": {
+        "materialColorPartNumber": "Part #",
+        "material": "Material",
+        "supplier": "Supplier",
+        "color": "Color",
+        "materialAttachmentType": "Attachment Type",
+        "materialSupplierPrimaryUOM": "Primary UOM",
+        "materialColorThirtyCharacterDescription": "30 Character Description",
+        "materialColorSixtyCharacterDescription": "60 Character Description",
+        "materialColorBrand": "Brand",
+        "materialColorPrintCopy": "Print Copy"
+    },
+    "DefaultColumns": {
+        "materialColorSixtyCharacterDescription": "60 Character Description",
+        "materialColorBrand": "Brand",
+        "materialColorPrintCopy": "Print Copy"
+    },
+    "DefaultDefinitionList": {
+        "materialSupplierPrimaryUOM": {
+            "attributeType": "choice",
+            "selectableOptions": {
+                "enumUOM001": "Each",
+                "enumUOM002": "Inch",
+                "enumUOM003": "Sq Yard",
+                "enumUOM004": "PR (pair)",
+                "enumUOM005": "ST (set)",
+                "enumUOM006": "BX (box)",
+                "enumUOM007": "RL (roll)",
+                "enumUOM008": "GM (grams)",
+                "enumUOM009": "PC (pieces)",
+                "enumUOM010": "ML (milliliter)",
+                "enumUOM011": "MM (millimeter)",
+                "enumUOM012": "OZ (ounce)",
+                "enumUOM013": "ET (each quarter)",
+                "enumUOM014": "CM (centimeter)",
+                "enumUOM015": "ET (each tenth)",
+                "enumUOM016": "ST"
+            }
+        },
+        "materialColorBrand": {
+            "attributeType": "choice",
+            "selectableOptions": {
+                "eunmBrand001": "100%",
+                "enumBrand002": "Aardvark",
+                "enumBrand003": "ABUS",
+                "enumBrand004": "ACCUGAUGE",
+                "enumBrand005": "Alex Global Technology"
+            }
+        },
+        "materialAttachmentType": {
+            "attributeType": "choice",
+            "selectableOptions": {
+                "enumAttachmentType001": "Drawstring",
+                "enumAttachmentType002": "Elastic band",
+                "enumAttachmentType003": "Rubber strap",
+                "enumAttachmentType004": "Hook and loop strap/Quick Release",
+                "enumAttachmentType005": "Clip-on"
+            }
+        }
     }
-  },
-  "materialColorIds": "OR:com.lcs.wc.material.LCSMaterialColor:554762",
-  "columns": {
-    "materialColorPartNumber": "Part #",
-    "material": "Material",
-    "supplier": "Supplier",
-    "color": "Color",
-    "materialAttachmentType": "Attachment Type",
-    "materialSupplierPrimaryUOM": "Primary UOM",
-    "materialColorThirtyCharacterDescription": "30 Character Description",
-    "materialColorSixtyCharacterDescription": "60 Character Description",
-    "materialColorBrand": "Brand",
-    "materialColorPrintCopy": "Print Copy"
-  }
 }

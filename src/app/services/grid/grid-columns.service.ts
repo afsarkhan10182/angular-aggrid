@@ -40,6 +40,7 @@ export interface GridColumnsBuildContext {
   getFeatureValue: (data: any) => any;
   getHierarchicalCellStyle: (params: any) => any;
   getFilteredSkuInfo: () => any[];
+  selectedSkuFilter?: string;
   renderNewRowSkuCell: (params: any) => string;
   renderDataCellContent: (params: any, fallbackWidth: number, value?: any) => string;
   getCellTooltipValue: (params: any) => string | null;
@@ -242,6 +243,7 @@ export class GridColumnsService {
       renderHierarchicalCell: () => '',
       getHierarchicalCellStyle: (params) => context.getHierarchicalCellStyle(params),
       getFilteredSkuInfo: () => context.getFilteredSkuInfo(),
+      selectedSkuFilter: context.selectedSkuFilter,
       shouldHighlightRow: (data) => this.gridService.shouldHighlightRow(data),
       renderNewRowSkuCell: (params) => context.renderNewRowSkuCell(params),
       utilService: this.utilService,

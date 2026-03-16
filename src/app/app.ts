@@ -81,6 +81,7 @@ import type {
   SkuFilterOption,
   MbomSkuFilterOption,
   SbomSkuFilterOption,
+  EbomSkuFilterOption,
   SkuInfo,
 } from './services/data.service';
 
@@ -150,8 +151,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public showActionDropdown = false;
   public readonly mbomSkuFilterOptions: Array<{ label: string; value: MbomSkuFilterOption }>;
   public readonly sbomSkuFilterOptions: Array<{ label: string; value: SbomSkuFilterOption }>;
+  public readonly ebomSkuFilterOptions: Array<{ label: string; value: EbomSkuFilterOption }>;
 
   public get skuFilterOptions(): Array<{ label: string; value: SkuFilterOption }> {
+    if (this.isEbomMode() || this.isMaterialMbomMode()) {
+      return this.ebomSkuFilterOptions;
+    }
     return this.isMbomMode() ? this.mbomSkuFilterOptions : this.sbomSkuFilterOptions;
   }
 
@@ -232,6 +237,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   ) {
     this.mbomSkuFilterOptions = this.dataService.getMbomSkuFilterOptions();
     this.sbomSkuFilterOptions = this.dataService.getSbomSkuFilterOptions();
+    this.ebomSkuFilterOptions = this.dataService.getEbomSkuFilterOptions();
 
     this.gridOptions.context = {
       componentParent: this,
@@ -399,7 +405,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private getInitialDisplayData(): any[] {
-    let treeData = this.rowData;
+    let treeData = this.filterDataBySkuFilter(this.rowData);
 
     if (this.activeGroupFields.length > 0) {
       treeData = this.gridConfigService.groupHierarchicalData(
@@ -537,6 +543,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       getFeatureValue: (data) => this.utilService.getFeatureValue(data),
       getHierarchicalCellStyle: (params) => this.getHierarchicalCellStyle(params),
       getFilteredSkuInfo: () => this.getFilteredSkuInfo(),
+      selectedSkuFilter: this.selectedSkuFilter,
       renderNewRowSkuCell: (params) => this.renderNewRowSkuCell(params),
       renderDataCellContent: (params, fallbackWidth, value) =>
         this.renderDataCellContent(params, fallbackWidth, value),
@@ -641,6 +648,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private getFilteredSkuInfo(): any[] {
+    if (this.isEbomMode() || this.isMaterialMbomMode()) {
+      const valid: SkuFilterOption[] = ['all', 'released', 'nonReleased'];
+      if (!valid.includes(this.selectedSkuFilter)) {
+        this.selectedSkuFilter = 'all';
+      }
+    }
     return this.dataService.getFilteredSkuInfo(this.selectedSkuFilter, () => this.isMbomMode());
   }
 
@@ -657,6 +670,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       option,
       this.mbomSkuFilterOptions,
       this.sbomSkuFilterOptions,
+      this.ebomSkuFilterOptions,
       () => this.isMbomMode(),
     );
   }
@@ -755,7 +769,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   public isSkuFilterReadOnly(): boolean {
     if (this.isEbomMode() || this.isMaterialMbomMode()) {
-      return false;
+      return this.selectedSkuFilter !== 'nonReleased';
     }
     if (this.isSbomMode()) {
       return false;
@@ -777,9 +791,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (this.isSkuFilterReadOnly()) {
       if (this.isMbomMode()) {
         return 'Switch to "HD source - Editable" view to enable saving';
-      } else {
-        return 'Switch to "Editable SKUs" view to enable saving';
       }
+      if (this.isEbomMode() || this.isMaterialMbomMode()) {
+        return 'Switch to "Editable - Non-released state" view to enable saving';
+      }
+      return 'Switch to "Editable SKUs" view to enable saving';
     }
 
     if (this.editedRows.size === 0) {
@@ -2491,6 +2507,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       if (this.searchText && this.searchText.trim() !== '') {
         dataToSort = this.filterDataBySearch(this.rowData, this.searchText);
       }
+      dataToSort = this.filterDataBySkuFilter(dataToSort);
 
       if (!dataToSort || dataToSort.length === 0) {
         return;

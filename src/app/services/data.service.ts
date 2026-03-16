@@ -22,10 +22,15 @@ import {
   SKU_FILTER_LABEL_HD_VIEW_ONLY,
   SKU_FILTER_LABEL_NON_HD,
   SKU_FILTER_LABEL_EDITABLE_SKUS,
+  SKU_FILTER_LABEL_ALL_VIEW_ONLY,
+  SKU_FILTER_LABEL_EDITABLE_NON_RELEASED,
+  SKU_FILTER_LABEL_NON_EDITABLE_RELEASED,
   SKU_FILTER_EMPTY_HD_EDITABLE,
   SKU_FILTER_EMPTY_HD_VIEW_ONLY,
   SKU_FILTER_EMPTY_NON_HD,
   SKU_FILTER_EMPTY_EDITABLE,
+  SKU_FILTER_EMPTY_RELEASED,
+  SKU_FILTER_EMPTY_NON_RELEASED,
   LABEL_ALL,
 } from '../constants';
 import { Inject, Injectable } from '@angular/core';
@@ -113,6 +118,10 @@ export interface SkuInfo {
   destinationDimensionId?: string;
   bomId?: string;
   bomName?: string;
+  /** EBOM/MATERIALMBOM: parent part number, displayed as "Parent part" in SKU header */
+  materialColorPartNumber?: string;
+  /** EBOM/MATERIALMBOM: state of the parent part, displayed on its own line in the SKU header */
+  materialColorState?: string;
   isHDSource?: boolean;
   isEditable?: boolean;
   isReleased?: boolean;
@@ -143,7 +152,8 @@ export interface ApiData {
 
 export type MbomSkuFilterOption = 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource';
 export type SbomSkuFilterOption = 'all' | 'editableSkus';
-export type SkuFilterOption = MbomSkuFilterOption | SbomSkuFilterOption;
+export type EbomSkuFilterOption = 'all' | 'released' | 'nonReleased';
+export type SkuFilterOption = MbomSkuFilterOption | SbomSkuFilterOption | EbomSkuFilterOption;
 
 /** Payload for attribute search on material-colors/search (part number or material name; only attribute differs). */
 export interface MaterialColorsSearchPayload {
@@ -913,6 +923,14 @@ export class DataService {
     ];
   }
 
+  getEbomSkuFilterOptions(): Array<{ label: string; value: EbomSkuFilterOption }> {
+    return [
+      { label: SKU_FILTER_LABEL_ALL_VIEW_ONLY, value: 'all' },
+      { label: SKU_FILTER_LABEL_EDITABLE_NON_RELEASED, value: 'nonReleased' },
+      { label: SKU_FILTER_LABEL_NON_EDITABLE_RELEASED, value: 'released' },
+    ];
+  }
+
   getFilteredSkuInfo(
     selectedFilter: SkuFilterOption,
     isMbomMode: () => boolean,
@@ -920,7 +938,11 @@ export class DataService {
     const skuInfo = this.getSkuInfo();
     const bomType = this.getBomType();
     if (bomType === BOM_TYPE_EBOM || bomType === BOM_TYPE_MATERIALMBOM) {
-      return skuInfo;
+      return this.filterSkuInfoByOption(
+        selectedFilter as EbomSkuFilterOption,
+        skuInfo,
+        'ebom',
+      );
     }
     if (isMbomMode()) {
       return this.filterSkuInfoByOption(
@@ -936,8 +958,20 @@ export class DataService {
   filterSkuInfoByOption(
     option: SkuFilterOption,
     skuInfo: any[],
-    bomType: 'mbom' | 'sbom',
+    bomType: 'mbom' | 'sbom' | 'ebom',
   ): any[] {
+    const normalizedState = (sku: any): string => String(sku?.materialColorState ?? '').trim().toLowerCase();
+    /** materialColorState = release/released → not editable; any other (e.g. pending) → editable. */
+    const isReleasedByState = (sku: any): boolean => {
+      const state = normalizedState(sku);
+      if (!state) return false;
+      if (state.includes('non-released') || state.includes('non released')) return false;
+      return state === 'release' || state === 'released' || state.startsWith('release');
+    };
+    const isNonReleasedByState = (sku: any): boolean => {
+      return !isReleasedByState(sku);
+    };
+
     const mbomConfig: Record<string, { filter?: (sku: any) => boolean; emptyMessage?: string }> = {
       all: {},
       hdEditable: {
@@ -962,7 +996,20 @@ export class DataService {
       },
     };
 
-    const config = bomType === 'mbom' ? mbomConfig[option] : sbomConfig[option];
+    const ebomConfig: Record<string, { filter?: (sku: any) => boolean; emptyMessage?: string }> = {
+      all: {},
+      released: {
+        filter: (sku) => isReleasedByState(sku),
+        emptyMessage: SKU_FILTER_EMPTY_RELEASED,
+      },
+      nonReleased: {
+        filter: (sku) => isNonReleasedByState(sku),
+        emptyMessage: SKU_FILTER_EMPTY_NON_RELEASED,
+      },
+    };
+
+    const config =
+      bomType === 'mbom' ? mbomConfig[option] : bomType === 'sbom' ? sbomConfig[option] : ebomConfig[option];
 
     if (!config?.filter) {
       return skuInfo;
@@ -979,7 +1026,9 @@ export class DataService {
     }
 
     const skuInfo = this.getSkuInfo();
-    const bomType = isMbomMode() ? 'mbom' : 'sbom';
+    const bt = this.getBomType();
+    const bomType: 'mbom' | 'sbom' | 'ebom' =
+      bt === BOM_TYPE_EBOM || bt === BOM_TYPE_MATERIALMBOM ? 'ebom' : isMbomMode() ? 'mbom' : 'sbom';
     return this.filterSkuInfoByOption(option, skuInfo, bomType).length === 0;
   }
 
@@ -992,7 +1041,9 @@ export class DataService {
     }
 
     const skuInfo = this.getSkuInfo();
-    const bomType = isMbomMode() ? 'mbom' : 'sbom';
+    const bt = this.getBomType();
+    const bomType: 'mbom' | 'sbom' | 'ebom' =
+      bt === BOM_TYPE_EBOM || bt === BOM_TYPE_MATERIALMBOM ? 'ebom' : isMbomMode() ? 'mbom' : 'sbom';
     if (this.filterSkuInfoByOption(option, skuInfo, bomType).length > 0) {
       return '';
     }
@@ -1004,21 +1055,26 @@ export class DataService {
     option: SkuFilterOption,
     isMbomModeFn: () => boolean,
   ): string {
+    const bt = this.getBomType();
+    if (bt === BOM_TYPE_EBOM || bt === BOM_TYPE_MATERIALMBOM) {
+      const ebomMessages: Record<string, string> = {
+        released: SKU_FILTER_EMPTY_RELEASED,
+        nonReleased: SKU_FILTER_EMPTY_NON_RELEASED,
+      };
+      return ebomMessages[option] || '';
+    }
     const mbomMessages: Record<string, string> = {
       hdEditable: SKU_FILTER_EMPTY_HD_EDITABLE,
       hdViewOnly: SKU_FILTER_EMPTY_HD_VIEW_ONLY,
       nonHdSource: SKU_FILTER_EMPTY_NON_HD,
     };
-
     const sbomMessages: Record<string, string> = {
       editableSkus: SKU_FILTER_EMPTY_EDITABLE,
     };
-
     if (isMbomModeFn()) {
       return mbomMessages[option] || '';
-    } else {
-      return sbomMessages[option] || '';
     }
+    return sbomMessages[option] || '';
   }
 
   getSkuFilterLabel(
@@ -1028,8 +1084,13 @@ export class DataService {
       value: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource';
     }>,
     sbomOptions: Array<{ label: string; value: 'all' | 'editableSkus' }>,
+    ebomOptions: Array<{ label: string; value: EbomSkuFilterOption }>,
     isMbomMode: () => boolean,
   ): string {
+    const bt = this.getBomType();
+    if (bt === BOM_TYPE_EBOM || bt === BOM_TYPE_MATERIALMBOM) {
+      return ebomOptions.find((item) => item.value === option)?.label || LABEL_ALL;
+    }
     const options = isMbomMode() ? mbomOptions : sbomOptions;
     return options.find((item) => item.value === option)?.label || LABEL_ALL;
   }

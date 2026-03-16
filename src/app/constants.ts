@@ -126,7 +126,13 @@ export const SKU_FILTER_LABEL_HD_EDITABLE = 'HD source - Editable';
 export const SKU_FILTER_LABEL_HD_VIEW_ONLY = 'HD source - View only';
 export const SKU_FILTER_LABEL_NON_HD = 'Non HD source - View only';
 export const SKU_FILTER_LABEL_EDITABLE_SKUS = 'Editable SKUs';
+/** EBOM/MATERIALMBOM SKU Views dropdown labels (based on skuInfo) */
+export const SKU_FILTER_LABEL_ALL_VIEW_ONLY = 'All - view only';
+export const SKU_FILTER_LABEL_EDITABLE_NON_RELEASED = 'Editable - Non-released';
+export const SKU_FILTER_LABEL_NON_EDITABLE_RELEASED = 'Non-editable - Released';
 export const SKU_FILTER_EMPTY_HD_EDITABLE = 'No HD editable SKUs found. Editing is disabled.';
+export const SKU_FILTER_EMPTY_RELEASED = 'No released SKUs found.';
+export const SKU_FILTER_EMPTY_NON_RELEASED = 'No non-released SKUs found. Editing is disabled.';
 export const SKU_FILTER_EMPTY_HD_VIEW_ONLY = 'No HD source view-only SKUs found.';
 export const SKU_FILTER_EMPTY_NON_HD = 'No non-HD source SKUs found.';
 export const SKU_FILTER_EMPTY_EDITABLE = 'No editable SKUs found. Editing is disabled.';

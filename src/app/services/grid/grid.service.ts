@@ -61,6 +61,7 @@ export interface ColumnDefinitionConfig {
   renderHierarchicalCell: (params: any) => string;
   getHierarchicalCellStyle: (params: any) => any;
   getFilteredSkuInfo: () => any[];
+  selectedSkuFilter?: string;
   shouldHighlightRow: (data: any) => boolean;
   renderNewRowSkuCell: (params: any) => string;
   utilService: UtilService;
@@ -844,9 +845,20 @@ export class GridService {
       skuInfoMap.set(sku.skuId, sku);
     });
 
+    const useReleasedForEditable = config.isEbomMode?.() || config.isMaterialMbomMode?.();
+    const ebomAllViewOnly = useReleasedForEditable && config.selectedSkuFilter === 'all';
+    /** EBOM/MATERIALMBOM: materialColorState = release/released → not editable; other (e.g. pending) → editable. */
+    const isSkuReleasedByState = (sku: any): boolean => {
+      const state = String(sku?.materialColorState ?? '').trim().toLowerCase();
+      if (!state) return false;
+      if (state.includes('non-released') || state.includes('non released')) return false;
+      return state === 'release' || state === 'released' || state.startsWith('release');
+    };
     const skuColumns = config.getFilteredSkuInfo().map((sku) => {
       const originalSku = skuInfoMap.get(sku.skuId);
-      const isDisabled = originalSku?.isEditable === false;
+      const isDisabled = useReleasedForEditable
+        ? ebomAllViewOnly || isSkuReleasedByState(originalSku ?? sku)
+        : originalSku?.isEditable === false;
 
       return {
         skuId: sku.skuId,
@@ -857,6 +869,8 @@ export class GridService {
         color: sku.color,
         size: sku.size1,
         destination: sku.destination,
+        materialColorPartNumber: sku.materialColorPartNumber,
+        materialColorState: sku.materialColorState,
         fieldName: this.skuService.toFieldName(sku.skuId),
         hasData: true,
         isDisabled: isDisabled,
@@ -903,25 +917,44 @@ export class GridService {
     }
 
     return skuColumns.map((sku, index) => {
-      const lines = [`SKU - ${sku.skuId}`];
+      const lines: string[] = [];
 
-      if (sku.product !== undefined && sku.product !== null && sku.product !== '') {
-        lines.push(`Product - ${sku.product}`);
-      }
-      if (sku.material !== undefined && sku.material !== null && sku.material !== '') {
-        lines.push(`Material - ${sku.material}`);
-      }
-      if (sku.manufacturer !== undefined && sku.manufacturer !== null && sku.manufacturer !== '') {
-        lines.push(`Manufacturer - ${sku.manufacturer}`);
-      }
-      if (sku.color !== undefined && sku.color !== null && sku.color !== '') {
-        lines.push(`Color - ${sku.color}`);
-      }
-      if (sku.size !== undefined && sku.size !== null && sku.size !== '') {
-        lines.push(`Size - ${sku.size}`);
-      }
-      if (sku.destination && sku.destination.trim() !== '') {
-        lines.push(`Destination - ${sku.destination}`);
+      if (useReleasedForEditable) {
+        if (
+          sku.materialColorPartNumber !== undefined &&
+          sku.materialColorPartNumber !== null &&
+          String(sku.materialColorPartNumber).trim() !== ''
+        ) {
+          lines.push(`Parent Part - ${sku.materialColorPartNumber}`);
+        }
+        if (
+          sku.materialColorState !== undefined &&
+          sku.materialColorState !== null &&
+          String(sku.materialColorState).trim() !== ''
+        ) {
+          lines.push(String(sku.materialColorState));
+        }
+      } else {
+        lines.push(`SKU - ${sku.skuId}`);
+
+        if (sku.product !== undefined && sku.product !== null && sku.product !== '') {
+          lines.push(`Product - ${sku.product}`);
+        }
+        if (sku.material !== undefined && sku.material !== null && sku.material !== '') {
+          lines.push(`Material - ${sku.material}`);
+        }
+        if (sku.manufacturer !== undefined && sku.manufacturer !== null && sku.manufacturer !== '') {
+          lines.push(`Manufacturer - ${sku.manufacturer}`);
+        }
+        if (sku.color !== undefined && sku.color !== null && sku.color !== '') {
+          lines.push(`Color - ${sku.color}`);
+        }
+        if (sku.size !== undefined && sku.size !== null && sku.size !== '') {
+          lines.push(`Size - ${sku.size}`);
+        }
+        if (sku.destination && sku.destination.trim() !== '') {
+          lines.push(`Destination - ${sku.destination}`);
+        }
       }
 
       const fullHeader = lines.join('\n');

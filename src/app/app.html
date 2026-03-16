@@ -55,8 +55,8 @@
               <app-icon name="search" size="14"></app-icon>
             </button>
           </div>
-          <div class="sku-filter-container" *ngIf="isMbomMode() && !isEbomMode() && !isMaterialMbomMode()">
-            <label class="sku-filter-label" for="sku-filter-select">SKU Views:</label>
+          <div class="sku-filter-container" *ngIf="isMbomMode() || isEbomMode() || isMaterialMbomMode()">
+            <label class="sku-filter-label" for="sku-filter-select">{{isEbomMode() || isMaterialMbomMode() ? 'Views:' : 'SKU Views:'}}</label>
             <div class="sku-filter-select-wrapper" [class.open]="isSkuFilterSelectOpen">
               <select
                 id="sku-filter-select"

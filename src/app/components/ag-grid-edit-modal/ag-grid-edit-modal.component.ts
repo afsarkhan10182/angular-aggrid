@@ -160,7 +160,11 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
     return this.mode === 'part' ? new Set<string>() : this.serviceLookupFields;
   }
 
-  private buildColumnDefs(columns: { [key: string]: string }): ColDef[] {
+  private buildColumnDefs(
+    columns: { [key: string]: string },
+    defaultColumnFields?: Set<string>,
+    defaultDefinitionList?: Record<string, { attributeType?: string; selectableOptions?: Record<string, string> }>,
+  ): ColDef[] {
     const columnDefs: ColDef[] = [
       {
         headerName: '',
@@ -204,16 +208,25 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
     ];
 
     const disabledFields = this.getDisabledFields();
-    
     const dropdownFields = this.getDropdownFields();
 
     // Build columns in the order they appear in the API response
     Object.keys(columns).forEach((field) => {
       const headerName = columns[field];
       const isDisabled = disabledFields.has(field);
-      const isDropdown = dropdownFields.has(field);
+      const isServiceDropdown = dropdownFields.has(field);
+      const definition = defaultDefinitionList?.[field];
+      const isChoiceDropdown =
+        this.mode === 'part' &&
+        definition?.attributeType === 'choice' &&
+        definition?.selectableOptions &&
+        typeof definition.selectableOptions === 'object';
+      const selectableOptions = isChoiceDropdown ? definition.selectableOptions! : null;
+      const choiceValues = selectableOptions ? Object.values(selectableOptions) : [];
+      const isDropdown = isServiceDropdown || isChoiceDropdown;
       const isCompactColumnField = COMPACT_COLUMN_FIELDS.has(field);
       const isPartNumberField = field === FIELD_PART_NUMBER;
+      const isDefaultColumn = defaultColumnFields?.has(field) ?? true;
 
       const colDef: ColDef = {
         headerName: headerName,
@@ -224,6 +237,7 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
         sortable: true,
         filter: true,
         suppressMovable: true,
+        hide: defaultColumnFields !== undefined ? !isDefaultColumn : false,
         cellRenderer: (params: any) => {
           // Get column width - try multiple methods for reliability
           let columnWidth = 150; // default fallback
@@ -247,8 +261,32 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
         },
       };
 
-      // Add cell editor for dropdown fieldsparams.column?.getActualWidth() || colDef.width || 
-      if (isDropdown) {
+      if (isChoiceDropdown && selectableOptions) {
+        colDef.cellEditor = AutocompleteCellEditorComponent;
+        colDef.cellEditorParams = () => ({
+          values: ['', ...choiceValues],
+          placeholder: 'Select...',
+          filterFunction: this.utilService.createAutocompleteFilter(),
+        });
+        colDef.valueGetter = (params: any) => {
+          const v = params.data?.[field];
+          if (v == null || v === '') return '';
+          return selectableOptions[v] ?? v;
+        };
+        colDef.valueFormatter = (params: any) => {
+          if (params.value == null || params.value === '') return '';
+          const opts = selectableOptions;
+          return opts[params.value] ?? params.value;
+        };
+        colDef.valueParser = (params: any) => {
+          const value = params?.newValue ?? params?.value;
+          if (value == null || value === '') return value;
+          const entry = Object.entries(selectableOptions).find(([, v]) => v === value);
+          return entry ? entry[0] : value;
+        };
+        colDef.cellClass = (colDef.cellClass ? `${colDef.cellClass} ` : '') + 'dropdown-cell';
+        colDef.headerClass = (colDef.headerClass ? `${colDef.headerClass} ` : '') + 'dropdown-header';
+      } else if (isServiceDropdown) {
         colDef.cellEditor = AutocompleteCellEditorComponent;
         colDef.cellEditorParams = () => ({
           placeholder: PLACEHOLDER_SEARCH_SERVICES,
@@ -257,7 +295,6 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
             dataService: this.dataService,
           },
         });
-        // Add CSS class to identify dropdown columns
         colDef.cellClass = 'dropdown-cell';
         colDef.headerClass = 'dropdown-header';
       }
@@ -540,6 +577,33 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
         // Notify grid to recalculate layout
         this.notifyGridLayoutChange();
       },
+      onCellClicked: (params: any) => {
+        if (params.colDef?.field === COL_ACTIONS) return;
+        if (params.event) {
+          const target = params.event.target as HTMLElement;
+          if (
+            target?.closest?.('button') ||
+            target?.closest?.('[data-action]') ||
+            target?.closest?.('.ag-selection-checkbox') ||
+            target?.closest?.('input[type="checkbox"]') ||
+            target?.tagName === 'INPUT' ||
+            target?.closest?.('.ag-checkbox')
+          ) {
+            return;
+          }
+        }
+        const editable = params.colDef?.editable;
+        const isEditable =
+          typeof editable === 'function' ? editable({ ...params, data: params.data }) : editable !== false;
+        if (isEditable) {
+          params.api.startEditingCell({
+            rowIndex: params.rowIndex,
+            colKey: params.column.getId(),
+            rowPinned: params.rowPinned,
+          });
+        }
+        commonOptions.onCellClicked?.(params);
+      },
       onCellValueChanged: (params) => {
         if (params.data) {
           const materialColorId = params.data.materialColorId;
@@ -816,6 +880,7 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
       next: (response: any) => {
         const instances = response?.instances;
         const columns = response?.columns;
+        const defaultColumns = response?.DefaultColumns;
 
         if (!instances || typeof instances !== 'object') {
           this.isLoading = false;
@@ -824,7 +889,15 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
         }
 
         if (columns && typeof columns === 'object') {
-          this.columnDefs = this.buildColumnDefs(columns);
+          const defaultColumnFields =
+            this.mode === 'part' && defaultColumns && typeof defaultColumns === 'object'
+              ? new Set<string>(Object.keys(defaultColumns))
+              : undefined;
+          const defaultDefinitionList =
+            this.mode === 'part' && response?.DefaultDefinitionList && typeof response.DefaultDefinitionList === 'object'
+              ? response.DefaultDefinitionList
+              : undefined;
+          this.columnDefs = this.buildColumnDefs(columns, defaultColumnFields, defaultDefinitionList);
           if (this.gridApi) {
             this.gridApi.setGridOption('columnDefs', this.columnDefs);
           }

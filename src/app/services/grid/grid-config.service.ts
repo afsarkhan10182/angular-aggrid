@@ -8,6 +8,7 @@ import {
   ENUM_MBOM_LINE_ITEM,
   COL_ACTIONS,
   COL_CHECKBOX,
+  FIELD_MATERIAL_COLOR_STATUS,
   FIELD_PART_NUMBER,
   FIELD_QUANTITY,
   FIELD_BOM_LINK_START_DATE,
@@ -575,6 +576,16 @@ export class GridConfigService {
     return [...EBOM_SERVICE_FIELDS];
   }
 
+  /**
+   * EBOM/MATERIALMBOM: released rows are non-editable; non-released rows are editable.
+   * Mixed selection: only non-released rows are editable; updates apply per row (released part not changed).
+   */
+  private isRowReleasedState(rowData: any): boolean {
+    const state = String(rowData?.[FIELD_MATERIAL_COLOR_STATUS] ?? '').trim().toLowerCase();
+    if (!state) return false;
+    return state === 'released' || state === 'release' || state.startsWith('release');
+  }
+
   isFieldEditableInSbom(
     field: string,
     rowData: any,
@@ -588,6 +599,9 @@ export class GridConfigService {
     }
 
     if (isEbomMode?.() || isMaterialMbomMode?.()) {
+      if (this.isRowReleasedState(rowData)) {
+        return false;
+      }
       const core = EBOM_CORE_FIELDS.includes(field);
       const serviceField = EBOM_SERVICE_FIELDS.includes(field);
       return core || serviceField;
