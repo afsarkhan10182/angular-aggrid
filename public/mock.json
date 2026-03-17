@@ -105,7 +105,7 @@
                 "materialColorSixtyCharacterDescription": "test",
                 "section": "enumSection001",
                 "materialSupplierPrimaryUOM": "",
-                "materialColorState": "Non-Released",
+                "materialColorState": "Released",
                 "materialColorServiceDescription": "test",
                 "bomLinkStartDate": "",
                 "supplier": "",
@@ -380,5 +380,5 @@
             "materialColorState": "Release"
         }
     ],
-    "bomType": "EBOM"
+    "bomType": "MATERIALMBOM"
 }

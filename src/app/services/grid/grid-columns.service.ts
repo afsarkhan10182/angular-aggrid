@@ -83,7 +83,6 @@ export class GridColumnsService {
     const columns: ExtendedColDef[] = [];
 
     const checkboxSelection = (params: any) => {
-      if (!context.isAddRowEnabled()) return false;
       const data = params?.data;
       if (!data) return false;
       return !(
@@ -102,7 +101,7 @@ export class GridColumnsService {
     actionsCol.width = context.actionsColumnWidth;
     actionsCol.minWidth = context.actionsColumnWidth;
     actionsCol.maxWidth = 76;
-    actionsCol.headerCheckboxSelection = () => context.isAddRowEnabled();
+    actionsCol.headerCheckboxSelection = () => true;
     actionsCol.headerCheckboxSelectionFilteredOnly = true;
     actionsCol.checkboxSelection = checkboxSelection;
     columns.push(actionsCol);

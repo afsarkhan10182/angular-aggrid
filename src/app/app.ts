@@ -148,6 +148,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public bomType: string = '';
   public selectedSkuFilter: SkuFilterOption = 'all';
   public isSkuFilterSelectOpen = false;
+  public highlightSkuFilter = false;
   public showActionDropdown = false;
   public readonly mbomSkuFilterOptions: Array<{ label: string; value: MbomSkuFilterOption }>;
   public readonly sbomSkuFilterOptions: Array<{ label: string; value: SbomSkuFilterOption }>;
@@ -217,6 +218,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public availableGroupFields: GroupConfig[] = []; // Available columns for grouping
   private readonly groupExpandedState: Map<string, boolean> = new Map(); // Track group expand/collapse state
   private linkedBomRequestId = 0;
+  private skuFilterHighlightTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     public dataService: DataService,
@@ -690,8 +692,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       this.applyGridSearch();
 
       if (this.isSkuFilterReadOnly()) {
-        this.gridApi.deselectAll();
-        this.selectedRows.clear();
         this.massEditMode = false;
       }
     }
@@ -803,6 +803,27 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
 
     return 'Save changes';
+  }
+
+  private showSkuFilterEditableHint(actionLabel: string): void {
+    let message = `Switch to an editable view to enable ${actionLabel}.`;
+    if (this.isMbomMode()) {
+      message = `Switch to "HD source - Editable" view to enable ${actionLabel}.`;
+    } else if (this.isEbomMode() || this.isMaterialMbomMode()) {
+      message = `Switch to "Editable - Non-released" view to enable ${actionLabel}.`;
+    } else if (!this.isSbomMode()) {
+      message = `Switch to "Editable SKUs" view to enable ${actionLabel}.`;
+    }
+
+    this.showNotification(message, NOTIFICATION_TYPE_INFO);
+    this.highlightSkuFilter = true;
+    if (this.skuFilterHighlightTimeout) {
+      clearTimeout(this.skuFilterHighlightTimeout);
+    }
+    this.skuFilterHighlightTimeout = setTimeout(() => {
+      this.highlightSkuFilter = false;
+      this.skuFilterHighlightTimeout = null;
+    }, 2200);
   }
 
   /**
@@ -2881,6 +2902,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
+    if (this.isSkuFilterReadOnly()) {
+      this.showSkuFilterEditableHint('Mass Edit');
+      return;
+    }
+
     this.massEditMode = true;
     const massEditState = this.massEditService.populateMassEditFields(
       Array.from(this.selectedRows),
@@ -2941,7 +2967,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const hasReleasedRows = selectedRows.some((row: any) => this.isReleasedState(row));
     if (hasReleasedRows) {
       this.showNotification(
-        'Please uncheck Released state rows to open Edit Parts.',
+        'Please uncheck Released state row(s) to open Edit Parts.',
         NOTIFICATION_TYPE_INFO,
       );
       return;
@@ -3058,6 +3084,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.stopAutoScroll();
     this.subscriptions.forEach((sub) => sub.unsubscribe());
     this.subscriptions = [];
+
+    if (this.skuFilterHighlightTimeout) {
+      clearTimeout(this.skuFilterHighlightTimeout);
+      this.skuFilterHighlightTimeout = null;
+    }
 
     if (this.searchTextDebounceTimer) {
       clearTimeout(this.searchTextDebounceTimer);
