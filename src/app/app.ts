@@ -2938,10 +2938,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     }
 
     const selectedRows = Array.from(this.selectedRows);
-    const hasNonReleased = selectedRows.some((row: any) => !this.isReleasedState(row));
-    if (hasNonReleased) {
+    const hasReleasedRows = selectedRows.some((row: any) => this.isReleasedState(row));
+    if (hasReleasedRows) {
       this.showNotification(
-        'Select only rows with Released state to Edit Parts.',
+        'Please uncheck Released state rows to open Edit Parts.',
         NOTIFICATION_TYPE_INFO,
       );
       return;

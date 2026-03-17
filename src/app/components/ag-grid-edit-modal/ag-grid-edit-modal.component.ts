@@ -51,6 +51,7 @@ const COMPACT_COLUMN_FIELDS = new Set<string>([FIELD_PART_NUMBER, FIELD_MATERIAL
   styleUrls: ['./ag-grid-edit-modal.component.css'],
 })
 export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestroy {
+  private readonly partEditSelectableOptionsByField: Record<string, Record<string, string>> = {};
   @Input() materialColorIds: string[] = [];
   @Input() mode: 'service' | 'part' = 'service';
   @Output() modalClose = new EventEmitter<void>();
@@ -700,11 +701,11 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
       rowsByMaterialColorId,
       buildInstanceData: (currentRow, editedFieldsForRow) => {
         if (this.mode === 'part') {
-          const data: any = {};
-          editedFieldsForRow.forEach((field) => {
-            data[field] = currentRow[field] ?? '';
-          });
-          return data;
+          return this.dataService.buildPartEditInstanceData(
+            currentRow,
+            editedFieldsForRow,
+            this.partEditSelectableOptionsByField,
+          );
         }
         return this.dataService.buildMaterialColorInstanceData(currentRow, editedFieldsForRow);
       },
@@ -727,6 +728,7 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
 
     save$.subscribe({
       next: (response: any) => {
+        const responseInstances = this.normalizeResponseInstances(response?.instances);
         
         // Handle errors from response
         const hasErrors = response?.errors && typeof response.errors === 'object' && Object.keys(response.errors).length > 0;
@@ -742,7 +744,7 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
           this.showSuccessMessage = false;
 
           this.rowManagementService.applyResponseInstances({
-            instances: response?.instances,
+            instances: responseInstances,
             rowData: this.rowData,
             editedRows: this.editedRows,
             editedFields: this.editedFields,
@@ -750,8 +752,8 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
             clearEditedState: true,
           });
 
-          const successCount = response?.instances
-            ? Object.keys(response.instances).filter((id) => !this.rowErrors[id]).length
+          const successCount = responseInstances
+            ? Object.keys(responseInstances).filter((id) => !this.rowErrors[id]).length
             : 0;
           if (successCount > 0) {
             this.dataSaved.emit();
@@ -789,7 +791,7 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
           this.applyActionsColumnWidth(this.computeActionsColumnWidth());
           // No errors - update row data with saved instances (modal stays open)
           this.rowManagementService.applyResponseInstances({
-            instances: response?.instances,
+            instances: responseInstances,
             rowData: this.rowData,
             editedRows: this.editedRows,
             editedFields: this.editedFields,
@@ -805,7 +807,7 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
           }
           
           // Show success message
-          const savedCount = Object.keys(response.instances || {}).length;
+          const savedCount = Object.keys(responseInstances || {}).length;
           this.showAutoHideSuccessMessage(
             savedCount === 1
               ? (this.mode === 'part' ? 'Part edit row saved successfully!' : 'Material color saved successfully!')
@@ -840,6 +842,24 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
     });
   }
 
+  private normalizeResponseInstances(instances: any): { [key: string]: any } | undefined {
+    if (!instances || typeof instances !== 'object') {
+      return undefined;
+    }
+
+    if (this.mode !== 'part') {
+      return instances;
+    }
+
+    return Object.keys(instances).reduce(
+      (normalized, materialColorId) => {
+        normalized[materialColorId] = this.flattenInstance(instances[materialColorId]);
+        return normalized;
+      },
+      {} as { [key: string]: any },
+    );
+  }
+
   private flattenInstance(instance: any): any {
     if (!instance || typeof instance !== 'object') return {};
     const flattened: any = {};
@@ -864,6 +884,9 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
     this.loadErrorMessage = '';
     this.rowData = [];
     this.rowErrors = {};
+    Object.keys(this.partEditSelectableOptionsByField).forEach((fieldName) => {
+      delete this.partEditSelectableOptionsByField[fieldName];
+    });
 
     if (!Array.isArray(this.materialColorIds) || this.materialColorIds.length === 0) {
       this.isLoading = false;
@@ -897,6 +920,14 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
             this.mode === 'part' && response?.DefaultDefinitionList && typeof response.DefaultDefinitionList === 'object'
               ? response.DefaultDefinitionList
               : undefined;
+          if (this.mode === 'part' && defaultDefinitionList) {
+            Object.keys(defaultDefinitionList).forEach((fieldName) => {
+              const selectableOptions = defaultDefinitionList[fieldName]?.selectableOptions;
+              if (selectableOptions && typeof selectableOptions === 'object') {
+                this.partEditSelectableOptionsByField[fieldName] = selectableOptions;
+              }
+            });
+          }
           this.columnDefs = this.buildColumnDefs(columns, defaultColumnFields, defaultDefinitionList);
           if (this.gridApi) {
             this.gridApi.setGridOption('columnDefs', this.columnDefs);

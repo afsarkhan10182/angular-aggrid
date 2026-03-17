@@ -62,6 +62,16 @@ const MATERIAL_COLOR_FIELD_VALUE_MAP: Readonly<Record<string, MaterialColorField
   },
 };
 
+const PART_EDIT_COLOR_ATTRIBUTE_FIELDS = [
+  'materialColorPrintCopy',
+  'materialColorSixtyCharacterDescription',
+  'materialColorThirtyCharacterDescription',
+  'materialColorBrand',
+] as const;
+
+const PART_EDIT_MATERIAL_ATTRIBUTE_FIELDS = ['materialAttachmentType'] as const;
+const PART_EDIT_SUPPLIER_ATTRIBUTE_FIELDS = ['materialSupplierPrimaryUOM'] as const;
+
 export interface BomLinkSku {
   product: string;
   productId: string;
@@ -697,13 +707,77 @@ export class DataService {
     return instanceData;
   }
 
+  buildPartEditInstanceData(
+    row: any,
+    editedFieldsForRow: Set<string>,
+    selectableOptionsByField?: Record<string, Record<string, string>>,
+  ): { [key: string]: any } {
+    const normalizePartEditValue = (fieldName: string, value: any): string => {
+      if (value == null || value === '') {
+        return '';
+      }
+
+      const normalizedValue = String(value);
+      const selectableOptions = selectableOptionsByField?.[fieldName];
+      if (!selectableOptions) {
+        return normalizedValue;
+      }
+
+      if (Object.prototype.hasOwnProperty.call(selectableOptions, normalizedValue)) {
+        return normalizedValue;
+      }
+
+      const matchedEntry = Object.entries(selectableOptions).find(
+        ([, displayValue]) => displayValue === normalizedValue,
+      );
+      return matchedEntry ? matchedEntry[0] : normalizedValue;
+    };
+
+    const buildTouchedAttributeGroup = (fields: readonly string[]): Record<string, string> =>
+      fields.reduce(
+        (group, fieldName) => {
+          if (editedFieldsForRow.has(fieldName)) {
+            group[fieldName] = normalizePartEditValue(fieldName, row?.[fieldName] ?? '');
+          }
+          return group;
+        },
+        {} as Record<string, string>,
+      );
+
+    const materialSupplierAttributes = buildTouchedAttributeGroup(PART_EDIT_SUPPLIER_ATTRIBUTE_FIELDS);
+    const materialColorAttributes = buildTouchedAttributeGroup(PART_EDIT_COLOR_ATTRIBUTE_FIELDS);
+    const materialAttributes = buildTouchedAttributeGroup(PART_EDIT_MATERIAL_ATTRIBUTE_FIELDS);
+
+    const instanceData: { [key: string]: any } = {
+      material: row?.material ?? '',
+      color: row?.color ?? '',
+      colorId: row?.colorId ?? '',
+      materialColorId: row?.materialColorId ?? '',
+      supplier: row?.supplier ?? '',
+      materialSupplierId: row?.materialSupplierId ?? '',
+      childId: row?.childId ?? '',
+      materialId: row?.materialId ?? '',
+    };
+
+    if (Object.keys(materialSupplierAttributes).length > 0) {
+      instanceData['MaterialSupplierAttributes'] = materialSupplierAttributes;
+    }
+    if (Object.keys(materialColorAttributes).length > 0) {
+      instanceData['MaterialColorAttributes'] = materialColorAttributes;
+    }
+    if (Object.keys(materialAttributes).length > 0) {
+      instanceData['MaterialAttributes'] = materialAttributes;
+    }
+
+    return instanceData;
+  }
+
   /**
    * Save Material Colors
    * PUT: /Windchill/servlet/rest/trek/saveMaterialColors
    * @param payload - Object with instances containing material color updates
    */
   saveMaterialColors(payload: { instances: { [key: string]: any } }): Observable<any> {
-    console.log('saveMaterialColors', payload);
     if (environment.useMockApi) {
       return of({ success: true, message: MSG_MATERIAL_COLORS_SAVED_MOCK });
     }
@@ -722,19 +796,26 @@ export class DataService {
 
   /**
    * Save Part Edit modal changes.
-   * Mock returns success; API reuses saveMaterialColors endpoint contract.
+   * PUT: /Windchill/servlet/rest/trek/saveMaterialandPartDetails?bomType=...
    */
   savePartEditData(payload: { instances: { [key: string]: any }; materialColorIds?: string }): Observable<any> {
-    if (environment.useMockApi) {
-      return of({ instances: payload.instances || {}, success: true });
-    }
-    const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/material-colors/part-edits`;
     const requestPayload = {
       instances: payload.instances || {},
       materialColorIds: payload.materialColorIds || '',
-      bomType: this.getBomTypeForPayload(),
     };
-    return this.http.put<any>(apiUrl, requestPayload, { headers: this.buildHttpHeaders() }).pipe(
+    console.log('savePartEditData payload', requestPayload);
+
+    if (environment.useMockApi) {
+      return of({ instances: requestPayload.instances, success: true });
+    }
+    const bomType = this.getBomTypeForPayload();
+    const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/saveMaterialandPartDetails`;
+    const urlWithQuery = `${apiUrl}?${PARAM_BOM_TYPE}=${encodeURIComponent(bomType)}`;
+    const headers = {
+      ...this.buildHttpHeaders(),
+      accept: '*/*',
+    };
+    return this.http.put<any>(urlWithQuery, requestPayload, { headers }).pipe(
       map((response) => response || { success: true }),
       catchError((error: HttpErrorResponse) => throwError(() => error)),
     );
