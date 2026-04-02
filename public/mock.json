@@ -371,7 +371,7 @@
             "manufacturer": "Robert Bosch GMBH Supplier Buyer",
             "isHDSource": false,
             "material": "00.3018.201.001; EP POWERPACK 2 BATTERY",
-            "isEditable": false,
+            "isEditable": true,
             "materialColorId": "554736",
             "bomName": "EBOM 00.3018.201.001; EP POWERPACK 2 BATTERY",
             "materialColorPartNumber": "582579",
@@ -380,5 +380,5 @@
             "materialColorState": "Release"
         }
     ],
-    "bomType": "MATERIALMBOM"
+    "bomType": "SBOM"
 }

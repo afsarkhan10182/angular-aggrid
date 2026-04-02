@@ -1536,7 +1536,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     event.event.preventDefault();
     event.event.stopPropagation();
-    if (this.isEbomMode()) return true;
     if (isReadOnlySkuFilter || event.colDef?.isDisabled) {
       return true;
     }
@@ -1552,7 +1551,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     event.event.preventDefault();
     event.event.stopPropagation();
-    if (this.isEbomMode()) return true;
     if (isReadOnlySkuFilter) {
       return true;
     }
@@ -1815,55 +1813,53 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     let skuValidationResult: { isValid: boolean; message: string; invalidRows?: any[] } = { isValid: true, message: '' };
     let hasPayloadErrors = false;
 
-    if (!this.isEbomMode()) {
-      skuValidationResult = this.validationService.validateNewRowsSkus(
-        this.rowData,
-        skuInfo,
-        this.displayData,
-      );
-      skuValidationResult.invalidRows?.forEach(ir => {
-        if (!this.isRowTouched(ir.row)) return;
-        const existing = rowValidationMap.get(ir.row);
-        if (existing) {
-          existing.skuErrors = Array.isArray(ir.skuErrors)
+    skuValidationResult = this.validationService.validateNewRowsSkus(
+      this.rowData,
+      skuInfo,
+      this.displayData,
+    );
+    skuValidationResult.invalidRows?.forEach(ir => {
+      if (!this.isRowTouched(ir.row)) return;
+      const existing = rowValidationMap.get(ir.row);
+      if (existing) {
+        existing.skuErrors = Array.isArray(ir.skuErrors)
+          ? ir.skuErrors
+          : ['SKU selection missing'];
+      } else {
+        rowValidationMap.set(ir.row, {
+          missingFields: [],
+          skuErrors: Array.isArray(ir.skuErrors)
             ? ir.skuErrors
-            : ['SKU selection missing'];
-        } else {
-          rowValidationMap.set(ir.row, {
-            missingFields: [],
-            skuErrors: Array.isArray(ir.skuErrors)
-              ? ir.skuErrors
-              : ['SKU selection missing'],
-          });
-        }
-      });
+            : ['SKU selection missing'],
+        });
+      }
+    });
 
-      const allNewRows = this.utilService.findAllNewRows(this.rowData, this.displayData);
-      for (const newRow of allNewRows) {
-        const payloadSkus = this.buildSkusArrayFromRow(newRow, skuInfo);
-        const payloadValidation = this.validationService.validateSkuPayload(
-          newRow,
-          skuInfo,
-          payloadSkus,
-        );
+    const allNewRows = this.utilService.findAllNewRows(this.rowData, this.displayData);
+    for (const newRow of allNewRows) {
+      const payloadSkus = this.buildSkusArrayFromRow(newRow, skuInfo);
+      const payloadValidation = this.validationService.validateSkuPayload(
+        newRow,
+        skuInfo,
+        payloadSkus,
+      );
 
-        if (!payloadValidation.isValid) {
-          hasPayloadErrors = true;
-          if (this.isRowTouched(newRow)) {
-            const existing = rowValidationMap.get(newRow);
-            const skuErrorMessage = payloadValidation.message || 'No SKUs selected in row';
-            if (existing) {
-              existing.skuErrors.push(skuErrorMessage);
-            } else {
-              rowValidationMap.set(newRow, {
-                missingFields: [],
-                skuErrors: [skuErrorMessage],
-              });
-            }
+      if (!payloadValidation.isValid) {
+        hasPayloadErrors = true;
+        if (this.isRowTouched(newRow)) {
+          const existing = rowValidationMap.get(newRow);
+          const skuErrorMessage = payloadValidation.message || 'No SKUs selected in row';
+          if (existing) {
+            existing.skuErrors.push(skuErrorMessage);
+          } else {
+            rowValidationMap.set(newRow, {
+              missingFields: [],
+              skuErrors: [skuErrorMessage],
+            });
           }
-          const rowId = this.utilService.getRowId(newRow) || ROW_ID_UNKNOWN;
-          this.invalidRowIds.add(rowId);
         }
+        const rowId = this.utilService.getRowId(newRow) || ROW_ID_UNKNOWN;
+        this.invalidRowIds.add(rowId);
       }
     }
 
@@ -1907,17 +1903,15 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (this.handleValidationError(validationResult)) {
       return;
     }
-    if (!this.isEbomMode()) {
-      if (this.handleValidationError(skuValidationResult)) {
-        return;
-      }
-      if (hasPayloadErrors) {
-        this.handleValidationError({
-          isValid: false,
-          message: 'Please fix validation errors before saving.',
-        } as any);
-        return;
-      }
+    if (this.handleValidationError(skuValidationResult)) {
+      return;
+    }
+    if (hasPayloadErrors) {
+      this.handleValidationError({
+        isValid: false,
+        message: 'Please fix validation errors before saving.',
+      } as any);
+      return;
     }
     if (this.handleValidationError(duplicateValidation)) {
       return;

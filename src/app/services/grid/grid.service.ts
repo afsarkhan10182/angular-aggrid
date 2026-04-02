@@ -524,21 +524,6 @@ export class GridService {
     const rowData = params.data || {};
     const partNumber = config.getPartNumberValue(rowData);
     const hasValue = params.value !== null && params.value !== undefined && params.value !== '';
-    const isEbom = config.isEbomMode?.();
-
-    if (isEbom) {
-      if (!partNumber) return '';
-      if (hasValue) {
-        const valueText = config.utilService.escapeHtml(String(params.value));
-        return `
-          <div class="sku-cell-action-wrapper filled">
-            <span class="sku-cell-value" title="${valueText}">${valueText}</span>
-          </div>
-        `;
-      }
-      return '';
-    }
-
     if (!partNumber) {
       return '';
     }

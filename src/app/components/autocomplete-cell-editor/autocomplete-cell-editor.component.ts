@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { ICellEditorAngularComp } from 'ag-grid-angular';
 import {
   BOM_LINK_KEY,
-  BOM_TYPE_EBOM,
   FIELD_COLOR_DESCRIPTION,
   FIELD_COLOR,
   FIELD_BOM_LINK_PART,
@@ -65,7 +64,6 @@ export class AutocompleteCellEditorComponent
 
   private params: any;
   private originalValue: string = '';
-  private lastPartValueBeforeSelection: string | null = null;
   private customFilterFunction?: (searchTerm: string, options: string[]) => string[];
   private dataService: DataService;
   private searchSubject = new Subject<string>();
@@ -635,6 +633,7 @@ export class AutocompleteCellEditorComponent
 
     if (this.params && this.params.node) {
       const fieldName = this.getFieldName();
+      let clearSkuOnPartChange = false;
       if (fieldName) {
         if (PART_FIELD_KEYS.includes(fieldName)) {
           const data = this.params.node.data || {};
@@ -643,9 +642,9 @@ export class AutocompleteCellEditorComponent
             data[FIELD_BOM_LINK_PART] ??
             data[FIELD_PART] ??
             '';
-          this.lastPartValueBeforeSelection = String(prevPart ?? '').trim();
-        } else {
-          this.lastPartValueBeforeSelection = null;
+          const isNewRow = !!data.isNewRow;
+          clearSkuOnPartChange =
+            isNewRow && String(prevPart ?? '').trim() !== String(option ?? '').trim();
         }
 
         this.params.node.setDataValue(fieldName, option);
@@ -690,7 +689,7 @@ export class AutocompleteCellEditorComponent
       }
 
       if (selectedMaterial) {
-        this.autoPopulateFields(selectedMaterial);
+        this.autoPopulateFields(selectedMaterial, { clearSkuOnPartChange });
         if (
           fieldName === FIELD_PART_NUMBER ||
           fieldName === FIELD_BOM_LINK_PART ||
@@ -706,6 +705,14 @@ export class AutocompleteCellEditorComponent
         !this.isServiceSearch
       ) {
         this.triggerFeatureAutoPopulation(option);
+      }
+
+      if (
+        clearSkuOnPartChange &&
+        !selectedMaterial &&
+        (fieldName === FIELD_PART_NUMBER || fieldName === FIELD_BOM_LINK_PART || fieldName === FIELD_PART)
+      ) {
+        this.clearSkuValuesForRow();
       }
 
       if (this.params.api) {
@@ -789,6 +796,18 @@ export class AutocompleteCellEditorComponent
     return this.options.filter((option) => option.toLowerCase().includes(searchTerm));
   }
 
+  private clearSkuValuesForRow(): void {
+    if (!this.params?.node || !this.dataService) return;
+    const node = this.params.node;
+    const skuFieldNames = this.skuService.getFieldNames(this.dataService.getSkuInfo());
+    skuFieldNames.forEach((fieldName) => {
+      const currentValue = node.data?.[fieldName];
+      if (currentValue !== '' && currentValue !== null && currentValue !== undefined) {
+        node.setDataValue(fieldName, '');
+      }
+    });
+  }
+
   private clearAutopopulatedFieldsWhenPartCleared(): void {
     if (!this.params?.node?.data) return;
     const node = this.params.node;
@@ -804,6 +823,7 @@ export class AutocompleteCellEditorComponent
         node.setDataValue(field, field === '_availablePartNumbers' ? [] : '');
       }
     });
+    this.clearSkuValuesForRow();
     if (this.params.api) {
       this.params.api.refreshCells({ rowNodes: [node], force: true });
     }
@@ -816,7 +836,7 @@ export class AutocompleteCellEditorComponent
    * For each column in responseColumns, set row[key] = flatInstance[key]. If a column is in the grid but not in
    * responseColumns, it is not filled (no error). Internal IDs (colorId, materialSupplierMasterId) are set for save.
    */
-  private autoPopulateFields(material: any): void {
+  private autoPopulateFields(material: any, options?: { clearSkuOnPartChange?: boolean }): void {
     if (!this.params || !this.params.node) return;
 
     const originalData = { ...this.params.node.data };
@@ -881,34 +901,13 @@ export class AutocompleteCellEditorComponent
       this.fetchAllMaterialsForDropdowns(material);
     }
 
-    const skuInfoPart = this.dataService?.getSkuInfo();
-    const isEbom = this.dataService?.getBomType() === BOM_TYPE_EBOM;
-    if (skuInfoPart?.length > 0 && isEbom && partValue) {
-      const isExistingRow = !this.params?.node?.data?.isNewRow;
-      const shouldLimitSkuUpdate = isExistingRow && this.isPartNumberSearch;
-      const previousPartValue = (this.lastPartValueBeforeSelection || '').trim();
+    const clearSkuOnPartChange = options?.clearSkuOnPartChange === true;
+    if (clearSkuOnPartChange) {
+      this.clearSkuValuesForRow();
+    }
 
-      const skuUpdates = this.skuService.buildSkuFieldUpdates({
-        skuInfo: skuInfoPart,
-        fillWithPartNumber: true,
-        partNumberValue: partValue,
-      });
-      this.skuService.applySkuFieldUpdates({
-        row: this.params?.node?.data,
-        updates: skuUpdates,
-        setDataValue: (fieldName, value) => this.params.node.setDataValue(fieldName, value),
-        shouldApply: (update) => {
-          if (shouldLimitSkuUpdate) {
-            if (!previousPartValue) return false;
-            const currentSkuValue = String(originalData[update.fieldName] ?? '').trim();
-            if (currentSkuValue !== previousPartValue) {
-              return false;
-            }
-          }
-          return originalData[update.fieldName] !== update.value;
-        },
-      });
-    } else if (material.skus && Array.isArray(material.skus) && skuInfoPart?.length > 0) {
+    const skuInfoPart = this.dataService?.getSkuInfo();
+    if (!clearSkuOnPartChange && material.skus && Array.isArray(material.skus) && skuInfoPart?.length > 0) {
       const skuUpdates = this.skuService.buildSkuFieldUpdates({
         skuInfo: skuInfoPart,
         sourceSkus: material.skus,
@@ -921,7 +920,6 @@ export class AutocompleteCellEditorComponent
       });
     }
     } finally {
-      this.lastPartValueBeforeSelection = null;
       setTimeout(() => setSkip?.(false), 0);
     }
   }
@@ -968,12 +966,8 @@ export class AutocompleteCellEditorComponent
         });
 
         const skuInfo = dataService.getSkuInfo();
-        const skuAutoFillWithPartNumber = dataService.getBomType() === BOM_TYPE_EBOM;
-        const partNumberForSkus = partData?.[FIELD_PART_NUMBER] ?? '';
         const skuUpdates = this.skuService.buildSkuFieldUpdates({
           skuInfo,
-          fillWithPartNumber: skuAutoFillWithPartNumber,
-          partNumberValue: partNumberForSkus,
           sourceSkus: partData.skus,
         });
         this.skuService.applySkuFieldUpdates({

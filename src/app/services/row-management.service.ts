@@ -1,6 +1,5 @@
 import {
   BOM_LINK_KEY,
-  BOM_TYPE_EBOM,
   BOM_TYPE_SBOM,
   LS_KEY_LAST_SAVED_AT,
   VALUE_SPEC_YES,
@@ -905,7 +904,23 @@ export class RowManagementService {
     dataService: DataService,
     editedRows: Set<string | number>
   ): void {
-    if ((params.field === FIELD_PART || params.colDef?.field === FIELD_PART) && params.newValue) {
+    const isPartField = params.field === FIELD_PART || params.colDef?.field === FIELD_PART;
+    const isPartChanged = this.normalizeEditValue(params.oldValue) !== this.normalizeEditValue(params.newValue);
+
+    if (isPartField && isPartChanged) {
+      const skuFieldNames = this.skuService.getFieldNames(dataService.getSkuInfo());
+      skuFieldNames.forEach((fieldName) => {
+        const currentValue = params.node?.data?.[fieldName];
+        if (currentValue !== '' && currentValue !== null && currentValue !== undefined) {
+          params.node.setDataValue(fieldName, '');
+          if (params.node?.data) {
+            params.node.data[fieldName] = '';
+          }
+        }
+      });
+    }
+
+    if (isPartField && params.newValue) {
       const apiData = dataService.getApiData();
       const items = Array.isArray(apiData?.instances) ? apiData.instances : [];
       if (items.length === 0) {
@@ -938,22 +953,6 @@ export class RowManagementService {
               }
             }
           }
-        });
-
-        const skuInfo = dataService.getSkuInfo();
-        const isEbom = dataService.getBomType() === BOM_TYPE_EBOM;
-        const skuUpdates = this.skuService.buildSkuFieldUpdates({
-          skuInfo,
-          fillWithPartNumber: isEbom,
-          partNumberValue: params.newValue ?? '',
-          sourceSkus: existingPartData.skus,
-        });
-        this.skuService.applySkuFieldUpdates({
-          row: params.node.data,
-          updates: skuUpdates,
-          setDataValue: (fieldName, value) => params.node.setDataValue(fieldName, value),
-          syncRowObject: !!params.node.data,
-          shouldApply: (update) => oldData[update.fieldName] !== update.value,
         });
 
         setTimeout(() => {
@@ -1029,6 +1028,8 @@ export class RowManagementService {
     apiPayload: any,
     resolve: (value: { success: boolean; message: string; payload?: any }) => void
   ): void {
+    this.updateSaveTimestamp();
+
     if (response && (response.instances || response.data)) {
       const responseData = response.instances ? response : response.data;
       this.updateApiData(responseData, componentInstance);
@@ -1039,7 +1040,6 @@ export class RowManagementService {
 
     this.clearEditedState(editedRows, componentInstance);
     this.updateOriginalValues(componentInstance);
-    this.updateSaveTimestamp();
     this.refreshGridAfterSave(gridApi, componentInstance);
 
     resolve({
