@@ -184,7 +184,7 @@
                 "materialSupplierPrimaryUOM": "",
                 "materialColorState": "Non-Released",
                 "materialColorServiceDescription": "test",
-                "bomLinkStartDate": "",
+                "bomLinkStartDate": "04/02/2026",
                 "supplier": "",
                 "materialColorId": "OR:com.lcs.wc.material.LCSMaterialColor:1112177",
                 "materialColorThirtyCharacterDescription": "hello",
@@ -193,10 +193,10 @@
                 "bomLinkCountryOfOrigin": "",
                 "materialColorServiceSubstituteOne": "10115",
                 "materialSupplierMasterId": "com.lcs.wc.material.LCSMaterialSupplierMaster:140951",
-                "quantity": "",
+                "quantity": "22",
                 "bomLinkSpecSheetExtra": "No",
                 "materialColorServiceEquivalent": "test part",
-                "bomLinkEndDate": "",
+                "bomLinkEndDate": "04/02/2026",
                 "materialType": "",
                 "childId": "140931",
                 "material": "",
@@ -380,5 +380,5 @@
             "materialColorState": "Release"
         }
     ],
-    "bomType": "SBOM"
+    "bomType": "EBOM"
 }

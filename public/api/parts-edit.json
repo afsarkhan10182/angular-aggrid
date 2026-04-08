@@ -22,9 +22,78 @@
             "MaterialAttributes": {
                 "materialAttachmentType": ""
             }
+        },
+        "OR:com.lcs.wc.material.LCSMaterialColor:554736": {
+            "MaterialSupplierAttributes": {
+                "materialSupplierPrimaryUOM": "enumUOM009"
+            },
+            "material": "00.3018.201.001; EP POWERPACK 2 BATTERY",
+            "color": "BK - Black(TK-0101)",
+            "MaterialColorAttributes": {
+                "materialColorPrintCopy": "Black print copy",
+                "materialColorSixtyCharacterDescription": "Black material color - service set A",
+                "materialColorThirtyCharacterDescription": "Black - A",
+                "materialColorPartNumber": "582579",
+                "materialColorBrand": "enumBrand003"
+            },
+            "colorId": "537913",
+            "materialColorId": "OR:com.lcs.wc.material.LCSMaterialColor:554736",
+            "supplier": "Robert Bosch GMBH Supplier Buyer",
+            "materialSupplierId": "VR:com.lcs.wc.material.LCSMaterialSupplier:554725",
+            "childId": "554724",
+            "materialId": "VR:com.lcs.wc.material.LCSMaterial:538168",
+            "MaterialAttributes": {
+                "materialAttachmentType": "enumAttachmentType004"
+            }
+        },
+        "OR:com.lcs.wc.material.LCSMaterialColor:900100": {
+            "MaterialSupplierAttributes": {
+                "materialSupplierPrimaryUOM": "enumUOM001"
+            },
+            "material": "00.3018.201.001; EP POWERPACK 2 BATTERY",
+            "color": "MS - Metallic Silver",
+            "MaterialColorAttributes": {
+                "materialColorPrintCopy": "Silver print copy",
+                "materialColorSixtyCharacterDescription": "Metallic silver - service set B",
+                "materialColorThirtyCharacterDescription": "Silver - B",
+                "materialColorPartNumber": "PP2-SILVER-001",
+                "materialColorBrand": "enumBrand002"
+            },
+            "colorId": "900101",
+            "materialColorId": "OR:com.lcs.wc.material.LCSMaterialColor:900100",
+            "supplier": "Beto Engineering and Marketing Co Primary Supplier Name",
+            "materialSupplierId": "VR:com.lcs.wc.material.LCSMaterialSupplier:900102",
+            "childId": "900103",
+            "materialId": "VR:com.lcs.wc.material.LCSMaterial:538168",
+            "MaterialAttributes": {
+                "materialAttachmentType": "enumAttachmentType002"
+            }
+        },
+        "OR:com.lcs.wc.material.LCSMaterialColor:900200": {
+            "MaterialSupplierAttributes": {
+                "materialSupplierPrimaryUOM": "enumUOM007"
+            },
+            "material": "00.3018.201.001; EP POWERPACK 2 BATTERY",
+            "color": "RD - Red",
+            "MaterialColorAttributes": {
+                "materialColorPrintCopy": "",
+                "materialColorSixtyCharacterDescription": "Red material color - service set C",
+                "materialColorThirtyCharacterDescription": "Red - C",
+                "materialColorPartNumber": "PP2-RED-002",
+                "materialColorBrand": "enumBrand005"
+            },
+            "colorId": "900201",
+            "materialColorId": "OR:com.lcs.wc.material.LCSMaterialColor:900200",
+            "supplier": "Alex Global Technology",
+            "materialSupplierId": "VR:com.lcs.wc.material.LCSMaterialSupplier:900202",
+            "childId": "900203",
+            "materialId": "VR:com.lcs.wc.material.LCSMaterial:538168",
+            "MaterialAttributes": {
+                "materialAttachmentType": "enumAttachmentType001"
+            }
         }
     },
-    "materialColorIds": "OR:com.lcs.wc.material.LCSMaterialColor:1112177",
+    "materialColorIds": "OR:com.lcs.wc.material.LCSMaterialColor:1112177,OR:com.lcs.wc.material.LCSMaterialColor:554736,OR:com.lcs.wc.material.LCSMaterialColor:900100,OR:com.lcs.wc.material.LCSMaterialColor:900200",
     "columns": {
         "materialColorPartNumber": "Part #",
         "material": "Material",
@@ -38,6 +107,13 @@
         "materialColorPrintCopy": "Print Copy"
     },
     "DefaultColumns": {
+        "materialColorPartNumber": "Part #",
+        "material": "Material",
+        "supplier": "Supplier",
+        "color": "Color",
+        "materialAttachmentType": "Attachment Type",
+        "materialSupplierPrimaryUOM": "Primary UOM",
+        "materialColorThirtyCharacterDescription": "30 Character Description",
         "materialColorSixtyCharacterDescription": "60 Character Description",
         "materialColorBrand": "Brand",
         "materialColorPrintCopy": "Print Copy"

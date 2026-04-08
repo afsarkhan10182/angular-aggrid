@@ -1477,6 +1477,14 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
           this.showDisconnectedSkusPanel = true;
           this.invalidRowIds.clear();
           this.rowManagementService.showSaveMessage(result.message, this, NOTIFICATION_TYPE_SUCCESS);
+
+         // Delete this if not required because we are not doing a full reload in the save changes
+          if (
+            (this.isEbomMode() || this.isMaterialMbomMode()) &&
+            (!this.displayData || this.displayData.length === 0)
+          ) {
+            this.loadData();
+          }
         } else {
           this.rowManagementService.showSaveMessage(result.message, this, NOTIFICATION_TYPE_ERROR);
         }
