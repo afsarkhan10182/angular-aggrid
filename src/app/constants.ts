@@ -262,6 +262,7 @@ export const PART_EDIT_MODAL_DISABLED_FIELDS: readonly string[] = [
   FIELD_MATERIAL,
   FIELD_SUPPLIER,
   FIELD_COLOR,
+  FIELD_MATERIAL_COLOR_STATUS,
 ];
 
 // Payload field rename map for API submission.

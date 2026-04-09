@@ -52,6 +52,7 @@ const COMPACT_COLUMN_FIELDS = new Set<string>([FIELD_PART_NUMBER, FIELD_MATERIAL
 })
 export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly partEditSelectableOptionsByField: Record<string, Record<string, string>> = {};
+  private readonly partEditRawInstancesById = new Map<string, any>();
   @Input() materialColorIds: string[] = [];
   @Input() mode: 'service' | 'part' = 'service';
   @Output() modalClose = new EventEmitter<void>();
@@ -705,6 +706,7 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
             currentRow,
             editedFieldsForRow,
             this.partEditSelectableOptionsByField,
+            this.partEditRawInstancesById.get(String(currentRow?.materialColorId ?? '')),
           );
         }
         return this.dataService.buildMaterialColorInstanceData(currentRow, editedFieldsForRow);
@@ -887,6 +889,7 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
     Object.keys(this.partEditSelectableOptionsByField).forEach((fieldName) => {
       delete this.partEditSelectableOptionsByField[fieldName];
     });
+    this.partEditRawInstancesById.clear();
 
     if (!Array.isArray(this.materialColorIds) || this.materialColorIds.length === 0) {
       this.isLoading = false;
@@ -935,6 +938,9 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
         }
 
         this.rowData = Object.keys(instances).map((materialColorId) => {
+          if (this.mode === 'part') {
+            this.partEditRawInstancesById.set(materialColorId, instances[materialColorId]);
+          }
           const flattened = this.flattenInstance(instances[materialColorId]);
           const rowData = {
             materialColorId,

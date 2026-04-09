@@ -711,6 +711,7 @@ export class DataService {
     row: any,
     editedFieldsForRow: Set<string>,
     selectableOptionsByField?: Record<string, Record<string, string>>,
+    rawInstanceTemplate?: any,
   ): { [key: string]: any } {
     const normalizePartEditValue = (fieldName: string, value: any): string => {
       if (value == null || value === '') {
@@ -733,21 +734,6 @@ export class DataService {
       return matchedEntry ? matchedEntry[0] : normalizedValue;
     };
 
-    const buildTouchedAttributeGroup = (fields: readonly string[]): Record<string, string> =>
-      fields.reduce(
-        (group, fieldName) => {
-          if (editedFieldsForRow.has(fieldName)) {
-            group[fieldName] = normalizePartEditValue(fieldName, row?.[fieldName] ?? '');
-          }
-          return group;
-        },
-        {} as Record<string, string>,
-      );
-
-    const materialSupplierAttributes = buildTouchedAttributeGroup(PART_EDIT_SUPPLIER_ATTRIBUTE_FIELDS);
-    const materialColorAttributes = buildTouchedAttributeGroup(PART_EDIT_COLOR_ATTRIBUTE_FIELDS);
-    const materialAttributes = buildTouchedAttributeGroup(PART_EDIT_MATERIAL_ATTRIBUTE_FIELDS);
-
     const instanceData: { [key: string]: any } = {
       material: row?.material ?? '',
       color: row?.color ?? '',
@@ -759,15 +745,43 @@ export class DataService {
       materialId: row?.materialId ?? '',
     };
 
-    if (Object.keys(materialSupplierAttributes).length > 0) {
-      instanceData['MaterialSupplierAttributes'] = materialSupplierAttributes;
-    }
-    if (Object.keys(materialColorAttributes).length > 0) {
-      instanceData['MaterialColorAttributes'] = materialColorAttributes;
-    }
-    if (Object.keys(materialAttributes).length > 0) {
-      instanceData['MaterialAttributes'] = materialAttributes;
-    }
+    const resolveContainerKeyForField = (fieldName: string): string | null => {
+      if (!rawInstanceTemplate || typeof rawInstanceTemplate !== 'object') {
+        return null;
+      }
+
+      if (Object.prototype.hasOwnProperty.call(rawInstanceTemplate, fieldName)) {
+        return null; // top-level
+      }
+
+      for (const [key, value] of Object.entries(rawInstanceTemplate)) {
+        if (
+          value &&
+          typeof value === 'object' &&
+          !Array.isArray(value) &&
+          key.toLowerCase().includes('attributes') &&
+          Object.prototype.hasOwnProperty.call(value, fieldName)
+        ) {
+          return key;
+        }
+      }
+
+      return null;
+    };
+
+    editedFieldsForRow.forEach((fieldName) => {
+      const normalizedValue = normalizePartEditValue(fieldName, row?.[fieldName] ?? '');
+      const containerKey = resolveContainerKeyForField(fieldName);
+
+      if (containerKey) {
+        if (!instanceData[containerKey]) {
+          instanceData[containerKey] = {};
+        }
+        instanceData[containerKey][fieldName] = normalizedValue;
+      } else {
+        instanceData[fieldName] = normalizedValue;
+      }
+    });
 
     return instanceData;
   }
