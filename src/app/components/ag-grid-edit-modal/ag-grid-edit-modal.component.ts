@@ -26,7 +26,6 @@ import {
   PART_EDIT_MODAL_DISABLED_FIELDS,
   FIELD_PART_NUMBER,
   FIELD_MATERIAL_COLOR_STATUS,
-  FIELD_MATERIAL_COLOR_CREATIVE_OWNER,
   FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT,
   FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE,
   FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_TWO,
@@ -43,9 +42,6 @@ import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/
 import { of } from 'rxjs';
 
 const COMPACT_COLUMN_FIELDS = new Set<string>([FIELD_PART_NUMBER, FIELD_MATERIAL_COLOR_STATUS]);
-const PART_EDIT_ASYNC_DROPDOWN_ID_FIELDS: Readonly<Record<string, string>> = {
-  [FIELD_MATERIAL_COLOR_CREATIVE_OWNER]: `${FIELD_MATERIAL_COLOR_CREATIVE_OWNER}Id`,
-};
 
 @Component({
   selector: 'app-ag-grid-edit-modal',
@@ -56,6 +52,8 @@ const PART_EDIT_ASYNC_DROPDOWN_ID_FIELDS: Readonly<Record<string, string>> = {
 })
 export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly partEditSelectableOptionsByField: Record<string, Record<string, string>> = {};
+  private readonly partEditUserListFields = new Set<string>();
+  private readonly partEditUserListTypesByField: Record<string, string> = {};
   private readonly partEditRawInstancesById = new Map<string, any>();
   @Input() materialColorIds: string[] = [];
   @Input() mode: 'service' | 'part' = 'service';
@@ -228,7 +226,7 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
         definition?.selectableOptions &&
         typeof definition.selectableOptions === 'object';
       const isAsyncPartDropdown =
-        this.mode === 'part' && field === FIELD_MATERIAL_COLOR_CREATIVE_OWNER;
+        this.mode === 'part' && this.partEditUserListFields.has(field);
       const selectableOptions = isChoiceDropdown ? definition.selectableOptions! : null;
       const choiceValues = selectableOptions ? Object.values(selectableOptions) : [];
       const isDropdown = isServiceDropdown || isChoiceDropdown || isAsyncPartDropdown;
@@ -297,8 +295,10 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
       } else if (isAsyncPartDropdown) {
         colDef.cellEditor = AutocompleteCellEditorComponent;
         colDef.cellEditorParams = () => ({
-          placeholder: 'Search creative owners...',
+          placeholder: `Search ${headerName}...`,
           isUserListSearch: true,
+          userListAttributeName: field,
+          userListType: this.partEditUserListTypesByField[field] || '',
           context: {
             dataService: this.dataService,
           },
@@ -723,6 +723,7 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
             currentRow,
             editedFieldsForRow,
             this.partEditSelectableOptionsByField,
+            this.partEditUserListFields,
             this.partEditRawInstancesById.get(String(currentRow?.materialColorId ?? '')),
           );
         }
@@ -888,7 +889,8 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
       return flattened;
     }
 
-    Object.entries(PART_EDIT_ASYNC_DROPDOWN_ID_FIELDS).forEach(([fieldName, idFieldName]) => {
+    this.partEditUserListFields.forEach((fieldName) => {
+      const idFieldName = `${fieldName}Id`;
       const responseValue = flattened[fieldName];
       const currentIdValue = currentRow[idFieldName];
       const currentDisplayValue = currentRow[fieldName];
@@ -904,6 +906,29 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
     });
 
     return flattened;
+  }
+
+  private resolvePartEditFieldContainerKey(fieldName: string, rawInstanceTemplate: any): string | null {
+    if (!rawInstanceTemplate || typeof rawInstanceTemplate !== 'object') {
+      return null;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(rawInstanceTemplate, fieldName)) {
+      return null;
+    }
+
+    for (const [key, value] of Object.entries(rawInstanceTemplate)) {
+      if (
+        value &&
+        typeof value === 'object' &&
+        !Array.isArray(value) &&
+        Object.prototype.hasOwnProperty.call(value, fieldName)
+      ) {
+        return key;
+      }
+    }
+
+    return null;
   }
 
   private flattenInstance(instance: any): any {
@@ -932,6 +957,10 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
     this.rowErrors = {};
     Object.keys(this.partEditSelectableOptionsByField).forEach((fieldName) => {
       delete this.partEditSelectableOptionsByField[fieldName];
+    });
+    this.partEditUserListFields.clear();
+    Object.keys(this.partEditUserListTypesByField).forEach((fieldName) => {
+      delete this.partEditUserListTypesByField[fieldName];
     });
     this.partEditRawInstancesById.clear();
 
@@ -967,12 +996,42 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
             this.mode === 'part' && response?.DefaultDefinitionList && typeof response.DefaultDefinitionList === 'object'
               ? response.DefaultDefinitionList
               : undefined;
+          const userListAttributes =
+            this.mode === 'part' && response?.UserListAttributes && typeof response.UserListAttributes === 'object'
+              ? response.UserListAttributes
+              : undefined;
           if (this.mode === 'part' && defaultDefinitionList) {
             Object.keys(defaultDefinitionList).forEach((fieldName) => {
               const selectableOptions = defaultDefinitionList[fieldName]?.selectableOptions;
               if (selectableOptions && typeof selectableOptions === 'object') {
                 this.partEditSelectableOptionsByField[fieldName] = selectableOptions;
               }
+            });
+          }
+          if (this.mode === 'part' && userListAttributes) {
+            Object.keys(userListAttributes).forEach((fieldName) => {
+              this.partEditUserListFields.add(fieldName);
+
+              const matchingInstance = Object.values(instances).find((instance: any) => {
+                if (!instance || typeof instance !== 'object') {
+                  return false;
+                }
+
+                if (Object.prototype.hasOwnProperty.call(instance, fieldName)) {
+                  return true;
+                }
+
+                return Object.values(instance).some(
+                  (value: any) =>
+                    value &&
+                    typeof value === 'object' &&
+                    !Array.isArray(value) &&
+                    Object.prototype.hasOwnProperty.call(value, fieldName),
+                );
+              });
+
+              const resolvedType = this.resolvePartEditFieldContainerKey(fieldName, matchingInstance);
+              this.partEditUserListTypesByField[fieldName] = resolvedType || '';
             });
           }
           this.columnDefs = this.buildColumnDefs(columns, defaultColumnFields, defaultDefinitionList);

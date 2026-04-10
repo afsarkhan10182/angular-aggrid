@@ -6,7 +6,6 @@ import {
   BOM_LINK_KEY,
   FIELD_COLOR_DESCRIPTION,
   FIELD_COLOR,
-  FIELD_MATERIAL_COLOR_CREATIVE_OWNER,
   FIELD_BOM_LINK_PART,
   FIELD_PART_NUMBER,
   FIELD_PART,
@@ -75,6 +74,8 @@ export class AutocompleteCellEditorComponent
   private fromIndex: number = 1;
   private toIndex: number = this.PAGE_SIZE;
   private hasMore: boolean = false;
+  private userListAttributeName: string = '';
+  private userListType: string = '';
   /** Total count from API (serviceDataModal resultCount) for part/material search pagination display */
   totalResultCount: number = 0;
 
@@ -218,7 +219,14 @@ export class AutocompleteCellEditorComponent
             if (this.isUserListSearch) {
               this.currentQuery = effectiveQuery;
               this.isLoadingMore = false;
-              return wrap(this.dataService.searchCreativeOwners(this.currentQuery, this.PAGE_SIZE));
+              return wrap(
+                this.dataService.searchUserList(
+                  this.userListType,
+                  this.userListAttributeName,
+                  this.currentQuery,
+                  this.PAGE_SIZE,
+                ),
+              );
             }
 
             if (effectiveQuery.length >= 1) {
@@ -353,6 +361,8 @@ export class AutocompleteCellEditorComponent
     this.fromIndex = 1;
     this.toIndex = this.PAGE_SIZE;
     this.hasMore = false;
+    this.userListAttributeName = '';
+    this.userListType = '';
     this.totalResultCount = 0;
     this.isDestroyed = false;
     this.originalValue = '';
@@ -387,8 +397,9 @@ export class AutocompleteCellEditorComponent
       fieldName === 'materialColorServiceSubstituteOne' ||
       fieldName === 'materialColorServiceSubstituteTwo' ||
       fieldName === 'materialColorServiceEquivalent';
-    this.isUserListSearch =
-      params.isUserListSearch === true || fieldName === FIELD_MATERIAL_COLOR_CREATIVE_OWNER;
+    this.isUserListSearch = params.isUserListSearch === true;
+    this.userListAttributeName = params.userListAttributeName || fieldName || '';
+    this.userListType = params.userListType || '';
 
     this.isMaterialSearch =
       !this.isPartNumberSearch &&

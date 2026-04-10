@@ -9,7 +9,6 @@ import {
   FIELD_BOM_LINK_FEATURE,
   FIELD_BOM_LINK_COUNTRY_OF_ORIGIN,
   FIELD_PART_NUMBER,
-  FIELD_MATERIAL_COLOR_CREATIVE_OWNER,
   FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT,
   FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE,
   FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_TWO,
@@ -72,12 +71,6 @@ const PART_EDIT_COLOR_ATTRIBUTE_FIELDS = [
 
 const PART_EDIT_MATERIAL_ATTRIBUTE_FIELDS = ['materialAttachmentType'] as const;
 const PART_EDIT_SUPPLIER_ATTRIBUTE_FIELDS = ['materialSupplierPrimaryUOM'] as const;
-const PART_EDIT_ID_FIELD_VALUE_MAP: Readonly<Record<string, MaterialColorFieldValueConfig>> = {
-  [FIELD_MATERIAL_COLOR_CREATIVE_OWNER]: {
-    idKey: `${FIELD_MATERIAL_COLOR_CREATIVE_OWNER}Id`,
-    valueKey: FIELD_MATERIAL_COLOR_CREATIVE_OWNER,
-  },
-};
 
 export interface BomLinkSku {
   product: string;
@@ -379,7 +372,9 @@ export class DataService {
     );
   }
 
-  searchCreativeOwners(
+  searchUserList(
+    type: string,
+    attributeName: string,
     query: string,
     fetchLimit: number = 20,
   ): Observable<{ results: any[]; resultCount: number; hasMore: boolean }> {
@@ -397,7 +392,7 @@ export class DataService {
       const limitedRows = filteredRows.slice(0, fetchLimit).map((row: any, index: number) => ({
         ...row,
         displayValue: String(row?.displayValue ?? row?.name ?? ''),
-        id: row?.id != null ? String(row.id) : `${FIELD_MATERIAL_COLOR_CREATIVE_OWNER}-${index}`,
+        id: row?.id != null ? String(row.id) : `${attributeName}-${index}`,
       }));
 
       return {
@@ -418,8 +413,8 @@ export class DataService {
 
     const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/getUserList`;
     const requestBody = {
-      type: 'MaterialColorAttributes',
-      attributeName: FIELD_MATERIAL_COLOR_CREATIVE_OWNER,
+      type,
+      attributeName,
     };
     const headers = {
       ...this.buildHttpHeaders(),
@@ -771,6 +766,7 @@ export class DataService {
     row: any,
     editedFieldsForRow: Set<string>,
     selectableOptionsByField?: Record<string, Record<string, string>>,
+    userListFields?: Set<string>,
     rawInstanceTemplate?: any,
   ): { [key: string]: any } {
     const normalizePartEditValue = (fieldName: string, value: any): string => {
@@ -830,13 +826,8 @@ export class DataService {
     };
 
     editedFieldsForRow.forEach((fieldName) => {
-      const idFieldValueConfig = PART_EDIT_ID_FIELD_VALUE_MAP[fieldName];
-      const normalizedValue = idFieldValueConfig
-        ? String(
-            row?.[idFieldValueConfig.idKey] ??
-              row?.[idFieldValueConfig.valueKey] ??
-              '',
-          )
+      const normalizedValue = userListFields?.has(fieldName)
+        ? String(row?.[`${fieldName}Id`] ?? row?.[fieldName] ?? '')
         : normalizePartEditValue(fieldName, row?.[fieldName] ?? '');
       const containerKey = resolveContainerKeyForField(fieldName);
 
@@ -884,7 +875,7 @@ export class DataService {
       instances: payload.instances || {},
       materialColorIds: payload.materialColorIds || '',
     };
-    console.log('savePartEditData payload', requestPayload);
+    // console.log('savePartEditData payload', requestPayload);
 
     if (environment.useMockApi) {
       return of({ instances: requestPayload.instances, success: true });
