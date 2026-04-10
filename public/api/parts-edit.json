@@ -1,34 +1,38 @@
 {
+    "UserListAttributes": {
+        "materialColorCreativeOwner": "Creative Owner",
+        "materialSupplierPrimaryBuyer": "Primary Buyer"
+    },
     "instances": {
-        "OR:com.lcs.wc.material.LCSMaterialColor:591426": {
+        "OR:com.lcs.wc.material.LCSMaterialColor:554762": {
             "MaterialSupplierAttributes": {
-                "materialSupplierPrimaryBuyer": "Sridhar Sunnamuddi",
+                "materialSupplierPrimaryBuyer": "",
                 "materialSupplierPrimaryUOM": ""
             },
-            "material": "Frame Trek Marlin 2027 XDS M",
-            "color": "BK - Raw(00000)",
+            "material": "BOSCH POWERTUBE 625 VERTICAL BLACK; US VARIANT",
+            "color": "BK - Black(TK-0101)",
             "MaterialColorAttributes": {
                 "materialColorGraphicsChangeOnly": "Yes",
-                "materialColorPrintCopy": "",
-                "materialColorCreativeOwner": "Srivignesh Ravi",
-                "materialColorSixtyCharacterDescription": "",
-                "materialColorThirtyCharacterDescription": "test11",
-                "materialColorPartNumber": "2033U0227",
+                "materialColorPrintCopy": "Bosch PowerTube 625Wh",
+                "materialColorCreativeOwner": "Test Owner",
+                "materialColorSixtyCharacterDescription": "test",
+                "materialColorThirtyCharacterDescription": "BTRY BSH BAT-625 POWERTUB-V-US",
+                "materialColorPartNumber": "580317",
                 "materialColorBrand": ""
             },
-            "colorId": "590464",
-            "materialColorId": "OR:com.lcs.wc.material.LCSMaterialColor:591426",
-            "supplier": "Trek Approved",
-            "materialSupplierId": "VR:com.lcs.wc.material.LCSMaterialSupplier:591415",
-            "childId": "591414",
-            "materialId": "VR:com.lcs.wc.material.LCSMaterial:590993",
+            "colorId": "537913",
+            "materialColorId": "OR:com.lcs.wc.material.LCSMaterialColor:554762",
+            "supplier": "Robert Bosch GMBH Supplier Buyer",
+            "materialSupplierId": "VR:com.lcs.wc.material.LCSMaterialSupplier:554751",
+            "childId": "554750",
+            "materialId": "VR:com.lcs.wc.material.LCSMaterial:533364",
             "materialColorState": "",
             "MaterialAttributes": {
                 "materialAttachmentType": ""
             }
         }
     },
-    "materialColorIds": "OR:com.lcs.wc.material.LCSMaterialColor:591426",
+    "materialColorIds": "OR:com.lcs.wc.material.LCSMaterialColor:554762",
     "columns": {
         "materialColorPartNumber": "Part #",
         "materialColorState": "State",
@@ -41,7 +45,7 @@
         "materialColorThirtyCharacterDescription": "30 Character Description",
         "materialColorSixtyCharacterDescription": "60 Character Description",
         "materialColorBrand": "Brand",
-        "materialColorPrintCopy": "Print Copy",
+        "materialColorPrintCopy": "Print Copy ",
         "materialColorGraphicsChangeOnly": "Graphics Change Only",
         "materialColorCreativeOwner": "Creative Owner"
     },
@@ -53,7 +57,7 @@
         "color": "Color",
         "materialColorSixtyCharacterDescription": "60 Character Description",
         "materialColorBrand": "Brand",
-        "materialColorPrintCopy": "Print Copy"
+        "materialColorPrintCopy": "Print Copy "
     },
     "DefaultDefinitionList": {
         "materialColorGraphicsChangeOnly": {

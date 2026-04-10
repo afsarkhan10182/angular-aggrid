@@ -26,6 +26,7 @@ import {
   PART_EDIT_MODAL_DISABLED_FIELDS,
   FIELD_PART_NUMBER,
   FIELD_MATERIAL_COLOR_STATUS,
+  FIELD_MATERIAL_COLOR_CREATIVE_OWNER,
   FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT,
   FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE,
   FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_TWO,
@@ -42,6 +43,9 @@ import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/
 import { of } from 'rxjs';
 
 const COMPACT_COLUMN_FIELDS = new Set<string>([FIELD_PART_NUMBER, FIELD_MATERIAL_COLOR_STATUS]);
+const PART_EDIT_ASYNC_DROPDOWN_ID_FIELDS: Readonly<Record<string, string>> = {
+  [FIELD_MATERIAL_COLOR_CREATIVE_OWNER]: `${FIELD_MATERIAL_COLOR_CREATIVE_OWNER}Id`,
+};
 
 @Component({
   selector: 'app-ag-grid-edit-modal',
@@ -223,9 +227,11 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
         definition?.attributeType === 'choice' &&
         definition?.selectableOptions &&
         typeof definition.selectableOptions === 'object';
+      const isAsyncPartDropdown =
+        this.mode === 'part' && field === FIELD_MATERIAL_COLOR_CREATIVE_OWNER;
       const selectableOptions = isChoiceDropdown ? definition.selectableOptions! : null;
       const choiceValues = selectableOptions ? Object.values(selectableOptions) : [];
-      const isDropdown = isServiceDropdown || isChoiceDropdown;
+      const isDropdown = isServiceDropdown || isChoiceDropdown || isAsyncPartDropdown;
       const isCompactColumnField = COMPACT_COLUMN_FIELDS.has(field);
       const isPartNumberField = field === FIELD_PART_NUMBER;
       const isDefaultColumn = defaultColumnFields?.has(field) ?? true;
@@ -286,6 +292,17 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
           const entry = Object.entries(selectableOptions).find(([, v]) => v === value);
           return entry ? entry[0] : value;
         };
+        colDef.cellClass = (colDef.cellClass ? `${colDef.cellClass} ` : '') + 'dropdown-cell';
+        colDef.headerClass = (colDef.headerClass ? `${colDef.headerClass} ` : '') + 'dropdown-header';
+      } else if (isAsyncPartDropdown) {
+        colDef.cellEditor = AutocompleteCellEditorComponent;
+        colDef.cellEditorParams = () => ({
+          placeholder: 'Search creative owners...',
+          isUserListSearch: true,
+          context: {
+            dataService: this.dataService,
+          },
+        });
         colDef.cellClass = (colDef.cellClass ? `${colDef.cellClass} ` : '') + 'dropdown-cell';
         colDef.headerClass = (colDef.headerClass ? `${colDef.headerClass} ` : '') + 'dropdown-header';
       } else if (isServiceDropdown) {
@@ -855,11 +872,38 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
 
     return Object.keys(instances).reduce(
       (normalized, materialColorId) => {
-        normalized[materialColorId] = this.flattenInstance(instances[materialColorId]);
+        normalized[materialColorId] = this.restoreAsyncPartDropdownDisplayValues(
+          materialColorId,
+          this.flattenInstance(instances[materialColorId]),
+        );
         return normalized;
       },
       {} as { [key: string]: any },
     );
+  }
+
+  private restoreAsyncPartDropdownDisplayValues(materialColorId: string, flattened: any): any {
+    const currentRow = this.rowData.find((row) => row.materialColorId === materialColorId);
+    if (!currentRow || !flattened || typeof flattened !== 'object') {
+      return flattened;
+    }
+
+    Object.entries(PART_EDIT_ASYNC_DROPDOWN_ID_FIELDS).forEach(([fieldName, idFieldName]) => {
+      const responseValue = flattened[fieldName];
+      const currentIdValue = currentRow[idFieldName];
+      const currentDisplayValue = currentRow[fieldName];
+
+      if (
+        responseValue != null &&
+        currentIdValue != null &&
+        String(responseValue) === String(currentIdValue) &&
+        currentDisplayValue != null
+      ) {
+        flattened[fieldName] = currentDisplayValue;
+      }
+    });
+
+    return flattened;
   }
 
   private flattenInstance(instance: any): any {

@@ -6,6 +6,7 @@ import {
   BOM_LINK_KEY,
   FIELD_COLOR_DESCRIPTION,
   FIELD_COLOR,
+  FIELD_MATERIAL_COLOR_CREATIVE_OWNER,
   FIELD_BOM_LINK_PART,
   FIELD_PART_NUMBER,
   FIELD_PART,
@@ -60,6 +61,7 @@ export class AutocompleteCellEditorComponent
   public isBomFeatureSearch: boolean = false;
   public isCountrySearch: boolean = false;
   public isServiceSearch: boolean = false;
+  public isUserListSearch: boolean = false;
   public isLoadingMore: boolean = false;
 
   private params: any;
@@ -129,6 +131,27 @@ export class AutocompleteCellEditorComponent
     return selectedOption ? selectedOption.id || selectedOption.displayValue || option : null;
   }
 
+  private isIdBackedGenericSearch(): boolean {
+    return this.isServiceSearch || this.isCountrySearch || this.isUserListSearch;
+  }
+
+  private syncGenericOptionIdFromCurrentValue(): void {
+    if (!this.isIdBackedGenericSearch() || !this.params?.node) {
+      return;
+    }
+
+    const fieldName = this.getFieldName();
+    if (!fieldName) {
+      return;
+    }
+
+    const idFieldName = `${fieldName}Id`;
+    const matchedId = this.getSelectedGenericOptionId(this.value);
+    if (this.params.node.data) {
+      this.params.node.data[idFieldName] = matchedId || '';
+    }
+  }
+
   ngOnInit() {
     this.originalValue = this.value;
 
@@ -144,7 +167,8 @@ export class AutocompleteCellEditorComponent
               this.isPartNumberSearch ||
               this.isBomFeatureSearch ||
               this.isCountrySearch ||
-              this.isServiceSearch) &&
+              this.isServiceSearch ||
+              this.isUserListSearch) &&
             this.dataService;
 
           const emptyResponse = { results: [], resultCount: 0, hasMore: false };
@@ -189,6 +213,12 @@ export class AutocompleteCellEditorComponent
               this.hasMore = false;
               this.genericOptions = [];
               return of({ requestId, response: { results: [], resultCount: 0, hasMore: false } });
+            }
+
+            if (this.isUserListSearch) {
+              this.currentQuery = effectiveQuery;
+              this.isLoadingMore = false;
+              return wrap(this.dataService.searchCreativeOwners(this.currentQuery, this.PAGE_SIZE));
             }
 
             if (effectiveQuery.length >= 1) {
@@ -237,7 +267,12 @@ export class AutocompleteCellEditorComponent
           const results = response.results || [];
           const resultCount = response.resultCount || 0;
 
-          if (this.isBomFeatureSearch || this.isCountrySearch || this.isServiceSearch) {
+          if (
+            this.isBomFeatureSearch ||
+            this.isCountrySearch ||
+            this.isServiceSearch ||
+            this.isUserListSearch
+          ) {
             this.genericOptions = Array.isArray(results) ? results : [];
             this.hasMore = response.hasMore || false;
 
@@ -312,6 +347,7 @@ export class AutocompleteCellEditorComponent
     this.isBomFeatureSearch = false;
     this.isCountrySearch = false;
     this.isServiceSearch = false;
+    this.isUserListSearch = false;
     this.isLoadingMore = false;
     this.currentQuery = '';
     this.fromIndex = 1;
@@ -351,12 +387,15 @@ export class AutocompleteCellEditorComponent
       fieldName === 'materialColorServiceSubstituteOne' ||
       fieldName === 'materialColorServiceSubstituteTwo' ||
       fieldName === 'materialColorServiceEquivalent';
+    this.isUserListSearch =
+      params.isUserListSearch === true || fieldName === FIELD_MATERIAL_COLOR_CREATIVE_OWNER;
 
     this.isMaterialSearch =
       !this.isPartNumberSearch &&
       !this.isBomFeatureSearch &&
       !this.isCountrySearch &&
       !this.isServiceSearch &&
+      !this.isUserListSearch &&
       (params.useApiSearch === true ||
         (this.dataService &&
           (this.placeholder.includes('material') || this.placeholder.includes('Material'))) ||
@@ -397,13 +436,15 @@ export class AutocompleteCellEditorComponent
       !this.isPartNumberSearch &&
       !this.isBomFeatureSearch &&
       !this.isCountrySearch &&
-      !this.isServiceSearch
+      !this.isServiceSearch &&
+      !this.isUserListSearch
     ) {
       this.filterOptions();
     }
   }
 
   getValue(): any {
+    this.syncGenericOptionIdFromCurrentValue();
     return this.value;
   }
 
@@ -426,7 +467,12 @@ export class AutocompleteCellEditorComponent
       this.isPartNumberSearch ||
       this.isBomFeatureSearch ||
       this.isCountrySearch ||
-      this.isServiceSearch;
+      this.isServiceSearch ||
+      this.isUserListSearch;
+
+    if (this.isIdBackedGenericSearch()) {
+      this.syncGenericOptionIdFromCurrentValue();
+    }
 
     if (usesApiSearch) {
       if (this.dataService) {
@@ -554,6 +600,7 @@ export class AutocompleteCellEditorComponent
       this.isBomFeatureSearch ||
       this.isCountrySearch ||
       this.isServiceSearch ||
+      this.isUserListSearch ||
       this.isLoadingMore ||
       !this.hasMore ||
       !this.dataService ||
@@ -662,21 +709,16 @@ export class AutocompleteCellEditorComponent
           }
         }
 
-        // Handle service search fields (similar to bomLinkFeature pattern)
-        if (this.isServiceSearch && this.genericOptions.length > 0) {
-          const selectedServiceId = this.getSelectedGenericOptionId(option, optionIndex);
-          if (selectedServiceId && fieldName) {
-            // Store ID in a separate field (e.g., materialColorServiceEquivalentId)
-            const idFieldName = `${fieldName}Id`;
-            this.params.node.setDataValue(idFieldName, selectedServiceId);
-          }
-        }
-
-        if (this.isCountrySearch && this.genericOptions.length > 0) {
-          const selectedCountryId = this.getSelectedGenericOptionId(option, optionIndex);
+        if (
+          (this.isServiceSearch || this.isCountrySearch || this.isUserListSearch) &&
+          this.genericOptions.length > 0
+        ) {
+          const selectedGenericId = this.getSelectedGenericOptionId(option, optionIndex);
           if (fieldName) {
             const idFieldName = `${fieldName}Id`;
-            this.params.node.setDataValue(idFieldName, selectedCountryId || '');
+            if (this.params.node.data) {
+              this.params.node.data[idFieldName] = selectedGenericId || '';
+            }
           }
         }
 
@@ -702,7 +744,8 @@ export class AutocompleteCellEditorComponent
         !this.isPartNumberSearch &&
         !this.isBomFeatureSearch &&
         !this.isCountrySearch &&
-        !this.isServiceSearch
+        !this.isServiceSearch &&
+        !this.isUserListSearch
       ) {
         this.triggerFeatureAutoPopulation(option);
       }
@@ -1126,11 +1169,16 @@ export class AutocompleteCellEditorComponent
       this.isPartNumberSearch ||
       this.isBomFeatureSearch ||
       this.isCountrySearch ||
-      this.isServiceSearch;
+      this.isServiceSearch ||
+      this.isUserListSearch;
 
     if (usesApiSearch) {
-      if (this.dataService && this.value && this.value.length >= 1) {
-        this.searchSubject.next(this.value);
+      if (this.dataService) {
+        if (this.isUserListSearch) {
+          this.searchSubject.next('');
+        } else if (this.value && this.value.length >= 1) {
+          this.searchSubject.next(this.value);
+        }
       }
     } else {
       if (this.options.length > 0) {

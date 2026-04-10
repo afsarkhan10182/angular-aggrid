@@ -9,6 +9,7 @@ import {
   FIELD_BOM_LINK_FEATURE,
   FIELD_BOM_LINK_COUNTRY_OF_ORIGIN,
   FIELD_PART_NUMBER,
+  FIELD_MATERIAL_COLOR_CREATIVE_OWNER,
   FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT,
   FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE,
   FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_TWO,
@@ -71,6 +72,12 @@ const PART_EDIT_COLOR_ATTRIBUTE_FIELDS = [
 
 const PART_EDIT_MATERIAL_ATTRIBUTE_FIELDS = ['materialAttachmentType'] as const;
 const PART_EDIT_SUPPLIER_ATTRIBUTE_FIELDS = ['materialSupplierPrimaryUOM'] as const;
+const PART_EDIT_ID_FIELD_VALUE_MAP: Readonly<Record<string, MaterialColorFieldValueConfig>> = {
+  [FIELD_MATERIAL_COLOR_CREATIVE_OWNER]: {
+    idKey: `${FIELD_MATERIAL_COLOR_CREATIVE_OWNER}Id`,
+    valueKey: FIELD_MATERIAL_COLOR_CREATIVE_OWNER,
+  },
+};
 
 export interface BomLinkSku {
   product: string;
@@ -369,6 +376,59 @@ export class DataService {
       query,
       fetchLimit,
       FIELD_PART_NUMBER,
+    );
+  }
+
+  searchCreativeOwners(
+    query: string,
+    fetchLimit: number = 20,
+  ): Observable<{ results: any[]; resultCount: number; hasMore: boolean }> {
+    const searchTerm = (query || '').trim().toLowerCase();
+    const mapRows = (response: any) => {
+      const rows = Array.isArray(response?.rows) ? response.rows : [];
+      const filteredRows =
+        searchTerm.length > 0
+          ? rows.filter((row: any) =>
+              String(row?.displayValue ?? row?.name ?? '')
+                .toLowerCase()
+                .includes(searchTerm),
+            )
+          : rows;
+      const limitedRows = filteredRows.slice(0, fetchLimit).map((row: any, index: number) => ({
+        ...row,
+        displayValue: String(row?.displayValue ?? row?.name ?? ''),
+        id: row?.id != null ? String(row.id) : `${FIELD_MATERIAL_COLOR_CREATIVE_OWNER}-${index}`,
+      }));
+
+      return {
+        results: limitedRows,
+        resultCount: filteredRows.length,
+        hasMore: filteredRows.length > limitedRows.length,
+      };
+    };
+
+    if (environment.useMockApi) {
+      return this.http.get<any>(environment.mockApiEndpoints.getUser, {
+        headers: this.buildHttpHeaders(),
+      }).pipe(
+        map(mapRows),
+        catchError(() => of({ results: [], resultCount: 0, hasMore: false })),
+      );
+    }
+
+    const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/getUserList`;
+    const requestBody = {
+      type: 'MaterialColorAttributes',
+      attributeName: FIELD_MATERIAL_COLOR_CREATIVE_OWNER,
+    };
+    const headers = {
+      ...this.buildHttpHeaders(),
+      accept: '*/*',
+    };
+
+    return this.http.post<any>(apiUrl, requestBody, { headers }).pipe(
+      map(mapRows),
+      catchError(() => of({ results: [], resultCount: 0, hasMore: false })),
     );
   }
 
@@ -770,7 +830,14 @@ export class DataService {
     };
 
     editedFieldsForRow.forEach((fieldName) => {
-      const normalizedValue = normalizePartEditValue(fieldName, row?.[fieldName] ?? '');
+      const idFieldValueConfig = PART_EDIT_ID_FIELD_VALUE_MAP[fieldName];
+      const normalizedValue = idFieldValueConfig
+        ? String(
+            row?.[idFieldValueConfig.idKey] ??
+              row?.[idFieldValueConfig.valueKey] ??
+              '',
+          )
+        : normalizePartEditValue(fieldName, row?.[fieldName] ?? '');
       const containerKey = resolveContainerKeyForField(fieldName);
 
       if (containerKey) {

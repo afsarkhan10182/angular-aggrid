@@ -45,6 +45,7 @@ export const FIELD_COLOR = 'color';
 export const FIELD_COLOR_DESCRIPTION = 'colorDescription';
 export const FIELD_HAS_LINKED_BOM = 'hasLinkedBom';
 export const FIELD_MATERIAL_COLOR_STATUS = 'materialColorState';
+export const FIELD_MATERIAL_COLOR_CREATIVE_OWNER = 'materialColorCreativeOwner';
 export const FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT = 'materialColorServiceEquivalent';
 export const FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE = 'materialColorServiceSubstituteOne';
 export const FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_TWO = 'materialColorServiceSubstituteTwo';
