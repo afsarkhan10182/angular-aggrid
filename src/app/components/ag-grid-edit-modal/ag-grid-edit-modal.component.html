@@ -74,7 +74,7 @@
                       class="dropdown-option"
                       [class.selected]="i === getMassEditAutocomplete(field).selectedIndex"
                       (mousedown)="
-                        selectMassEditOption(field, option);
+                        selectMassEditOption(field, option, i);
                         $event.preventDefault();
                         $event.stopPropagation()
                       "

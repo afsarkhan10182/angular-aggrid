@@ -875,7 +875,7 @@ export class DataService {
       instances: payload.instances || {},
       materialColorIds: payload.materialColorIds || '',
     };
-    // console.log('savePartEditData payload', requestPayload);
+    console.log('savePartEditData payload', requestPayload);
 
     if (environment.useMockApi) {
       return of({ instances: requestPayload.instances, success: true });

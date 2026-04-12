@@ -104,7 +104,9 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
   ]);
 
   public massEditAutocomplete: { [field: string]: { showDropdown: boolean; options: string[]; selectedIndex: number; top?: string; left?: string; width?: string } } = {};
-  private massEditSearchSubjects: { [field: string]: Subject<string> } = {};
+  private massEditSearchSubjects: { [field: string]: Subject<{ query: string; force?: boolean }> } = {};
+  private massEditGenericOptionsByField: { [field: string]: any[] } = {};
+  private massEditSelectedIds: { [field: string]: string } = {};
   private massEditSubscriptions: Subscription[] = [];
   private massEditInputElements: { [field: string]: HTMLInputElement } = {};
   private massEditScrollCleanupFns: Array<() => void> = [];
@@ -157,7 +159,14 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   private getDropdownFields(): Set<string> {
-    return this.mode === 'part' ? new Set<string>() : new Set(SERVICE_DATA_MANAGER_MODAL_DROPDOWN_FIELDS);
+    if (this.mode === 'part') {
+      return new Set<string>([
+        ...Object.keys(this.partEditSelectableOptionsByField),
+        ...this.partEditUserListFields,
+      ]);
+    }
+
+    return new Set(SERVICE_DATA_MANAGER_MODAL_DROPDOWN_FIELDS);
   }
 
   private getServiceLookupFields(): Set<string> {
@@ -1079,6 +1088,7 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
   openMassEdit(): void {
     this.massEditMode = true;
     this.massEditValues = {};
+    this.massEditSelectedIds = {};
     this.initializeMassEditAutocomplete();
     setTimeout(() => {
       this.setupMassEditScrollSync();
@@ -1089,9 +1099,44 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
   closeMassEditMode(): void {
     this.massEditMode = false;
     this.massEditValues = {};
+    this.massEditSelectedIds = {};
     this.cleanupMassEditAutocomplete();
     this.cleanupMassEditScrollSync();
     this.notifyGridLayoutChange();
+  }
+
+  private isPartChoiceDropdownField(field: string): boolean {
+    return this.mode === 'part' && !!this.partEditSelectableOptionsByField[field];
+  }
+
+  private isPartUserListDropdownField(field: string): boolean {
+    return this.mode === 'part' && this.partEditUserListFields.has(field);
+  }
+
+  private isIdBackedMassEditField(field: string): boolean {
+    return this.isPartUserListDropdownField(field) || this.getServiceLookupFields().has(field);
+  }
+
+  private updateMassEditStaticOptions(field: string, query: string): void {
+    const selectableOptions = this.partEditSelectableOptionsByField[field];
+    if (!selectableOptions || !this.massEditAutocomplete[field]) {
+      return;
+    }
+
+    const allOptions = Object.values(selectableOptions);
+    const searchTerm = (query || '').trim().toLowerCase();
+    const filteredOptions =
+      searchTerm.length > 0
+        ? allOptions.filter((option) => option.toLowerCase().includes(searchTerm))
+        : allOptions;
+
+    this.massEditAutocomplete[field].options = filteredOptions;
+    this.massEditAutocomplete[field].showDropdown = filteredOptions.length > 0;
+    this.massEditAutocomplete[field].selectedIndex = filteredOptions.length > 0 ? 0 : -1;
+
+    if (this.massEditAutocomplete[field].showDropdown) {
+      setTimeout(() => this.positionMassEditDropdown(field), 0);
+    }
   }
 
   private initializeMassEditAutocomplete(): void {
@@ -1114,21 +1159,33 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
         };
       }
 
+      if (this.isPartChoiceDropdownField(field)) {
+        return;
+      }
+
       // Create search subject if it doesn't exist
       if (!this.massEditSearchSubjects[field]) {
-        this.massEditSearchSubjects[field] = new Subject<string>();
+        this.massEditSearchSubjects[field] = new Subject<{ query: string; force?: boolean }>();
         
         // Subscribe to search with debounce
         const searchSub = this.massEditSearchSubjects[field]
           .pipe(
             debounceTime(300),
-            distinctUntilChanged(),
-            switchMap((query) => {
-              const effectiveQuery = query ?? '';
-              if (effectiveQuery.length >= 1) {
-                return this.dataService.searchServices(effectiveQuery, 20);
+            distinctUntilChanged(
+              (previous, current) =>
+                previous.query === current.query && previous.force !== true && current.force !== true,
+            ),
+            switchMap((searchState) => {
+              const effectiveQuery = searchState?.query ?? '';
+              if (this.isPartUserListDropdownField(field)) {
+                return this.dataService.searchUserList(
+                  this.partEditUserListTypesByField[field] || '',
+                  field,
+                  effectiveQuery,
+                  20,
+                );
               }
-              return of({ results: [], resultCount: 0, hasMore: false });
+              return this.dataService.searchServices(effectiveQuery, 20);
             }),
             catchError(() => {
               return of({ results: [], resultCount: 0, hasMore: false });
@@ -1136,12 +1193,14 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
           )
           .subscribe((response) => {
             const results = response.results || [];
+            this.massEditGenericOptionsByField[field] = Array.isArray(results) ? results : [];
             if (this.massEditAutocomplete[field]) {
-              this.massEditAutocomplete[field].options = results
+              this.massEditAutocomplete[field].options = this.massEditGenericOptionsByField[field]
                 .map((service: any) => service.displayValue || service.name || '')
                 .filter((name: string) => name.length > 0);
               this.massEditAutocomplete[field].showDropdown = this.massEditAutocomplete[field].options.length > 0;
-              this.massEditAutocomplete[field].selectedIndex = -1;
+              this.massEditAutocomplete[field].selectedIndex =
+                this.massEditAutocomplete[field].options.length > 0 ? 0 : -1;
               
               // Position dropdown when it shows
               if (this.massEditAutocomplete[field].showDropdown) {
@@ -1165,18 +1224,24 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
     this.massEditSearchSubjects = {};
     
     this.massEditAutocomplete = {};
+    this.massEditGenericOptionsByField = {};
   }
 
   onMassEditInputChange(field: string, value: string, event?: Event): void {
     this.massEditValues[field] = value;
+    if (this.isIdBackedMassEditField(field)) {
+      delete this.massEditSelectedIds[field];
+    }
     
     // Store input element reference
     if (event && event.target) {
       this.massEditInputElements[field] = event.target as HTMLInputElement;
     }
     
-    if (this.massEditSearchSubjects[field]) {
-      this.massEditSearchSubjects[field].next(value);
+    if (this.isPartChoiceDropdownField(field)) {
+      this.updateMassEditStaticOptions(field, value);
+    } else if (this.massEditSearchSubjects[field]) {
+      this.massEditSearchSubjects[field].next({ query: value });
     }
 
     const autocompleteState = this.massEditAutocomplete[field];
@@ -1214,6 +1279,13 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
         if (inputElement.value) {
           inputElement.setSelectionRange(inputElement.value.length, inputElement.value.length);
         }
+
+        const value = this.massEditValues[field] || '';
+        if (this.isPartChoiceDropdownField(field)) {
+          this.updateMassEditStaticOptions(field, value);
+        } else if (this.massEditSearchSubjects[field]) {
+          this.massEditSearchSubjects[field].next({ query: value, force: true });
+        }
       }, 0);
     }
   }
@@ -1228,8 +1300,13 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
     }
     
     const value = this.massEditValues[field] || '';
-    if (value && this.massEditSearchSubjects[field]) {
-      this.massEditSearchSubjects[field].next(value);
+    if (this.isPartChoiceDropdownField(field)) {
+      this.updateMassEditStaticOptions(field, value);
+      return;
+    }
+
+    if (this.massEditSearchSubjects[field]) {
+      this.massEditSearchSubjects[field].next({ query: value, force: true });
     }
   }
 
@@ -1284,9 +1361,9 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
       Enter: () => {
         event.preventDefault();
         if (autocomplete.selectedIndex >= 0 && autocomplete.selectedIndex < autocomplete.options.length) {
-          this.selectMassEditOption(field, autocomplete.options[autocomplete.selectedIndex]);
+          this.selectMassEditOption(field, autocomplete.options[autocomplete.selectedIndex], autocomplete.selectedIndex);
         } else if (autocomplete.options.length === 1) {
-          this.selectMassEditOption(field, autocomplete.options[0]);
+          this.selectMassEditOption(field, autocomplete.options[0], 0);
         } else {
           this.closeMassEditDropdown(field);
         }
@@ -1300,8 +1377,16 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
     keyHandlers[event.key]?.();
   }
 
-  selectMassEditOption(field: string, option: string): void {
+  selectMassEditOption(field: string, option: string, optionIndex?: number): void {
     this.massEditValues[field] = option;
+    if (this.isIdBackedMassEditField(field)) {
+      const genericOptions = this.massEditGenericOptionsByField[field] || [];
+      const selectedOption =
+        optionIndex !== undefined && optionIndex >= 0 && optionIndex < genericOptions.length
+          ? genericOptions[optionIndex]
+          : genericOptions.find((entry: any) => (entry.displayValue || entry.name || '') === option);
+      this.massEditSelectedIds[field] = selectedOption?.id ? String(selectedOption.id) : '';
+    }
     this.closeMassEditDropdown(field);
   }
 
@@ -1377,6 +1462,10 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
             if (!value || disabledFields.has(field)) return;
 
             rowTouched = true;
+            const selectedId = this.massEditSelectedIds[field] || '';
+            const idFieldName = `${field}Id`;
+            const idValueChanged =
+              this.isIdBackedMassEditField(field) && (rowData[idFieldName] || '') !== selectedId;
 
             if (this.rowManagementService.hasComparableValueChanged({
               fieldName: field,
@@ -1391,6 +1480,17 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
               );
               rowValueChanged = true;
               columnsToUpdate.add(field);
+            }
+
+            if (this.isIdBackedMassEditField(field)) {
+              if (selectedId) {
+                rowData[idFieldName] = selectedId;
+              } else if (!value) {
+                rowData[idFieldName] = '';
+              }
+              if (idValueChanged) {
+                rowValueChanged = true;
+              }
             }
 
             this.rowManagementService.syncEditedState({
@@ -1426,6 +1526,7 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
 
         // Clear mass edit values after applying (but keep mass edit mode open)
         this.massEditValues = {};
+        this.massEditSelectedIds = {};
       } finally {
         this.isMassEditing = false;
       }
