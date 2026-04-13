@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { GridApi } from 'ag-grid-community';
 import { GridConfigService } from './grid/grid-config.service';
+import { RowManagementService } from './row-management.service';
 import {
   ENUM_MBOM_LINE_ITEM,
   COL_CHECKBOX,
@@ -44,26 +45,17 @@ interface UpdateFieldParams {
   isMbomRow: boolean;
   columnFields: Set<string>;
   columnsToUpdate: Set<string>;
-}
-
-interface TrackEditedFieldsParams {
-  rowData: any;
-  state: MassEditState;
-  isMbomMode: () => boolean;
-  isSbomMode: () => boolean;
-  isEbomMode: () => boolean;
-  isMaterialMbomMode?: () => boolean;
-  isMbomRow: boolean;
-  columnFields: Set<string>;
-  editedRows: Set<string | number>;
-  editedFields: Map<string | number, Set<string>>;
+  updatedFieldsForRow: Set<string>;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class MassEditService {
-  constructor(private readonly gridConfigService: GridConfigService) {}
+  constructor(
+    private readonly gridConfigService: GridConfigService,
+    private readonly rowManagementService: RowManagementService,
+  ) {}
 
   populateMassEditFields(
     selectedRows: any[],
@@ -233,6 +225,7 @@ export class MassEditService {
       isMaterialMbomMode,
       editedRows,
       editedFields,
+      originalRowValues,
     } = options;
 
     if (selectedRows.size === 0 || !gridApi) return;
@@ -248,6 +241,7 @@ export class MassEditService {
       const rowData = node.data;
       const isMbomRow = rowData?.ptcbomPartMarkUp === 'enumMBOM001';
       let hasChanges = false;
+      const updatedFieldsForRow = new Set<string>();
 
       const updateParams: UpdateFieldParams = {
         node,
@@ -260,27 +254,25 @@ export class MassEditService {
         isMbomRow,
         columnFields,
         columnsToUpdate,
+        updatedFieldsForRow,
       };
 
       hasChanges = this.updateStartDate(updateParams) || hasChanges;
       hasChanges = this.updateEndDate(updateParams) || hasChanges;
       hasChanges = this.updateQuantity(updateParams) || hasChanges;
-      hasChanges = this.updateIncludeInSpecSheet(node, rowData, state, isSbomMode, columnFields, columnsToUpdate) || hasChanges;
+      hasChanges = this.updateIncludeInSpecSheet(updateParams) || hasChanges;
 
       if (hasChanges) {
-        const trackParams: TrackEditedFieldsParams = {
-          rowData,
-          state,
-          isMbomMode,
-          isSbomMode,
-          isEbomMode,
-          isMaterialMbomMode,
-          isMbomRow,
-          columnFields,
-          editedRows,
-          editedFields,
-        };
-        this.trackEditedFields(trackParams);
+        updatedFieldsForRow.forEach((fieldName) => {
+          this.rowManagementService.syncRowFieldEditState({
+            rowData,
+            fieldName,
+            newValue: rowData?.[fieldName],
+            editedRows,
+            editedFields,
+            originalRowValues,
+          });
+        });
         nodesToUpdate.push(node);
       }
     });
@@ -358,7 +350,18 @@ export class MassEditService {
     fields: string[],
     formatter: (dateStr: string) => string
   ): boolean {
-    const { node, rowData, isMbomMode, isSbomMode, isEbomMode, isMaterialMbomMode, isMbomRow, columnFields, columnsToUpdate } = params;
+    const {
+      node,
+      rowData,
+      isMbomMode,
+      isSbomMode,
+      isEbomMode,
+      isMaterialMbomMode,
+      isMbomRow,
+      columnFields,
+      columnsToUpdate,
+      updatedFieldsForRow,
+    } = params;
     const shouldUpdate = dateValue && (isMbomMode() || isEbomMode() || isMaterialMbomMode?.() || (isSbomMode() && !isMbomRow));
     if (!shouldUpdate) return false;
 
@@ -370,13 +373,26 @@ export class MassEditService {
       rowData[targetField] = formattedDate;
       node.setDataValue(targetField, formattedDate);
       columnsToUpdate.add(targetField);
+      updatedFieldsForRow.add(targetField);
       return true;
     }
     return false;
   }
 
   private updateQuantity(params: UpdateFieldParams): boolean {
-    const { node, rowData, state, isMbomMode, isSbomMode, isEbomMode, isMaterialMbomMode, isMbomRow, columnFields, columnsToUpdate } = params;
+    const {
+      node,
+      rowData,
+      state,
+      isMbomMode,
+      isSbomMode,
+      isEbomMode,
+      isMaterialMbomMode,
+      isMbomRow,
+      columnFields,
+      columnsToUpdate,
+      updatedFieldsForRow,
+    } = params;
     const shouldUpdate =
       (isMbomMode() || isEbomMode() || isMaterialMbomMode?.() || (isSbomMode() && !isMbomRow)) &&
       state.quantity !== null &&
@@ -390,19 +406,14 @@ export class MassEditService {
       rowData[targetField] = state.quantity;
       node.setDataValue(targetField, state.quantity);
       columnsToUpdate.add(targetField);
+      updatedFieldsForRow.add(targetField);
       return true;
     }
     return false;
   }
 
-  private updateIncludeInSpecSheet(
-    node: any,
-    rowData: any,
-    state: MassEditState,
-    isSbomMode: () => boolean,
-    columnFields: Set<string>,
-    columnsToUpdate: Set<string>
-  ): boolean {
+  private updateIncludeInSpecSheet(params: UpdateFieldParams): boolean {
+    const { node, rowData, state, isSbomMode, columnFields, columnsToUpdate, updatedFieldsForRow } = params;
     if (!isSbomMode() || !state.includeInSpecSheet) return false;
     if (rowData.isNewRow) return false;
 
@@ -423,59 +434,9 @@ export class MassEditService {
       rowData[targetField] = state.includeInSpecSheet;
       node.setDataValue(targetField, state.includeInSpecSheet);
       columnsToUpdate.add(targetField);
+      updatedFieldsForRow.add(targetField);
       return true;
     }
     return false;
-  }
-
-  private trackEditedFields(params: TrackEditedFieldsParams): void {
-    const { rowData, state, isMbomMode, isSbomMode, isEbomMode, isMaterialMbomMode, isMbomRow, columnFields, editedRows, editedFields } = params;
-    const primaryKey = rowData.materialKey || rowData.newRowId || rowData[FIELD_PART_NUMBER] || rowData.part;
-    const compositeKey =
-      rowData.section && (rowData[FIELD_PART_NUMBER] || rowData.part)
-        ? `${rowData.section}::${rowData[FIELD_PART_NUMBER] || rowData.part}`
-        : null;
-    const editKey = primaryKey || compositeKey;
-
-    if (!editKey) return;
-
-    editedRows.add(editKey);
-    if (compositeKey) editedRows.add(compositeKey);
-
-    if (!editedFields.has(editKey)) {
-      editedFields.set(editKey, new Set<string>());
-    }
-    const editedFieldsForRow = editedFields.get(editKey)!;
-
-    if (isMbomMode() || isEbomMode() || isMaterialMbomMode?.()) {
-      this.addFieldIfExists(editedFieldsForRow, [...MASS_EDIT_DATE_START_FIELDS], columnFields, rowData, state.startDate);
-      this.addFieldIfExists(editedFieldsForRow, [...MASS_EDIT_DATE_END_FIELDS], columnFields, rowData, state.endDate);
-      this.addFieldIfExists(editedFieldsForRow, [...MASS_EDIT_QUANTITY_FIELDS], columnFields, rowData, state.quantity !== null && state.quantity !== undefined);
-    }
-
-    if (isSbomMode()) {
-      if (!isMbomRow) {
-        this.addFieldIfExists(editedFieldsForRow, [...MASS_EDIT_DATE_START_FIELDS], columnFields, rowData, state.startDate);
-        this.addFieldIfExists(editedFieldsForRow, [...MASS_EDIT_DATE_END_FIELDS], columnFields, rowData, state.endDate);
-        this.addFieldIfExists(editedFieldsForRow, [...MASS_EDIT_QUANTITY_FIELDS], columnFields, rowData, state.quantity !== null && state.quantity !== undefined);
-      }
-      this.addFieldIfExists(editedFieldsForRow, [...MASS_EDIT_INCLUDE_IN_SPEC_SHEET_FIELDS], columnFields, rowData, state.includeInSpecSheet);
-    }
-  }
-
-  private addFieldIfExists(
-    editedFieldsForRow: Set<string>,
-    fields: string[],
-    columnFields: Set<string>,
-    rowData: any,
-    condition: any
-  ): void {
-    if (!condition) return;
-    for (const field of fields) {
-      if (columnFields.has(field) || rowData.hasOwnProperty(field)) {
-        editedFieldsForRow.add(field);
-        break;
-      }
-    }
   }
 }

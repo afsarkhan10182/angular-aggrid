@@ -855,12 +855,6 @@ export class GridConfigService {
     if (data.isExpired) {
       classes.push('expired-row');
     }
-    if (data.isNew) {
-      classes.push('new-row');
-    }
-    if (data.isEdited) {
-      classes.push('edited-row');
-    }
     if (data.isParent) {
       classes.push('parent-row');
       if (data.isExpanded) {

@@ -630,20 +630,28 @@
 }
 
 /* Edited rows: same yellow highlight behavior as main grid */
-::ng-deep .ag-theme-alpine .ag-row.edited-row,
-::ng-deep .ag-theme-alpine .ag-row.edited-row .ag-cell {
+::ng-deep .ag-theme-alpine .ag-row.row-edited,
+::ng-deep .ag-theme-alpine .ag-row.row-edited .ag-cell {
   background-color: #fef3c7 !important;
 }
 
 /* Keep edited highlight visible even while row stays selected */
-::ng-deep .ag-theme-alpine .ag-row.ag-row-selected.edited-row,
-::ng-deep .ag-theme-alpine .ag-row.ag-row-selected.edited-row .ag-cell {
+::ng-deep .ag-theme-alpine .ag-row.ag-row-selected.row-edited,
+::ng-deep .ag-theme-alpine .ag-row.ag-row-selected.row-edited .ag-cell {
   background-color: #fef3c7 !important;
   color: inherit !important;
 }
 
-::ng-deep .ag-theme-alpine .ag-row.ag-row-selected.edited-row {
+::ng-deep .ag-theme-alpine .ag-row.ag-row-selected.row-edited {
   border-left: none !important;
+}
+
+::ng-deep .ag-theme-alpine .ag-row.ag-row-inline-editing:not(.row-edited),
+::ng-deep .ag-theme-alpine .ag-row.ag-row-inline-editing:not(.row-edited) .ag-cell,
+::ng-deep .ag-theme-alpine .ag-row.ag-row-selected.ag-row-inline-editing:not(.row-edited),
+::ng-deep .ag-theme-alpine .ag-row.ag-row-selected.ag-row-inline-editing:not(.row-edited) .ag-cell {
+  background-color: inherit !important;
+  color: inherit !important;
 }
 
 

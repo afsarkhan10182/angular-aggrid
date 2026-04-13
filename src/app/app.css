@@ -263,27 +263,6 @@
   padding-left: 20px;
 }
 
-/* Ensure all sides have blue borders for editable cells in new rows */
-.ag-row.new-row .ag-cell[col-id='part'] {
-  border: 1px solid #007bff !important;
-  background: white !important;
-}
-
-.ag-row.new-row .ag-cell[col-id='feature'] {
-  border: 1px solid #007bff !important;
-  background: white !important;
-}
-
-.ag-row.new-row .ag-cell[col-id='startDate'] {
-  border: 1px solid #007bff !important;
-  background: white !important;
-}
-
-.ag-row.new-row .ag-cell[col-id='qty'] {
-  border: 1px solid #007bff !important;
-  background: white !important;
-}
-
 /* Toggle switch styling - Force override browser defaults */
 .toggle-switch-container {
   display: inline-flex !important;

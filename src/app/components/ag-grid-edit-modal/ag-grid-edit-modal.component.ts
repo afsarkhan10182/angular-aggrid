@@ -683,10 +683,13 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
           if (this.rowErrors[materialColorId]) {
             this.clearRowError(materialColorId);
           }
+
+          // Ensure rowClassRules re-evaluate immediately when edited state changes (especially on revert).
+          params.api.redrawRows({ rowNodes: [params.node] });
         }
       },
       rowClassRules: {
-        'edited-row': (params: any) => {
+        'row-edited': (params: any) => {
           return params.data?.materialColorId && this.editedRows.has(params.data.materialColorId);
         },
         'error-row': (params: any) => {
@@ -974,6 +977,35 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
     return flattened;
   }
 
+  private normalizePartEditChoiceDropdownValues(flattened: any): any {
+    if (this.mode !== 'part' || !flattened || typeof flattened !== 'object') {
+      return flattened;
+    }
+
+    Object.keys(this.partEditSelectableOptionsByField).forEach((fieldName) => {
+      const selectableOptions = this.partEditSelectableOptionsByField[fieldName];
+      if (!selectableOptions || typeof selectableOptions !== 'object') return;
+
+      const raw = flattened[fieldName];
+      if (raw == null || raw === '') return;
+
+      const current = String(raw);
+
+      // If already an internal key, keep it.
+      if (Object.prototype.hasOwnProperty.call(selectableOptions, current)) {
+        return;
+      }
+
+      // If it's a display value, map it back to the internal key so tracking/revert is consistent.
+      const match = Object.entries(selectableOptions).find(([, displayValue]) => displayValue === current);
+      if (match) {
+        flattened[fieldName] = match[0];
+      }
+    });
+
+    return flattened;
+  }
+
   private loadModalData(): void {
     this.isLoading = true;
     this.loadErrorMessage = '';
@@ -1068,7 +1100,9 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
           if (this.mode === 'part') {
             this.partEditRawInstancesById.set(materialColorId, instances[materialColorId]);
           }
-          const flattened = this.flattenInstance(instances[materialColorId]);
+          const flattened = this.normalizePartEditChoiceDropdownValues(
+            this.flattenInstance(instances[materialColorId]),
+          );
           const rowData = {
             materialColorId,
             ...flattened,
@@ -1541,7 +1575,7 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
               force: true,
             });
           }
-          // Always redraw touched rows so edited-row class can be added/removed
+          // Always redraw touched rows so row-edited class can be added/removed
           // even when only edit state changed (e.g., revert to modal-open values).
           this.gridApi.redrawRows({ rowNodes: nodesToUpdate });
         }

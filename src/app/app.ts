@@ -245,8 +245,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       componentParent: this,
       dataService: this.dataService,
       setSkipEditTracking: (skip: boolean) => this.rowManagementService.setSkipEditTracking(skip),
+      rowManagementService: this.rowManagementService,
       editedRows: this.editedRows,
       editedFields: this.editedFields,
+      originalRowValues: this.originalRowValues,
     };
 
     this.showExpiredData = false;
@@ -277,14 +279,18 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
             componentParent: this,
             dataService: this.dataService,
             setSkipEditTracking: (skip: boolean) => this.rowManagementService.setSkipEditTracking(skip),
+            rowManagementService: this.rowManagementService,
             editedRows: this.editedRows,
             editedFields: this.editedFields,
+            originalRowValues: this.originalRowValues,
           }
         : {
             dataService: this.dataService,
             setSkipEditTracking: (skip: boolean) => this.rowManagementService.setSkipEditTracking(skip),
+            rowManagementService: this.rowManagementService,
             editedRows: this.editedRows,
             editedFields: this.editedFields,
+            originalRowValues: this.originalRowValues,
           },
       isFullWidthRow: (params: any) => {
         const data = params.rowNode.data;

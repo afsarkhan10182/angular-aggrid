@@ -797,48 +797,63 @@ export class AutocompleteCellEditorComponent
     }
   }
 
-  /**
-   * When editing a new row in the main grid, part/material selection updates the row via setDataValue.
-   * AG Grid may not fire onCellValueChanged for that commit, so the row is never added to editedRows
-   * and the Save button stays disabled. Explicitly mark the new row as edited when part/material is selected.
-   */
   private markNewRowAsEditedIfNeeded(fieldName: string): void {
     const data = this.params?.node?.data;
     if (!data?.isNewRow) return;
-    const rowId = data.newRowId;
-    if (rowId == null) return;
     const ctx = this.getGridContext();
-    const editedRows = ctx?.editedRows;
-    if (!editedRows) return;
-    editedRows.add(rowId);
-    const editedFields = ctx?.editedFields;
-    if (editedFields) {
-      if (!editedFields.has(rowId)) editedFields.set(rowId, new Set<string>());
-      editedFields.get(rowId)!.add(fieldName);
-      if (fieldName === FIELD_PART_NUMBER || fieldName === FIELD_BOM_LINK_PART) {
-        editedFields.get(rowId)!.add(FIELD_PART);
-      }
+    const rowManagementService = (ctx as any)?.rowManagementService;
+    const editedRows = (ctx as any)?.editedRows as Set<string | number> | undefined;
+    const editedFields = (ctx as any)?.editedFields as Map<string | number, Set<string>> | undefined;
+    if (!rowManagementService || !editedRows || !editedFields) return;
+
+    rowManagementService.syncRowFieldEditState({
+      rowData: data,
+      fieldName,
+      newValue: data?.[fieldName],
+      editedRows,
+      editedFields,
+      originalRowValues: (ctx as any)?.originalRowValues,
+    });
+
+    if (fieldName === FIELD_PART_NUMBER || fieldName === FIELD_BOM_LINK_PART) {
+      rowManagementService.syncRowFieldEditState({
+        rowData: data,
+        fieldName: FIELD_PART,
+        newValue: data?.[FIELD_PART],
+        editedRows,
+        editedFields,
+        originalRowValues: (ctx as any)?.originalRowValues,
+      });
     }
   }
 
   private markExistingRowAsEditedForPartChange(fieldName: string): void {
     const data = this.params?.node?.data;
     if (!data || data.isNewRow) return;
-    const rowId =
-      data.materialKey || data.newRowId || data[FIELD_PART_NUMBER] || data.part || null;
-    if (rowId == null) return;
     const ctx = this.getGridContext();
-    const editedRows = ctx?.editedRows;
-    const editedFields = ctx?.editedFields;
-    if (editedRows) editedRows.add(rowId);
-    if (editedFields) {
-      if (!editedFields.has(rowId)) editedFields.set(rowId, new Set<string>());
-      const set = editedFields.get(rowId)!;
-      set.add(fieldName);
-      if (fieldName !== FIELD_PART_NUMBER) set.add(FIELD_PART_NUMBER);
-      if (fieldName !== FIELD_BOM_LINK_PART) set.add(FIELD_BOM_LINK_PART);
-      set.add(FIELD_PART);
-    }
+    const rowManagementService = (ctx as any)?.rowManagementService;
+    const editedRows = (ctx as any)?.editedRows as Set<string | number> | undefined;
+    const editedFields = (ctx as any)?.editedFields as Map<string | number, Set<string>> | undefined;
+    if (!rowManagementService || !editedRows || !editedFields) return;
+
+    const originalRowValues = (ctx as any)?.originalRowValues;
+    const fieldsToMark = new Set<string>([
+      fieldName,
+      FIELD_PART_NUMBER,
+      FIELD_BOM_LINK_PART,
+      FIELD_PART,
+    ]);
+
+    fieldsToMark.forEach((f) => {
+      rowManagementService.syncRowFieldEditState({
+        rowData: data,
+        fieldName: f,
+        newValue: data?.[f],
+        editedRows,
+        editedFields,
+        originalRowValues,
+      });
+    });
   }
 
   private filterLocalOptions(query: string): string[] {

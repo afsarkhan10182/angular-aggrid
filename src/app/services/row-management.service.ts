@@ -105,7 +105,6 @@ export class RowManagementService {
 
   /**
    * Store original values for existing rows and reset edited-field tracking.
-   * Kept in RowManagementService to keep row state responsibilities in one place.
    */
   captureOriginalValues(
     rowData: any[],
@@ -128,16 +127,9 @@ export class RowManagementService {
       const rowId = row.materialKey || row.newRowId || row[FIELD_PART_NUMBER] || row.part;
       if (!rowId) return;
 
-      const originalValues = {
-        [FIELD_PART_NUMBER]: String(row[FIELD_PART_NUMBER] || row.part || row.bomLinkPart || ''),
-        bomLinkPart: String(row.bomLinkPart || row[FIELD_PART_NUMBER] || row.part || ''),
-        bomLinkFeature: String(row.bomLinkFeature || row.feature || ''),
-        bomLinkStartDate: String(row.bomLinkStartDate || row.startDate || ''),
-        bomLinkEndDate: String(row.bomLinkEndDate || row.endDate || ''),
-        quantity: String(row.quantity || row.qty || ''),
-        bomLinkSpecSheetExtra: String(row.bomLinkSpecSheetExtra || ''),
-        bomLinkIncludeInSpecSheet: String(row.bomLinkIncludeInSpecSheet || ''),
-      };
+      // Keep a shallow snapshot so existing-row edits can be reverted reliably across all editable fields.
+      const originalValues: any = { ...row };
+      delete originalValues.children;
 
       originalRowValues.set(rowId, originalValues);
       if (row.section && (row[FIELD_PART_NUMBER] || row.part)) {
@@ -618,10 +610,18 @@ export class RowManagementService {
 
     params.api.stopEditing();
 
-    params.node.setDataValue(params.colDef.field, valueToPaste);
+    const targetField = params.colDef.field;
+    params.node.setDataValue(targetField, valueToPaste);
 
-    if (params.data.newRowId) {
-      componentInstance.editedRows.add(params.data.newRowId);
+    if (componentInstance?.editedRows && componentInstance?.editedFields) {
+      this.syncRowFieldEditState({
+        rowData: params.data,
+        fieldName: targetField,
+        newValue: valueToPaste,
+        editedRows: componentInstance.editedRows,
+        editedFields: componentInstance.editedFields,
+        originalRowValues: componentInstance.originalRowValues,
+      });
     }
 
     params.api.redrawRows({
@@ -662,8 +662,15 @@ export class RowManagementService {
     params.api.stopEditing();
     params.node.setDataValue(fieldName, '');
 
-    if (params.data.newRowId) {
-      componentInstance.editedRows.add(params.data.newRowId);
+    if (componentInstance?.editedRows && componentInstance?.editedFields) {
+      this.syncRowFieldEditState({
+        rowData: params.data,
+        fieldName,
+        newValue: '',
+        editedRows: componentInstance.editedRows,
+        editedFields: componentInstance.editedFields,
+        originalRowValues: componentInstance.originalRowValues,
+      });
     }
 
     params.api.refreshCells({
@@ -732,6 +739,35 @@ export class RowManagementService {
       : null;
   }
 
+  syncRowFieldEditState(options: {
+    rowData: any;
+    fieldName: string;
+    newValue: any;
+    editedRows: Set<string | number>;
+    editedFields: Map<string | number, Set<string>>;
+    originalRowValues?: Map<string | number, any>;
+  }): void {
+    const { rowData, fieldName, newValue, editedRows, editedFields, originalRowValues } = options;
+    if (!rowData || !fieldName) return;
+
+    const partId =
+      rowData.materialKey || rowData.newRowId || rowData[FIELD_PART_NUMBER] || rowData.part;
+    if (!partId) return;
+
+    const compositeId = this.getCompositeId(rowData);
+    const isNewRow = !!rowData.isNewRow;
+
+    const params = {
+      data: rowData,
+      oldValue: undefined,
+      newValue,
+    };
+
+    const changed = this.isFieldChanged(params, fieldName, isNewRow, partId, compositeId, originalRowValues);
+    this.updateEditedFields(editedFields, partId, fieldName, changed);
+    this.updateEditedRows(editedRows, params, partId, compositeId, editedFields, changed);
+  }
+
   private normalizeForField(fieldName: string, value: any): any {
     if (value === null || value === undefined) return '';
     if (typeof value === 'string') {
@@ -782,7 +818,7 @@ export class RowManagementService {
     if (!original) return undefined;
 
     const resolver = ORIGINAL_VALUE_RESOLVERS[fieldName];
-    return resolver ? resolver(original) : undefined;
+    return resolver ? resolver(original) : original?.[fieldName];
   }
 
   private isFieldChanged(
