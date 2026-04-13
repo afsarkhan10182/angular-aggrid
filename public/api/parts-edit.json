@@ -2,39 +2,43 @@
     "UserListAttributes": {
         "materialColorCreativeOwner": "Creative Owner",
         "materialSupplierPrimaryBuyer": "Primary Buyer",
-        "materialColorEngineerOwner": "Engineer Owner"
+        "materialColorEngineeringOwner": "Engineering Owner",
+        "materialColorProductOwner": "Product Owner"
     },
     "instances": {
-        "OR:com.lcs.wc.material.LCSMaterialColor:554762": {
+        "OR:com.lcs.wc.material.LCSMaterialColor:591426": {
             "MaterialSupplierAttributes": {
-                "materialSupplierPrimaryBuyer": "",
-                "materialSupplierPrimaryUOM": ""
+                "materialSupplierPrimaryBuyer": "Site, Administrator",
+                "materialSupplierPrimaryUOM": "Inch",
+                "materialSupplierCountryOfOrigin": ""
             },
-            "material": "BOSCH POWERTUBE 625 VERTICAL BLACK; US VARIANT",
-            "color": "BK - Black(TK-0101)",
+            "material": "Frame Trek Marlin 2027 XDS M",
+            "color": "BK - Raw(00000)",
             "MaterialColorAttributes": {
                 "materialColorGraphicsChangeOnly": "Yes",
-                "materialColorPrintCopy": "Bosch PowerTube 625Wh",
-                "materialColorCreativeOwner": "Test Owner",
-                "materialColorEngineerOwner": "Engineer Owner",
-                "materialColorSixtyCharacterDescription": "test",
-                "materialColorThirtyCharacterDescription": "BTRY BSH BAT-625 POWERTUB-V-US",
-                "materialColorPartNumber": "580317",
-                "materialColorBrand": ""
+                "materialColorPrintCopy": "1234",
+                "materialColorCreativeOwner": "Srivignesh Ravi",
+                "materialColorEngineeringOwner": "Site, Administrator",
+                "materialColorSixtyCharacterDescription": "test456",
+                "materialColorProductOwner": "Wasim Hossain",
+                "materialColorThirtyCharacterDescription": "test112",
+                "materialColorPartNumber": "2033U0227",
+                "materialColorBrand": "Aardvark",
+                "materialColorWirelessConnectivity": "No"
             },
-            "colorId": "537913",
-            "materialColorId": "OR:com.lcs.wc.material.LCSMaterialColor:554762",
-            "supplier": "Robert Bosch GMBH Supplier Buyer",
-            "materialSupplierId": "VR:com.lcs.wc.material.LCSMaterialSupplier:554751",
-            "childId": "554750",
-            "materialId": "VR:com.lcs.wc.material.LCSMaterial:533364",
+            "colorId": "590464",
+            "materialColorId": "OR:com.lcs.wc.material.LCSMaterialColor:591426",
+            "supplier": "Trek Approved",
+            "materialSupplierId": "VR:com.lcs.wc.material.LCSMaterialSupplier:591415",
+            "childId": "591414",
+            "materialId": "VR:com.lcs.wc.material.LCSMaterial:590993",
             "materialColorState": "",
             "MaterialAttributes": {
-                "materialAttachmentType": ""
+                "materialAttachmentType": "Hook and loop strap/Quick Release"
             }
         }
     },
-    "materialColorIds": "OR:com.lcs.wc.material.LCSMaterialColor:554762",
+    "materialColorIds": "OR:com.lcs.wc.material.LCSMaterialColor:591426",
     "columns": {
         "materialColorPartNumber": "Part #",
         "materialColorState": "State",
@@ -44,13 +48,16 @@
         "materialAttachmentType": "Attachment Type",
         "materialSupplierPrimaryUOM": "Primary UOM",
         "materialSupplierPrimaryBuyer": "Primary Buyer",
+        "materialSupplierCountryOfOrigin": "Country Of Origin",
         "materialColorThirtyCharacterDescription": "30 Character Description",
         "materialColorSixtyCharacterDescription": "60 Character Description",
         "materialColorBrand": "Brand",
         "materialColorPrintCopy": "Print Copy ",
         "materialColorGraphicsChangeOnly": "Graphics Change Only",
         "materialColorCreativeOwner": "Creative Owner",
-        "materialColorEngineerOwner": "Engineer Owner"
+        "materialColorWirelessConnectivity": "Wireless Connectivity",
+        "materialColorEngineeringOwner": "Engineering Owner",
+        "materialColorProductOwner": "Product Owner"
     },
     "DefaultColumns": {
         "materialColorPartNumber": "Part #",
@@ -109,6 +116,13 @@
                 "enumAttachmentType003": "Rubber strap",
                 "enumAttachmentType004": "Hook and loop strap/Quick Release",
                 "enumAttachmentType005": "Clip-on"
+            }
+        },
+        "materialColorWirelessConnectivity": {
+            "attributeType": "choice",
+            "selectableOptions": {
+                "enumYes001": "Yes",
+                "enumNo002": "No"
             }
         }
     }

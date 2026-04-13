@@ -8,6 +8,7 @@ import {
   ATTR_PTCMATERIAL_NAME,
   FIELD_BOM_LINK_FEATURE,
   FIELD_BOM_LINK_COUNTRY_OF_ORIGIN,
+  FIELD_MATERIAL_SUPPLIER_COUNTRY_OF_ORIGIN,
   FIELD_PART_NUMBER,
   FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT,
   FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE,
@@ -336,8 +337,14 @@ export class DataService {
     query: string,
     fetchLimit: number = 20,
   ): Observable<{ results: any[]; resultCount: number; hasMore: boolean }> {
+    const bomType = this.getBomType();
+    const flexTypeName =
+      bomType === BOM_TYPE_EBOM || bomType === BOM_TYPE_MATERIALMBOM
+        ? String.raw`Business Object\bomFeature\part`
+        : String.raw`Business Object\bomFeature`;
+
     return this.searchFlexInstances(
-      String.raw`Business Object\bomFeature`,
+      flexTypeName,
       'name',
       query,
       fetchLimit,
@@ -826,7 +833,10 @@ export class DataService {
     };
 
     editedFieldsForRow.forEach((fieldName) => {
-      const normalizedValue = userListFields?.has(fieldName)
+      const normalizedValue =
+        userListFields?.has(fieldName) ||
+        fieldName === FIELD_BOM_LINK_COUNTRY_OF_ORIGIN ||
+        fieldName === FIELD_MATERIAL_SUPPLIER_COUNTRY_OF_ORIGIN
         ? String(row?.[`${fieldName}Id`] ?? row?.[fieldName] ?? '')
         : normalizePartEditValue(fieldName, row?.[fieldName] ?? '');
       const containerKey = resolveContainerKeyForField(fieldName);

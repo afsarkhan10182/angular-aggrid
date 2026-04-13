@@ -38,6 +38,7 @@ export const FIELD_QTY = 'qty';
 export const FIELD_BOM_LINK_SPEC_SHEET_EXTRA = 'bomLinkSpecSheetExtra';
 export const FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET = 'bomLinkIncludeInSpecSheet';
 export const FIELD_BOM_LINK_COUNTRY_OF_ORIGIN = 'bomLinkCountryOfOrigin';
+export const FIELD_MATERIAL_SUPPLIER_COUNTRY_OF_ORIGIN = 'materialSupplierCountryOfOrigin';
 export const FIELD_MATERIAL = 'material';
 export const FIELD_MATERIAL_DESCRIPTION = 'materialDescription';
 export const FIELD_SUPPLIER = 'supplier';

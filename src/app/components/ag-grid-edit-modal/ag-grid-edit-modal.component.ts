@@ -25,6 +25,7 @@ import {
   SERVICE_DATA_MANAGER_MODAL_DROPDOWN_FIELDS,
   PART_EDIT_MODAL_DISABLED_FIELDS,
   FIELD_PART_NUMBER,
+  FIELD_MATERIAL_SUPPLIER_COUNTRY_OF_ORIGIN,
   FIELD_MATERIAL_COLOR_STATUS,
   FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT,
   FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE,
@@ -161,6 +162,7 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
   private getDropdownFields(): Set<string> {
     if (this.mode === 'part') {
       return new Set<string>([
+        FIELD_MATERIAL_SUPPLIER_COUNTRY_OF_ORIGIN,
         ...Object.keys(this.partEditSelectableOptionsByField),
         ...this.partEditUserListFields,
       ]);
@@ -236,9 +238,11 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
         typeof definition.selectableOptions === 'object';
       const isAsyncPartDropdown =
         this.mode === 'part' && this.partEditUserListFields.has(field);
+      const isCountryDropdown =
+        this.mode === 'part' && field === FIELD_MATERIAL_SUPPLIER_COUNTRY_OF_ORIGIN;
       const selectableOptions = isChoiceDropdown ? definition.selectableOptions! : null;
       const choiceValues = selectableOptions ? Object.values(selectableOptions) : [];
-      const isDropdown = isServiceDropdown || isChoiceDropdown || isAsyncPartDropdown;
+      const isDropdown = isServiceDropdown || isChoiceDropdown || isAsyncPartDropdown || isCountryDropdown;
       const isCompactColumnField = COMPACT_COLUMN_FIELDS.has(field);
       const isPartNumberField = field === FIELD_PART_NUMBER;
       const isDefaultColumn = defaultColumnFields?.has(field) ?? true;
@@ -299,6 +303,17 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
           const entry = Object.entries(selectableOptions).find(([, v]) => v === value);
           return entry ? entry[0] : value;
         };
+        colDef.cellClass = (colDef.cellClass ? `${colDef.cellClass} ` : '') + 'dropdown-cell';
+        colDef.headerClass = (colDef.headerClass ? `${colDef.headerClass} ` : '') + 'dropdown-header';
+      } else if (isCountryDropdown) {
+        colDef.cellEditor = AutocompleteCellEditorComponent;
+        colDef.cellEditorParams = () => ({
+          placeholder: 'search countries...',
+          isCountrySearch: true,
+          context: {
+            dataService: this.dataService,
+          },
+        });
         colDef.cellClass = (colDef.cellClass ? `${colDef.cellClass} ` : '') + 'dropdown-cell';
         colDef.headerClass = (colDef.headerClass ? `${colDef.headerClass} ` : '') + 'dropdown-header';
       } else if (isAsyncPartDropdown) {
@@ -1114,7 +1129,11 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   private isIdBackedMassEditField(field: string): boolean {
-    return this.isPartUserListDropdownField(field) || this.getServiceLookupFields().has(field);
+    return (
+      this.isPartUserListDropdownField(field) ||
+      field === FIELD_MATERIAL_SUPPLIER_COUNTRY_OF_ORIGIN ||
+      this.getServiceLookupFields().has(field)
+    );
   }
 
   private updateMassEditStaticOptions(field: string, query: string): void {
@@ -1177,6 +1196,9 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
             ),
             switchMap((searchState) => {
               const effectiveQuery = searchState?.query ?? '';
+              if (field === FIELD_MATERIAL_SUPPLIER_COUNTRY_OF_ORIGIN) {
+                return this.dataService.searchCountriesOfOrigin(effectiveQuery, 20);
+              }
               if (this.isPartUserListDropdownField(field)) {
                 return this.dataService.searchUserList(
                   this.partEditUserListTypesByField[field] || '',

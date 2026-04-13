@@ -380,5 +380,5 @@
             "materialColorState": "Release"
         }
     ],
-    "bomType": "EBOM"
+    "bomType": "MATERIALMBOM"
 }
