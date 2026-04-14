@@ -831,18 +831,10 @@ export class GridService {
     });
 
     const useReleasedForEditable = config.isEbomMode?.() || config.isMaterialMbomMode?.();
-    const ebomAllViewOnly = useReleasedForEditable && config.selectedSkuFilter === 'all';
-    /** EBOM/MATERIALMBOM: materialColorState = release/released → not editable; other (e.g. pending) → editable. */
-    const isSkuReleasedByState = (sku: any): boolean => {
-      const state = String(sku?.materialColorState ?? '').trim().toLowerCase();
-      if (!state) return false;
-      if (state.includes('non-released') || state.includes('non released')) return false;
-      return state === 'release' || state === 'released' || state.startsWith('release');
-    };
     const skuColumns = config.getFilteredSkuInfo().map((sku) => {
       const originalSku = skuInfoMap.get(sku.skuId);
       const isDisabled = useReleasedForEditable
-        ? ebomAllViewOnly || isSkuReleasedByState(originalSku ?? sku)
+        ? config.selectedSkuFilter === 'all' || this.isSkuReleasedByState(originalSku ?? sku)
         : originalSku?.isEditable === false;
 
       return {
@@ -877,7 +869,6 @@ export class GridService {
         const tooltipText =
           bomName && bomName.trim() !== '' ? `${fullText}\nBOM Name - ${bomName}` : fullText;
         this.eGui.setAttribute('title', tooltipText);
-        this.eGui.style.userSelect = 'none';
 
         lines.forEach((line: string) => {
           const div = documentRef.createElement('div');
@@ -945,11 +936,6 @@ export class GridService {
       const fullHeader = lines.join('\n');
       const headerClasses = [index === 0 ? 'first-sku-column-header' : ''];
       const cellClasses = [index === 0 ? 'first-sku-column-cell' : ''];
-
-      if (sku.isDisabled) {
-        headerClasses.push('sku-column-disabled-header');
-        cellClasses.push('sku-column-disabled-cell');
-      }
 
       return {
         headerName: fullHeader,
@@ -1211,6 +1197,13 @@ export class GridService {
       return '<div class="sku-cell-disabled-placeholder">Not Available</div>';
     }
     return config.renderNewRowSkuCell(params);
+  }
+
+  private isSkuReleasedByState(sku: any): boolean {
+    const state = String(sku?.materialColorState ?? '').trim().toLowerCase();
+    if (!state) return false;
+    if (state.includes('non-released') || state.includes('non released')) return false;
+    return state === 'release' || state === 'released' || state.startsWith('release');
   }
 
   private renderSkuCellWithDelete(

@@ -220,6 +220,26 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   private linkedBomRequestId = 0;
   private skuFilterHighlightTimeout: ReturnType<typeof setTimeout> | null = null;
 
+  private getCriteriaDisplayNames(): string[] {
+    if (this.isEbomMode() || this.isMaterialMbomMode()) {
+      const skuInfo = this.dataService.getSkuInfo();
+      const materialPartNumbers = skuInfo
+        .map((sku: any) => String(sku?.materialColorPartNumber ?? '').trim())
+        .filter((value, index, values) => value !== '' && values.indexOf(value) === index);
+
+      if (materialPartNumbers.length > 0) {
+        return materialPartNumbers;
+      }
+    }
+
+    const bomPartInfo = this.dataService.getBomPartInfo();
+    const bomPartInfoArray = Array.isArray(bomPartInfo) ? bomPartInfo : bomPartInfo ? [bomPartInfo] : [];
+
+    return bomPartInfoArray
+      .map((info: any) => String(info?.bomOwner ?? '').trim())
+      .filter(Boolean);
+  }
+
   constructor(
     public dataService: DataService,
     private readonly gridConfigService: GridConfigService,
@@ -475,21 +495,21 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const loadSub = this.dataService.loadData().subscribe({
       next: (data) => {
         this.isLoading = false;
+        const displayNames = this.getCriteriaDisplayNames();
+        if (displayNames.length > 0) {
+          this.bomNamesFull = displayNames.join(', ');
+
+          if (displayNames.length > 3) {
+            this.bomNamesDisplay = displayNames.slice(0, 3).join(', ') + '...';
+          } else {
+            this.bomNamesDisplay = this.bomNamesFull;
+          }
+          this.bomName = this.bomNamesDisplay;
+        }
+
         const bomPartInfo = this.dataService.getBomPartInfo();
         if (bomPartInfo) {
           const bomPartInfoArray = Array.isArray(bomPartInfo) ? bomPartInfo : [bomPartInfo];
-          if (bomPartInfoArray.length > 0) {
-            const names = bomPartInfoArray.map((info: any) => info.bomOwner).filter(Boolean);
-
-            this.bomNamesFull = names.join(', ');
-
-            if (names.length > 3) {
-              this.bomNamesDisplay = names.slice(0, 3).join(', ') + '...';
-            } else {
-              this.bomNamesDisplay = this.bomNamesFull;
-            }
-            this.bomName = this.bomNamesDisplay;
-          }
           if (bomPartInfoArray.length > 0 && bomPartInfoArray[0]?.modifyTimestamp) {
             this.rowManagementService.setLastSavedAt(new Date(bomPartInfoArray[0].modifyTimestamp));
           }
