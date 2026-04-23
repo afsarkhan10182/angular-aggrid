@@ -85,7 +85,7 @@
 
       <!-- Right Group: Show Expired, Last Saved, Export, and Save -->
       <div class="right-controls-group">
-        <div class="toggle-switch-container">
+        <div class="toggle-switch-container" *ngIf="shouldShowExpiredToggle()">
           <label class="toggle-switch">
             <span class="toggle-text">Show Expired:</span>
             <input

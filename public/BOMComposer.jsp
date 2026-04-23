@@ -34,10 +34,12 @@
     String  windchillHost = wtproperties.getProperty("wt.rmi.server.hostname","");
 
     String pageTitle = "Product BOM Composer";
-	if ("SBOM".equals(bomType) || "EBOM".equals(bomType)) {
+	if ("EBOM".equals(bomType)) {
+		pageTitle = "Material BOM Composer";
+	} else if ("SBOM".equals(bomType)) {
 		pageTitle = bomType + " Composer";
 	} else if ("MATERIALMBOM".equals(bomType)) {
-		pageTitle = "Material BOM Composer";
+		pageTitle = "Part MBOM Composer";
 	}
 %>
 <!DOCTYPE html>

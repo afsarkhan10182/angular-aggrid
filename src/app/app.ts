@@ -772,16 +772,24 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   public getBomComposerTitle(): string {
     const bomType = this.getCurrentBomType();
-    
-    if (bomType === BOM_TYPE_EBOM || bomType === BOM_TYPE_SBOM) {
-      return `${bomType} Composer`;
-    }
-    
-    if (bomType === BOM_TYPE_MATERIALMBOM) {
+
+    if (bomType === BOM_TYPE_EBOM) {
       return 'Material BOM Composer';
     }
-    
+
+    if (bomType === BOM_TYPE_SBOM) {
+      return 'SBOM Composer';
+    }
+
+    if (bomType === BOM_TYPE_MATERIALMBOM) {
+      return 'Part MBOM Composer';
+    }
+
     return 'Product BOM Composer';
+  }
+
+  public shouldShowExpiredToggle(): boolean {
+    return !this.isEbomMode() && !this.isMaterialMbomMode();
   }
 
   public getCriteriaLabel(): string {
