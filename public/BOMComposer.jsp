@@ -8,6 +8,9 @@
                com.lcs.wc.util.LCSProperties,
                org.apache.logging.log4j.Logger,
                org.apache.logging.log4j.LogManager,
+			   com.lcs.wc.material.LCSMaterial,
+			   com.lcs.wc.material.LCSMaterialColorQuery,
+			   com.lcs.wc.db.FlexObject,
                com.lcs.wc.util.FormatHelper"
 %>
 
@@ -36,8 +39,29 @@
     String pageTitle = "Product BOM Composer";
 	if ("EBOM".equals(bomType)) {
 		pageTitle = "Material BOM Composer";
+		
+		String[] skuIDsColl = ids.split(",");
+		StringBuilder idsBuilder = new StringBuilder();
+		for (String skuId : skuIDsColl) {
+			LCSMaterial material = (LCSMaterial) LCSQuery.findObjectById(skuId);
+			Collection<FlexObject> skuList = new LCSMaterialColorQuery().findMaterialColorData(material).getResults();
+
+			for (FlexObject skufo : skuList) {
+				String id = skufo.getString("LCSMATERIALCOLOR.IDA2A2");
+				System.out.println("skufo = " + skufo);
+				if (idsBuilder.length() > 0) {
+					idsBuilder.append(",");
+				}
+				idsBuilder.append("OR:com.lcs.wc.material.LCSMaterialColor:" + id);
+			}
+		}
+		ids = idsBuilder.toString();
+		System.out.println("BOMComposer.jsp ids = " + ids);
+		
 	} else if ("SBOM".equals(bomType)) {
 		pageTitle = bomType + " Composer";
+	} else if ("MATERIALSBOM".equals(bomType)) {
+		pageTitle = "Material SBOM Composer";
 	} else if ("MATERIALMBOM".equals(bomType)) {
 		pageTitle = "Part MBOM Composer";
 	}

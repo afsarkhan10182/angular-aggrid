@@ -1,6 +1,7 @@
 import {
   BOM_LINK_KEY,
-  BOM_TYPE_EBOM,
+  BOM_TYPE_MATERIALEBOM,
+  BOM_TYPE_MATERIALSBOM,
   BOM_TYPE_MATERIALMBOM,
   DEFAULT_BOM_TYPE,
   HEADER_CSRF_NONCE,
@@ -339,7 +340,7 @@ export class DataService {
   ): Observable<{ results: any[]; resultCount: number; hasMore: boolean }> {
     const bomType = this.getBomType();
     const flexTypeName =
-      bomType === BOM_TYPE_EBOM || bomType === BOM_TYPE_MATERIALMBOM
+      bomType === BOM_TYPE_MATERIALEBOM || bomType === BOM_TYPE_MATERIALMBOM
         ? String.raw`Business Object\bomFeature\part`
         : String.raw`Business Object\bomFeature`;
 
@@ -1100,12 +1101,15 @@ export class DataService {
   ): any[] {
     const skuInfo = this.getSkuInfo();
     const bomType = this.getBomType();
-    if (bomType === BOM_TYPE_EBOM || bomType === BOM_TYPE_MATERIALMBOM) {
+    if (bomType === BOM_TYPE_MATERIALEBOM || bomType === BOM_TYPE_MATERIALMBOM) {
       return this.filterSkuInfoByOption(
         selectedFilter as EbomSkuFilterOption,
         skuInfo,
         'ebom',
       );
+    }
+    if (bomType === BOM_TYPE_MATERIALSBOM) {
+      return this.filterSkuInfoByOption(selectedFilter as SbomSkuFilterOption, skuInfo, 'sbom');
     }
     if (isMbomMode()) {
       return this.filterSkuInfoByOption(
@@ -1191,7 +1195,13 @@ export class DataService {
     const skuInfo = this.getSkuInfo();
     const bt = this.getBomType();
     const bomType: 'mbom' | 'sbom' | 'ebom' =
-      bt === BOM_TYPE_EBOM || bt === BOM_TYPE_MATERIALMBOM ? 'ebom' : isMbomMode() ? 'mbom' : 'sbom';
+      bt === BOM_TYPE_MATERIALEBOM || bt === BOM_TYPE_MATERIALMBOM
+        ? 'ebom'
+        : bt === BOM_TYPE_MATERIALSBOM
+          ? 'sbom'
+          : isMbomMode()
+            ? 'mbom'
+            : 'sbom';
     return this.filterSkuInfoByOption(option, skuInfo, bomType).length === 0;
   }
 
@@ -1206,7 +1216,13 @@ export class DataService {
     const skuInfo = this.getSkuInfo();
     const bt = this.getBomType();
     const bomType: 'mbom' | 'sbom' | 'ebom' =
-      bt === BOM_TYPE_EBOM || bt === BOM_TYPE_MATERIALMBOM ? 'ebom' : isMbomMode() ? 'mbom' : 'sbom';
+      bt === BOM_TYPE_MATERIALEBOM || bt === BOM_TYPE_MATERIALMBOM
+        ? 'ebom'
+        : bt === BOM_TYPE_MATERIALSBOM
+          ? 'sbom'
+          : isMbomMode()
+            ? 'mbom'
+            : 'sbom';
     if (this.filterSkuInfoByOption(option, skuInfo, bomType).length > 0) {
       return '';
     }
@@ -1219,7 +1235,13 @@ export class DataService {
     isMbomModeFn: () => boolean,
   ): string {
     const bt = this.getBomType();
-    if (bt === BOM_TYPE_EBOM || bt === BOM_TYPE_MATERIALMBOM) {
+    if (bt === BOM_TYPE_MATERIALSBOM) {
+      const sbomMessages: Record<string, string> = {
+        editableSkus: SKU_FILTER_EMPTY_EDITABLE,
+      };
+      return sbomMessages[option] || '';
+    }
+    if (bt === BOM_TYPE_MATERIALEBOM || bt === BOM_TYPE_MATERIALMBOM) {
       const ebomMessages: Record<string, string> = {
         released: SKU_FILTER_EMPTY_RELEASED,
         nonReleased: SKU_FILTER_EMPTY_NON_RELEASED,
@@ -1251,8 +1273,11 @@ export class DataService {
     isMbomMode: () => boolean,
   ): string {
     const bt = this.getBomType();
-    if (bt === BOM_TYPE_EBOM || bt === BOM_TYPE_MATERIALMBOM) {
+    if (bt === BOM_TYPE_MATERIALEBOM || bt === BOM_TYPE_MATERIALMBOM) {
       return ebomOptions.find((item) => item.value === option)?.label || LABEL_ALL;
+    }
+    if (bt === BOM_TYPE_MATERIALSBOM) {
+      return sbomOptions.find((item) => item.value === option)?.label || LABEL_ALL;
     }
     const options = isMbomMode() ? mbomOptions : sbomOptions;
     return options.find((item) => item.value === option)?.label || LABEL_ALL;

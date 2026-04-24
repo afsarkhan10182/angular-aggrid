@@ -40,9 +40,10 @@ import { MassEditService, MassEditState } from './services/mass-edit.service';
 import { SkuService } from './services/sku.service';
 import { environment } from '../environments/environment';
 import {
-  BOM_TYPE_EBOM,
-  BOM_TYPE_MBOM,
-  BOM_TYPE_SBOM,
+  BOM_TYPE_MATERIALEBOM,
+  BOM_TYPE_PRODUCTMBOM,
+  BOM_TYPE_PRODUCTSBOM,
+  BOM_TYPE_MATERIALSBOM,
   BOM_TYPE_MATERIALMBOM,
   DEFAULT_BOM_TYPE,
   EBOM_SERVICE_FIELDS,
@@ -543,7 +544,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    if (this.dataService.getBomType() !== BOM_TYPE_SBOM) {
+    if (!this.isSbomMode()) {
       return;
     }
 
@@ -751,19 +752,24 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   public isSbomMode(): boolean {
-    return this.getCurrentBomType() === BOM_TYPE_SBOM;
+    const bomType = this.getCurrentBomType();
+    return bomType === BOM_TYPE_PRODUCTSBOM || bomType === BOM_TYPE_MATERIALSBOM;
   }
 
   public isMbomMode(): boolean {
-    return this.getCurrentBomType() === BOM_TYPE_MBOM;
+    return this.getCurrentBomType() === BOM_TYPE_PRODUCTMBOM;
   }
 
   public isEbomMode(): boolean {
-    return this.getCurrentBomType() === BOM_TYPE_EBOM;
+    return this.getCurrentBomType() === BOM_TYPE_MATERIALEBOM;
   }
 
   public isMaterialMbomMode(): boolean {
     return this.getCurrentBomType() === BOM_TYPE_MATERIALMBOM;
+  }
+
+  public isMaterialSbomMode(): boolean {
+    return this.getCurrentBomType() === BOM_TYPE_MATERIALSBOM;
   }
 
   public isPartEditMode(): boolean {
@@ -773,12 +779,16 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public getBomComposerTitle(): string {
     const bomType = this.getCurrentBomType();
 
-    if (bomType === BOM_TYPE_EBOM) {
+    if (bomType === BOM_TYPE_MATERIALEBOM) {
       return 'Material BOM Composer';
     }
 
-    if (bomType === BOM_TYPE_SBOM) {
+    if (bomType === BOM_TYPE_PRODUCTSBOM) {
       return 'SBOM Composer';
+    }
+
+    if (bomType === BOM_TYPE_MATERIALSBOM) {
+      return 'Material SBOM Composer';
     }
 
     if (bomType === BOM_TYPE_MATERIALMBOM) {
@@ -794,7 +804,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   public getCriteriaLabel(): string {
     const bomType = this.getCurrentBomType();
-    if (bomType === BOM_TYPE_EBOM || bomType === BOM_TYPE_MATERIALMBOM) {
+    if (
+      bomType === BOM_TYPE_MATERIALEBOM ||
+      bomType === BOM_TYPE_MATERIALMBOM ||
+      bomType === BOM_TYPE_MATERIALSBOM
+    ) {
       return 'Material of SKUs chosen - ';
     }
     // For MBOM and SBOM
@@ -1811,7 +1825,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     const requiredFields = this.validationService.getRequiredFieldsForSave(bomType);
     const touchedRows = allDataRows.filter((row) => this.isRowTouched(row));
     const requiredFieldsOrGetter =
-      bomType === BOM_TYPE_SBOM || bomType === BOM_TYPE_EBOM  || bomType === BOM_TYPE_MATERIALMBOM 
+      bomType === BOM_TYPE_PRODUCTSBOM ||
+      bomType === BOM_TYPE_MATERIALSBOM ||
+      bomType === BOM_TYPE_MATERIALEBOM ||
+      bomType === BOM_TYPE_MATERIALMBOM
         ? (row: any) =>
             requiredFields.filter((f) =>
               f.keys.some((key) =>

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import {
   BOM_LINK_KEY,
-  BOM_TYPE_MBOM,
+  BOM_TYPE_PRODUCTMBOM,
   FIELD_HAS_LINKED_BOM,
   FIELD_PART_NUMBER,
 } from '../../constants';
@@ -165,7 +165,7 @@ export class GridDataTransformService {
         const hasPartNumber = !!(partNumber && String(partNumber).trim() !== '');
 
         let isCorrectMarkup = true;
-        if (bomType === BOM_TYPE_MBOM) {
+        if (bomType === BOM_TYPE_PRODUCTMBOM) {
           isCorrectMarkup = bomLink.ptcbomPartMarkUp === 'enumMBOM001';
         }
 

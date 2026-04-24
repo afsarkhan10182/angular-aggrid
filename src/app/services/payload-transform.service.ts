@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import {
   BOM_LINK_KEY,
-  BOM_TYPE_EBOM,
-  BOM_TYPE_MBOM,
-  BOM_TYPE_SBOM,
+  BOM_TYPE_MATERIALEBOM,
+  BOM_TYPE_PRODUCTMBOM,
+  BOM_TYPE_PRODUCTSBOM,
+  BOM_TYPE_MATERIALSBOM,
   BOM_TYPE_MATERIALMBOM,
   COLUMN_RENAME_FOR_API,
   DEFAULT_BOM_TYPE,
@@ -104,7 +105,7 @@ export class PayloadTransformService {
       const rowPartNumber = String(row?.[FIELD_PART_NUMBER] || '').trim();
 
       const bomType = this.dataService.getBomType() || DEFAULT_BOM_TYPE;
-      const isSbom = bomType === BOM_TYPE_SBOM;
+      const isSbom = bomType === BOM_TYPE_PRODUCTSBOM || bomType === BOM_TYPE_MATERIALSBOM;
       const isEmptyFeature = !rowFeatureValue || rowFeatureValue.trim() === '';
       
       const shouldSearchForMatches = resolvedSection && (isSbom || rowFeatureValue);
@@ -148,7 +149,7 @@ export class PayloadTransformService {
             const bomLinkFeature = String(row.bomLinkFeature || '').trim();
             
             const bomType = this.dataService.getBomType() || DEFAULT_BOM_TYPE;
-            const isSbom = bomType === BOM_TYPE_SBOM;
+            const isSbom = bomType === BOM_TYPE_PRODUCTSBOM || bomType === BOM_TYPE_MATERIALSBOM;
             const isEmptyFeature = !bomLinkFeature || bomLinkFeature === '';
 
             const shouldSearchApiInstances = section && (isSbom || bomLinkFeature);
@@ -166,7 +167,7 @@ export class PayloadTransformService {
                 const isSectionMatch = instanceSection === section;
                 const instanceHasPartNumber = Boolean(instancePart && String(instancePart).trim() !== '');
 
-                const isMbom = bomType === BOM_TYPE_MBOM;
+                const isMbom = bomType === BOM_TYPE_PRODUCTMBOM;
 
                 let isFeatureMatch = false;
                 let requiresPartMatch = false;
@@ -340,7 +341,7 @@ export class PayloadTransformService {
   ): boolean {
     const isSectionMatch = r.section === resolvedSection;
     const existingFeature = String(r.bomLinkFeature || '').trim();
-    const isMbom = bomType === BOM_TYPE_MBOM;
+    const isMbom = bomType === BOM_TYPE_PRODUCTMBOM;
 
     const { isFeatureMatch, requiresPartMatch } = this.determineFeatureMatch(
       existingFeature,
@@ -416,7 +417,7 @@ export class PayloadTransformService {
       : this.dataService.getSkuInfo();
     const allowedSkuIds = this.skuService.createAllowedSkuIdSet(skuInfo);
     const bomType = this.dataService.getBomTypeFromResponse() || this.dataService.getBomType();
-    const isEbom = bomType === BOM_TYPE_EBOM || bomType === BOM_TYPE_MATERIALMBOM;
+    const isEbom = bomType === BOM_TYPE_MATERIALEBOM || bomType === BOM_TYPE_MATERIALMBOM;
 
     const ebomServiceFieldsSet = new Set(this.gridConfigService.getEbomServiceFieldNames());
 
@@ -484,7 +485,7 @@ export class PayloadTransformService {
           bomLink.section = resolvedSection;
         }
 
-        if (bomType === BOM_TYPE_MBOM) {
+        if (bomType === BOM_TYPE_PRODUCTMBOM) {
           bomLink.ptcbomPartMarkUp = ENUM_MBOM_LINE_ITEM;
         }
 
@@ -546,7 +547,7 @@ export class PayloadTransformService {
         }
 
         if (row.bomLinkIncludeInSpecSheet) {
-          const isSbom = bomType === BOM_TYPE_SBOM;
+          const isSbom = bomType === BOM_TYPE_PRODUCTSBOM || bomType === BOM_TYPE_MATERIALSBOM;
           const isNewRow = row.isNewRow;
           
           if (!(isSbom && isNewRow)) {

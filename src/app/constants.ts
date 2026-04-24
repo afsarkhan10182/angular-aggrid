@@ -1,9 +1,10 @@
 // BOM and API core values.
-export const BOM_TYPE_EBOM = 'EBOM';
-export const BOM_TYPE_MBOM = 'MBOM';
-export const BOM_TYPE_SBOM = 'SBOM';
+export const BOM_TYPE_PRODUCTMBOM = 'MBOM';
+export const BOM_TYPE_PRODUCTSBOM = 'SBOM';
+export const BOM_TYPE_MATERIALEBOM = 'EBOM';
 export const BOM_TYPE_MATERIALMBOM = 'MATERIALMBOM';
-export const DEFAULT_BOM_TYPE = BOM_TYPE_MATERIALMBOM;
+export const BOM_TYPE_MATERIALSBOM = 'MATERIALSBOM';
+export const DEFAULT_BOM_TYPE = BOM_TYPE_MATERIALSBOM;
 export const BOM_LINK_KEY = 'bom-link';
 export const ENUM_MBOM_LINE_ITEM = 'enumMBOM001';
 export const VALUE_SPEC_YES = 'Yes';

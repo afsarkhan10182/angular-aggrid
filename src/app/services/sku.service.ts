@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BOM_TYPE_MBOM, BOM_TYPE_SBOM, FIELD_PART_NUMBER } from '../constants';
+import { BOM_TYPE_PRODUCTMBOM, BOM_TYPE_PRODUCTSBOM, BOM_TYPE_MATERIALSBOM, FIELD_PART_NUMBER } from '../constants';
 
 export interface SkuRowContext {
   section: string;
@@ -34,8 +34,9 @@ export class SkuService {
   private readonly partMatchRequirementByBomType: Readonly<
     Record<string, (rowPartNumber: string, instancePartNumber: string) => boolean>
   > = {
-    [BOM_TYPE_SBOM]: () => true,
-    [BOM_TYPE_MBOM]: (rowPartNumber, instancePartNumber) =>
+    [BOM_TYPE_PRODUCTSBOM]: () => true,
+    [BOM_TYPE_MATERIALSBOM]: () => true,
+    [BOM_TYPE_PRODUCTMBOM]: (rowPartNumber, instancePartNumber) =>
       this.hasValue(rowPartNumber) && this.hasValue(instancePartNumber),
   };
 

@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import {
   BOM_LINK_KEY,
-  BOM_TYPE_EBOM,
-  BOM_TYPE_MBOM,
-  BOM_TYPE_SBOM,
+  BOM_TYPE_MATERIALEBOM,
+  BOM_TYPE_PRODUCTMBOM,
+  BOM_TYPE_PRODUCTSBOM,
+  BOM_TYPE_MATERIALSBOM,
   BOM_TYPE_MATERIALMBOM,
   FIELD_PART_NUMBER,
   REQUIRED_FIELDS_FOR_SAVE,
@@ -256,7 +257,7 @@ export class ValidationService {
 
   getRequiredFieldsForSave(bomType: string): RequiredField[] {
     const fields = [...REQUIRED_FIELDS_FOR_SAVE];
-    if (bomType === BOM_TYPE_SBOM) {
+    if (bomType === BOM_TYPE_PRODUCTSBOM || bomType === BOM_TYPE_MATERIALSBOM) {
       return fields.filter((f) => f.label !== HEADER_FEATURE);
     }
     return fields;
@@ -456,7 +457,7 @@ export class ValidationService {
     apiData?: any
   ): ValidationResult {
     const bomType = this.dataService.getBomType();
-    const isEbom = bomType === BOM_TYPE_EBOM;
+    const isEbom = bomType === BOM_TYPE_MATERIALEBOM;
     const isMaterialMbom = bomType === BOM_TYPE_MATERIALMBOM;
 
     // EBOM and MATERIALMBOM: duplicate Part + Feature not allowed. Part+Feature-only logic; no SKU/section/ptcBomPartMarkUp.
@@ -467,8 +468,8 @@ export class ValidationService {
     const newRows = this.collectNewRows(rowData, displayData);
 
     const existingRows: any[] = [];
-    const isMbom = bomType === BOM_TYPE_MBOM;
-    const isSbom = bomType === BOM_TYPE_SBOM;
+    const isMbom = bomType === BOM_TYPE_PRODUCTMBOM;
+    const isSbom = bomType === BOM_TYPE_PRODUCTSBOM || bomType === BOM_TYPE_MATERIALSBOM;
 
     if (apiData && apiData.instances && Array.isArray(apiData.instances)) {
       for (const instance of apiData.instances) {

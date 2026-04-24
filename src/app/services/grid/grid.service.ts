@@ -1,5 +1,6 @@
 import {
-  BOM_TYPE_SBOM,
+  BOM_TYPE_PRODUCTSBOM,
+  BOM_TYPE_MATERIALSBOM,
   ENUM_MBOM_LINE_ITEM,
   VALUE_SPEC_NO,
   COL_CHECKBOX,
@@ -91,7 +92,7 @@ export class GridService {
   flattenHierarchicalData(data: any[], config: HierarchicalDataConfig): any[] {
     const result: any[] = [];
     const bomType = config.getBomType();
-    const isSbom = bomType === BOM_TYPE_SBOM;
+    const isSbom = bomType === BOM_TYPE_PRODUCTSBOM || bomType === BOM_TYPE_MATERIALSBOM;
 
     const processNode = (node: any) => {
       if (node.isSectionHeader) {
@@ -221,7 +222,7 @@ export class GridService {
     config: HierarchicalDataConfig,
   ): any[] {
     const bomType = config.getBomType();
-    const isSbom = bomType === BOM_TYPE_SBOM;
+    const isSbom = bomType === BOM_TYPE_PRODUCTSBOM || bomType === BOM_TYPE_MATERIALSBOM;
     const shouldApplySkuFilter = config.selectedSkuFilter !== 'all';
 
     let visibleSkuIds: Set<string> = new Set();
@@ -743,7 +744,7 @@ export class GridService {
     }
 
     const bomType = this.dataService.getBomType();
-    const isSbom = bomType === BOM_TYPE_SBOM;
+    const isSbom = bomType === BOM_TYPE_PRODUCTSBOM || bomType === BOM_TYPE_MATERIALSBOM;
 
     return data.children.some((child: any) => {
       if (child.isMaterialHeader) return true;

@@ -1,6 +1,7 @@
 import {
   BOM_LINK_KEY,
-  BOM_TYPE_SBOM,
+  BOM_TYPE_PRODUCTSBOM,
+  BOM_TYPE_MATERIALSBOM,
   LS_KEY_LAST_SAVED_AT,
   VALUE_SPEC_YES,
   NOTIFICATION_TYPE_SUCCESS,
@@ -497,7 +498,7 @@ export class RowManagementService {
     });
 
     const bomType = dataService.getBomType();
-    if (bomType === BOM_TYPE_SBOM) {
+    if (bomType === BOM_TYPE_PRODUCTSBOM || bomType === BOM_TYPE_MATERIALSBOM) {
       newRow.bomLinkSpecSheetExtra = VALUE_SPEC_YES;
       newRow.bomLinkIncludeInSpecSheet = '';
     }
