@@ -3,6 +3,7 @@ export const environment = {
   csrfUrl: '/Windchill/servlet/rest/security/csrf',
   getUserUrl: '/Windchill/servlet/rest/trek/getUserDetails',
   dataApiPath: '/Windchill/servlet/rest/trek/bomlink',
+  cooAnalysisApiPath: '/Windchill/servlet/rest/trek/cooanalysis',
   credentials: {
     username: '',
     password: '',

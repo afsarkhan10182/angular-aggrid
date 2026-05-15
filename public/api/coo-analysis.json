@@ -1,0 +1,125 @@
+{
+  "bomPartInfo": [
+    {
+      "bomMasterId": "COO-ANALYSIS-MOCK",
+      "bomName": "COO Analysis",
+      "bomOwner": "Sample COO Report",
+      "modifyTimestamp": "2026-05-14 00:00:00.0"
+    }
+  ],
+  "instances": [
+    {
+      "bom-link": {
+        "section": "cooSection001",
+        "sectionDisplayName": "COO Summary",
+        "mt": "GC",
+        "sku": "5274813",
+        "description": "DOMANE AL 2 56 BK",
+        "chinaCurrent": "39.1900",
+        "chinaEstimated": "39.1900",
+        "lines": "73",
+        "fromChina": "28",
+        "withoutCost": "0",
+        "materialColorPartNumber": "5274813",
+        "skus": []
+      }
+    },
+    {
+      "bom-link": {
+        "section": "cooSection001",
+        "sectionDisplayName": "COO Summary",
+        "mt": "GC",
+        "sku": "5274821",
+        "description": "DOMANE AL 2 56 BL",
+        "chinaCurrent": "39.2900",
+        "chinaEstimated": "39.2900",
+        "lines": "73",
+        "fromChina": "28",
+        "withoutCost": "0",
+        "materialColorPartNumber": "5274821",
+        "skus": []
+      }
+    },
+    {
+      "bom-link": {
+        "section": "cooSection001",
+        "sectionDisplayName": "COO Summary",
+        "mt": "GV",
+        "sku": "5287851",
+        "description": "ALLANT+ 7 AU M CH",
+        "chinaCurrent": "20.7200",
+        "chinaEstimated": "20.5500",
+        "lines": "201",
+        "fromChina": "56",
+        "withoutCost": "21",
+        "materialColorPartNumber": "5287851",
+        "skus": []
+      }
+    },
+    {
+      "bom-link": {
+        "section": "cooSection001",
+        "sectionDisplayName": "COO Summary",
+        "mt": "GV",
+        "sku": "5287852",
+        "description": "ALLANT+ 7 AU L CH",
+        "chinaCurrent": "20.7200",
+        "chinaEstimated": "20.5500",
+        "lines": "201",
+        "fromChina": "56",
+        "withoutCost": "21",
+        "materialColorPartNumber": "5287852",
+        "skus": []
+      }
+    },
+    {
+      "bom-link": {
+        "section": "cooSection001",
+        "sectionDisplayName": "COO Summary",
+        "mt": "GV",
+        "sku": "5287922",
+        "description": "ALLANT+ 7S STAGGER MZ L CH",
+        "chinaCurrent": "18.6700",
+        "chinaEstimated": "18.7400",
+        "lines": "204",
+        "fromChina": "58",
+        "withoutCost": "24",
+        "materialColorPartNumber": "5287922",
+        "skus": []
+      }
+    },
+    {
+      "bom-link": {
+        "section": "cooSection001",
+        "sectionDisplayName": "COO Summary",
+        "mt": "GV",
+        "sku": "5287925",
+        "description": "ALLANT+ 7S STAGGER MZ L RD",
+        "chinaCurrent": "18.6900",
+        "chinaEstimated": "18.6800",
+        "lines": "204",
+        "fromChina": "60",
+        "withoutCost": "24",
+        "materialColorPartNumber": "5287925",
+        "skus": []
+      }
+    }
+  ],
+  "columns": {
+    "bomLinkFeature": "Feature",
+    "materialColorPartNumber": "Part #",
+    "material": "Material",
+    "supplier": "Supplier",
+    "color": "Color",
+    "bomLinkCountryOfOrigin": "Country Of Origin",
+    "quantity": "Quantity"
+  },
+  "sectionDetails": {
+    "cooSection001": "COO Summary"
+  },
+  "sectionOrder": [
+    "COO Summary"
+  ],
+  "skuInfo": [],
+  "bomType": "COOANALYSIS"
+}

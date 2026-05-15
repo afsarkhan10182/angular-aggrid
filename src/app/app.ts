@@ -41,6 +41,7 @@ import { SkuService } from './services/sku.service';
 import { environment } from '../environments/environment';
 import {
   BOM_TYPE_MATERIALEBOM,
+  BOM_TYPE_COO_ANALYSIS,
   BOM_TYPE_PRODUCTMBOM,
   BOM_TYPE_PRODUCTSBOM,
   BOM_TYPE_MATERIALSBOM,
@@ -147,6 +148,28 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public bomNamesDisplay: string = '';
   public bomNamesFull: string = '';
   public bomType: string = '';
+  public cooAnalysisRows: any[] = [];
+  public cooAnalysisMode = 'MBOM';
+  public cooAnalysisRule = 'Expand Through Phantom (exclude Phantom)';
+  public cooAnalysisCountry = 'CN China';
+  public readonly cooAnalysisCountryOptions = ['CN China'];
+  public cooAnalysisAsOf = 'All Time';
+  public readonly cooAnalysisColumnDefs: ColDef[] = [
+    { headerName: 'MT', field: 'mt', width: 72, minWidth: 72 },
+    { headerName: 'SKU', field: 'sku', colId: 'cooSku', width: 140, minWidth: 140 },
+    { headerName: 'Description', field: 'description', flex: 1, minWidth: 320 },
+    { headerName: '% China (Current)', field: 'chinaCurrent', width: 190 },
+    { headerName: '% China (Estimated)', field: 'chinaEstimated', width: 205 },
+    { headerName: '# Lines', field: 'lines', width: 105, cellClass: 'coo-analysis-link-cell' },
+    { headerName: '# From China', field: 'fromChina', width: 130 },
+    { headerName: '# w/o Cost', field: 'withoutCost', width: 115 },
+  ];
+  public readonly cooAnalysisDefaultColDef: ColDef = {
+    sortable: true,
+    resizable: true,
+    filter: false,
+    suppressMovable: true,
+  };
   public selectedSkuFilter: SkuFilterOption = 'all';
   public isSkuFilterSelectOpen = false;
   public highlightSkuFilter = false;
@@ -458,7 +481,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   private checkAuthentication(): void {
     if (!environment.enableHttpBasicAuth) {
-      this.loadData();
+      this.loadInitialData();
       return;
     }
 
@@ -479,7 +502,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     const csrfSub = this.sessionService.getCsrfToken().subscribe({
       next: () => {
-        this.loadData();
+        this.loadInitialData();
       },
       error: () => {
         this.showNotification(
@@ -489,6 +512,72 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       },
     });
     this.subscriptions.push(csrfSub);
+  }
+
+  private loadInitialData(): void {
+    if (this.isCooAnalysisMode()) {
+      this.loadCooAnalysisData();
+      return;
+    }
+
+    this.loadData();
+  }
+
+  public isCooAnalysisMode(): boolean {
+    return String(this.dataService.getBomType() || '').toLowerCase() === BOM_TYPE_COO_ANALYSIS.toLowerCase() || BOM_TYPE_COO_ANALYSIS.toLowerCase() === String(this.dataService.getBomType() || '').toLowerCase();
+  }
+
+  private loadCooAnalysisData(): void {
+    this.isLoading = true;
+    const loadSub = this.dataService.loadCooAnalysisData().subscribe({
+      next: (data) => {
+        this.isLoading = false;
+        this.bomType = data.bomType || BOM_TYPE_COO_ANALYSIS;
+        this.bomName = 'COO Analysis';
+        this.bomNamesDisplay = this.bomName;
+        this.bomNamesFull = this.bomName;
+        this.cooAnalysisRows = this.extractCooAnalysisRows(data);
+        this.rowData = this.transformToTreeData(data);
+        this.storeOriginalValues();
+        this.initializeColumns();
+
+        if (this.gridApi) {
+          this.gridApi.refreshHeader();
+          this.applyGridSearch();
+        } else {
+          this.displayData = this.getInitialDisplayData();
+        }
+        this.applyActionsColumnWidth(this.computeActionsColumnWidth());
+
+        if (this.gridApi) {
+          setTimeout(() => {
+            this.gridConfigService.forceHorizontalScrollbarVisibility(this.gridApi);
+          }, 200);
+        }
+      },
+      error: (error) => {
+        this.isLoading = false;
+        const errorMessage = this.dataService.getLoadErrorMessage(error);
+        this.showNotification(errorMessage, NOTIFICATION_TYPE_ERROR_PERSISTENT);
+      },
+    });
+    this.subscriptions.push(loadSub);
+  }
+
+  private extractCooAnalysisRows(data: any): any[] {
+    return (data?.instances ?? [])
+      .map((item: any) => item?.['bom-link'])
+      .filter(Boolean)
+      .map((row: any) => ({
+        mt: row.mt ?? '',
+        sku: row.sku ?? row.materialColorPartNumber ?? '',
+        description: row.description ?? row.material ?? '',
+        chinaCurrent: row.chinaCurrent ?? '',
+        chinaEstimated: row.chinaEstimated ?? '',
+        lines: row.lines ?? '',
+        fromChina: row.fromChina ?? '',
+        withoutCost: row.withoutCost ?? '',
+      }));
   }
 
   loadData(): void {
@@ -778,7 +867,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   public getBomComposerTitle(): string {
     const bomType = this.getCurrentBomType();
-
+    console.log('bomType', bomType);
     if (bomType === BOM_TYPE_MATERIALEBOM) {
       return 'Material BOM Composer';
     }
@@ -793,6 +882,9 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     if (bomType === BOM_TYPE_MATERIALMBOM) {
       return 'Part MBOM Composer';
+    }
+    if (bomType === BOM_TYPE_COO_ANALYSIS || bomType === BOM_TYPE_COO_ANALYSIS.toLowerCase()) {
+      return 'COO Analysis Composer';
     }
 
     return 'Product BOM Composer';

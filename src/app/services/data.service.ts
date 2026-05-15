@@ -1,5 +1,6 @@
 import {
   BOM_LINK_KEY,
+  BOM_TYPE_COO_ANALYSIS,
   BOM_TYPE_MATERIALEBOM,
   BOM_TYPE_MATERIALSBOM,
   BOM_TYPE_MATERIALMBOM,
@@ -236,6 +237,30 @@ export class DataService {
       map((data) => {
         this.apiData = data;
         return data;
+      }),
+      catchError(this.handleError),
+    );
+  }
+
+  loadCooAnalysisData(): Observable<ApiData> {
+    let apiUrl = environment.useMockApi
+      ? environment.cooAnalysisApiPath
+      : `${this.getServiceHostUrl()}${environment.cooAnalysisApiPath}`;
+
+    if (!environment.useMockApi) {
+      const bomId = this.utilService.getJspDataAttribute('data-bomid');
+      if (bomId) {
+        apiUrl += `/${bomId}`;
+      }
+    }
+
+    return this.http.get<ApiData>(apiUrl).pipe(
+      map((data) => {
+        this.apiData = {
+          ...data,
+          bomType: data.bomType || BOM_TYPE_COO_ANALYSIS,
+        };
+        return this.apiData;
       }),
       catchError(this.handleError),
     );

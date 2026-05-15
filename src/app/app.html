@@ -21,6 +21,53 @@
 
   <!-- Controls Section -->
   <div class="controls-section">
+    <ng-container *ngIf="isCooAnalysisMode(); else standardBomComposer">
+      <section aria-label="COO Analysis">
+        <div *ngIf="isLoading" class="loading-spinner-container">
+          <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading data...</p>
+          </div>
+        </div>
+
+        <div class="coo-analysis-toolbar">
+          <div class="coo-analysis-toolbar-item">
+            <strong>Mode:</strong>
+            <span>{{ cooAnalysisMode }}</span>
+          </div>
+          <label class="coo-analysis-toolbar-item coo-analysis-rule">
+            <strong>BOM Rule:</strong>
+            <span>{{ cooAnalysisRule }}</span>
+          </label>
+          <div class="coo-analysis-toolbar-item">
+            <strong>Country:</strong>
+            <select class="coo-analysis-country-select" [(ngModel)]="cooAnalysisCountry">
+              <option *ngFor="let country of cooAnalysisCountryOptions" [value]="country">
+                {{ country }}
+              </option>
+            </select>
+          </div>
+          <div class="coo-analysis-toolbar-item">
+            <strong>As of:</strong>
+            <span>{{ cooAnalysisAsOf }}</span>
+          </div>
+        </div>
+
+        <div class="coo-analysis-grid-wrap">
+          <ag-grid-angular
+            style="width: 100%"
+            class="ag-theme-alpine coo-analysis-grid"
+            [domLayout]="'autoHeight'"
+            [columnDefs]="cooAnalysisColumnDefs"
+            [defaultColDef]="cooAnalysisDefaultColDef"
+            [rowData]="cooAnalysisRows"
+          >
+          </ag-grid-angular>
+        </div>
+      </section>
+    </ng-container>
+
+    <ng-template #standardBomComposer>
     <!-- Criteria Display and Controls -->
     <div class="controls-row">
       <!-- Left Group: Criteria and Search -->
@@ -509,6 +556,7 @@
         </div>
       }
     </div>
+    </ng-template>
   </div>
 
   <!-- Linked BOM Modal -->
