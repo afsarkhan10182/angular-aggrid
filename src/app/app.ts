@@ -69,6 +69,7 @@ import {
   NOTIFICATION_TYPE_SUCCESS,
   NOTIFICATION_TYPE_INFO,
   MSG_SAVE_DISABLED_VIEW_ONLY,
+  MSG_BOM_SEARCH_RESULTS_EXCEEDED,
   COLUMNS_REFRESH_ACTIONS,
   ROW_ID_UNKNOWN,
   EXCLUDED_FIELDS_EXPORT,
@@ -94,6 +95,7 @@ const SPEC_SHEET_EDIT_FIELDS = new Set<string>([
   FIELD_BOM_LINK_SPEC_SHEET_EXTRA,
   FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
 ]);
+const MAX_BOM_LINK_LOAD_ROWS = 1000;
 
 @Component({
   selector: 'app-root',
@@ -580,11 +582,41 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       }));
   }
 
+  private hasExceededBomLinkLoadLimit(data: any): boolean {
+    if (this.isCooAnalysisMode()) {
+      return false;
+    }
+
+    const bomLinkRows = Array.isArray(data?.instances) ? data.instances : [];
+    return bomLinkRows.length > MAX_BOM_LINK_LOAD_ROWS;
+  }
+
+  private clearBomGridForExceededSearch(): void {
+    this.rowData = [];
+    this.displayData = [];
+    this.selectedRows.clear();
+    this.editedRows.clear();
+    this.editedFields.clear();
+    this.invalidRowIds.clear();
+
+    if (this.gridApi) {
+      this.gridApi.setGridOption('rowData', []);
+      this.gridApi.refreshCells({ force: true });
+    }
+  }
+
   loadData(): void {
     this.isLoading = true;
     const loadSub = this.dataService.loadData().subscribe({
       next: (data) => {
         this.isLoading = false;
+
+        if (this.hasExceededBomLinkLoadLimit(data)) {
+          this.clearBomGridForExceededSearch();
+          this.showNotification(MSG_BOM_SEARCH_RESULTS_EXCEEDED, NOTIFICATION_TYPE_ERROR_PERSISTENT);
+          return;
+        }
+
         const displayNames = this.getCriteriaDisplayNames();
         if (displayNames.length > 0) {
           this.bomNamesFull = displayNames.join(', ');
