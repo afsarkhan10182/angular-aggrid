@@ -242,19 +242,35 @@ export class DataService {
     );
   }
 
-  loadCooAnalysisData(): Observable<ApiData> {
-    let apiUrl = environment.useMockApi
+  loadCooAnalysisData(filters?: {
+    bomRule?: string;
+    coo?: string;
+    asOf?: string;
+  }): Observable<ApiData> {
+    const apiUrl = environment.useMockApi
       ? environment.cooAnalysisApiPath
-      : `${this.getServiceHostUrl()}${environment.cooAnalysisApiPath}`;
+      : this.getServiceHostUrl() + environment.cooAnalysisApiPath;
 
-    if (!environment.useMockApi) {
-      const bomId = this.utilService.getJspDataAttribute('data-bomid');
-      if (bomId) {
-        apiUrl += `/${bomId}`;
-      }
+    const queryParams = new URLSearchParams();
+    const skuIds = this.utilService.getJspDataAttribute('data-bomid');
+    if (skuIds) {
+      queryParams.set('skuID', skuIds);
+    }
+    if (filters?.bomRule) {
+      queryParams.set('bomRule', filters.bomRule);
+    }
+    if (filters?.coo) {
+      queryParams.set('cooAnalysis', filters.coo);
+    }
+    const effectiveDate = this.formatCooEffectiveDate(filters?.asOf);
+    if (effectiveDate) {
+      queryParams.set('effectiveDate', effectiveDate);
     }
 
-    return this.http.get<ApiData>(apiUrl).pipe(
+    const queryString = queryParams.toString();
+    const urlWithQuery = queryString ? apiUrl + '?' + queryString : apiUrl;
+
+    return this.http.get<ApiData>(urlWithQuery).pipe(
       map((data) => {
         this.apiData = {
           ...data,
@@ -264,6 +280,19 @@ export class DataService {
       }),
       catchError(this.handleError),
     );
+  }
+
+  private formatCooEffectiveDate(value?: string): string {
+    if (!value) {
+      return '';
+    }
+
+    const inputDateMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (inputDateMatch) {
+      return inputDateMatch[2] + '/' + inputDateMatch[3] + '/' + inputDateMatch[1];
+    }
+
+    return value;
   }
 
   /**

@@ -21,9 +21,9 @@
 
   <!-- Controls Section -->
   <div class="controls-section">
-    <ng-container *ngIf="isCooAnalysisMode(); else standardBomComposer">
-      <section aria-label="COO Analysis">
-        <div *ngIf="isLoading" class="loading-spinner-container">
+    <ng-template #cooAnalysisContent let-loading="loading">
+      <section class="coo-analysis-section" aria-label="COO Analysis">
+        <div *ngIf="loading" class="loading-spinner-container">
           <div class="loading-spinner">
             <div class="spinner"></div>
             <p>Loading data...</p>
@@ -31,26 +31,48 @@
         </div>
 
         <div class="coo-analysis-toolbar">
-          <div class="coo-analysis-toolbar-item">
-            <strong>Mode:</strong>
-            <span>{{ cooAnalysisMode }}</span>
-          </div>
           <label class="coo-analysis-toolbar-item coo-analysis-rule">
-            <strong>BOM Rule:</strong>
-            <span>{{ cooAnalysisRule }}</span>
+            <strong>BOM Rule</strong>
+            <div class="sku-filter-select-wrapper coo-analysis-select-wrapper">
+              <select
+                class="sku-filter-select coo-analysis-select"
+                [(ngModel)]="cooAnalysisRule"
+                (change)="onCooAnalysisFilterChange()"
+                aria-label="COO Analysis BOM Rule"
+              >
+                <option *ngFor="let rule of cooAnalysisRuleOptions" [value]="getCooOptionValue(rule)">
+                  {{ getCooOptionLabel(rule) }}
+                </option>
+              </select>
+              <app-icon name="chevron-down" size="14" class="sku-filter-select-arrow"></app-icon>
+            </div>
           </label>
-          <div class="coo-analysis-toolbar-item">
-            <strong>Country:</strong>
-            <select class="coo-analysis-country-select" [(ngModel)]="cooAnalysisCountry">
-              <option *ngFor="let country of cooAnalysisCountryOptions" [value]="country">
-                {{ country }}
-              </option>
-            </select>
-          </div>
-          <div class="coo-analysis-toolbar-item">
-            <strong>As of:</strong>
-            <span>{{ cooAnalysisAsOf }}</span>
-          </div>
+          <label class="coo-analysis-toolbar-item">
+            <strong>COO</strong>
+            <div class="sku-filter-select-wrapper coo-analysis-country-wrapper">
+              <select
+                class="sku-filter-select coo-analysis-select"
+                [(ngModel)]="cooAnalysisCountry"
+                (change)="onCooAnalysisFilterChange()"
+                aria-label="COO Analysis country"
+              >
+                <option *ngFor="let country of cooAnalysisCountryOptions" [value]="getCooOptionValue(country)">
+                  {{ getCooOptionLabel(country) }}
+                </option>
+              </select>
+              <app-icon name="chevron-down" size="14" class="sku-filter-select-arrow"></app-icon>
+            </div>
+          </label>
+          <label class="coo-analysis-toolbar-item coo-analysis-date-field">
+            <strong>As Of</strong>
+            <input
+              type="date"
+              class="mass-edit-input coo-analysis-date-input"
+              [(ngModel)]="cooAnalysisAsOfDate"
+              (change)="onCooAnalysisFilterChange()"
+              aria-label="COO Analysis As Of date"
+            />
+          </label>
         </div>
 
         <div class="coo-analysis-grid-wrap">
@@ -65,6 +87,10 @@
           </ag-grid-angular>
         </div>
       </section>
+    </ng-template>
+
+    <ng-container *ngIf="isCooAnalysisMode(); else standardBomComposer">
+      <ng-container *ngTemplateOutlet="cooAnalysisContent; context: { loading: isLoading }"></ng-container>
     </ng-container>
 
     <ng-template #standardBomComposer>
@@ -194,7 +220,17 @@
               <app-icon name="edit" size="14"></app-icon>
               <span>Edit Parts</span>
             </button>
-            <!-- Disconnect All SKUs - SBOM only -->
+            <button
+              *ngIf="shouldShowCooAnalysisAction()"
+              (click)="openCooAnalysisModal(); closeActionDropdown()"
+              class="action-dropdown-item"
+              title="COO Analysis"
+            >
+              <app-icon name="file-excel" size="14"></app-icon>
+              <span>COO Analysis</span>
+            </button>
+            
+
             <button
               *ngIf="isSbomMode()"
               (click)="bulkDisconnectFromSkus(); closeActionDropdown()"
@@ -558,6 +594,23 @@
     </div>
     </ng-template>
   </div>
+
+  <!-- COO Analysis Modal -->
+  @if (showCooAnalysisModal) {
+    <div class="modal-overlay" (click)="closeCooAnalysisModal()">
+      <div class="modal-container modal-shell coo-analysis-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>COO Analysis</h3>
+          <button class="close-button" (click)="closeCooAnalysisModal()" aria-label="Close">
+            <app-icon name="times" size="14"></app-icon>
+          </button>
+        </div>
+        <div class="modal-content modal-shell-body coo-analysis-modal-body">
+          <ng-container *ngTemplateOutlet="cooAnalysisContent; context: { loading: isCooAnalysisModalLoading }"></ng-container>
+        </div>
+      </div>
+    </div>
+  }
 
   <!-- Linked BOM Modal -->
   @if (showLinkedBomModal) {

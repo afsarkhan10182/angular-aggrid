@@ -141,6 +141,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public serviceDataManagerModalMaterialColorIds: string[] = [];
   public showPartEditModal = false;
   public partEditModalMaterialColorIds: string[] = [];
+  public showCooAnalysisModal = false;
+  public isCooAnalysisModalLoading = false;
   public searchText: string = '';
   public saveMessage: string = '';
   public saveMessageType: string = '';
@@ -152,20 +154,12 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public bomType: string = '';
   public cooAnalysisRows: any[] = [];
   public cooAnalysisMode = 'MBOM';
-  public cooAnalysisRule = 'Expand Through Phantom (exclude Phantom)';
-  public cooAnalysisCountry = 'CN China';
-  public readonly cooAnalysisCountryOptions = ['CN China'];
-  public cooAnalysisAsOf = 'All Time';
-  public readonly cooAnalysisColumnDefs: ColDef[] = [
-    { headerName: 'MT', field: 'mt', width: 72, minWidth: 72 },
-    { headerName: 'SKU', field: 'sku', colId: 'cooSku', width: 140, minWidth: 140 },
-    { headerName: 'Description', field: 'description', flex: 1, minWidth: 320 },
-    { headerName: '% China (Current)', field: 'chinaCurrent', width: 190 },
-    { headerName: '% China (Estimated)', field: 'chinaEstimated', width: 205 },
-    { headerName: '# Lines', field: 'lines', width: 105, cellClass: 'coo-analysis-link-cell' },
-    { headerName: '# From China', field: 'fromChina', width: 130 },
-    { headerName: '# w/o Cost', field: 'withoutCost', width: 115 },
-  ];
+  public cooAnalysisRule = '';
+  public cooAnalysisRuleOptions: any[] = [];
+  public cooAnalysisCountry = '';
+  public cooAnalysisCountryOptions: any[] = [];
+  public cooAnalysisAsOfDate = '';
+  public cooAnalysisColumnDefs: ColDef[] = [];
   public readonly cooAnalysisDefaultColDef: ColDef = {
     sortable: true,
     resizable: true,
@@ -526,19 +520,19 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   public isCooAnalysisMode(): boolean {
-    return String(this.dataService.getBomType() || '').toLowerCase() === BOM_TYPE_COO_ANALYSIS.toLowerCase() || BOM_TYPE_COO_ANALYSIS.toLowerCase() === String(this.dataService.getBomType() || '').toLowerCase();
+    return String(this.dataService.getBomType() || '').toLowerCase() === BOM_TYPE_COO_ANALYSIS.toLowerCase();
   }
 
-  private loadCooAnalysisData(): void {
+  private loadCooAnalysisData(useFilters = false): void {
     this.isLoading = true;
-    const loadSub = this.dataService.loadCooAnalysisData().subscribe({
+    const loadSub = this.dataService.loadCooAnalysisData(useFilters ? this.getCooAnalysisFilters() : undefined).subscribe({
       next: (data) => {
         this.isLoading = false;
         this.bomType = data.bomType || BOM_TYPE_COO_ANALYSIS;
         this.bomName = 'COO Analysis';
         this.bomNamesDisplay = this.bomName;
         this.bomNamesFull = this.bomName;
-        this.cooAnalysisRows = this.extractCooAnalysisRows(data);
+        this.applyCooAnalysisResponse(data);
         this.rowData = this.transformToTreeData(data);
         this.storeOriginalValues();
         this.initializeColumns();
@@ -566,20 +560,72 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.subscriptions.push(loadSub);
   }
 
-  private extractCooAnalysisRows(data: any): any[] {
-    return (data?.instances ?? [])
-      .map((item: any) => item?.['bom-link'])
-      .filter(Boolean)
-      .map((row: any) => ({
-        mt: row.mt ?? '',
-        sku: row.sku ?? row.materialColorPartNumber ?? '',
-        description: row.description ?? row.material ?? '',
-        chinaCurrent: row.chinaCurrent ?? '',
-        chinaEstimated: row.chinaEstimated ?? '',
-        lines: row.lines ?? '',
-        fromChina: row.fromChina ?? '',
-        withoutCost: row.withoutCost ?? '',
-      }));
+  private applyCooAnalysisResponse(data: any): void {
+    this.cooAnalysisRuleOptions = Array.isArray(data?.bomRuleList) ? data.bomRuleList : [];
+    this.cooAnalysisCountryOptions = Array.isArray(data?.cooList) ? data.cooList : [];
+    this.cooAnalysisColumnDefs = this.buildCooAnalysisColumnDefs(data?.columns);
+
+    if (data?.bomRule) {
+      this.cooAnalysisRule = String(data.bomRule);
+    }
+    if (data?.coo) {
+      this.cooAnalysisCountry = String(data.coo);
+    }
+    if (data?.effectiveDate) {
+      this.cooAnalysisAsOfDate = this.toDateInputValue(String(data.effectiveDate));
+    }
+
+    this.cooAnalysisRows = Array.isArray(data?.instances) ? data.instances : [];
+  }
+
+  private buildCooAnalysisColumnDefs(columns: any): ColDef[] {
+    if (!columns || typeof columns !== 'object') {
+      return [];
+    }
+
+    return Object.entries(columns).map(([field, headerName]) => ({
+      headerName: String(headerName),
+      field,
+      colId: field === 'sku' ? 'cooSku' : field,
+      width: this.getCooAnalysisColumnWidth(field),
+      minWidth: this.getCooAnalysisColumnWidth(field),
+      flex: field === 'description' ? 1 : undefined,
+      cellClass: field === 'lines' ? 'coo-analysis-link-cell' : undefined,
+    }));
+  }
+
+  private getCooAnalysisColumnWidth(field: string): number {
+    const widths: Record<string, number> = {
+      mrf: 72,
+      sku: 140,
+      description: 320,
+      lines: 105,
+      cooCurrent: 190,
+      cooEstimated: 205,
+      fromCoo: 130,
+      withoutCost: 115,
+    };
+
+    return widths[field] ?? 140;
+  }
+
+  getCooOptionValue(option: any): string {
+    return String(option?.id ?? option ?? '');
+  }
+
+  getCooOptionLabel(option: any): string {
+    return String(option?.displayValue ?? option ?? '');
+  }
+
+  private toDateInputValue(value: string): string {
+    const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (!match) {
+      return value;
+    }
+
+    const month = match[1].padStart(2, '0');
+    const day = match[2].padStart(2, '0');
+    return match[3] + '-' + month + '-' + day;
   }
 
   private hasExceededBomLinkLoadLimit(data: any): boolean {
@@ -3193,6 +3239,61 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   closePartEditModal(): void {
     this.showPartEditModal = false;
     this.partEditModalMaterialColorIds = [];
+  }
+
+  shouldShowCooAnalysisAction(): boolean {
+    const bomType = this.getCurrentBomType();
+    return bomType === BOM_TYPE_PRODUCTMBOM;
+  }
+
+  openCooAnalysisModal(useFilters = false): void {
+    this.showCooAnalysisModal = true;
+    this.isCooAnalysisModalLoading = true;
+
+    const loadSub = this.dataService.loadCooAnalysisData(useFilters ? this.getCooAnalysisFilters() : undefined).subscribe({
+      next: (data) => {
+        this.applyCooAnalysisResponse(data);
+        this.isCooAnalysisModalLoading = false;
+      },
+      error: (error) => {
+        this.isCooAnalysisModalLoading = false;
+        const errorMessage = this.dataService.getLoadErrorMessage(error);
+        this.showNotification(errorMessage, NOTIFICATION_TYPE_ERROR_PERSISTENT);
+      },
+    });
+    this.subscriptions.push(loadSub);
+  }
+
+  closeCooAnalysisModal(): void {
+    this.showCooAnalysisModal = false;
+    this.isCooAnalysisModalLoading = false;
+  }
+
+  onCooAnalysisFilterChange(): void {
+    if (this.showCooAnalysisModal) {
+      this.openCooAnalysisModal(true);
+      return;
+    }
+
+    if (this.isCooAnalysisMode()) {
+      this.loadCooAnalysisData(true);
+    }
+  }
+
+  private getTodayDateInputValue(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return year + '-' + month + '-' + day;
+  }
+
+  private getCooAnalysisFilters(): { bomRule: string; coo: string; asOf: string } {
+    return {
+      bomRule: this.cooAnalysisRule,
+      coo: this.cooAnalysisCountry,
+      asOf: this.cooAnalysisAsOfDate,
+    };
   }
 
   onServiceDataManagerModalDataSaved(): void {

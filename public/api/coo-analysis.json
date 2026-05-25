@@ -1,125 +1,70 @@
 {
-  "bomPartInfo": [
-    {
-      "bomMasterId": "COO-ANALYSIS-MOCK",
-      "bomName": "COO Analysis",
-      "bomOwner": "Sample COO Report",
-      "modifyTimestamp": "2026-05-14 00:00:00.0"
-    }
-  ],
-  "instances": [
-    {
-      "bom-link": {
-        "section": "cooSection001",
-        "sectionDisplayName": "COO Summary",
-        "mt": "GC",
-        "sku": "5274813",
-        "description": "DOMANE AL 2 56 BK",
-        "chinaCurrent": "39.1900",
-        "chinaEstimated": "39.1900",
-        "lines": "73",
-        "fromChina": "28",
-        "withoutCost": "0",
-        "materialColorPartNumber": "5274813",
-        "skus": []
+   "coo":"936974",
+   "cooList":[
+      {
+         "displayValue":"China",
+         "id":"936975"
+      },
+      {
+         "displayValue":"India",
+         "id":"936947"
+      },
+      {
+         "displayValue":"UK",
+         "id":"937029"
+      },
+      {
+         "displayValue":"USA",
+         "id":"937002"
       }
-    },
-    {
-      "bom-link": {
-        "section": "cooSection001",
-        "sectionDisplayName": "COO Summary",
-        "mt": "GC",
-        "sku": "5274821",
-        "description": "DOMANE AL 2 56 BL",
-        "chinaCurrent": "39.2900",
-        "chinaEstimated": "39.2900",
-        "lines": "73",
-        "fromChina": "28",
-        "withoutCost": "0",
-        "materialColorPartNumber": "5274821",
-        "skus": []
+   ],
+   "instances":[
+      {
+         "mrf":"GC",
+         "cooEstimated":50.45,
+         "description":"Validated Test",
+         "fromCoo":10,
+         "sku":"100040",
+         "lines":20,
+         "withoutCost":5,
+         "cooCurrent":50.13
+      },
+      {
+         "mrf":"GC",
+         "cooEstimated":50.45,
+         "description":"Tested",
+         "fromCoo":10,
+         "sku":"100041",
+         "lines":20,
+         "withoutCost":5,
+         "cooCurrent":50.13
       }
-    },
-    {
-      "bom-link": {
-        "section": "cooSection001",
-        "sectionDisplayName": "COO Summary",
-        "mt": "GV",
-        "sku": "5287851",
-        "description": "ALLANT+ 7 AU M CH",
-        "chinaCurrent": "20.7200",
-        "chinaEstimated": "20.5500",
-        "lines": "201",
-        "fromChina": "56",
-        "withoutCost": "21",
-        "materialColorPartNumber": "5287851",
-        "skus": []
+   ],
+   "bomRuleList":[
+      {
+         "id":"EXPAND_TO_BUY",
+         "displayValue":"Expand To Buy (exclude all non Buy)"
+      },
+      {
+         "id":"EXPAND_TO_LOWEST",
+         "displayValue":"Expand To Lowest (Won’t expand Buy)"
+      },
+      {
+         "id":"EXPAND_THROUGH_PHANTOM",
+         "displayValue":"Expand Through Phantom (exclude Phantom)"
       }
-    },
-    {
-      "bom-link": {
-        "section": "cooSection001",
-        "sectionDisplayName": "COO Summary",
-        "mt": "GV",
-        "sku": "5287852",
-        "description": "ALLANT+ 7 AU L CH",
-        "chinaCurrent": "20.7200",
-        "chinaEstimated": "20.5500",
-        "lines": "201",
-        "fromChina": "56",
-        "withoutCost": "21",
-        "materialColorPartNumber": "5287852",
-        "skus": []
-      }
-    },
-    {
-      "bom-link": {
-        "section": "cooSection001",
-        "sectionDisplayName": "COO Summary",
-        "mt": "GV",
-        "sku": "5287922",
-        "description": "ALLANT+ 7S STAGGER MZ L CH",
-        "chinaCurrent": "18.6700",
-        "chinaEstimated": "18.7400",
-        "lines": "204",
-        "fromChina": "58",
-        "withoutCost": "24",
-        "materialColorPartNumber": "5287922",
-        "skus": []
-      }
-    },
-    {
-      "bom-link": {
-        "section": "cooSection001",
-        "sectionDisplayName": "COO Summary",
-        "mt": "GV",
-        "sku": "5287925",
-        "description": "ALLANT+ 7S STAGGER MZ L RD",
-        "chinaCurrent": "18.6900",
-        "chinaEstimated": "18.6800",
-        "lines": "204",
-        "fromChina": "60",
-        "withoutCost": "24",
-        "materialColorPartNumber": "5287925",
-        "skus": []
-      }
-    }
-  ],
-  "columns": {
-    "bomLinkFeature": "Feature",
-    "materialColorPartNumber": "Part #",
-    "material": "Material",
-    "supplier": "Supplier",
-    "color": "Color",
-    "bomLinkCountryOfOrigin": "Country Of Origin",
-    "quantity": "Quantity"
-  },
-  "sectionDetails": {
-    "cooSection001": "COO Summary"
-  },
-  "sectionOrder": [
-    "COO Summary"
-  ],
-  "skuInfo": [],
-  "bomType": "COOANALYSIS"
+   ],
+   "columns":{
+      "mrf":"Mrf",
+      "sku":"SKU",
+      "description":"Description",
+      "lines":"# Lines",
+      "cooCurrent":"% China (Current)",
+      "cooEstimated":"% China (Estimated)",
+      "fromCoo":"# From China",
+      "withoutCost":"# w/o Cost"
+   },
+   "skuIds":"VR:com.lcs.wc.foundation.LCSRevisableEntity:913303,VR:com.lcs.wc.foundation.LCSRevisableEntity:913337",
+   "effectiveDate":"05/25/2026",
+   "bomRule":"EXPAND_THROUGH_PHANTOM"
 }

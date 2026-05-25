@@ -215,12 +215,25 @@
   font-weight: 500;
 }
 
+.coo-analysis-section {
+  position: relative;
+  overflow-x: auto;
+}
+
+.coo-analysis-modal {
+  width: min(94vw, 1180px);
+}
+
+.coo-analysis-modal-body {
+  padding: 16px;
+}
+
 .coo-analysis-toolbar {
   min-width: 980px;
-  height: 40px;
+  min-height: 48px;
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 18px;
   padding: 4px 22px;
   border-bottom: 1px solid #cbd5e1;
   background: #eef2f4;
@@ -236,17 +249,33 @@
 }
 
 .coo-analysis-rule {
-  min-width: 455px;
+  min-width: 430px;
 }
 
-.coo-analysis-country-select {
-  height: 28px;
-  min-width: 110px;
-  border: 1px solid #b6bec8;
-  background: #ffffff;
-  color: #334155;
-  font: inherit;
-  padding: 2px 28px 2px 8px;
+.coo-analysis-select-wrapper {
+  width: 290px;
+  min-width: 290px;
+  max-width: 290px;
+}
+
+.coo-analysis-country-wrapper {
+  width: 190px;
+  min-width: 190px;
+  max-width: 190px;
+}
+
+.coo-analysis-select {
+  height: 30px;
+}
+
+.coo-analysis-date-field {
+  margin-left: auto;
+}
+
+.coo-analysis-date-input {
+  height: 30px;
+  min-width: 150px;
+  padding: 4px 8px;
 }
 
 .coo-analysis-grid-wrap {
