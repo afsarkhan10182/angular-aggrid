@@ -1,5 +1,4 @@
-import { DOCUMENT } from '@angular/common';
-import { Inject, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -19,32 +18,17 @@ export interface LoggedInUserModel {
   providedIn: 'root',
 })
 export class SessionService {
-  private getServiceHostUrl(): string {
-    const hostFromJsp = this.utilService.getJspDataAttribute('data-host');
-
-    if (!hostFromJsp) {
-      return '';
-    }
-
-    if (hostFromJsp.startsWith('http://') || hostFromJsp.startsWith('https://')) {
-      return hostFromJsp;
-    }
-
-    // Otherwise, use the current page's protocol (http or https)
-    const protocol = this.document.location?.protocol || 'https:'; // Returns "http:" or "https:"
-    return `${protocol}//${hostFromJsp}`;
-  }
 
   getAuthUrl(): string {
     return environment.useMockApi
       ? environment.mockApiEndpoints.csrf
-      : `${this.getServiceHostUrl()}${environment.csrfUrl}`;
+      : `${this.utilService.getServiceHostUrl()}${environment.csrfUrl}`;
   }
 
   getUserApiUrl(): string {
     return environment.useMockApi
       ? environment.mockApiEndpoints.getUser
-      : `${this.getServiceHostUrl()}${environment.getUserUrl}`;
+      : `${this.utilService.getServiceHostUrl()}${environment.getUserUrl}`;
   }
 
   private readonly sessionSubject = new BehaviorSubject<LoggedInUserModel | null>(null);
@@ -58,7 +42,6 @@ export class SessionService {
   constructor(
     private readonly http: HttpClient,
     private readonly utilService: UtilService,
-    @Inject(DOCUMENT) private readonly document: Document,
   ) {}
 
   getCsrfToken(): Observable<string> {

@@ -1,6 +1,5 @@
 import {
   BOM_LINK_KEY,
-  BOM_TYPE_COO_ANALYSIS,
   BOM_TYPE_MATERIALEBOM,
   BOM_TYPE_MATERIALSBOM,
   BOM_TYPE_MATERIALMBOM,
@@ -219,7 +218,7 @@ export class DataService {
   loadData(): Observable<ApiData> {
     let apiUrl = environment.useMockApi
       ? environment.dataApiPath
-      : `${this.getServiceHostUrl()}${environment.dataApiPath}`;
+      : `${this.utilService.getServiceHostUrl()}${environment.dataApiPath}`;
 
     if (!environment.useMockApi) {
       const bomId = this.utilService.getJspDataAttribute('data-bomid');
@@ -242,59 +241,6 @@ export class DataService {
     );
   }
 
-  loadCooAnalysisData(filters?: {
-    bomRule?: string;
-    coo?: string;
-    asOf?: string;
-  }): Observable<ApiData> {
-    const apiUrl = environment.useMockApi
-      ? environment.cooAnalysisApiPath
-      : this.getServiceHostUrl() + environment.cooAnalysisApiPath;
-
-    const queryParams = new URLSearchParams();
-    const skuIds = this.utilService.getJspDataAttribute('data-bomid');
-    if (skuIds) {
-      queryParams.set('skuID', skuIds);
-    }
-    if (filters?.bomRule) {
-      queryParams.set('bomRule', filters.bomRule);
-    }
-    if (filters?.coo) {
-      queryParams.set('cooAnalysis', filters.coo);
-    }
-    const effectiveDate = this.formatCooEffectiveDate(filters?.asOf);
-    if (effectiveDate) {
-      queryParams.set('effectiveDate', effectiveDate);
-    }
-
-    const queryString = queryParams.toString();
-    const urlWithQuery = queryString ? apiUrl + '?' + queryString : apiUrl;
-
-    return this.http.get<ApiData>(urlWithQuery).pipe(
-      map((data) => {
-        this.apiData = {
-          ...data,
-          bomType: data.bomType || BOM_TYPE_COO_ANALYSIS,
-        };
-        return this.apiData;
-      }),
-      catchError(this.handleError),
-    );
-  }
-
-  private formatCooEffectiveDate(value?: string): string {
-    if (!value) {
-      return '';
-    }
-
-    const inputDateMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (inputDateMatch) {
-      return inputDateMatch[2] + '/' + inputDateMatch[3] + '/' + inputDateMatch[1];
-    }
-
-    return value;
-  }
-
   /**
    * Get linked/complex BOM data for a material child/master id.
    * This endpoint is used by linked BOM modal, not by material-color search/edit flows.
@@ -302,7 +248,7 @@ export class DataService {
   getComplexBOM(materialId: string): Observable<any> {
     const apiUrl = environment.useMockApi
       ? environment.mockApiEndpoints.complexMaterial
-      : `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/getMaterialBOM?materialMasterId=${materialId}`;
+      : `${this.utilService.getServiceHostUrl()}/Windchill/servlet/rest/trek/getMaterialBOM?materialMasterId=${materialId}`;
 
     return this.http.get<any>(apiUrl).pipe(
       map((data) => {
@@ -473,7 +419,7 @@ export class DataService {
       );
     }
 
-    const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/getUserList`;
+    const apiUrl = `${this.utilService.getServiceHostUrl()}/Windchill/servlet/rest/trek/getUserList`;
     const requestBody = {
       type,
       attributeName,
@@ -558,7 +504,7 @@ export class DataService {
       });
     }
 
-    const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/instances`;
+    const apiUrl = `${this.utilService.getServiceHostUrl()}/Windchill/servlet/rest/trek/instances`;
     const requestBody = {
       flexTypeName,
       attributeName,
@@ -671,7 +617,7 @@ export class DataService {
   updateBomData(payload: any): Observable<any> {
     const apiUrl = environment.useMockApi
       ? environment.mockApiEndpoints.saveBomLinks
-      : `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/saveBOMLinks`;
+      : `${this.utilService.getServiceHostUrl()}/Windchill/servlet/rest/trek/saveBOMLinks`;
 
     return this.http.put<any>(apiUrl, payload, { headers: this.buildHttpHeaders() }).pipe(
       catchError((error: HttpErrorResponse) => {
@@ -689,7 +635,7 @@ export class DataService {
   private postMaterialColorsSearch(
     payload: MaterialColorsSearchPayload | ByIdsPayload
   ): Observable<any> {
-    const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/material-colors/search`;
+    const apiUrl = `${this.utilService.getServiceHostUrl()}/Windchill/servlet/rest/trek/material-colors/search`;
     return this.http.post<any>(apiUrl, payload, { headers: this.buildHttpHeaders() });
   }
 
@@ -769,7 +715,7 @@ export class DataService {
   }
 
   private postPartEdits(payload: ByIdsPayload): Observable<any> {
-    const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/material-colors/part-edits`;
+    const apiUrl = `${this.utilService.getServiceHostUrl()}/Windchill/servlet/rest/trek/material-colors/part-edits`;
     const urlWithQuery = payload.bomType ? `${apiUrl}?${PARAM_BOM_TYPE}=${payload.bomType}` : apiUrl;
     const body = { materialColorIds: payload.materialColorIds };
     return this.http.post<any>(urlWithQuery, body, { headers: this.buildHttpHeaders() });
@@ -919,7 +865,7 @@ export class DataService {
       return of({ success: true, message: MSG_MATERIAL_COLORS_SAVED_MOCK });
     }
 
-    const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/saveMaterialColors`;
+    const apiUrl = `${this.utilService.getServiceHostUrl()}/Windchill/servlet/rest/trek/saveMaterialColors`;
 
     return this.http.put<any>(apiUrl, payload, { headers: this.buildHttpHeaders() }).pipe(
       map((response) => {
@@ -946,7 +892,7 @@ export class DataService {
       return of({ instances: requestPayload.instances, success: true });
     }
     const bomType = this.getBomTypeForPayload();
-    const apiUrl = `${this.getServiceHostUrl()}/Windchill/servlet/rest/trek/saveMaterialandPartDetails`;
+    const apiUrl = `${this.utilService.getServiceHostUrl()}/Windchill/servlet/rest/trek/saveMaterialandPartDetails`;
     const urlWithQuery = `${apiUrl}?${PARAM_BOM_TYPE}=${encodeURIComponent(bomType)}`;
     const headers = {
       ...this.buildHttpHeaders(),
@@ -1046,27 +992,13 @@ export class DataService {
     return this.utilService.getJspDataAttribute('data-refskuid');
   }
 
-  getServiceHostUrl(): string {
-    const hostFromJsp = this.utilService.getJspDataAttribute('data-host');
-
-    if (!hostFromJsp) {
-      return '';
-    }
-
-    if (hostFromJsp.startsWith('http://') || hostFromJsp.startsWith('https://')) {
-      return hostFromJsp;
-    }
-
-    const protocol = this.document.location?.protocol || 'https:';
-    return `${protocol}//${hostFromJsp}`;
-  }
   /**
    * Fetch bomLinkIncludeInSpecSheet constraints from API/Mock
    */
   fetchIncludeInSpecSheetConstraints(): Observable<any> {
     const url = environment.useMockApi
       ? environment.mockApiEndpoints.includeInSpecSheet
-      : `${this.getServiceHostUrl()}/Windchill/servlet/rest/tm/types/com.lcs.wc.flexbom.FlexBOMLink/attributes/${FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET}`;
+      : `${this.utilService.getServiceHostUrl()}/Windchill/servlet/rest/tm/types/com.lcs.wc.flexbom.FlexBOMLink/attributes/${FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET}`;
 
     return this.http.get<any>(url).pipe(
       catchError(() => {

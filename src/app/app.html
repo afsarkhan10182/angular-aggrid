@@ -21,76 +21,10 @@
 
   <!-- Controls Section -->
   <div class="controls-section">
-    <ng-template #cooAnalysisContent let-loading="loading">
-      <section class="coo-analysis-section" aria-label="COO Analysis">
-        <div *ngIf="loading" class="loading-spinner-container">
-          <div class="loading-spinner">
-            <div class="spinner"></div>
-            <p>Loading data...</p>
-          </div>
-        </div>
-
-        <div class="coo-analysis-toolbar">
-          <label class="coo-analysis-toolbar-item coo-analysis-rule">
-            <strong>BOM Rule</strong>
-            <div class="sku-filter-select-wrapper coo-analysis-select-wrapper">
-              <select
-                class="sku-filter-select coo-analysis-select"
-                [(ngModel)]="cooAnalysisRule"
-                (change)="onCooAnalysisFilterChange()"
-                aria-label="COO Analysis BOM Rule"
-              >
-                <option *ngFor="let rule of cooAnalysisRuleOptions" [value]="getCooOptionValue(rule)">
-                  {{ getCooOptionLabel(rule) }}
-                </option>
-              </select>
-              <app-icon name="chevron-down" size="14" class="sku-filter-select-arrow"></app-icon>
-            </div>
-          </label>
-          <label class="coo-analysis-toolbar-item">
-            <strong>COO</strong>
-            <div class="sku-filter-select-wrapper coo-analysis-country-wrapper">
-              <select
-                class="sku-filter-select coo-analysis-select"
-                [(ngModel)]="cooAnalysisCountry"
-                (change)="onCooAnalysisFilterChange()"
-                aria-label="COO Analysis country"
-              >
-                <option *ngFor="let country of cooAnalysisCountryOptions" [value]="getCooOptionValue(country)">
-                  {{ getCooOptionLabel(country) }}
-                </option>
-              </select>
-              <app-icon name="chevron-down" size="14" class="sku-filter-select-arrow"></app-icon>
-            </div>
-          </label>
-          <label class="coo-analysis-toolbar-item coo-analysis-date-field">
-            <strong>As Of</strong>
-            <input
-              type="date"
-              class="mass-edit-input coo-analysis-date-input"
-              [(ngModel)]="cooAnalysisAsOfDate"
-              (change)="onCooAnalysisFilterChange()"
-              aria-label="COO Analysis As Of date"
-            />
-          </label>
-        </div>
-
-        <div class="coo-analysis-grid-wrap">
-          <ag-grid-angular
-            style="width: 100%"
-            class="ag-theme-alpine coo-analysis-grid"
-            [domLayout]="'autoHeight'"
-            [columnDefs]="cooAnalysisColumnDefs"
-            [defaultColDef]="cooAnalysisDefaultColDef"
-            [rowData]="cooAnalysisRows"
-          >
-          </ag-grid-angular>
-        </div>
-      </section>
-    </ng-template>
-
     <ng-container *ngIf="isCooAnalysisMode(); else standardBomComposer">
-      <ng-container *ngTemplateOutlet="cooAnalysisContent; context: { loading: isLoading }"></ng-container>
+      <app-coo-analysis
+        (loadFailed)="onCooAnalysisLoadFailed($event)"
+      ></app-coo-analysis>
     </ng-container>
 
     <ng-template #standardBomComposer>
@@ -606,7 +540,10 @@
           </button>
         </div>
         <div class="modal-content modal-shell-body coo-analysis-modal-body">
-          <ng-container *ngTemplateOutlet="cooAnalysisContent; context: { loading: isCooAnalysisModalLoading }"></ng-container>
+          <app-coo-analysis
+            [isModal]="true"
+            (loadFailed)="onCooAnalysisLoadFailed($event)"
+          ></app-coo-analysis>
         </div>
       </div>
     </div>

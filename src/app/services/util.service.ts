@@ -16,6 +16,19 @@ export interface ExtendedColDef extends ColDef {
   hide?: boolean;
 }
 
+export interface ExcelExportColumn {
+  field: string;
+  headerName: string;
+  width?: number;
+}
+
+export interface ExcelRowsExportOptions {
+  columns: ExcelExportColumn[];
+  rows: any[];
+  fileName?: string;
+  sheetName?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -222,6 +235,21 @@ export class UtilService {
     return angularRoot?.getAttribute(attributeName) || null;
   }
 
+  getServiceHostUrl(): string {
+    const hostFromJsp = this.getJspDataAttribute('data-host');
+
+    if (!hostFromJsp) {
+      return '';
+    }
+
+    if (/^https?:\/\//i.test(hostFromJsp)) {
+      return hostFromJsp;
+    }
+
+    const protocol = this.document.location?.protocol || 'https:';
+    return protocol + '//' + hostFromJsp;
+  }
+
   /**
    * Export grid data to Excel file
    * Uses dynamic import to lazy-load xlsx library, reducing initial bundle size
@@ -268,18 +296,7 @@ export class UtilService {
 
         this.addDataRowsToExcel(excelData, rowData, rowNodes, visibleColumns);
 
-        const XLSX = await import('xlsx');
-        const worksheet = XLSX.utils.aoa_to_sheet(excelData);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-
-        const colWidths = this.getColumnWidths(visibleColumns);
-        worksheet['!cols'] = colWidths;
-
-        const exportFileName =
-          fileName || `${EXCEL_FILE_NAME_PREFIX}${new Date().toISOString().split('T')[0]}.xlsx`;
-
-        XLSX.writeFile(workbook, exportFileName);
+        await this.writeExcelWorkbook(excelData, sheetName, fileName, this.getColumnWidths(visibleColumns));
 
           resolve();
         } catch (error) {
@@ -287,6 +304,22 @@ export class UtilService {
         }
       })();
     });
+  }
+
+  exportRowsToExcel(options: ExcelRowsExportOptions): Promise<void> {
+    const { columns, rows, fileName, sheetName = EXCEL_SHEET_NAME } = options;
+
+    if (!columns || columns.length === 0) {
+      return Promise.reject(new Error('No columns found for export'));
+    }
+
+    const excelData: any[] = [columns.map((column) => column.headerName)];
+    rows.forEach((row) => {
+      excelData.push(columns.map((column) => this.formatCellValueForExport(row, column.field)));
+    });
+
+    const columnWidths = columns.map((column) => ({ wch: column.width ?? 15 }));
+    return this.writeExcelWorkbook(excelData, sheetName, fileName, columnWidths);
   }
 
   getExcludedSearchFields(): Set<string> {
@@ -710,6 +743,27 @@ export class UtilService {
       currentParent = currentParent.parent;
     }
     return '';
+  }
+
+  private async writeExcelWorkbook(
+    excelData: any[],
+    sheetName: string,
+    fileName?: string,
+    columnWidths?: any[]
+  ): Promise<void> {
+    const XLSX = await import('xlsx');
+    const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+    if (columnWidths) {
+      worksheet['!cols'] = columnWidths;
+    }
+
+    const exportFileName =
+      fileName || `${EXCEL_FILE_NAME_PREFIX}${new Date().toISOString().split('T')[0]}.xlsx`;
+
+    XLSX.writeFile(workbook, exportFileName);
   }
 
   private buildExcelRowData(row: any, node: any, visibleColumns: any[]): any[] {

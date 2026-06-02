@@ -215,133 +215,15 @@
   font-weight: 500;
 }
 
-.coo-analysis-section {
-  position: relative;
-  overflow-x: auto;
-}
-
 .coo-analysis-modal {
   width: min(94vw, 1180px);
+  max-height: 90vh;
 }
 
 .coo-analysis-modal-body {
   padding: 16px;
-}
-
-.coo-analysis-toolbar {
-  min-width: 980px;
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 4px 22px;
-  border-bottom: 1px solid #cbd5e1;
-  background: #eef2f4;
-  color: #111827;
-  font-size: 16px;
-}
-
-.coo-analysis-toolbar-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-}
-
-.coo-analysis-rule {
-  min-width: 430px;
-}
-
-.coo-analysis-select-wrapper {
-  width: 290px;
-  min-width: 290px;
-  max-width: 290px;
-}
-
-.coo-analysis-country-wrapper {
-  width: 190px;
-  min-width: 190px;
-  max-width: 190px;
-}
-
-.coo-analysis-select {
-  height: 30px;
-}
-
-.coo-analysis-date-field {
-  margin-left: auto;
-}
-
-.coo-analysis-date-input {
-  height: 30px;
-  min-width: 150px;
-  padding: 4px 8px;
-}
-
-.coo-analysis-grid-wrap {
-  min-width: 980px;
-  padding: 0;
-}
-
-:host ::ng-deep .coo-analysis-grid {
-  --ag-header-background-color: #dfe5e9;
-  --ag-header-foreground-color: #111827;
-  --ag-border-color: #cbd5e1;
-  --ag-row-border-color: transparent;
-  --ag-font-size: 17px;
-  --ag-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --ag-grid-size: 7px;
-  --ag-header-height: 42px;
-  --ag-row-height: 34px;
-  border-top: 1px solid #cbd5e1;
-}
-
-:host ::ng-deep .coo-analysis-grid .ag-header,
-:host ::ng-deep .coo-analysis-grid .ag-header-row,
-:host ::ng-deep .coo-analysis-grid .ag-header-cell {
-  height: 42px !important;
-  min-height: 42px !important;
-  max-height: 42px !important;
-}
-
-:host ::ng-deep .coo-analysis-grid .ag-root-wrapper {
-  border: 0;
-  border-radius: 0;
-  background: #f8fafc;
-}
-
-:host ::ng-deep .coo-analysis-grid .ag-header-cell {
-  font-weight: 700;
-  border-right: 1px solid #cbd5e1;
-  align-items: center !important;
-  padding: 7px 10px !important;
-}
-
-:host ::ng-deep .coo-analysis-grid .ag-header-cell-text {
-  display: inline !important;
-  overflow: visible;
-  text-overflow: clip;
-  white-space: nowrap;
-}
-
-:host ::ng-deep .coo-analysis-grid .ag-header-cell-label {
-  display: flex !important;
-  align-items: center !important;
-  flex-direction: row !important;
-  height: auto !important;
-}
-
-:host ::ng-deep .coo-analysis-grid .ag-cell {
-  border-right: 1px solid #cbd5e1;
-  line-height: 34px;
-}
-
-:host ::ng-deep .coo-analysis-grid .ag-row {
-  background: #f8fafc;
-}
-
-:host ::ng-deep .coo-analysis-link-cell {
-  color: #2a87a0;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .spinner {
