@@ -4,6 +4,7 @@ export const environment = {
   getUserUrl: '/Windchill/servlet/rest/trek/getUserDetails',
   dataApiPath: '/Windchill/servlet/rest/trek/bomlink',
   cooAnalysisApiPath: '/Windchill/servlet/rest/trek/COOAnalysis',
+  cooAnalysisExportApiPath: '/Windchill/servlet/rest/trek/COOAnalysisExport',
   credentials: {
     username: '',
     password: '',

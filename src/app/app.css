@@ -216,13 +216,56 @@
 }
 
 .coo-analysis-modal {
-  width: min(94vw, 1180px);
+  width: 90%;
+  max-width: 1200px;
+  height: 85vh;
   max-height: 90vh;
+  border-radius: 8px;
+  border: 0;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.coo-analysis-modal .modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.coo-analysis-modal .modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.coo-analysis-modal .close-button {
+  width: auto;
+  height: auto;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #6b7280;
+}
+
+.coo-analysis-modal .close-button:hover {
+  background: #e5e7eb;
+  color: #111827;
 }
 
 .coo-analysis-modal-body {
-  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 24px;
   overflow: hidden;
+  min-height: 0;
+}
+
+.coo-analysis-modal-body app-coo-analysis {
+  display: flex;
+  flex: 1;
   min-height: 0;
 }
 

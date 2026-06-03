@@ -70,6 +70,11 @@ export class CooAnalysisComponent implements OnInit, OnDestroy {
     this.load(true);
   }
 
+  openDatePicker(event: Event): void {
+    const input = event.target as HTMLInputElement & { showPicker?: () => void };
+    input.showPicker?.();
+  }
+
   private load(useFilters: boolean): void {
     this.isLoading = true;
     const filters = useFilters
@@ -101,7 +106,7 @@ export class CooAnalysisComponent implements OnInit, OnDestroy {
 
   private withLinesDownloadRenderer(columnDefs: ColDef[]): ColDef[] {
     return columnDefs.map((columnDef) => {
-      if (columnDef.field !== 'lines') {
+      if (!this.isLinesColumn(columnDef)) {
         return columnDef;
       }
 
@@ -110,6 +115,10 @@ export class CooAnalysisComponent implements OnInit, OnDestroy {
         cellRenderer: this.renderLinesDownloadCell,
       };
     });
+  }
+
+  private isLinesColumn(columnDef: ColDef): boolean {
+    return Boolean((columnDef.context as { isCooAnalysisLinesColumn?: boolean } | undefined)?.isCooAnalysisLinesColumn);
   }
 
   private renderLinesDownloadCell(params: ICellRendererParams): HTMLElement | string {
@@ -150,7 +159,7 @@ export class CooAnalysisComponent implements OnInit, OnDestroy {
           .exportRowsToExcel({
             rows: exportData.rows,
             columns: exportData.columns,
-            fileName: this.getLinesExportFileName(skuId),
+            fileName: this.getLinesExportFileName(this.getRowSku(row)),
             sheetName: 'COO Lines',
           })
           .then(() => {
@@ -234,8 +243,13 @@ export class CooAnalysisComponent implements OnInit, OnDestroy {
     return sku === null || sku === undefined ? '' : String(sku);
   }
 
-  private getLinesExportFileName(skuId: string): string {
-    const safeSkuId = skuId.replace(/[^a-zA-Z0-9_-]/g, '_');
-    return 'COO_Analysis_Lines_' + safeSkuId + '_' + new Date().toISOString().split('T')[0] + '.xlsx';
+  private getRowSku(row: CooAnalysisRow): string {
+    const sku = row?.['sku'];
+    return sku === null || sku === undefined ? '' : String(sku);
+  }
+
+  private getLinesExportFileName(sku: string): string {
+    const safeSku = sku.replace(/[^a-zA-Z0-9_-]/g, '_');
+    return 'COO_Analysis_' + safeSku + '_' + new Date().toISOString().split('T')[0] + '.xlsx';
   }
 }

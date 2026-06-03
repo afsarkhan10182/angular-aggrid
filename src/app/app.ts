@@ -835,7 +835,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   public getBomComposerTitle(): string {
     const bomType = this.getCurrentBomType();
-    console.log('bomType', bomType);
     if (bomType === BOM_TYPE_MATERIALEBOM) {
       return 'Material BOM Composer';
     }

@@ -1,250 +1,325 @@
 {
-   "coo":"936974",
-   "cooList":[
-      {
-         "displayValue":"China",
-         "id":"936975"
-      },
-      {
-         "displayValue":"India",
-         "id":"936947"
-      },
-      {
-         "displayValue":"UK",
-         "id":"937029"
-      },
-      {
-         "displayValue":"USA",
-         "id":"937002"
-      }
-   ],
-   "instances":[
-      {
-         "mrf":"GC",
-         "cooEstimated":50.45,
-         "description":"Validated Test",
-         "fromCoo":10,
-         "sku":"100040",
-         "lines":20,
-         "withoutCost":5,
-         "cooCurrent":50.13
-      },
-      {
-         "mrf":"GC",
-         "cooEstimated":50.45,
-         "description":"Tested",
-         "fromCoo":10,
-         "sku":"100041",
-         "lines":20,
-         "withoutCost":5,
-         "cooCurrent":50.13
-      },
-      {
-         "mrf":"GC",
-         "cooEstimated":50.45,
-         "description":"Tested",
-         "fromCoo":10,
-         "sku":"100041",
-         "lines":20,
-         "withoutCost":5,
-         "cooCurrent":50.13
-      },
-      {
-         "mrf":"GC",
-         "cooEstimated":50.45,
-         "description":"Tested",
-         "fromCoo":10,
-         "sku":"100041",
-         "lines":20,
-         "withoutCost":5,
-         "cooCurrent":50.13
-      },
-      {
-         "mrf":"GC",
-         "cooEstimated":50.45,
-         "description":"Tested",
-         "fromCoo":10,
-         "sku":"100041",
-         "lines":20,
-         "withoutCost":5,
-         "cooCurrent":50.13
-      },
-      {
-         "mrf":"GC",
-         "cooEstimated":50.45,
-         "description":"Tested",
-         "fromCoo":10,
-         "sku":"100041",
-         "lines":20,
-         "withoutCost":5,
-         "cooCurrent":50.13
-      },
-      {
-         "mrf":"GC",
-         "cooEstimated":50.45,
-         "description":"Tested",
-         "fromCoo":10,
-         "sku":"100041",
-         "lines":20,
-         "withoutCost":5,
-         "cooCurrent":50.13
-      },
-      {
-         "mrf":"GC",
-         "cooEstimated":50.45,
-         "description":"Tested",
-         "fromCoo":10,
-         "sku":"100041",
-         "lines":20,
-         "withoutCost":5,
-         "cooCurrent":50.13
-      },
-      {
-         "mrf":"GC",
-         "cooEstimated":50.45,
-         "description":"Tested",
-         "fromCoo":10,
-         "sku":"100041",
-         "lines":20,
-         "withoutCost":5,
-         "cooCurrent":50.13
-      }  ,
-      {
-         "mrf":"GC",
-         "cooEstimated":50.45,
-         "description":"Tested",
-         "fromCoo":10,
-         "sku":"100041",
-         "lines":20,
-         "withoutCost":5,
-         "cooCurrent":50.13
-      },
-      {
-         "mrf":"GC",
-         "cooEstimated":50.45,
-         "description":"Tested",
-         "fromCoo":10,
-         "sku":"100041",
-         "lines":20,
-         "withoutCost":5,
-         "cooCurrent":50.13
-      },
-      {
-         "mrf":"GC",
-         "cooEstimated":50.45,
-         "description":"Tested",
-         "fromCoo":10,
-         "sku":"100041",
-         "lines":20,
-         "withoutCost":5,
-         "cooCurrent":50.13
-      },
-      {
-         "mrf":"GC",
-         "cooEstimated":50.45,
-         "description":"Tested",
-         "fromCoo":10,
-         "sku":"100041",
-         "lines":20,
-         "withoutCost":5,
-         "cooCurrent":50.13
-      },
-      
-      {
-         "mrf":"GC",
-         "cooEstimated":50.45,
-         "description":"Tested",
-         "fromCoo":10,
-         "sku":"100041",
-         "lines":20,
-         "withoutCost":5,
-         "cooCurrent":50.13
-      }  ,
-      {
-         "mrf":"GC",
-         "cooEstimated":50.45,
-         "description":"Tested",
-         "fromCoo":10,
-         "sku":"100041",
-         "lines":20,
-         "withoutCost":5,
-         "cooCurrent":50.13
-      } ,
-      {
-         "mrf":"GC",
-         "cooEstimated":50.45,
-         "description":"Tested",
-         "fromCoo":10,
-         "sku":"100041",
-         "lines":20,
-         "withoutCost":5,
-         "cooCurrent":50.13
-      }  ,               {
-         "mrf":"GC",
-         "cooEstimated":50.45,
-         "description":"Tested",
-         "fromCoo":10,
-         "sku":"100041",
-         "lines":20,
-         "withoutCost":5,
-         "cooCurrent":50.13
-      }             ,
-      {
-         "mrf":"GC",
-         "cooEstimated":50.45,
-         "description":"Tested",
-         "fromCoo":10,
-         "sku":"100041",
-         "lines":20,
-         "withoutCost":5,
-         "cooCurrent":50.13
-      }             ,   
-      {
-         "mrf":"GC",
-         "cooEstimated":50.45,
-         "description":"Tested",
-         "fromCoo":10,
-         "sku":"100041",
-         "lines":20,
-         "withoutCost":5,
-         "cooCurrent":50.13
-      }             ,
-      {
-         "mrf":"GC",
-         "cooEstimated":50.45,
-         "description":"Tested",
-         "fromCoo":10,
-         "sku":"100041",
-         "lines":20,
-         "withoutCost":5,
-         "cooCurrent":50.13
-      }             
-   ],
-   "bomRuleList":[
-      {
-         "id":"EXPAND_TO_BUY",
-         "displayValue":"Expand To Buy (exclude all non Buy)"
-      },
-      {
-         "id":"EXPAND_TO_LOWEST",
-         "displayValue":"Expand To Lowest (Won’t expand Buy)"
-      },
-      {
-         "id":"EXPAND_THROUGH_PHANTOM",
-         "displayValue":"Expand Through Phantom (exclude Phantom)"
-      }
-   ],
-   "columns":{
-      "mrf":"Mrf",
-      "sku":"SKU",
-      "description":"Description",
-      "lines":"# Lines",
-      "cooCurrent":"% China (Current)",
-      "cooEstimated":"% China (Estimated)",
-      "fromCoo":"# From China",
-      "withoutCost":"# w/o Cost"
-   },
-   "skuIds":"VR:com.lcs.wc.foundation.LCSRevisableEntity:913303,VR:com.lcs.wc.foundation.LCSRevisableEntity:913337",
-   "effectiveDate":"05/25/2026",
-   "bomRule":"EXPAND_THROUGH_PHANTOM"
+  "coo": "936974",
+  "cooList": [
+    {
+      "displayValue": "China",
+      "id": "936974"
+    },
+    {
+      "displayValue": "India",
+      "id": "936945"
+    },
+    {
+      "displayValue": "UK",
+      "id": "937028"
+    },
+    {
+      "displayValue": "USA",
+      "id": "937001"
+    }
+  ],
+  "instances": [
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test asdfasdf sdfasdfasd asdfasdf asdfasdfasdf asdfasdfasdf ",
+      "fromCoo": 10,
+      "sku": "100040",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913303",
+      "cooCurrent": 50.13
+    },
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100041",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913304",
+      "cooCurrent": 50.13
+    },
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100042",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913305",
+      "cooCurrent": 50.13
+    },
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100043",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913306",
+      "cooCurrent": 50.13
+    } ,
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100044",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913307",
+      "cooCurrent": 50.13
+    },   
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100045",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913308",
+      "cooCurrent"   : 50.13
+    },
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100046",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913309",
+      "cooCurrent": 50.13
+    },
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100047",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913310",
+      "cooCurrent": 50.13
+      },    
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100048",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913311",
+      "cooCurrent": 50.13
+    },                           
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100049",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913312",
+      "cooCurrent": 50.13
+    },   
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100050",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913313",
+      "cooCurrent": 50.13
+    },
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100051",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913314",
+      "cooCurrent": 50.13
+    },
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100052",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913315",
+      "cooCurrent": 50.13
+    } ,
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100053",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913316",
+      "cooCurrent": 50.13
+    }   , 
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100054",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913317",
+      "cooCurrent": 50.13
+    }    ,
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100055",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913318",
+      "cooCurrent": 50.13
+    }       ,
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100056",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913319",
+      "cooCurrent": 50.13
+    }       ,
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100057",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913320",
+      "cooCurrent": 50.13
+    } ,     
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100058",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913321",
+      "cooCurrent": 50.13
+    }   ,   
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100059",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913322",
+      "cooCurrent": 50.13
+    }   ,   
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100060",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913323",
+      "cooCurrent": 50.13
+    }   ,   
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100061",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913324",
+      "cooCurrent": 50.13
+    }   ,   
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100062",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913325",
+      "cooCurrent": 50.13
+      }   ,   
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100063",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913326",
+      "cooCurrent": 50.13
+    }       ,   
+    {
+      "mrf": "GC",
+      "cooEstimated": 50.45,
+      "description": "Validated Test",
+      "fromCoo": 10,
+      "sku": "100064",
+      "lines": 20,
+      "withoutCost": 5,
+      "skuId": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913327",
+      "cooCurrent": 50.13
+    }      
+  ],
+  "bomRuleList": [
+    {
+      "displayValue": "Expand Through Phantom (exclude Phantom)",
+      "id": "EXPAND_THROUGH_PHANTOM"
+    },
+    {
+      "displayValue": "Expand To Buy (exclude all non Buy)",
+      "id": "EXPAND_TO_BUY"
+    },
+    {
+      "displayValue": "Expand To Lowest (Won't expand Buy)",
+      "id": "EXPAND_TO_LOWEST"
+    }
+  ],
+  "columns": {
+    "mrf": "Mrf",
+    "sku": "SKU",
+    "description": "Description",
+    "lines": "# Lines",
+    "cooCurrent": "% China (Current)",
+    "cooEstimated": "% China (Estimated)",
+    "fromCoo": "# From China",
+    "withoutCost": "# w/o Cost"
+  },
+  "skuIds": "VR:com.lcs.wc.foundation.LCSRevisableEntity:913303",
+  "effectiveDate": "06/03/2026",
+  "bomRule": "EXPAND_THROUGH_PHANTOM"
 }

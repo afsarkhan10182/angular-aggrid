@@ -11,6 +11,7 @@
 			   com.lcs.wc.material.LCSMaterial,
 			   com.lcs.wc.material.LCSMaterialColorQuery,
 			   com.lcs.wc.db.FlexObject,
+			   com.test.*,
                com.lcs.wc.util.FormatHelper"
 %>
 
@@ -64,6 +65,15 @@
 		pageTitle = "Material SBOM Composer";
 	} else if ("MATERIALMBOM".equals(bomType)) {
 		pageTitle = "Part MBOM Composer";
+	} else if ("COOANALYSISPRODUCT".equals(bomType)) {
+		bomType = "COOANALYSIS";
+		
+		String productIds = request.getParameter("productIds");
+		System.out.println("productIds = "+ productIds);
+		String skuIds = request.getParameter("skusMap");
+		System.out.println("skuIds = "+ skuIds);
+		ids = Test4.findSKUByProductAndSKU(productIds, skuIds);
+		
 	}
 %>
 <!DOCTYPE html>

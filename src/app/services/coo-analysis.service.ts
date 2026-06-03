@@ -25,6 +25,7 @@ export interface CooAnalysisResponse {
   columns?: Record<string, string>;
   instances?: CooAnalysisRow[];
   skuIds?: string;
+  skuID?: string;
   bomType?: string;
 }
 
@@ -64,7 +65,7 @@ export class CooAnalysisService {
   }
 
   loadLineDetails(skuId: string, filters?: CooAnalysisFilters): Observable<CooAnalysisLineExportData> {
-    const urlWithQuery = this.buildUrlWithQuery(skuId, filters);
+    const urlWithQuery = this.buildUrlWithQuery(skuId, filters, this.getCooAnalysisExportApiUrl());
     return this.http.get<CooAnalysisResponse>(urlWithQuery).pipe(
       map((response) => ({
         rows: Array.isArray(response.instances) ? response.instances : [],
@@ -81,7 +82,11 @@ export class CooAnalysisService {
     return typeof option === 'string' ? option : String(option?.displayValue ?? '');
   }
 
-  private buildUrlWithQuery(skuIds: string, filters?: CooAnalysisFilters): string {
+  private buildUrlWithQuery(
+    skuIds: string,
+    filters?: CooAnalysisFilters,
+    apiUrl = this.getCooAnalysisApiUrl()
+  ): string {
     const queryParams = new URLSearchParams();
     if (skuIds) {
       queryParams.set('skuID', skuIds);
@@ -98,7 +103,6 @@ export class CooAnalysisService {
     }
 
     const queryString = queryParams.toString();
-    const apiUrl = this.getCooAnalysisApiUrl();
     return queryString ? apiUrl + '?' + queryString : apiUrl;
   }
 
@@ -110,6 +114,12 @@ export class CooAnalysisService {
     return environment.useMockApi
       ? environment.cooAnalysisApiPath
       : this.utilService.getServiceHostUrl() + environment.cooAnalysisApiPath;
+  }
+
+  private getCooAnalysisExportApiUrl(): string {
+    return environment.useMockApi
+      ? environment.cooAnalysisExportApiPath
+      : this.utilService.getServiceHostUrl() + environment.cooAnalysisExportApiPath;
   }
 
   private toViewModel(response: CooAnalysisResponse): CooAnalysisViewModel {
@@ -129,15 +139,20 @@ export class CooAnalysisService {
       return [];
     }
 
-    return Object.entries(columns).map(([field, headerName]) => ({
-      headerName: String(headerName),
-      field,
-      colId: field === 'sku' ? 'cooSku' : field,
-      width: this.getColumnWidth(field),
-      minWidth: this.getColumnWidth(field),
-      flex: field === 'description' ? 1 : undefined,
-      cellClass: field === 'lines' ? 'coo-analysis-link-cell' : undefined,
-    }));
+    return Object.entries(columns).map(([field, headerName]) => {
+      const header = String(headerName);
+      const isLinesColumn = this.isLinesColumn(field, header);
+
+      return {
+        headerName: header,
+        field,
+        colId: field === 'sku' ? 'cooSku' : field,
+        width: this.getColumnWidth(field, header),
+        minWidth: this.getColumnWidth(field, header),
+        cellClass: isLinesColumn ? 'coo-analysis-link-cell' : undefined,
+        context: { isCooAnalysisLinesColumn: isLinesColumn },
+      };
+    });
   }
 
   private buildExportColumns(columns?: Record<string, string>): ExcelExportColumn[] {
@@ -148,23 +163,20 @@ export class CooAnalysisService {
     return Object.entries(columns).map(([field, headerName]) => ({
       field,
       headerName: String(headerName),
-      width: Math.ceil(this.getColumnWidth(field) / 10),
+      width: Math.ceil(this.getColumnWidth(field, String(headerName)) / 10),
     }));
   }
 
-  private getColumnWidth(field: string): number {
-    const widths: Record<string, number> = {
-      mrf: 72,
-      sku: 140,
-      description: 320,
-      lines: 105,
-      cooCurrent: 190,
-      cooEstimated: 205,
-      fromCoo: 130,
-      withoutCost: 115,
-    };
 
-    return widths[field] ?? 140;
+  private isLinesColumn(field: string, headerName: string): boolean {
+    const normalizedField = field.replace(/[^a-z0-9]/gi, '').toLowerCase();
+    const normalizedHeader = headerName.replace(/[^a-z0-9]/gi, '').toLowerCase();
+    return normalizedField === 'lines' || normalizedHeader === 'lines';
+  }
+
+  private getColumnWidth(field: string, headerName: string): number {
+    const contentLength = Math.max(field.length, headerName.length);
+    return Math.min(Math.max(contentLength * 12 + 36, 90), 320);
   }
 
   private formatEffectiveDate(value?: string): string {

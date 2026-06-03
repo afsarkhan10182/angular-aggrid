@@ -47,6 +47,8 @@
         type="date"
         class="coo-analysis-date-input"
         [(ngModel)]="asOfDate"
+        (click)="openDatePicker($event)"
+        (focus)="openDatePicker($event)"
         (change)="onFilterChange()"
         aria-label="COO Analysis As Of date"
       />
