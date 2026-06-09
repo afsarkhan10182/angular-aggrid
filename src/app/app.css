@@ -1171,3 +1171,16 @@
 .ag-row.ag-row-inline-editing .ag-cell {
   background-color: #fef3c7 !important;
 }
+
+:host .controls-section.coo-analysis-page-section {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+:host .controls-section.coo-analysis-page-section app-coo-analysis {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}

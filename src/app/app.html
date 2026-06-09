@@ -20,9 +20,10 @@
   </div>
 
   <!-- Controls Section -->
-  <div class="controls-section">
+  <div class="controls-section" [class.coo-analysis-page-section]="isCooAnalysisMode()">
     <ng-container *ngIf="isCooAnalysisMode(); else standardBomComposer">
       <app-coo-analysis
+        [isModal]="true"
         (loadFailed)="onCooAnalysisLoadFailed($event)"
       ></app-coo-analysis>
     </ng-container>

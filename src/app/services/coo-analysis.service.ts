@@ -139,16 +139,20 @@ export class CooAnalysisService {
       return [];
     }
 
-    return Object.entries(columns).map(([field, headerName]) => {
+    const columnEntries = Object.entries(columns);
+
+    return columnEntries.map(([field, headerName]) => {
       const header = String(headerName);
       const isLinesColumn = this.isLinesColumn(field, header);
+      const columnWidth = this.getColumnWidth(field, header);
 
       return {
         headerName: header,
         field,
         colId: field === 'sku' ? 'cooSku' : field,
-        width: this.getColumnWidth(field, header),
-        minWidth: this.getColumnWidth(field, header),
+        width: columnWidth,
+        minWidth: columnWidth,
+        flex: columnWidth,
         cellClass: isLinesColumn ? 'coo-analysis-link-cell' : undefined,
         context: { isCooAnalysisLinesColumn: isLinesColumn },
       };
