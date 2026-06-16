@@ -7,8 +7,6 @@ export const environment = {
   csrfUrl: '/Windchill/servlet/rest/security/csrf',
   getUserUrl: '/Windchill/servlet/rest/trek/getUserDetails',
   dataApiPath: '/mock.json',
-  cooAnalysisApiPath: '/api/coo-analysis.json',
-  cooAnalysisExportApiPath: '/api/coo-analysis-export.json',
   credentials: {
     username: 'wcadmin',
     password: 'wcadmin',

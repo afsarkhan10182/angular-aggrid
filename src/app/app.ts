@@ -23,7 +23,6 @@ import { HierarchicalCellRendererComponent } from './components/hierarchical-cel
 import { LinkedBomModalComponent } from './components/linked-bom-modal/linked-bom-modal.component';
 import { ServiceDataManagerModalComponent } from './components/service-data-manager-modal/service-data-manager-modal.component';
 import { PartEditModalComponent } from './components/part-edit-modal/part-edit-modal.component';
-import { CooAnalysisComponent } from './components/coo-analysis/coo-analysis.component';
 import { DataService } from './services/data.service';
 import { GridConfigService, GroupConfig } from './services/grid/grid-config.service';
 import { GridService, ColumnVisibilityConfig } from './services/grid/grid.service';
@@ -42,7 +41,6 @@ import { SkuService } from './services/sku.service';
 import { environment } from '../environments/environment';
 import {
   BOM_TYPE_MATERIALEBOM,
-  BOM_TYPE_COO_ANALYSIS,
   BOM_TYPE_PRODUCTMBOM,
   BOM_TYPE_PRODUCTSBOM,
   BOM_TYPE_MATERIALSBOM,
@@ -109,7 +107,6 @@ const MAX_BOM_LINK_LOAD_ROWS = 1000;
     LinkedBomModalComponent,
     ServiceDataManagerModalComponent,
     PartEditModalComponent,
-    CooAnalysisComponent,
   ],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
@@ -143,7 +140,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public serviceDataManagerModalMaterialColorIds: string[] = [];
   public showPartEditModal = false;
   public partEditModalMaterialColorIds: string[] = [];
-  public showCooAnalysisModal = false;
   public searchText: string = '';
   public saveMessage: string = '';
   public saveMessageType: string = '';
@@ -498,31 +494,10 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private loadInitialData(): void {
-    if (this.isCooAnalysisMode()) {
-      this.prepareCooAnalysisView();
-      return;
-    }
-
     this.loadData();
   }
 
-  public isCooAnalysisMode(): boolean {
-    return String(this.dataService.getBomType() || '').toLowerCase() === BOM_TYPE_COO_ANALYSIS.toLowerCase();
-  }
-
-  private prepareCooAnalysisView(): void {
-    this.isLoading = false;
-    this.bomType = BOM_TYPE_COO_ANALYSIS;
-    this.bomName = 'COO Analysis';
-    this.bomNamesDisplay = this.bomName;
-    this.bomNamesFull = this.bomName;
-  }
-
   private hasExceededBomLinkLoadLimit(data: any): boolean {
-    if (this.isCooAnalysisMode()) {
-      return false;
-    }
-
     const bomLinkRows = Array.isArray(data?.instances) ? data.instances : [];
     return bomLinkRows.length > MAX_BOM_LINK_LOAD_ROWS;
   }
@@ -850,10 +825,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     if (bomType === BOM_TYPE_MATERIALMBOM) {
       return 'Part MBOM Composer';
     }
-    if (bomType === BOM_TYPE_COO_ANALYSIS || bomType === BOM_TYPE_COO_ANALYSIS.toLowerCase()) {
-      return 'COO Analysis Composer';
-    }
-
     return 'Product BOM Composer';
   }
 
@@ -3128,24 +3099,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   closePartEditModal(): void {
     this.showPartEditModal = false;
     this.partEditModalMaterialColorIds = [];
-  }
-
-  shouldShowCooAnalysisAction(): boolean {
-    const bomType = this.getCurrentBomType();
-    return bomType === BOM_TYPE_PRODUCTMBOM;
-  }
-
-  openCooAnalysisModal(): void {
-    this.showCooAnalysisModal = true;
-  }
-
-  closeCooAnalysisModal(): void {
-    this.showCooAnalysisModal = false;
-  }
-
-  onCooAnalysisLoadFailed(error: unknown): void {
-    const errorMessage = this.dataService.getLoadErrorMessage(error);
-    this.showNotification(errorMessage, NOTIFICATION_TYPE_ERROR_PERSISTENT);
   }
 
   onServiceDataManagerModalDataSaved(): void {

@@ -20,22 +20,7 @@
   </div>
 
   <!-- Controls Section -->
-  <div class="controls-section" [class.coo-analysis-page-section]="isCooAnalysisMode()">
-    <ng-container *ngIf="isCooAnalysisMode(); else standardBomComposer">
-      @defer (when isCooAnalysisMode()) {
-        <app-coo-analysis
-          [isModal]="true"
-          (loadFailed)="onCooAnalysisLoadFailed($event)"
-        ></app-coo-analysis>
-      } @loading {
-        <div class="modal-loading-state">
-          <div class="modal-loader" aria-hidden="true"></div>
-          <p class="modal-loading-text">Opening COO analysis...</p>
-        </div>
-      }
-    </ng-container>
-
-    <ng-template #standardBomComposer>
+  <div class="controls-section">
     <!-- Criteria Display and Controls -->
     <div class="controls-row">
       <!-- Left Group: Criteria and Search -->
@@ -162,17 +147,6 @@
               <app-icon name="edit" size="14"></app-icon>
               <span>Edit Parts</span>
             </button>
-            <button
-              *ngIf="shouldShowCooAnalysisAction()"
-              (click)="openCooAnalysisModal(); closeActionDropdown()"
-              class="action-dropdown-item"
-              title="COO Analysis"
-            >
-              <app-icon name="file-excel" size="14"></app-icon>
-              <span>COO Analysis</span>
-            </button>
-            
-
             <button
               *ngIf="isSbomMode()"
               (click)="bulkDisconnectFromSkus(); closeActionDropdown()"
@@ -534,35 +508,7 @@
         </div>
       }
     </div>
-    </ng-template>
   </div>
-
-  <!-- COO Analysis Modal -->
-  @if (showCooAnalysisModal) {
-    <div class="modal-overlay" (click)="closeCooAnalysisModal()">
-      <div class="modal-container app-modal-shell modal-shell coo-analysis-modal" (click)="$event.stopPropagation()">
-        <div class="modal-header app-modal-header">
-          <h3>COO Analysis</h3>
-          <button class="close-button app-modal-close" (click)="closeCooAnalysisModal()" aria-label="Close">
-            <app-icon name="times" size="14"></app-icon>
-          </button>
-        </div>
-        <div class="modal-content app-modal-body coo-analysis-modal-body">
-          @defer (when showCooAnalysisModal) {
-            <app-coo-analysis
-              [isModal]="true"
-              (loadFailed)="onCooAnalysisLoadFailed($event)"
-            ></app-coo-analysis>
-          } @loading {
-            <div class="modal-loading-state">
-              <div class="modal-loader" aria-hidden="true"></div>
-              <p class="modal-loading-text">Opening COO analysis...</p>
-            </div>
-          }
-        </div>
-      </div>
-    </div>
-  }
 
   <!-- Linked BOM Modal -->
   @if (showLinkedBomModal) {

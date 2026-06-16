@@ -216,12 +216,6 @@
 }
 
 
-.coo-analysis-modal-body app-coo-analysis {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
-
 .spinner {
   border: 4px solid #f3f4f6;
   border-top: 4px solid #3b82f6;
@@ -1123,17 +1117,4 @@
 .ag-row.ag-row-inline-editing,
 .ag-row.ag-row-inline-editing .ag-cell {
   background-color: #fef3c7 !important;
-}
-
-:host .controls-section.coo-analysis-page-section {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
-  position: relative;
-}
-
-:host .controls-section.coo-analysis-page-section app-coo-analysis {
-  display: flex;
-  flex: 1;
-  min-height: 0;
 }

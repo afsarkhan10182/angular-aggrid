@@ -4,7 +4,6 @@ export const BOM_TYPE_PRODUCTSBOM = 'SBOM';
 export const BOM_TYPE_MATERIALEBOM = 'EBOM';
 export const BOM_TYPE_MATERIALMBOM = 'MATERIAL_MBOM';
 export const BOM_TYPE_MATERIALSBOM = 'MATERIAL_SBOM';
-export const BOM_TYPE_COO_ANALYSIS = 'COOANALYSIS';
 export const DEFAULT_BOM_TYPE = BOM_TYPE_PRODUCTMBOM;
 export const BOM_LINK_KEY = 'bom-link';
 export const ENUM_MBOM_LINE_ITEM = 'enumMBOM001';
