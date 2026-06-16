@@ -21,8 +21,6 @@ import { IconComponent } from './components/icon/icon.component';
 import { ColumnHeaderPinComponent } from './components/column-header-pin/column-header-pin.component';
 import { HierarchicalCellRendererComponent } from './components/hierarchical-cell-renderer/hierarchical-cell-renderer.component';
 import { LinkedBomModalComponent } from './components/linked-bom-modal/linked-bom-modal.component';
-import { ServiceDataManagerModalComponent } from './components/service-data-manager-modal/service-data-manager-modal.component';
-import { PartEditModalComponent } from './components/part-edit-modal/part-edit-modal.component';
 import { DataService } from './services/data.service';
 import { GridConfigService, GroupConfig } from './services/grid/grid-config.service';
 import { GridService, ColumnVisibilityConfig } from './services/grid/grid.service';
@@ -105,8 +103,6 @@ const MAX_BOM_LINK_LOAD_ROWS = 1000;
     AgGridAngular,
     IconComponent,
     LinkedBomModalComponent,
-    ServiceDataManagerModalComponent,
-    PartEditModalComponent,
   ],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
@@ -136,10 +132,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public selectedLinkedBomData: any = {};
   public selectedLinkedBomSkuData: any[] = [];
   public isLinkedBomLoading = false;
-  public showServiceDataManagerModal = false;
-  public serviceDataManagerModalMaterialColorIds: string[] = [];
-  public showPartEditModal = false;
-  public partEditModalMaterialColorIds: string[] = [];
   public searchText: string = '';
   public saveMessage: string = '';
   public saveMessageType: string = '';
@@ -3002,165 +2994,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.massEditEndDate = massEditState.endDate;
     this.massEditQuantity = massEditState.quantity;
     this.massEditIncludeInSpecSheet = massEditState.includeInSpecSheet;
-  }
-
-  openServiceDataManagerModal(): void {
-    if (this.selectedRows.size <= 1) {
-      this.showNotification('Select more than 1 row to for Service Data Manager.', NOTIFICATION_TYPE_INFO);
-      return;
-    }
-
-    // Check for unsaved changes in the main grid
-    const hasEditedRows = this.editedRows.size > 0;
-    const hasNewRows = this.rowData.some((row: any) => row?.isNewRow === true && !row?.isSectionHeader && !row?.isGroupHeader && !row?.isMaterialHeader);
-    
-    if (hasEditedRows || hasNewRows) {
-      const message = 'Any unsaved changes in the BOM Composer will be lost. Do you want to continue?';
-      
-      const proceed = confirm(message);
-      if (!proceed) {
-        return;
-      }
-    }
-
-    const ids = new Set<string>();
-    this.selectedRows.forEach((row: any) => {
-      const id = row?.materialColorId;
-      if (typeof id === 'string' && id.trim()) {
-        ids.add(id.trim());
-      }
-    });
-
-    this.serviceDataManagerModalMaterialColorIds = Array.from(ids);
-    if (this.serviceDataManagerModalMaterialColorIds.length === 0) {
-      this.showNotification('Selected rows do not contain Material Color IDs.', NOTIFICATION_TYPE_INFO);
-      return;
-    }
-
-    this.showServiceDataManagerModal = true;
-  }
-
-  openPartEditModal(): void {
-    if (this.selectedRows.size === 0) {
-      this.showNotification('Select at least 1 row to Edit Parts.', NOTIFICATION_TYPE_INFO);
-      return;
-    }
-
-    const selectedRows = Array.from(this.selectedRows);
-    const hasReleasedRows = selectedRows.some((row: any) => this.isReleasedState(row));
-    if (hasReleasedRows) {
-      this.showNotification(
-        'Please uncheck Released state row(s) to open Edit Parts.',
-        NOTIFICATION_TYPE_INFO,
-      );
-      return;
-    }
-
-    const hasEditedRows = this.editedRows.size > 0;
-    const hasNewRows = this.rowData.some(
-      (row: any) =>
-        row?.isNewRow === true && !row?.isSectionHeader && !row?.isGroupHeader && !row?.isMaterialHeader,
-    );
-    if (hasEditedRows || hasNewRows) {
-      const message = 'Any unsaved changes in the BOM Composer will be lost. Do you want to continue?';
-      const proceed = confirm(message);
-      if (!proceed) {
-        return;
-      }
-    }
-
-    const ids = new Set<string>();
-    selectedRows.forEach((row: any) => {
-      const id = row?.materialColorId;
-      if (typeof id === 'string' && id.trim()) {
-        ids.add(id.trim());
-      }
-    });
-    this.partEditModalMaterialColorIds = Array.from(ids);
-    if (this.partEditModalMaterialColorIds.length === 0) {
-      this.showNotification('Selected rows do not contain Material Color IDs.', NOTIFICATION_TYPE_INFO);
-      return;
-    }
-
-    this.showPartEditModal = true;
-  }
-
-  private isReleasedState(row: any): boolean {
-    const state = String(row?.[FIELD_MATERIAL_COLOR_STATUS] ?? '').trim().toLowerCase();
-    if (!state) return false;
-    return state === 'released' || state === 'release' || state.startsWith('release');
-  }
-
-  closeServiceDataManagerModal(): void {
-    this.showServiceDataManagerModal = false;
-    this.serviceDataManagerModalMaterialColorIds = [];
-  }
-
-  closePartEditModal(): void {
-    this.showPartEditModal = false;
-    this.partEditModalMaterialColorIds = [];
-  }
-
-  onServiceDataManagerModalDataSaved(): void {
-    this.editedRows.clear();
-    this.editedFields.clear();
-    this.originalRowValues.clear();
-    this.loadData();
-  }
-
-  onPartEditModalDataSaved(): void {
-    this.editedRows.clear();
-    this.editedFields.clear();
-    this.originalRowValues.clear();
-    this.loadData();
-  }
-
-  bulkDisconnectFromSkus(): void {
-    if (this.isSkuFilterReadOnly() || !this.isSbomMode()) return;
-    if (this.selectedRows.size === 0) {
-      this.showNotification('Select at least 1 row to disconnect SKUs.', NOTIFICATION_TYPE_INFO);
-      return;
-    }
-    if (!this.gridApi) return;
-
-    const selectedNodes = this.gridApi.getSelectedNodes();
-    const skuInfo = this.getFilteredSkuInfo();
-    const skuFields: string[] = this.skuService.getFieldNames(skuInfo);
-    const nodesToUpdate: any[] = [];
-
-    selectedNodes.forEach((node: any) => {
-      if (!node.data) return;
-
-      const rowData = node.data;
-      if (rowData.isNewRow || !this.canDisconnectForRow(rowData)) return;
-
-      let hasChanges = false;
-      skuFields.forEach((skuField) => {
-        if (
-          this.isSkuEditableForDisconnect(skuField) &&
-          this.skuService.hasValue(rowData[skuField])
-        ) {
-          this.disconnectedSkuKeys.add(this.getDisconnectedKey(rowData, skuField));
-          hasChanges = true;
-        }
-      });
-
-      if (hasChanges) {
-        this.hasDisconnectEdits = true;
-        this.showDisconnectedSkusPanel = true;
-        const rowId = this.utilService.getRowId(rowData);
-        if (rowId) this.editedRows.add(rowId);
-        nodesToUpdate.push(node);
-      }
-    });
-
-    if (nodesToUpdate.length > 0 && skuFields.length > 0) {
-      this.gridApi.refreshCells({
-        rowNodes: nodesToUpdate,
-        columns: skuFields,
-        force: true,
-      });
-    }
   }
 
   ngOnDestroy(): void {

@@ -127,34 +127,6 @@
               <app-icon name="layer-group" size="14"></app-icon>
               <span>Mass Edit</span>
             </button>
-            <!-- Service Data Manager - SBOM only -->
-            <button
-              *ngIf="isSbomMode()"
-              (click)="openServiceDataManagerModal(); closeActionDropdown()"
-              class="action-dropdown-item"
-              title="Service Data Manager"
-            >
-              <app-icon name="cog" size="14"></app-icon>
-              <span>Service Data Manager</span>
-            </button>
-            <!-- Edit Parts - EBOM and MATERIALMBOM -->
-            <button
-              *ngIf="isPartEditMode()"
-              (click)="openPartEditModal(); closeActionDropdown()"
-              class="action-dropdown-item"
-              title="Edit Parts"
-            >
-              <app-icon name="edit" size="14"></app-icon>
-              <span>Edit Parts</span>
-            </button>
-            <button
-              *ngIf="isSbomMode()"
-              (click)="bulkDisconnectFromSkus(); closeActionDropdown()"
-              class="action-dropdown-item"
-              title="Disconnect All SKUs"
-            >
-              <span>Disconnect All SKUs</span>
-            </button>
           </div>
         </div>
         <div class="save-section">
@@ -191,25 +163,6 @@
       <button (click)="clearSaveMessage()" class="save-message-close" title="Close">
         <span class="close-icon-text">×</span>
       </button>
-    </div>
-
-    <!-- Disconnected SKUs (same height as Mass Edit so grid height is consistent) -->
-    <div *ngIf="hasDisconnectedSkusPanelVisible" class="disconnected-skus-panel">
-      <div class="disconnected-skus-bar">
-        <span class="disconnected-skus-title">Disconnected SKUs ({{ disconnectedSkuKeys.size }}) — applied on Save</span>
-        <button (click)="closeDisconnectedSkusPanel()" class="disconnected-skus-close" type="button" title="Close">×</button>
-      </div>
-      <div class="disconnected-skus-chips">
-        <span *ngFor="let item of getDisconnectedSkuList()" class="disconnected-skus-chip">
-          {{ item.part }} → {{ item.skuId }}
-          <button
-            type="button"
-            class="disconnected-skus-chip-undo"
-            (pointerdown)="reconnectSkuFromPanel(item, $event)"
-            title="Reconnect"
-          >&#8617;</button>
-        </span>
-      </div>
     </div>
 
     <!-- Mass Edit Panel -->
@@ -540,61 +493,4 @@
     }
   }
 
-  <!-- Service Data Manager Modal -->
-  @if (showServiceDataManagerModal) {
-    @defer (when showServiceDataManagerModal) {
-      <app-service-data-manager-modal
-        [materialColorIds]="serviceDataManagerModalMaterialColorIds"
-        (modalClose)="closeServiceDataManagerModal()"
-        (dataSaved)="onServiceDataManagerModalDataSaved()"
-      >
-      </app-service-data-manager-modal>
-    } @loading {
-      <div class="modal-overlay" (click)="closeServiceDataManagerModal()">
-        <div class="modal-container app-modal-shell modal-shell" (click)="$event.stopPropagation()">
-          <div class="modal-header app-modal-header">
-            <h3>Service Data Manager</h3>
-            <button class="close-button app-modal-close" (click)="closeServiceDataManagerModal()" aria-label="Close">
-              <app-icon name="times" size="14"></app-icon>
-            </button>
-          </div>
-          <div class="modal-content app-modal-body">
-            <div class="modal-loading-state">
-              <div class="modal-loader" aria-hidden="true"></div>
-              <p class="modal-loading-text">Opening service data manager...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    }
-  }
-
-  <!-- Part Edit Modal -->
-  @if (showPartEditModal) {
-    @defer (when showPartEditModal) {
-      <app-part-edit-modal
-        [materialColorIds]="partEditModalMaterialColorIds"
-        (modalClose)="closePartEditModal()"
-        (dataSaved)="onPartEditModalDataSaved()"
-      >
-      </app-part-edit-modal>
-    } @loading {
-      <div class="modal-overlay" (click)="closePartEditModal()">
-        <div class="modal-container app-modal-shell modal-shell" (click)="$event.stopPropagation()">
-          <div class="modal-header app-modal-header">
-            <h3>Part Edit</h3>
-            <button class="close-button app-modal-close" (click)="closePartEditModal()" aria-label="Close">
-              <app-icon name="times" size="14"></app-icon>
-            </button>
-          </div>
-          <div class="modal-content app-modal-body">
-            <div class="modal-loading-state">
-              <div class="modal-loader" aria-hidden="true"></div>
-              <p class="modal-loading-text">Opening part edit...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    }
-  }
 </div>
