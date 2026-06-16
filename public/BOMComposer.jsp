@@ -61,9 +61,9 @@
 		
 	} else if ("SBOM".equals(bomType)) {
 		pageTitle = bomType + " Composer";
-	} else if ("MATERIALSBOM".equals(bomType)) {
+	} else if ("MATERIAL_SBOM".equals(bomType)) {
 		pageTitle = "Material SBOM Composer";
-	} else if ("MATERIALMBOM".equals(bomType)) {
+	} else if ("MATERIAL_MBOM".equals(bomType)) {
 		pageTitle = "Part MBOM Composer";
 	} else if ("COOANALYSISPRODUCT".equals(bomType)) {
 		bomType = "COOANALYSIS";
