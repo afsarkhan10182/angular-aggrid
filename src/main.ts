@@ -9,7 +9,6 @@ import {
   TextFilterModule,
   NumberFilterModule,
   DateFilterModule,
-  QuickFilterModule,
   CustomEditorModule,
   TextEditorModule,
   NumberEditorModule,
@@ -22,7 +21,6 @@ import {
   CellStyleModule,
   RowStyleModule,
   TooltipModule,
-  ColumnHoverModule,
   HighlightChangesModule,
 } from 'ag-grid-community';
 import { environment } from './environments/environment';
@@ -35,7 +33,6 @@ ModuleRegistry.registerModules([
   TextFilterModule,
   NumberFilterModule,
   DateFilterModule,
-  QuickFilterModule,
   CustomEditorModule,
   TextEditorModule,
   NumberEditorModule,
@@ -48,7 +45,6 @@ ModuleRegistry.registerModules([
   CellStyleModule,
   RowStyleModule,
   TooltipModule,
-  ColumnHoverModule,
   HighlightChangesModule,
 ]);
 

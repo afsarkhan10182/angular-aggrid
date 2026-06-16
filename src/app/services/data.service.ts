@@ -64,15 +64,6 @@ const MATERIAL_COLOR_FIELD_VALUE_MAP: Readonly<Record<string, MaterialColorField
   },
 };
 
-const PART_EDIT_COLOR_ATTRIBUTE_FIELDS = [
-  'materialColorPrintCopy',
-  'materialColorSixtyCharacterDescription',
-  'materialColorThirtyCharacterDescription',
-  'materialColorBrand',
-] as const;
-
-const PART_EDIT_MATERIAL_ATTRIBUTE_FIELDS = ['materialAttachmentType'] as const;
-const PART_EDIT_SUPPLIER_ATTRIBUTE_FIELDS = ['materialSupplierPrimaryUOM'] as const;
 
 export interface BomLinkSku {
   product: string;
@@ -159,6 +150,7 @@ export interface ApiData {
   sectionOrder?: string[];
   sectionDetails?: { [key: string]: string }; // Maps internal section ID to display name (e.g., "enumSection001": "Fuselage")
   bomType?: string;
+  bomFeatureFlexTypeName?: string;
   skuIds?: string; // Version IDs from API response (e.g., "VR:com.lcs.wc.foundation.LCSRevisableEntity:574978")
 }
 
@@ -339,10 +331,12 @@ export class DataService {
     fetchLimit: number = 20,
   ): Observable<{ results: any[]; resultCount: number; hasMore: boolean }> {
     const bomType = this.getBomType();
-    const flexTypeName =
+    const fallbackFlexTypeName =
       bomType === BOM_TYPE_MATERIALEBOM || bomType === BOM_TYPE_MATERIALMBOM
         ? String.raw`Business Object\bomFeature\part`
         : String.raw`Business Object\bomFeature`;
+    const flexTypeName =
+      String(this.apiData?.bomFeatureFlexTypeName || '').trim() || fallbackFlexTypeName;
 
     return this.searchFlexInstances(
       flexTypeName,
@@ -886,8 +880,6 @@ export class DataService {
       instances: payload.instances || {},
       materialColorIds: payload.materialColorIds || '',
     };
-    console.log('savePartEditData payload', requestPayload);
-
     if (environment.useMockApi) {
       return of({ instances: requestPayload.instances, success: true });
     }

@@ -1,13 +1,13 @@
 <div class="modal-overlay" tabindex="0" aria-label="Modal overlay">
-  <div class="modal-container" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
-    <div class="modal-header">
+  <div class="modal-container app-modal-shell" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+    <div class="modal-header app-modal-header">
       <h3>{{ modalTitle }}</h3>
-      <button (click)="handleCloseClick()" class="close-btn" title="Close">
+      <button (click)="handleCloseClick()" class="close-btn app-modal-close" title="Close">
         <app-icon name="times" size="16"></app-icon>
       </button>
     </div>
 
-    <div class="modal-body">
+    <div class="modal-body app-modal-body">
       <div *ngIf="isLoading" class="modal-loading-state" aria-live="polite">
         <div class="modal-loader" aria-hidden="true"></div>
         <p class="modal-loading-text">{{ loadingText }}</p>

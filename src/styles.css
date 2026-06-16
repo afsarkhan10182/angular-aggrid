@@ -49,6 +49,78 @@ body {
   color: var(--color-text-primary);
 }
 
+
+/* Shared application modal shell */
+.modal-container.app-modal-shell,
+.app-modal-shell {
+  background: white;
+  border-radius: 8px;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 90%;
+  max-width: 1200px;
+  height: 85vh;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 0;
+}
+
+.modal-header.app-modal-header,
+.app-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.modal-header.app-modal-header h3,
+.app-modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.close-button.app-modal-close,
+.close-btn.app-modal-close,
+.app-modal-close {
+  width: auto;
+  height: auto;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.close-button.app-modal-close:hover,
+.close-btn.app-modal-close:hover,
+.app-modal-close:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.modal-content.app-modal-body,
+.modal-body.app-modal-body,
+.app-modal-body {
+  flex: 1;
+  padding: 20px 24px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 /* -----------------------------------------------------------------------------
  * 02. App Shell
  * -------------------------------------------------------------------------- */
@@ -2828,9 +2900,12 @@ div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
   min-height: 360px;
 }
 
-.modal-shell-body {
-  padding: 20px 24px;
+.modal-container.app-modal-shell.modal-shell:not(.coo-analysis-modal) {
+  width: min(92vw, 980px);
+  height: auto;
+  min-height: 360px;
 }
+
 
 .modal-loading-state {
   display: flex;

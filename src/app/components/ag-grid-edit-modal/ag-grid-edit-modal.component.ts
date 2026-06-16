@@ -242,7 +242,6 @@ export class AgGridEditModalComponent implements OnInit, AfterViewInit, OnDestro
         this.mode === 'part' && field === FIELD_MATERIAL_SUPPLIER_COUNTRY_OF_ORIGIN;
       const selectableOptions = isChoiceDropdown ? definition.selectableOptions! : null;
       const choiceValues = selectableOptions ? Object.values(selectableOptions) : [];
-      const isDropdown = isServiceDropdown || isChoiceDropdown || isAsyncPartDropdown || isCountryDropdown;
       const isCompactColumnField = COMPACT_COLUMN_FIELDS.has(field);
       const isPartNumberField = field === FIELD_PART_NUMBER;
       const isDefaultColumn = defaultColumnFields?.has(field) ?? true;

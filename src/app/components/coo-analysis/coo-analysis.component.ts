@@ -167,13 +167,13 @@ export class CooAnalysisComponent implements OnInit, OnDestroy {
             this.clearExportPreparingTimeout();
             this.setExportMessage(MSG_EXPORT_EXCEL_SUCCESS, 'success');
           })
-          .catch((error) => {
+          .catch(() => {
             this.isExporting = false;
             this.clearExportPreparingTimeout();
             this.setExportMessage(MSG_EXPORT_EXCEL_ERROR, 'error');
           });
       },
-      error: (error) => {
+      error: () => {
         this.isExporting = false;
         this.clearExportPreparingTimeout();
         this.setExportMessage(MSG_EXPORT_EXCEL_ERROR, 'error');

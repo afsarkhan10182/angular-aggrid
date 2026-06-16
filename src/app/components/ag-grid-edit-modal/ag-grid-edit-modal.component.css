@@ -14,60 +14,6 @@
   pointer-events: auto;
 }
 
-.modal-container {
-  background: white;
-  border-radius: 8px;
-  box-shadow:
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  width: 90%;
-  max-width: 1200px;
-  height: 85vh; /* Fixed height for stable layout */
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-  color: #111827;
-}
-
-.close-btn {
-  background: transparent;
-  border: none;
-  font-size: 20px;
-  color: #6b7280;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-
-.close-btn:hover {
-  background: #e5e7eb;
-  color: #111827;
-}
-
-.modal-body {
-  flex: 1;
-  padding: 20px 24px;
-  overflow: hidden; /* Critical: prevents body from scrolling */
-  display: flex;
-  flex-direction: column;
-  min-height: 0; /* Critical: allows flex children to shrink */
-}
 
 .modal-loading-state {
   flex: 1;

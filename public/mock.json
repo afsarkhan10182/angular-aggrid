@@ -195,12 +195,13 @@
       "colorDimensionId": "638270",
       "sourceDimensionId": "637648",
       "destinationDimensionId": "638233",
-      "isHDSource": false,
+      "isHDSource": true,
       "isEditable": true,
       "materialColorPartNumber": ""
     }
   ],
   "bomType": "MBOM",
+  "bomFeatureFlexTypeName": "Business Object\\bomFeature\\mtb",
   "sectionDetails": {
     "enumSection001": "Fuselage",
     "enumSection002": "Cockpit",

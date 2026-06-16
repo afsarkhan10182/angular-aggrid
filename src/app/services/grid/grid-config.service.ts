@@ -316,9 +316,6 @@ export class GridConfigService {
       allowDragFromColumnsToolPanel: true,
       suppressRowVirtualisation: false,
       domLayout: 'normal',
-      quickFilterText: '',
-      includeHiddenColumnsInQuickFilter: false,
-      cacheQuickFilter: true,
       rowModelType: 'clientSide',
       navigateToNextCell: (params) => {
         return params.nextCellPosition;

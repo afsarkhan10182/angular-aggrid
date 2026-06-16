@@ -10,7 +10,6 @@ import {
   MASS_EDIT_DATE_END_FIELDS,
   MASS_EDIT_QUANTITY_FIELDS,
   MASS_EDIT_INCLUDE_IN_SPEC_SHEET_FIELDS,
-  FIELD_PART_NUMBER,
 } from '../constants';
 
 export interface MassEditState {
