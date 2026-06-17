@@ -172,24 +172,6 @@
   user-select: none;
 }
 
-/* Per-SKU disconnect (cross) in existing Product MBOM rows */
-:host ::ng-deep .sku-disconnect-btn {
-  margin-left: 8px;
-  background: #ef4444;
-  color: #ffffff;
-  border: none;
-  border-radius: 3px;
-  padding: 2px 6px;
-  cursor: pointer;
-  font-size: 12px;
-  line-height: 1;
-  transition: opacity 0.2s ease;
-}
-
-:host ::ng-deep .sku-disconnect-btn:hover {
-  opacity: 0.9;
-}
-
 .loading-spinner-container {
   position: absolute;
   top: 0;

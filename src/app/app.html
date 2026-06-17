@@ -137,6 +137,202 @@
         </div>
       </div>
 
+      @defer (on idle) {
+        <!-- Side Buttons Wrapper -->
+        <div class="side-buttons-wrapper">
+          <!-- Toggle Columns Button - Outside grid but visually integrated -->
+          <div class="grid-toggle-button-container" [class.panel-open]="showColumnVisibilityPanel">
+            <button
+              (click)="toggleColumnVisibility()"
+              class="grid-toggle-columns-btn"
+              title="Show/Hide Columns"
+              #toggleBtn
+            >
+              <div class="toggle-button-content">
+                <app-icon name="columns" size="14"></app-icon>
+                <span class="toggle-button-text">COLUMNS</span>
+              </div>
+            </button>
+          </div>
+
+          <!-- Group By Button - Outside grid but visually integrated -->
+          <div
+            class="grid-toggle-button-container group-by-container"
+            [class.panel-open]="showGroupByPanel"
+          >
+            <button
+              (click)="toggleGroupByPanel()"
+              class="grid-toggle-columns-btn"
+              [class.active]="activeGroupFields.length > 0"
+              title="Group By"
+              #groupByBtn
+            >
+              <div class="toggle-button-content">
+                <app-icon name="layer-group" size="14"></app-icon>
+                <span class="toggle-button-text">GROUP BY</span>
+                <span *ngIf="activeGroupFields.length > 0" class="group-count-badge">{{
+                  activeGroupFields.length
+                }}</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Column Visibility Panel - Positioned near grid toggle button -->
+        <div
+          *ngIf="showColumnVisibilityPanel"
+          class="grid-column-visibility-panel-container"
+          #columnPanel
+        >
+          <div
+            class="column-visibility-panel"
+            tabindex="-1"
+            (click)="$event.stopPropagation()"
+            (keydown.escape)="showColumnVisibilityPanel = false"
+            (focusout)="onVisibleColumnsPanelFocusOut($event)"
+          >
+            <div class="column-visibility-header">
+              <h4>Visible Columns</h4>
+              <div class="header-actions">
+                <button (click)="selectAllColumns()" class="select-all-btn">
+                  <app-icon name="check-square" size="14"></app-icon> Select All
+                </button>
+                <button (click)="clearAllColumns()" class="clear-all-btn">
+                  <app-icon name="square" size="14"></app-icon> Clear All
+                </button>
+                <button (click)="showColumnVisibilityPanel = false" class="close-panel-btn">
+                  <app-icon name="times" size="14"></app-icon>
+                </button>
+              </div>
+            </div>
+            <div
+              class="column-checkboxes"
+              #columnCheckboxes
+              (dragover)="onDragOver($event)"
+              (drop)="onDrop($event)"
+              (dragleave)="stopAutoScroll()"
+            >
+              <ng-container *ngFor="let col of getVisibleColumnsForPanel(); let i = index; trackBy: trackByColumnField">
+                <!-- Drop indicator line -->
+                <div
+                  *ngIf="dragOverIndex === i && draggedColumnIndex !== i && draggedColumnIndex < i"
+                  class="drop-indicator"
+                ></div>
+
+                <div
+                  *ngIf="col.field && !isSkuColumn(col) && !isFieldGrouped(col.field)"
+                  class="column-checkbox"
+                  [class.dragging]="draggedColumnIndex === i"
+                  [class.drag-over]="dragOverIndex === i && draggedColumnIndex !== i"
+                  draggable="true"
+                  (dragstart)="onDragStart($event, col, i)"
+                  (dragend)="onDragEnd($event)"
+                  (dragover)="onItemDragOver($event, i)"
+                  (dragleave)="onItemDragLeave($event)"
+                  (mousedown)="onColumnMouseDown($event)"
+                >
+                  <div class="drag-handle" title="Drag to reorder">
+                    <app-icon name="grip-vertical" size="14"></app-icon>
+                  </div>
+                  <label (mousedown)="$event.stopPropagation()">
+                    <input
+                      type="checkbox"
+                      [checked]="!col.hide"
+                      (change)="toggleColumnVisibility(col, $event)"
+                      (mousedown)="$event.stopPropagation()"
+                    />
+                    <span class="column-name" (mousedown)="$event.stopPropagation()">{{
+                      col.headerName
+                    }}</span>
+                  </label>
+                </div>
+
+                <!-- Drop indicator line -->
+                <div
+                  *ngIf="dragOverIndex === i && draggedColumnIndex !== i && draggedColumnIndex > i"
+                  class="drop-indicator"
+                ></div>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group By Panel - Positioned near group by button -->
+        <div
+          *ngIf="showGroupByPanel"
+          class="grid-column-visibility-panel-container group-by-panel"
+          #groupByPanel
+        >
+          <div
+            class="column-visibility-panel"
+            (click)="$event.stopPropagation()"
+            (keydown.escape)="showColumnVisibilityPanel = false"
+          >
+            <div class="column-visibility-header">
+              <h4>Group By</h4>
+              <button (click)="showGroupByPanel = false" class="close-panel-btn">
+                <app-icon name="times" size="14"></app-icon>
+              </button>
+            </div>
+
+            <!-- Active Groups -->
+            <div *ngIf="activeGroupFields.length > 0" class="active-groups-section">
+              <div class="active-groups-header">
+                <div class="section-title">Active Groups:</div>
+                <button (click)="clearAllGroups()" class="clear-all-groups-btn">
+                  <app-icon name="trash" size="14"></app-icon> Clear All
+                </button>
+              </div>
+              <div class="active-groups-list">
+                <div
+                  *ngFor="let group of activeGroupFields; let i = index"
+                  class="active-group-item"
+                >
+                  <span class="group-level-badge">{{ i + 1 }}</span>
+                  <span class="group-name">{{ group.headerName }}</span>
+                  <button (click)="removeGroupField(group)" class="remove-group-btn" title="Remove">
+                    <app-icon name="times" size="14"></app-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Available Fields -->
+            <div class="available-fields-section">
+              <div class="section-title">Group by Column:</div>
+              <div class="column-checkboxes">
+                <ng-container *ngFor="let field of availableGroupFields">
+                  <div class="column-checkbox" *ngIf="!isFieldGrouped(field.field)">
+                    <label>
+                      <input type="checkbox" [checked]="false" (change)="addGroupField(field)" />
+                      <span class="column-name">{{ field.headerName }}</span>
+                    </label>
+                  </div>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+        </div>
+      } @placeholder {
+        <div class="side-buttons-wrapper defer-placeholder">
+          <div class="grid-toggle-button-container">
+            <button class="grid-toggle-columns-btn" disabled>
+              <div class="toggle-button-content">
+                <app-icon name="columns" size="14"></app-icon>
+                <span class="toggle-button-text">COLUMNS</span>
+              </div>
+            </button>
+          </div>
+          <div class="grid-toggle-button-container group-by-container">
+            <button class="grid-toggle-columns-btn" disabled>
+              <div class="toggle-button-content">
+                <app-icon name="layer-group" size="14"></app-icon>
+                <span class="toggle-button-text">GROUP BY</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      }
     </div>
   </div>
 

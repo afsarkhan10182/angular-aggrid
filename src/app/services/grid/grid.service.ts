@@ -1161,27 +1161,11 @@ export class GridService {
     const value = params.value;
     if (!value && value !== 0) return '';
 
-    const skuField = params.colDef.field;
-    const isDisconnected =
-      typeof config.isSkuDisconnected === 'function' && config.isSkuDisconnected(data, skuField);
     const isHighlighted = config.shouldHighlightRow(data);
-    const isStruck = isDisconnected;
     const valueStr = String(value);
     const htmlValue = config.utilService.escapeHtml(valueStr).replaceAll('\n', '<br>');
-    const baseCanDisconnect = !config.isSkuFilterReadOnly();
-    const skuEditableForDisconnect =
-      typeof config.isSkuEditableForDisconnect !== 'function' || config.isSkuEditableForDisconnect(skuField);
-    const canDisconnect =
-      !isDisconnected &&
-      baseCanDisconnect &&
-      skuEditableForDisconnect &&
-      (typeof config.canDisconnectForRow !== 'function' || config.canDisconnectForRow(data));
 
-    if (data.isMaterialHeader || data.isDirectRow) {
-      return this.renderSkuCellWithDelete(htmlValue, isHighlighted, isStruck, skuField, canDisconnect, isDisconnected);
-    }
-
-    return this.renderSkuCellWithDelete(htmlValue, isHighlighted, isStruck, skuField, canDisconnect, isDisconnected);
+    return this.renderSkuCellDisplay(htmlValue, isHighlighted);
   }
 
   private renderNewRowSkuCellInternal(params: any, config: any): string {
@@ -1198,32 +1182,19 @@ export class GridService {
     return state === 'release' || state === 'released' || state.startsWith('release');
   }
 
-  private renderSkuCellWithDelete(
+  private renderSkuCellDisplay(
     htmlValue: string,
     isHighlighted: boolean,
-    isStruck: boolean,
-    skuField: string,
-    canDisconnect: boolean,
-    isDisconnected: boolean
   ): string {
-    const escapedSkuField = this.utilService.escapeHtml(skuField);
-    const actionBtn = canDisconnect
-      ? `<button type="button" class="sku-disconnect-btn" data-action="disconnect-sku" data-sku-field="${escapedSkuField}" title="Disconnect SKU">&#10005;</button>`
-      : isDisconnected
-        ? `<button type="button" class="sku-reconnect-btn" data-action="reconnect-sku" data-sku-field="${escapedSkuField}" title="Reconnect">&#8617;</button>`
-        : '';
-
     const textClasses = [
       'sku-cell-text',
       isHighlighted ? 'sku-cell-text-highlight' : '',
-      isStruck ? 'sku-cell-text-disconnected' : '',
     ]
       .filter(Boolean)
       .join(' ');
 
     return `<div class="sku-cell-display">
       <span class="${textClasses}">${htmlValue}</span>
-      ${actionBtn}
     </div>`;
   }
 }

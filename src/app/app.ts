@@ -44,8 +44,6 @@ import {
   COL_CHECKBOX,
   ENUM_MBOM_LINE_ITEM,
   FIELD_ACTIONS,
-  FIELD_BOM_LINK_SPEC_SHEET_EXTRA,
-  FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
   FIELD_BOM_LINK_START_DATE,
   FIELD_BOM_LINK_END_DATE,
   FIELD_BOM_LINK_FEATURE,
@@ -76,10 +74,6 @@ import type {
 const PART_NUMBER_EDIT_FIELDS = new Set<string>([FIELD_BOM_LINK_PART, FIELD_PART_NUMBER]);
 const MATERIAL_CLICK_FIELDS = new Set<string>([FIELD_MATERIAL, FIELD_MATERIAL_DESCRIPTION]);
 const DATE_EDIT_FIELDS = new Set<string>([FIELD_BOM_LINK_START_DATE, FIELD_BOM_LINK_END_DATE]);
-const SPEC_SHEET_EDIT_FIELDS = new Set<string>([
-  FIELD_BOM_LINK_SPEC_SHEET_EXTRA,
-  FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
-]);
 const MAX_BOM_LINK_LOAD_ROWS = 1000;
 
 @Component({
@@ -146,18 +140,11 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   private readonly editedFields = new Map<string | number, Set<string>>();
   public readonly invalidRowIds = new Set<string | number>();
   public readonly selectedRows = new Set<any>();
+  public hasDisconnectEdits = false;
+  public disconnectedSkuKeys = new Set<string>();
+  public showDisconnectedSkusPanel = false;
 
-  /** True when user disconnected one or more SKUs (single or bulk); payload will send disconnect: true. Cleared on successful save. */
-  public hasDisconnectEdits: boolean = false;
-
-  /** Keys 'rowId|skuField' for SKUs marked disconnected (shown strikethrough until save). Cleared on successful save. */
-  public disconnectedSkuKeys: Set<string> = new Set<string>();
-
-  /** When false, the disconnected SKUs panel is hidden (user closed it). Re-shown when new disconnects are added. */
-  public showDisconnectedSkusPanel = true;
-
-  /** True when disconnected SKUs panel is visible (same layout impact as mass edit for grid height). */
-  get hasDisconnectedSkusPanelVisible(): boolean {
+  public get hasDisconnectedSkusPanelVisible(): boolean {
     return false;
   }
 
@@ -566,9 +553,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       getCellTooltipValue: (params) => this.getCellTooltipValue(params),
       isFieldEditable: (field, params) => this.isFieldEditable(field, params),
       clearAutopopulateFieldsForRow: (data) => this.clearAutopopulateFieldsForRow(data),
-      canDisconnectForRow: (data) => this.canDisconnectForRow(data),
-      isSkuDisconnected: (row, skuField) => this.isSkuDisconnected(row, skuField),
-      isSkuEditableForDisconnect: (skuField) => this.isSkuEditableForDisconnect(skuField),
     });
     this.applyActionsColumnWidth(this.actionsColumnWidth);
 
@@ -1361,8 +1345,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
     if (this.handlePastePartButton(event, target, isReadOnlySkuFilter)) return;
     if (this.handleDeleteButton(event, target, isReadOnlySkuFilter)) return;
-    if (this.handleDisconnectButton(event, target, isReadOnlySkuFilter)) return;
-    if (this.handleReconnectButton(event, target, isReadOnlySkuFilter)) return;
 
     const clickedField = event.colDef?.field as string | undefined;
 
@@ -1504,32 +1486,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     return true;
   }
 
-  private handleDisconnectButton(event: any, target: HTMLElement, isReadOnlySkuFilter: boolean): boolean {
-    const disconnectButton = target?.closest('[data-action="disconnect-sku"]');
-    if (!(disconnectButton instanceof HTMLElement)) return false;
-
-    if (isReadOnlySkuFilter) {
-      return true;
-    }
-    const skuField = disconnectButton.dataset['skuField'];
-    if (skuField && event.data && this.canDisconnectForRow(event.data)) {
-      this.disconnectPartFromSku(event.data, skuField, event.event);
-    }
-    return true;
-  }
-
-  private handleReconnectButton(event: any, target: HTMLElement, isReadOnlySkuFilter: boolean): boolean {
-    const reconnectButton = target?.closest('[data-action="reconnect-sku"]');
-    if (!(reconnectButton instanceof HTMLElement)) return false;
-
-    if (isReadOnlySkuFilter) return true;
-    const skuField = reconnectButton.dataset['skuField'];
-    if (skuField && event.data) {
-      this.reconnectPartFromSku(event.data, skuField, event.event);
-    }
-    return true;
-  }
-
   private handleEditableCellClick(event: any, isReadOnlySkuFilter: boolean): void {
     if (!event.data || event.data.isSectionHeader) return;
 
@@ -1575,8 +1531,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     return DATE_EDIT_FIELDS.has(field);
   }
 
-  private isSpecSheetEditField(field: string): boolean {
-    return SPEC_SHEET_EDIT_FIELDS.has(field);
+  private isSpecSheetEditField(_field: string): boolean {
+    return false;
   }
 
   private handleActionsColumnClick(event: any): void {
@@ -2512,158 +2468,26 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  disconnectPartFromSku(rowData: any, skuField: string, event?: any): void {
-    if (!rowData || !skuField || !this.gridApi) return;
-    if (this.isSkuFilterReadOnly() || !this.canDisconnectForRow(rowData)) return;
-    if (!this.isSkuEditableForDisconnect(skuField)) return;
-
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-
-    this.hasDisconnectEdits = true;
-    this.showDisconnectedSkusPanel = true;
-    this.disconnectedSkuKeys.add(this.getDisconnectedKey(rowData, skuField));
-    const rowId = this.utilService.getRowId(rowData);
-    if (rowId) this.editedRows.add(rowId);
-
-    const targetNode = this.utilService.findNodeByDataReference(this.gridApi, rowData);
-    if (targetNode) {
-      this.gridApi.refreshCells({
-        rowNodes: [targetNode],
-        columns: [skuField],
-        force: true,
-      });
-    }
+  disconnectPartFromSku(_rowData: any, _skuField: string, event?: any): void {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
   }
 
-  /**
-   * When reconnecting, if this row has no other disconnects and no other edited fields,
-   * clear it from editedRows/editedFields and invalidRowIds so Save can become disabled and validation is cleared.
-   */
-  private clearRowEditStateIfReverted(rowId: string | number, row?: any): void {
-    this.rowManagementService.clearRowEditStateIfReverted({
-      rowId,
-      row,
-      disconnectedSkuKeys: this.disconnectedSkuKeys,
-      editedRows: this.editedRows,
-      editedFields: this.editedFields,
-      invalidRowIds: this.invalidRowIds,
-      getDisconnectRowToken: (r) => this.getDisconnectRowToken(r),
-    });
+  canDisconnectForRow(_row: any): boolean {
+    return false;
   }
 
-  /** Revert a disconnect: remove from disconnectedSkuKeys so the SKU is no longer marked for disconnect on save. */
-  reconnectPartFromSku(rowData: any, skuField: string, event?: any): void {
-    if (!rowData || !skuField || !this.gridApi) return;
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    const key = this.getDisconnectedKey(rowData, skuField);
-    if (!this.disconnectedSkuKeys.has(key)) return;
-
-    this.disconnectedSkuKeys.delete(key);
-    if (this.disconnectedSkuKeys.size === 0) this.hasDisconnectEdits = false;
-
-    const rowId = this.utilService.getRowId(rowData);
-    if (rowId !== null) {
-      this.clearRowEditStateIfReverted(rowId, rowData);
-    }
-
-    const targetNode = this.utilService.findNodeByDataReference(this.gridApi, rowData);
-    if (targetNode) {
-      this.gridApi.refreshCells({
-        rowNodes: [targetNode],
-        columns: [skuField, ...COLUMNS_REFRESH_ACTIONS],
-        force: true,
-      });
-    }
+  getDisconnectedKey(_row: any, _skuField: string): string {
+    return '';
   }
 
-  /** Revert one disconnected SKU from the panel item. */
-  reconnectSkuFromPanel(
-    item: { key: string; row?: any; skuField?: string },
-    event?: Event
-  ): void {
-    event?.preventDefault();
-    event?.stopPropagation();
-
-    const panelKey = String(item?.key || '');
-    if (!panelKey) return;
-
-    const wasDeleted = this.disconnectedSkuKeys.delete(panelKey);
-    if (!wasDeleted) return;
-
-    if (this.disconnectedSkuKeys.size === 0) {
-      this.hasDisconnectEdits = false;
-    }
-
-    const row = item?.row;
-    const skuField = item?.skuField;
-    const rowId = this.utilService.getRowId(row);
-    if (rowId !== undefined && rowId !== null && String(rowId).trim() !== '') {
-      this.clearRowEditStateIfReverted(rowId, row);
-    }
-
-    if (this.gridApi && skuField) {
-      this.gridApi.refreshCells({
-        columns: [skuField, ...COLUMNS_REFRESH_ACTIONS],
-        force: true,
-      });
-    }
-  }
-
-  /**
-   * Row is eligible for disconnect only in Product MBOM: not read-only, existing row (not new),
-   * not MBOM line item, and SpecSheet Extra is Yes.
-   */
-  canDisconnectForRow(row: any): boolean {
-    if (!row || this.isSkuFilterReadOnly() || !this.isNonProductMbomMode()) return false;
-    if (row.isNewRow) return false;
-    if (row.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM) return false;
-    const specSheetExtra = String(row[FIELD_BOM_LINK_SPEC_SHEET_EXTRA] ?? '').trim();
-    return specSheetExtra === VALUE_SPEC_YES;
-  }
-
-  /** Key for disconnectedSkuKeys: rowId|skuField. Used for strikethrough and payload. */
-  private getDisconnectRowToken(row: any): string {
-    return this.utilService.getStableRowToken(row);
-  }
-
-  /** Key for disconnectedSkuKeys: rowToken|skuField. Used for strikethrough and payload. */
-  getDisconnectedKey(row: any, skuField: string): string {
-    return this.skuService.buildDisconnectedKey(this.getDisconnectRowToken(row), skuField);
-  }
-
-  isSkuDisconnected(row: any, skuField: string): boolean {
-    return this.disconnectedSkuKeys.has(this.getDisconnectedKey(row, skuField));
-  }
-
-  /** True if SKU (from skuInfo) has isEditable === true; only then show disconnect cross and allow disconnect action. */
-  isSkuEditableForDisconnect(skuField: string): boolean {
-    return this.skuService.isSkuEditableForDisconnect(this.getFilteredSkuInfo(), skuField);
+  isSkuEditableForDisconnect(_skuField: string): boolean {
+    return false;
   }
 
   /** For tooltip: list of SKU names/labels that have values in this row. */
   getConnectedSkuLabelsForRow(row: any): string[] {
     return this.skuService.getConnectedSkuLabelsForRow(row, this.getFilteredSkuInfo());
-  }
-
-  closeDisconnectedSkusPanel(): void {
-    this.showDisconnectedSkusPanel = false;
-  }
-
-  /** List of disconnected SKUs for the panel: part, skuId, and reconnect metadata. */
-  getDisconnectedSkuList(): { part: string; skuId: string; key: string; row: any; skuField: string }[] {
-    return this.skuService.getDisconnectedSkuList({
-      gridApi: this.gridApi,
-      skuInfo: this.getFilteredSkuInfo(),
-      disconnectedSkuKeys: this.disconnectedSkuKeys,
-      getDisconnectedKey: (row, skuField) => this.getDisconnectedKey(row, skuField),
-      isEligibleRow: (row) => !!row && (row.isDirectRow || row.isSubRow || row.isNewRow),
-    });
   }
 
   ngOnDestroy(): void {

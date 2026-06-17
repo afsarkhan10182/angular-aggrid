@@ -11,16 +11,11 @@ import {
   FIELD_BOM_LINK_FEATURE,
   FIELD_BOM_LINK_PART,
   FIELD_BOM_LINK_COUNTRY_OF_ORIGIN,
-  FIELD_BOM_LINK_SPEC_SHEET_EXTRA,
-  FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
   FIELD_BOM_LINK_START_DATE,
   FIELD_BOM_LINK_END_DATE,
   FIELD_PART_NUMBER,
   FIELD_MATERIAL,
   FIELD_MATERIAL_DESCRIPTION,
-  FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE,
-  FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_TWO,
-  FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT,
   FIELD_QUANTITY,
   FIELD_SUPPLIER,
   FIELD_COLOR,
@@ -46,9 +41,6 @@ export interface GridColumnsBuildContext {
   getCellTooltipValue: (params: any) => string | null;
   isFieldEditable: (field: string, params: any) => boolean;
   clearAutopopulateFieldsForRow: (data: any) => void;
-  canDisconnectForRow: (data: any) => boolean;
-  isSkuDisconnected: (row: any, skuField: string) => boolean;
-  isSkuEditableForDisconnect: (skuField: string) => boolean;
 }
 
 export interface CollectNewRowsForGroupingConfig {
@@ -143,41 +135,6 @@ export class GridColumnsService {
             },
           }),
         }),
-      [FIELD_BOM_LINK_SPEC_SHEET_EXTRA]: () =>
-        this.createAutocompleteColumn({
-          headerName: columnMapping[FIELD_BOM_LINK_SPEC_SHEET_EXTRA],
-          field: FIELD_BOM_LINK_SPEC_SHEET_EXTRA,
-          width: 150,
-          minWidth: 100,
-          context,
-          cellEditor: AutocompleteCellEditorComponent,
-          cellEditorParams: {
-            values: ['', 'Yes', 'No'],
-            placeholder: 'Select...',
-            filterFunction: (searchValue: string, options: string[]) => {
-              if (!searchValue) return options;
-              const lower = searchValue.toLowerCase();
-              return options.filter((opt) => opt.toLowerCase().includes(lower));
-            },
-          },
-        }),
-      [FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET]: () =>
-        this.createAutocompleteColumn({
-          headerName: columnMapping[FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET],
-          field: FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
-          width: 150,
-          minWidth: 100,
-          context,
-          cellEditor: AutocompleteCellEditorComponent,
-          cellEditorParams: () => {
-            const values = ['', ...this.dataService.getIncludeInSpecSheetOptions(context.constraintsData)];
-            return {
-              values,
-              placeholder: 'Select...',
-              filterFunction: this.utilService.createAutocompleteFilter(),
-            };
-          },
-        }),
     };
 
     Object.keys(columnMapping).forEach((field) => {
@@ -208,9 +165,6 @@ export class GridColumnsService {
       const fieldCustomizers: Partial<Record<string, () => void>> = {
         [FIELD_BOM_LINK_PART]: () => this.configurePartNumberColumn(columnDef, context),
         [FIELD_PART_NUMBER]: () => this.configurePartNumberColumn(columnDef, context),
-        [FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE]: () => this.configureServiceSearchColumn(columnDef),
-        [FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_TWO]: () => this.configureServiceSearchColumn(columnDef),
-        [FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT]: () => this.configureServiceSearchColumn(columnDef),
         [FIELD_MATERIAL]: () => this.configureMaterialSearchColumn(columnDef),
         [FIELD_MATERIAL_DESCRIPTION]: () => this.configureMaterialSearchColumn(columnDef),
         [FIELD_QUANTITY]: () => this.configureQuantityColumn(columnDef, field, context),
@@ -234,9 +188,6 @@ export class GridColumnsService {
       isNonProductMbomMode: () => context.isNonProductMbomMode(),
       isProductMbomOnlyMode: () => context.isProductMbomOnlyMode(),
       isMaterialMbomMode: () => context.isMaterialMbomMode(),
-      canDisconnectForRow: (data) => context.canDisconnectForRow(data),
-      isSkuDisconnected: (row, skuField) => context.isSkuDisconnected(row, skuField),
-      isSkuEditableForDisconnect: (skuField) => context.isSkuEditableForDisconnect(skuField),
       getDataCellStyle: (params) => context.getDataCellStyle(params),
       getFeatureValue: (data) => context.getFeatureValue(data),
       renderHierarchicalCell: () => '',
