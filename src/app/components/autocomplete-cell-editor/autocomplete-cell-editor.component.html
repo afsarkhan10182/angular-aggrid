@@ -1,0 +1,76 @@
+<div class="autocomplete-container">
+  <input
+    #input
+    type="text"
+    [(ngModel)]="value"
+    (input)="onInputChange($event)"
+    (keydown)="onKeyDown($event)"
+    (blur)="onBlur()"
+    (click)="onInputClick()"
+    (focus)="onInputFocus()"
+    [placeholder]="placeholder"
+    class="autocomplete-input"
+  />
+  <div
+    *ngIf="showDropdown && filteredOptions.length > 0"
+    class="autocomplete-dropdown"
+    #dropdown
+    (click)="$event.stopPropagation()"
+    (scroll)="onDropdownScroll($event)"
+  >
+    <div class="dropdown-header">
+      {{
+        isMaterialSearch
+          ? 'Select material'
+          : isPartNumberSearch
+          ? 'Select part number'
+          : 'Select option'
+      }}
+      @if (isMaterialSearch || isPartNumberSearch) {
+        ({{ totalResultCount }} available)
+      } @else {
+        ({{ filteredOptions.length }} available)
+      }
+    </div>
+    <div
+      *ngFor="let option of filteredOptions; let i = index"
+      [class.selected]="i === selectedIndex"
+      class="dropdown-option"
+      (click)="selectOption(option, i); $event.stopPropagation()"
+      (mouseenter)="selectedIndex = i"
+    >
+      <div
+        *ngIf="(isMaterialSearch || isPartNumberSearch) && filteredMaterialOptions[i]"
+        class="material-option"
+      >
+        <div class="material-name">{{ option }}</div>
+        <div class="material-details" *ngIf="isMaterialSearch">
+          <div *ngIf="filteredMaterialOptions[i].supplier" class="detail-line">
+            supplier: {{ filteredMaterialOptions[i].supplier }}
+          </div>
+          <div *ngIf="filteredMaterialOptions[i].color" class="detail-line">
+            color: {{ filteredMaterialOptions[i].color }}
+          </div>
+        </div>
+        <div class="material-details" *ngIf="isPartNumberSearch">
+          <div *ngIf="filteredMaterialOptions[i].material" class="detail-line">
+            Material: {{ filteredMaterialOptions[i].material }}
+          </div>
+          <div *ngIf="filteredMaterialOptions[i].supplier" class="detail-line">
+            Supplier: {{ filteredMaterialOptions[i].supplier }}
+          </div>
+          <div *ngIf="filteredMaterialOptions[i].color" class="detail-line">
+            Color: {{ filteredMaterialOptions[i].color }}
+          </div>
+          <div *ngIf="filteredMaterialOptions[i].ptcmaterialName" class="detail-line">
+            Material: {{ filteredMaterialOptions[i].ptcmaterialName }}
+          </div>
+        </div>
+      </div>
+      <div *ngIf="!isMaterialSearch && !isPartNumberSearch">
+        {{ option }}
+      </div>
+    </div>
+    <div *ngIf="isLoadingMore" class="dropdown-loading">Loading more...</div>
+  </div>
+</div>

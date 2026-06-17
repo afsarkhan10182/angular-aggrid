@@ -1,10 +1,56 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
 import { App } from './app/app';
-import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
+import {
+  ModuleRegistry,
+  ClientSideRowModelModule,
+  ClientSideRowModelApiModule,
+  RowSelectionModule,
+  TextFilterModule,
+  NumberFilterModule,
+  DateFilterModule,
+  CustomEditorModule,
+  TextEditorModule,
+  NumberEditorModule,
+  DateEditorModule,
+  ColumnAutoSizeModule,
+  ColumnApiModule,
+  RowApiModule,
+  RenderApiModule,
+  ScrollApiModule,
+  CellStyleModule,
+  RowStyleModule,
+  TooltipModule,
+  HighlightChangesModule,
+} from 'ag-grid-community';
+import { environment } from './environments/environment';
 
-// Register AG Grid modules
-ModuleRegistry.registerModules([AllCommunityModule]);
+// Register only required AG Grid modules for better tree-shaking.
+ModuleRegistry.registerModules([
+  ClientSideRowModelModule,
+  ClientSideRowModelApiModule,
+  RowSelectionModule,
+  TextFilterModule,
+  NumberFilterModule,
+  DateFilterModule,
+  CustomEditorModule,
+  TextEditorModule,
+  NumberEditorModule,
+  DateEditorModule,
+  ColumnAutoSizeModule,
+  ColumnApiModule,
+  RowApiModule,
+  RenderApiModule,
+  ScrollApiModule,
+  CellStyleModule,
+  RowStyleModule,
+  TooltipModule,
+  HighlightChangesModule,
+]);
 
-bootstrapApplication(App, appConfig)
-  .catch((err) => console.error(err));
+bootstrapApplication(App, appConfig).catch((err) => {
+  // Application bootstrap error - handle silently in production
+  if (!environment.production) {
+    throw err;
+  }
+});

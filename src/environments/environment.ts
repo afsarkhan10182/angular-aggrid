@@ -4,23 +4,25 @@
 
 export const environment = {
   production: false,
-  baseHref: '/',
-  apiUrl: '/api',
   csrfUrl: '/Windchill/servlet/rest/security/csrf',
-  dataApiPath: '/mock.json',
-  serverHostUrl: '',
-  // Development credentials for mock API validation
+  getUserUrl: '/Windchill/servlet/rest/trek/getUserDetails',
+  dataApiPath: '/Windchill/servlet/rest/trek/bomlink',
   credentials: {
-    username: 'test',
-    password: 'test',
+    username: 'wcadmin',
+    password: 'wcadmin',
   },
-  enableHttpBasicAuth: true,
-  appKey: '',
-  enableThingworx: false,
-  isLoggerEnable: false,
-  // Mock API configuration for development
-  useMockApi: true,
+  enableHttpBasicAuth: false,
+  useMockApi: false,
   mockApiEndpoints: {
     csrf: '/api/csrf.json',
+    getUser: '/api/getUser.json',
+    material: '/api/material.json',
+    bomFeatures: '/api/feature.json',
+    saveBomLinks: '/api/updateBom',
+    complexMaterial: '/api/materialmodal.json',
+    includeInSpecSheet: '/api/IncludeInSpecSheet.json',
+    /** Single source for material-colors search: part search, material search, and search by IDs (same response structure). */
+    materialColorsSearch: '/api/serviceDataModal.json',
+    partEditSearch: '/api/parts-edit.json',
   },
 };

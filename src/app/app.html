@@ -1,167 +1,173 @@
-<!-- Router outlet for SBOM component -->
-<router-outlet *ngIf="router.url === '/sbom'"></router-outlet>
-
-<!-- Main Grid View -->
-<div class="app-container" *ngIf="router.url !== '/sbom'">
+<div class="app-container" [class.edit-panel-active]="hasDisconnectedSkusPanelVisible">
   <!-- Header -->
   <div class="app-header">
-    <h2>MBOM</h2>
-    <button class="nav-button" style="display:flex;" (click)="goToSbom()">
-      <span>Go to SBOM →</span>
-    </button>
+    <div class="header-left">
+      <div class="criteria-display">
+        <strong>{{ getCriteriaLabel() }}</strong>
+        <span [title]="bomNamesFull">{{ bomNamesDisplay }}</span>
+      </div>
+    </div>
+    <h2>
+      <span>{{ getBomComposerTitle() }}</span>
+    </h2>
+    <div class="header-right">
+      <!-- User info display -->
+      <div class="user-info" *ngIf="currentUser">
+        <app-icon name="user" size="16"></app-icon>
+        <span class="username">{{ currentUser.fullName || currentUser.name }}</span>
+      </div>
+    </div>
   </div>
 
-      <!-- Controls Section -->
-    <div class="controls-section">
-      <!-- Criteria Display and Controls -->
-      <div class="controls-row">
-        <!-- Left Group: Criteria and Search -->
-        <div class="left-controls-group">
-          <div class="criteria-display">
-            <strong>Criteria:</strong> Parts of SKUs chosen - {{ dataService.getProductInfo()?.productId || '100690' }}
-          </div>
-          <div class="search-filter-section">
-            <div class="search-filter-container">
-              <div class="search-input-wrapper">
-                <i class="fas fa-search search-icon"></i>
-                <input 
-                  type="text" 
-                  class="search-input"
-                  placeholder="Search All Columns"
-                  [(ngModel)]="searchText"
-                  (input)="onSearchTextChange()"
-                  (keyup.enter)="applyQuickFilter()"
-                  #searchInput>
-                <button 
-                  *ngIf="searchText" 
-                  class="clear-search-btn"
-                  (click)="clearSearch()"
-                  title="Clear search">
-                  <i class="fas fa-times"></i>
-                </button>
-              </div>
-              <button 
-                class="search-filter-btn"
-                (click)="applyQuickFilter()"
-                [disabled]="!searchText"
-                title="Apply filter">
-                <i class="fas fa-filter"></i>
-                Filter
+  <!-- Controls Section -->
+  <div class="controls-section">
+    <!-- Criteria Display and Controls -->
+    <div class="controls-row">
+      <!-- Left Group: Criteria and Search -->
+      <div class="left-controls-group">
+        <div class="search-filter-section">
+          <div class="search-filter-container">
+            <div class="search-input-wrapper">
+              <input
+                type="text"
+                class="search-input"
+                placeholder="Search All Columns"
+                [(ngModel)]="searchText"
+                (input)="onSearchTextChange()"
+                (keyup.enter)="applyGridSearch()"
+                #searchInput
+              />
+              <button
+                *ngIf="searchText"
+                class="clear-search-btn"
+                (click)="clearSearch()"
+                title="Clear search"
+              >
+                <app-icon name="times" size="14"></app-icon>
               </button>
             </div>
-          </div>
-        </div>
-
-        <!-- Right Group: Show Expired, Last Saved, and Save -->
-        <div class="right-controls-group">
-          <div class="toggle-switch-container">
-            <span class="toggle-text">Show Expired:</span>
-            <span class="expired-count" *ngIf="showExpiredData && expiredDataCount > 0">{{ expiredDataCount }}</span>
-            <label class="toggle-switch">
-              <input type="checkbox" [(ngModel)]="showExpiredData" (change)="toggleExpiredData()">
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-          <div class="save-section">
-            <!-- Last Saved Display -->
-            <div class="last-saved-display">
-              <i class="fas fa-clock"></i>
-              <span class="last-saved-text">
-                {{ lastSavedAt ? 'Last Saved: ' + formatLastSavedTime(lastSavedAt) : 'No saves yet' }}
-              </span>
-            </div>
-            <!-- Save Changes Button -->
-            <button 
-              (click)="saveChanges()" 
-              class="save-changes-btn"
-              [disabled]="editedRows.size === 0">
-              <i class="fas fa-save"></i> Save ({{ editedRows.size }})
+            <button
+              class="search-filter-btn"
+              (click)="applyGridSearch()"
+              [disabled]="!searchText"
+              title="Search"
+            >
+              <app-icon name="search" size="14"></app-icon>
             </button>
           </div>
         </div>
       </div>
-    
+
+      <!-- Right Group: Show Expired, Last Saved, and Save -->
+      <div class="right-controls-group">
+        <div class="toggle-switch-container" *ngIf="shouldShowExpiredToggle()">
+          <label class="toggle-switch">
+            <span class="toggle-text">Show Expired:</span>
+            <input
+              type="checkbox"
+              id="show-expired-toggle"
+              [(ngModel)]="showExpiredData"
+              (change)="toggleExpiredData()"
+            />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="save-section">
+          <!-- Last Saved Display -->
+          <div class="last-saved-display">
+            <app-icon name="clock" size="14"></app-icon>
+            <span class="last-saved-text">
+              {{ getLastSavedText() }}
+            </span>
+          </div>
+          <!-- Save Changes Button -->
+          <button
+            (click)="saveChanges()"
+            class="save-changes-btn"
+            [disabled]="editedRows.size === 0 || isSaving || isSkuFilterReadOnly()"
+            [title]="getSaveButtonTooltip()"
+          >
+            <ng-container *ngIf="!isSaving; else savingTpl">
+              <app-icon name="save" size="14"></app-icon>
+              <span>Save</span>
+            </ng-container>
+            <ng-template #savingTpl>
+              <span class="btn-inline-spinner" aria-hidden="true"></span>
+              <span>Saving</span>
+            </ng-template>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Save Status Message -->
     <div *ngIf="saveMessage" class="save-message" [class]="saveMessageType">
       <span class="save-message-text">{{ saveMessage }}</span>
-      <button (click)="clearSaveMessage()" class="save-message-close">
-        <i class="fas fa-times"></i>
+      <button (click)="clearSaveMessage()" class="save-message-close" title="Close">
+        <span class="close-icon-text">×</span>
       </button>
     </div>
-    
-  <!-- AG Grid with Toggle Button Container -->
-  <div class="ag-grid-section">
-    <!-- AG Grid Container -->
-    <div class="ag-grid-container-wrapper">
-      <div class="ag-grid-container">
-        <ag-grid-angular 
-          style="width: 100%; height: 700px; min-width: 100%;" 
-          class="ag-theme-alpine"
-          [gridOptions]="gridOptions"
-          [columnDefs]="columnDefs" 
-          [defaultColDef]="defaultColDef" 
-          [rowData]="rowData"
-          (gridReady)="onGridReady($event)"
-          (cellClicked)="onCellClicked($event)">
-        </ag-grid-angular>
-      </div>
-    </div>
-    
-    <!-- Toggle Columns Button - Outside grid but visually integrated -->
-    <div class="grid-toggle-button-container" [class.panel-open]="showColumnVisibilityPanel">
-      <button (click)="toggleColumnVisibility()" class="grid-toggle-columns-btn" title="Show/Hide Columns">
-        <div class="toggle-button-content">
-          <i class="fas fa-columns"></i>
-          <span class="toggle-button-text">COLUMNS</span>
-        </div>
-      </button>
-    </div>
-    
-    <!-- Column Visibility Panel - Positioned near grid toggle button -->
-    <div *ngIf="showColumnVisibilityPanel" class="grid-column-visibility-panel-container">
-      <div class="column-visibility-panel" (click)="$event.stopPropagation()">
-        <div class="column-visibility-header">
-          <h4>Visible Columns</h4>
-          <button (click)="showColumnVisibilityPanel = false" class="close-panel-btn">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <div class="column-checkboxes">
-          <!-- Select All Checkbox -->
-          <!-- <div class="column-checkbox select-all-checkbox">
-            <label>
-              <input type="checkbox" 
-                     [checked]="selectAllState === true"
-                     [indeterminate]="selectAllState === null"
-                     (change)="toggleSelectAll($event)">
-              <span class="column-name select-all-text"><strong>Select All</strong></span>
-            </label>
-          </div> -->
-          
-          <!-- Divider -->
-          <!-- <div class="column-divider"></div> -->
-          
-          <!-- Individual Column Checkboxes -->
-          <ng-container *ngFor="let col of allColumns">
-            <div *ngIf="!isSkuColumn(col)" class="column-checkbox">
-              <label>
-                <input type="checkbox" 
-                       [checked]="!col.hide" 
-                       (change)="toggleColumnVisibility(col, $event)">
-                <span class="column-name">{{ col.headerName }}</span>
-              </label>
-            </div>
-          </ng-container>
+
+    <!-- AG Grid with Toggle Button Container -->
+    <div class="ag-grid-section">
+      <!-- Loading Spinner -->
+      <div *ngIf="isLoading" class="loading-spinner-container">
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+          <p>Loading data...</p>
         </div>
       </div>
+
+      <!-- AG Grid Container -->
+      <div class="ag-grid-container-wrapper" [class.loading]="isLoading">
+        <div class="ag-grid-container">
+          <ag-grid-angular
+            style="width: 100%"
+            [style.height]="gridViewportHeight"
+            class="ag-theme-alpine"
+            [gridOptions]="gridOptions"
+            [columnDefs]="columnDefs"
+            [defaultColDef]="defaultColDef"
+            [rowData]="displayData"
+            (gridReady)="onGridReady($event)"
+            (cellClicked)="onCellClicked($event)"
+            (selectionChanged)="onSelectionChanged($event)"
+          >
+          </ag-grid-angular>
+        </div>
+      </div>
+
     </div>
   </div>
-</div>
 
-<!-- Part Detail Modal -->
-<app-part-modal 
-  *ngIf="showPartModal"
-  [partData]="selectedPartData"
-  [skuData]="selectedPartSkuData"
-  (close)="closePartModal()">
-</app-part-modal>
+  <!-- Linked BOM Modal -->
+  @if (showLinkedBomModal) {
+    @defer (when showLinkedBomModal) {
+      <app-linked-bom-modal
+        [partData]="selectedLinkedBomData"
+        [skuData]="selectedLinkedBomSkuData"
+        [isLoading]="isLinkedBomLoading"
+        (modalClose)="closeLinkedBomModal()"
+      >
+      </app-linked-bom-modal>
+    } @loading {
+      <div class="modal-overlay" (click)="closeLinkedBomModal()">
+        <div class="modal-container app-modal-shell modal-shell" (click)="$event.stopPropagation()">
+          <div class="modal-header app-modal-header">
+            <h3>Linked BOM</h3>
+            <button class="close-button app-modal-close" (click)="closeLinkedBomModal()" aria-label="Close">
+              <app-icon name="times" size="14"></app-icon>
+            </button>
+          </div>
+          <div class="modal-content app-modal-body">
+            <div class="modal-loading-state">
+              <div class="modal-loader" aria-hidden="true"></div>
+              <p class="modal-loading-text">Opening linked BOM...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  }
+
+</div>

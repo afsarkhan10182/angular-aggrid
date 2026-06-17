@@ -1,75 +1,266 @@
+@import 'ag-grid-community/styles/ag-grid.css';
+@import 'ag-grid-community/styles/ag-theme-alpine.css';
 
-@import "ag-grid-community/styles/ag-grid.css";
-@import "ag-grid-community/styles/ag-theme-alpine.css";
+/* -----------------------------------------------------------------------------
+ * 00. Design Tokens
+ * -------------------------------------------------------------------------- */
+:root {
+  --app-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --color-bg-page: #f8fafc;
+  --color-bg-surface: #ffffff;
+  --color-bg-surface-alt: #f1f5f9;
+  --color-border-subtle: #e2e8f0;
+  --color-border-muted: #cbd5e1;
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #374151;
+  --color-text-muted: #64748b;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-raised: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --transition-standard: all 0.2s ease;
+}
 
-/* Basic reset */
-* { 
+/* -----------------------------------------------------------------------------
+ * 01. Global Reset & Base
+ * -------------------------------------------------------------------------- */
+* {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+html,
 body {
-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-margin: 0;
-padding: 0;
-background-color: #f8fafc;
-color: #1e293b;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
-/* App layout - Professional spacing */
+app-root {
+  display: block;
+  height: 100%;
+}
+
+body {
+  font-family: var(--app-font-family);
+  background-color: var(--color-bg-page);
+  color: var(--color-text-primary);
+}
+
+
+/* Shared application modal shell */
+.modal-container.app-modal-shell,
+.app-modal-shell {
+  background: white;
+  border-radius: 8px;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 90%;
+  max-width: 1200px;
+  height: 85vh;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 0;
+}
+
+.modal-header.app-modal-header,
+.app-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.modal-header.app-modal-header h3,
+.app-modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.close-button.app-modal-close,
+.close-btn.app-modal-close,
+.app-modal-close {
+  width: auto;
+  height: auto;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.close-button.app-modal-close:hover,
+.close-btn.app-modal-close:hover,
+.app-modal-close:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.modal-content.app-modal-body,
+.modal-body.app-modal-body,
+.app-modal-body {
+  flex: 1;
+  padding: 20px 24px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* -----------------------------------------------------------------------------
+ * 02. App Shell
+ * -------------------------------------------------------------------------- */
 .app-container {
   max-width: 1600px;
   margin: 0 auto;
   padding: 20px;
-  background: white;
-  min-height: 100vh;
+  background: var(--color-bg-surface);
   height: 100vh;
-  position: relative;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+/* Show outer page scroll only on narrower layouts where controls wrap */
+@media (max-width: 1300px) {
+  .app-container {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .app-header {
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--color-border-subtle);
   position: relative;
+  background: linear-gradient(135deg, var(--color-bg-page) 0%, var(--color-bg-surface-alt) 100%);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .app-header h2 {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--color-text-primary);
   margin: 0;
+  text-align: center;
+  grid-column: 2;
+  position: relative;
+  padding: 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: flex-start;
+  grid-column: 1;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+  grid-column: 3;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  box-shadow: var(--shadow-soft);
+  transition: var(--transition-standard);
+}
+
+.user-info:hover {
+  background: var(--color-bg-page);
+  border-color: var(--color-border-muted);
+  box-shadow: var(--shadow-raised);
+}
+
+.user-info i {
+  color: #10b981;
+  font-size: 16px;
+}
+
+.username {
+  font-weight: 500;
+  color: var(--color-text-primary);
 }
 
 .nav-button {
-  position: absolute;
-  right: 0;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.9rem;
+  transition: var(--transition-standard);
+  font-size: 13px;
+  font-weight: 500;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-/* Controls Section - Clean layout */
+.nav-button:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+  transform: translateY(-1px);
+}
+
+.nav-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+/* -----------------------------------------------------------------------------
+ * 03. Top Controls
+ * -------------------------------------------------------------------------- */
 .controls-section {
-  background: #f8fafc;
-  border-radius: 6px;
+  background: var(--color-bg-page);
+  border-radius: var(--radius-md);
   padding: 16px;
-  margin-bottom: 20px;
-  border: 1px solid #e2e8f0;
+  margin-bottom: 0;
+  border: 1px solid var(--color-border-subtle);
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-raised);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .controls-row {
@@ -81,11 +272,11 @@ color: #1e293b;
 
 .criteria-display {
   padding: 10px 14px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  background: var(--color-bg-page);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
   font-size: 14px;
-  color: #374151;
+  color: var(--color-text-secondary);
   font-weight: 500;
   flex: 1;
   min-width: 300px;
@@ -106,14 +297,16 @@ color: #1e293b;
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
+  background: var(--color-bg-page);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
   font-size: 13px;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-weight: 500;
-  min-width: 280px;
-  max-width: 400px;
+  min-width: 180px;
+  max-width: 350px;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .last-saved-display i {
@@ -140,7 +333,7 @@ color: #1e293b;
   color: white;
   border: none;
   padding: 6px 12px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -148,6 +341,24 @@ color: #1e293b;
   font-size: 12px;
   font-weight: 500;
   height: 32px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.btn-inline-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  display: inline-block;
+  animation: btn-spin 0.8s linear infinite;
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .save-changes-btn:disabled {
@@ -161,13 +372,15 @@ color: #1e293b;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  margin: 12px 0;
-  border-radius: 6px;
+  padding: 8px 16px;
+  margin: 8px 0;
+  border-radius: var(--radius-md);
   font-size: 14px;
   font-weight: 500;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-raised);
   animation: slideInDown 0.3s ease-out;
+  min-height: auto;
+  line-height: 1.4;
 }
 
 .save-message.success {
@@ -177,6 +390,12 @@ color: #1e293b;
 }
 
 .save-message.error {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border-left: 4px solid #b91c1c;
+}
+
+.save-message.error-persistent {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
   border-left: 4px solid #b91c1c;
@@ -199,7 +418,7 @@ color: #1e293b;
   color: inherit;
   cursor: pointer;
   padding: 4px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 16px;
   opacity: 0.8;
   transition: opacity 0.2s;
@@ -208,6 +427,15 @@ color: #1e293b;
 .save-message-close:hover {
   opacity: 1;
   background: rgba(255, 255, 255, 0.1);
+}
+
+/* Close icon text styling */
+.close-icon-text {
+  display: block;
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 1;
+  color: #000000;
 }
 
 @keyframes slideInDown {
@@ -221,24 +449,34 @@ color: #1e293b;
   }
 }
 
-
-
 /* Old column visibility panel CSS - replaced by grid-integrated version */
 
 .column-visibility-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #e2e8f0;
+  margin: -12px -12px 8px -12px; /* Bleed to edges of panel */
+  padding: 8px 12px;
+  background: #f3f4f6; /* Match grid header background */
+  border-bottom: 1px solid #d1d5db; /* Match grid header border */
+  border-radius: 6px 6px 0 0; /* Match panel border radius */
+  color: #1a202c; /* Ensure text color is consistent */
+  font-weight: 600; /* Ensure font weight is consistent */
+  gap: 8px;
 }
 
 .column-visibility-header h4 {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   color: #1a202c;
   font-weight: 600;
+  flex: 1;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .close-panel-btn {
@@ -246,10 +484,15 @@ color: #1e293b;
   border: none;
   color: #718096;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  font-size: 14px;
-  transition: background-color 0.2s;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 12px;
+  transition: background-color 0.15s;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .close-panel-btn:hover {
@@ -257,15 +500,149 @@ color: #1e293b;
   color: #4a5568;
 }
 
+.select-all-btn,
+.clear-all-btn {
+  padding: 4px 8px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  color: #374151;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.select-all-btn:hover {
+  background: #f0f9ff;
+  border-color: #3b82f6;
+  color: #2563eb;
+}
+
+.clear-all-btn:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+  color: #dc2626;
+}
+
+.select-all-btn:active,
+.clear-all-btn:active {
+  transform: scale(0.98);
+}
+
+.select-all-btn i,
+.clear-all-btn i {
+  font-size: 12px;
+}
+
 .column-checkboxes {
   max-height: 300px;
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: 2px;
+  scroll-behavior: smooth;
 }
 
 .column-checkbox {
-  margin: 6px 0;
-  padding: 4px 0;
+  margin: 2px 0;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: move;
+  transition: all 0.15s ease;
+  border-radius: 4px;
+  position: relative;
+  border: 1px solid transparent;
+  background-color: #ffffff;
+  min-height: 32px;
+}
+
+.column-checkbox:hover {
+  background-color: #f9fafb;
+  border-color: #e5e7eb;
+}
+
+.column-checkbox.dragging {
+  opacity: 0.4;
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: scale(0.98);
+}
+
+.column-checkbox.drag-over {
+  background-color: #eff6ff;
+  border-color: #3b82f6;
+  border: 2px dashed #3b82f6;
+  transform: scale(1.02);
+}
+
+.drop-indicator {
+  height: 2px;
+  background-color: #3b82f6;
+  margin: 1px 0;
+  border-radius: 1px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.drag-handle {
+  color: #9ca3af;
+  font-size: 14px;
+  cursor: grab;
+  padding: 4px 2px;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  background-color: transparent;
+  position: relative;
+}
+
+.drag-handle i {
+  display: block;
+  line-height: 1;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+  color: #3b82f6;
+  background-color: #dbeafe;
+  transform: scale(1.1);
+}
+
+.column-checkbox:hover .drag-handle {
+  color: #6b7280;
+  background-color: #f3f4f6;
+}
+
+.column-checkbox.dragging .drag-handle {
+  color: #3b82f6;
+  background-color: #dbeafe;
+}
+
+.column-checkbox.drag-over .drag-handle {
+  color: #3b82f6;
+  background-color: #bfdbfe;
 }
 
 .column-checkbox label {
@@ -273,12 +650,35 @@ color: #1e293b;
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
   color: #2d3748;
-  transition: color 0.2s;
-  padding: 4px 8px;
-  border-radius: 4px;
-  width: 100%;
+  transition: color 0.15s;
+  padding: 0;
+  border-radius: 3px;
+  flex: 1;
+  margin: 0;
+  user-select: none;
+}
+
+.column-checkbox input[type='checkbox'] {
+  cursor: pointer;
+  pointer-events: auto;
+  width: 14px;
+  height: 14px;
+  margin: 0 6px 0 0;
+  flex-shrink: 0;
+}
+
+.column-checkbox .column-name {
+  pointer-events: auto;
+  cursor: pointer;
+  flex: 1;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .column-name {
@@ -293,51 +693,67 @@ color: #1e293b;
   background: #f8fafc;
 }
 
-.column-checkbox input[type="checkbox"] {
-  margin-right: 6px;
-  cursor: pointer;
-  width: 14px;
-  height: 14px;
-}
-
 /* AG Grid Section - Container for grid + toggle button */
 .ag-grid-section {
   display: flex;
   flex: 1;
-  min-height: 500px;
+  min-height: 0;
   position: relative;
-  border-radius: 6px;
   overflow: hidden;
 }
 
 /* AG Grid container - Clean design with proper scrolling */
 .ag-grid-container-wrapper {
   flex: 1;
-  overflow: visible;
+  overflow: hidden;
   border: 1px solid #e2e8f0;
-  border-right: none; /* No right border - toggle button will provide it */
-  border-radius: 6px 0 0 6px;
-  background: white;
-  position: relative;
-  line-height: 1;
+  border-right: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Custom scrollbar styling for horizontal scrolling - Webkit browsers */
+.ag-grid-section::-webkit-scrollbar,
+.ag-grid-container-wrapper::-webkit-scrollbar {
+  height: 12px;
+  width: 12px;
+}
+
+.ag-grid-section::-webkit-scrollbar-track,
+.ag-grid-container-wrapper::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.ag-grid-section::-webkit-scrollbar-thumb,
+.ag-grid-container-wrapper::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+  border: 2px solid #f1f5f9;
+  transition: background 0.2s ease;
+}
+
+.ag-grid-section::-webkit-scrollbar-thumb:hover,
+.ag-grid-container-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .ag-grid-container {
-  min-width: 100%;
-  width: max-content;
-  height: 100%;
-  position: relative;
-  overflow: visible;
-  background: white;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* AG Grid theme - CLEAN & ADJUSTABLE with VISIBLE GRID LINES */
 .ag-theme-alpine {
   /* 🎯 IMPROVED ROW HEIGHT - Better readability while staying compact */
   --ag-row-height: 28px;
-  
-  --ag-header-height: 60px;
-  
+
+  --ag-header-height: 110px;
+
   /* Ensure internal horizontal scrollbar is visible */
   --ag-scrollbar-track-color: #f1f5f9;
   --ag-scrollbar-thumb-color: #cbd5e1;
@@ -359,133 +775,100 @@ color: #1e293b;
   --ag-row-border-style: solid;
   --ag-row-hover-border-color: #d1d5db;
   --ag-row-hover-border-width: 1px;
+
+  /* Prevent sub-pixel rendering issues on zoom */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 /* ✅ FALLBACK BORDER RULES - Direct styling to ensure visible borders */
 .ag-theme-alpine .ag-cell {
-  border-right: 1px solid #d1d5db;
-  border-bottom: 1px solid #d1d5db;
+  border-right: 1px solid #d1d5db !important;
+  border-bottom: 1px solid #d1d5db !important;
+  /* Prevent border disappearing on zoom */
+  outline: 1px solid transparent;
 }
 
 .ag-theme-alpine .ag-header-cell {
-  border-right: 1px solid #d1d5db;
-  border-bottom: 1px solid #d1d5db;
+  border-right: 1px solid #d1d5db !important;
+  border-bottom: 1px solid #d1d5db !important;
+  /* Prevent border disappearing on zoom */
+  outline: 1px solid transparent;
+}
+
+/* Force borders to be visible at all zoom levels */
+.ag-theme-alpine .ag-row {
+  border-bottom: 1px solid #d1d5db !important;
+  box-shadow: 0 1px 0 0 #d1d5db;
 }
 
 /* Firefox 102 ESR compatibility fixes */
 @-moz-document url-prefix() {
   .ag-theme-alpine {
     /* Ensure CSS variables work in older Firefox */
-    row-height: 24px;
-    header-height: 60px;
+    --ag-row-height: 24px;
+    --ag-header-height: 110px;
   }
-  
+
   /* Fix flexbox issues in older Firefox */
   .part-cell-content {
     display: -moz-box;
     -moz-box-align: center;
     -moz-box-pack: start;
   }
-  
+
   /* Ensure transforms work properly */
-  .add-row-btn, .delete-row-btn {
+  .add-row-btn,
+  .delete-row-btn {
+    transform: scale(1);
     -moz-transform: scale(1);
   }
-  
-  .add-row-btn:hover, .delete-row-btn:hover {
+
+  .add-row-btn:hover,
+  .delete-row-btn:hover {
+    transform: scale(1.2);
     -moz-transform: scale(1.2);
   }
-  
-  /* Comprehensive horizontal scroll fix for old Firefox */
-  .ag-body-horizontal-scroll-viewport {
-    overflow-x: auto !important;
-    scrollbar-width: auto !important;
-    scrollbar-color: #cbd5e1 #f1f5f9 !important;
-    min-width: max-content !important;
-    width: max-content !important;
-    -moz-overflow-scrolling: touch !important;
-    display: block !important;
-  }
-  
-  .ag-body-horizontal-scroll {
-    min-width: max-content !important;
-    width: max-content !important;
-    display: block !important;
-  }
-  
-  /* Ensure AG Grid internal scrolling works */
+
+  /* Firefox-specific scrollbar improvements */
   .ag-body-viewport {
     overflow-x: auto !important;
     overflow-y: auto !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #94a3b8 #f1f5f9 !important;
     -moz-overflow-scrolling: touch !important;
-  }
-  
-  /* Force horizontal scrollbar visibility in old Firefox */
-  .ag-body-horizontal-scroll-viewport {
-    scrollbar-width: auto !important;
-    scrollbar-color: #cbd5e1 #f1f5f9 !important;
-  }
-  
-  /* Ensure grid container allows horizontal scrolling */
-  .ag-grid-container-wrapper {
-    overflow-x: auto !important;
-    -moz-overflow-scrolling: touch !important;
-  }
-  
-  /* Additional fixes for very old Firefox versions */
-  .ag-body-horizontal-scroll-viewport {
-    -moz-box-sizing: border-box !important;
+    /* Hardware acceleration for Firefox */
+    will-change: scroll-position !important;
+    transform: translateZ(0) !important;
     -moz-transform: translateZ(0) !important;
+    backface-visibility: hidden !important;
+    overscroll-behavior-x: contain !important;
   }
-  
-  /* Force scrollbar to always be visible in old Firefox */
-  .ag-body-horizontal-scroll-viewport::-moz-scrollbar {
-    width: 12px !important;
-    height: 12px !important;
+
+  .ag-body-horizontal-scroll-viewport {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #94a3b8 #f1f5f9 !important;
+    -moz-overflow-scrolling: touch !important;
+    /* Hardware acceleration for Firefox horizontal scrolling */
+    will-change: scroll-position !important;
+    transform: translateZ(0) !important;
+    -moz-transform: translateZ(0) !important;
+    backface-visibility: hidden !important;
+    overscroll-behavior-x: contain !important;
   }
-  
-  .ag-body-horizontal-scroll-viewport::-moz-scrollbar-thumb {
-    background-color: #cbd5e1 !important;
-    border-radius: 6px !important;
-  }
-  
-  .ag-body-horizontal-scroll-viewport::-moz-scrollbar-track {
-    background-color: #f1f5f9 !important;
-  }
-  
-  /* Force horizontal scrollbar to always be visible */
-  .ag-body-horizontal-scroll-viewport::-webkit-scrollbar {
-    height: 12px !important;
-    background-color: #f1f5f9 !important;
-  }
-  
-  .ag-body-horizontal-scroll-viewport::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1 !important;
-    border-radius: 6px !important;
-    border: 2px solid #f1f5f9 !important;
-  }
-  
-  .ag-body-horizontal-scroll-viewport::-webkit-scrollbar-track {
-    background-color: #f1f5f9 !important;
-  }
-  
-  /* Ensure grid container allows proper scrolling */
-  .ag-grid-container {
-    overflow: visible !important;
-    position: relative !important;
-  }
-  
-  /* Force proper cell sizing for horizontal scroll */
-  .ag-cell {
-    min-width: 120px !important;
-    max-width: 250px !important;
-    flex-shrink: 0 !important;
-  }
-  
-  /* Ensure header cells don't shrink */
-  .ag-header-cell {
-    flex-shrink: 0 !important;
-    min-width: 120px !important;
+
+  .ag-body-vertical-scroll-viewport {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #94a3b8 #f1f5f9 !important;
+    -moz-overflow-scrolling: touch !important;
   }
 }
 
@@ -525,87 +908,29 @@ color: #1e293b;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
-/* Filter menu styling */
+/* Filter menu styling - Only ensure z-index for visibility, let AG Grid handle positioning */
 .ag-theme-alpine .ag-filter-menu {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  padding: 12px;
-  min-width: 250px;
+  z-index: 999999 !important;
 }
 
-/* Filter condition styling */
-.ag-theme-alpine .ag-filter-condition {
-  margin-bottom: 8px;
+/* Ensure filter popup is visible and above everything */
+.ag-theme-alpine .ag-popup {
+  z-index: 999999 !important;
 }
 
-.ag-theme-alpine .ag-filter-condition-operator {
-  margin: 8px 0;
-  padding: 4px 0;
+.ag-theme-alpine .ag-filter-wrapper {
+  z-index: 999999 !important;
 }
 
-/* Filter buttons styling */
-.ag-theme-alpine .ag-filter-apply-panel {
-  margin-top: 12px;
-  padding-top: 8px;
-  border-top: 1px solid #e2e8f0;
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
+/* Filter popup container */
+.ag-theme-alpine .ag-popup-child {
+  z-index: 999999 !important;
 }
 
-.ag-theme-alpine .ag-filter-apply-panel button {
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid #d1d5db;
-  background: #ffffff;
-  color: #374151;
-  transition: all 0.2s;
-}
-
-.ag-theme-alpine .ag-filter-apply-panel button:hover {
-  background: #f8fafc;
-  border-color: #9ca3af;
-}
-
-.ag-theme-alpine .ag-filter-apply-panel button.ag-filter-apply-panel-button {
-  background: #3b82f6;
-  color: white;
-  border-color: #3b82f6;
-}
-
-.ag-theme-alpine .ag-filter-apply-panel button.ag-filter-apply-panel-button:hover {
-  background: #2563eb;
-  border-color: #2563eb;
-}
-
-/* Reset button specific styling */
-.ag-theme-alpine .ag-filter-apply-panel button.ag-filter-reset-button {
-  background: #6b7280;
-  color: white;
-  border-color: #6b7280;
-}
-
-.ag-theme-alpine .ag-filter-apply-panel button.ag-filter-reset-button:hover {
-  background: #4b5563;
-  border-color: #4b5563;
-}
-
-/* Ensure filter buttons are properly spaced */
-.ag-theme-alpine .ag-filter-apply-panel {
-  gap: 12px !important;
-}
-
-/* Filter input focus states */
-.ag-theme-alpine .ag-filter-body input:focus,
-.ag-theme-alpine .ag-filter-body select:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+/* Ensure filter popup parent container doesn't hide it */
+.ag-theme-alpine .ag-popup-parent {
+  z-index: 999999 !important;
+  overflow: visible !important;
 }
 
 /* Filter icon styling */
@@ -618,36 +943,58 @@ color: #1e293b;
   font-weight: 600 !important;
 }
 
+/* Filter icons are disabled - see below */
+
+/* Hide all filter icons - filters are disabled */
+.ag-theme-alpine .ag-header-cell-filter-button,
+.ag-theme-alpine .ag-icon-filter,
+.ag-theme-alpine .ag-header-cell .ag-header-cell-filter-button,
+.ag-theme-alpine .ag-header-cell .ag-icon-filter {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 /* Header cell - Bold and visually distinct styling with VISIBLE grid lines */
-.ag-header-cell {
+/* Note: SKU columns have separate styling - see SKU COLUMN HEADERS section */
+.ag-theme-alpine .ag-header-cell:not([col-id*='sku']) {
   min-width: 120px !important;
   max-width: 350px !important;
   padding: 12px 16px !important;
   /* ✅ VISIBLE BORDERS - Consistent with cell borders */
-  border-right: var(--ag-cell-vertical-border-width) var(--ag-row-border-style) var(--ag-row-border-color) !important;
-  border-bottom: var(--ag-cell-horizontal-border-width) var(--ag-row-border-style) var(--ag-row-border-color) !important;
+  border-right: var(--ag-cell-vertical-border-width) var(--ag-row-border-style)
+    var(--ag-row-border-color) !important;
+  border-bottom: var(--ag-cell-horizontal-border-width) var(--ag-row-border-style)
+    var(--ag-row-border-color) !important;
   background: #f3f4f6 !important;
   font-weight: 700 !important;
-  text-align: center !important;
+  text-align: left !important;
   font-size: 14px !important;
   line-height: 1.3 !important;
   color: #374151 !important;
-  min-height: 55px !important;
+  height: 120px !important;
+  min-height: 120px !important;
+  max-height: 120px !important;
   white-space: normal !important;
   word-wrap: break-word !important;
 }
 
-/* Actions column header - distinct styling */
-.ag-header-cell[col-id="actions"] {
-  background: #e5e7eb !important;
-  border-right: 2px solid #9ca3af !important;
-  min-width: 40px !important;
-  max-width: 40px !important;
-  padding: 12px 4px !important;
-  border-bottom: 2px solid #d1d5db !important;
-  font-size: 14px !important;
-  font-weight: 700 !important;
-  color: #374151 !important;
+/* ========== Actions column: one column with checkbox | error ⓘ | plus + ========== */
+
+.ag-header-cell[col-id='actions'],
+.ag-theme-alpine .ag-header-cell[col-id='actions'],
+div.ag-header-cell[col-id='actions'] {
+  background: #f3f4f6 !important;
+  border-right: 1px solid #d1d5db !important;
+  border-left: none !important;
+  border-top: none !important;
+  border-bottom: 1px solid #d1d5db !important;
+  min-width: var(--actions-col-width, 60px) !important;
+  max-width: var(--actions-col-width, 60px) !important;
+  width: var(--actions-col-width, 60px) !important;
+  padding: 6px 4px !important;
+  box-sizing: border-box !important;
 }
 
 /* Cell - Improved styling with VISIBLE grid lines and better resizing */
@@ -655,16 +1002,18 @@ color: #1e293b;
   min-width: 80px !important;
   max-width: 350px !important;
   padding: 6px 10px !important;
-  line-height: 1.4 !important;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: block !important;
   /* ✅ VISIBLE BORDERS - Use CSS variables for consistent grid lines */
-  border-right: var(--ag-cell-vertical-border-width) var(--ag-row-border-style) var(--ag-row-border-color) !important;
-  border-bottom: var(--ag-cell-horizontal-border-width) var(--ag-row-border-style) var(--ag-row-border-color) !important;
+  border-right: var(--ag-cell-vertical-border-width) var(--ag-row-border-style)
+    var(--ag-row-border-color) !important;
+  border-bottom: var(--ag-cell-horizontal-border-width) var(--ag-row-border-style)
+    var(--ag-row-border-color) !important;
   border-left: none !important;
   border-top: none !important;
-  vertical-align: middle !important;
   font-size: 13px !important;
   color: #374151 !important;
   height: var(--ag-row-height) !important;
@@ -681,11 +1030,23 @@ color: #1e293b;
   -ms-user-select: text !important;
 }
 
+/* Allow overflow when cell is being edited inline */
+.ag-cell.ag-cell-inline-editing {
+  overflow: visible !important;
+  z-index: 1000 !important;
+}
+
+.ag-cell.ag-cell-inline-editing .ag-cell-wrapper {
+  overflow: visible !important;
+}
+
 /* Improved column resizing experience */
 .ag-theme-alpine .ag-header-cell-resize {
   background-color: #3b82f6 !important;
   width: 3px !important;
   transition: background-color 0.2s ease !important;
+  z-index: 1000 !important;
+  cursor: col-resize !important;
 }
 
 .ag-theme-alpine .ag-header-cell-resize:hover {
@@ -696,6 +1057,44 @@ color: #1e293b;
 /* Better column header styling for resizing */
 .ag-theme-alpine .ag-header-cell {
   transition: background-color 0.2s ease !important;
+}
+
+/* Prevent selection/highlight during column resize */
+.ag-theme-alpine .ag-header-cell.ag-header-cell-resizing,
+.ag-theme-alpine .ag-header-cell-resizing {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure SKU columns can resize smoothly */
+.ag-theme-alpine .ag-header-cell[col-id*='sku'] {
+  transition: width 0.1s ease !important;
+  box-sizing: border-box !important;
+}
+
+/* Prevent text selection during column resize for SKU columns */
+.ag-theme-alpine .ag-header-cell[col-id*='sku'].ag-header-cell-resizing,
+.ag-theme-alpine .ag-header-cell[col-id*='sku'] .sku-header-wrapper {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  pointer-events: auto !important;
+}
+
+/* Prevent row selection/highlighting during column resize */
+.ag-theme-alpine.ag-resizing .ag-row,
+.ag-theme-alpine.ag-resizing .ag-row:hover,
+.ag-theme-alpine.ag-resizing .ag-row.ag-row-selected {
+  background-color: inherit !important;
+  border-color: inherit !important;
+}
+
+/* Prevent any visual glitches during resize */
+.ag-theme-alpine .ag-header-cell.ag-header-cell-resizing {
+  overflow: visible !important;
+  z-index: 1001 !important;
 }
 
 .ag-theme-alpine .ag-header-cell:hover {
@@ -727,21 +1126,187 @@ color: #1e293b;
   text-overflow: ellipsis !important;
 }
 
-/* Actions column cell styling - Improved with visible borders */
-.ag-cell[col-id="actions"] {
-  min-width: 40px !important;
-  max-width: 40px !important;
-  padding: 4px !important;
-  /* ✅ VISIBLE BORDERS - Consistent with other cells */
-  border-right: var(--ag-cell-vertical-border-width) var(--ag-row-border-style) var(--ag-row-border-color) !important;
-  border-bottom: var(--ag-cell-horizontal-border-width) var(--ag-row-border-style) var(--ag-row-border-color) !important;
+/* Actions column: checkbox + error ⓘ + plus/delete (+/−) in one column */
+.ag-cell[col-id='actions'] {
+  min-width: var(--actions-col-width, 60px) !important;
+  max-width: var(--actions-col-width, 60px) !important;
+  width: var(--actions-col-width, 60px) !important;
+  padding: 6px 4px !important;
+  box-sizing: border-box !important;
+  border-right: var(--ag-cell-vertical-border-width) var(--ag-row-border-style)
+    var(--ag-row-border-color) !important;
+  border-bottom: var(--ag-cell-horizontal-border-width) var(--ag-row-border-style)
+    var(--ag-row-border-color) !important;
   border-left: none !important;
   border-top: none !important;
-  background: #f9fafb !important;
+  background: white !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+}
+
+/* Actions cell wrapper: fill cell so icons are not clipped (fix 28px/15px constraint) */
+.ag-cell[col-id='actions'] .ag-cell-wrapper,
+.ag-pinned-left-cols-container .ag-cell[col-id='actions'] .ag-cell-wrapper {
+  width: 100% !important;
+  min-width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  overflow: visible !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  --actions-gap: 8px;
+  --actions-pad: 4px;
+  --actions-checkbox-width: 18px;
+  gap: var(--actions-gap);
+  padding-left: var(--actions-pad);
+}
+
+.ag-cell[col-id='actions'] .ag-cell-value,
+.ag-pinned-left-cols-container .ag-cell[col-id='actions'] .ag-cell-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+/* Actions cell: checkbox + ⓘ + +/− in one row */
+.ag-cell[col-id='actions'] .actions-cell-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--actions-gap);
+  flex-wrap: nowrap;
+}
+
+/* Tighter spacing only when error icon is present */
+.ag-cell[col-id='actions'].actions-has-error .ag-cell-wrapper,
+.ag-pinned-left-cols-container .ag-cell[col-id='actions'].actions-has-error .ag-cell-wrapper {
+  --actions-gap: 6px;
+  --actions-pad: 4px;
+}
+
+.ag-cell[col-id='actions'].actions-has-error .actions-cell-content {
+  gap: var(--actions-gap);
+}
+
+/* Shared validation info icon style (used across main grid + modals) */
+.validation-error-icon {
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 600;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.ag-cell[col-id='actions'].actions-has-error .actions-cell-content .validation-error-icon {
+  width: 18px !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  font-size: 15px !important;
+}
+
+/* Reserve checkbox space when checkbox is not rendered */
+.ag-cell[col-id='actions'].actions-no-checkbox .ag-cell-value,
+.ag-pinned-left-cols-container .ag-cell[col-id='actions'].actions-no-checkbox .ag-cell-value {
+  margin-left: 0;
+}
+
+.ag-cell[col-id='actions'].actions-no-checkbox .actions-cell-content,
+.ag-pinned-left-cols-container .ag-cell[col-id='actions'].actions-no-checkbox .actions-cell-content {
+  padding-left: calc(var(--actions-checkbox-width) + var(--actions-gap));
+}
+
+.section-fullwidth-actions.actions-no-checkbox .actions-cell-content {
+  padding-left: calc(var(--actions-checkbox-width) + var(--actions-gap));
+}
+
+.ag-cell[col-id='actions'] .ag-selection-checkbox,
+.ag-pinned-left-cols-container .ag-cell[col-id='actions'] .ag-selection-checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  cursor: pointer;
+  margin-right: 0;
+  padding: 0;
+}
+
+.ag-cell[col-id='actions'] .ag-selection-checkbox input,
+.ag-pinned-left-cols-container .ag-cell[col-id='actions'] .ag-selection-checkbox input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+.ag-cell[col-id='actions'] .ag-selection-checkbox .ag-icon,
+.ag-pinned-left-cols-container .ag-cell[col-id='actions'] .ag-selection-checkbox .ag-icon {
+  font-size: 14px;
+}
+
+.ag-cell[col-id='actions'] .actions-cell-content .validation-error-icon {
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  width: 18px !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  flex-shrink: 0;
+  font-size: 12px !important;
+  line-height: 1 !important;
+}
+
+.ag-cell[col-id='actions'] .actions-cell-content .add-row-btn,
+.ag-cell[col-id='actions'] .actions-cell-content .delete-row-btn {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
+  margin: 0;
+  flex-shrink: 0;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  font-size: 12px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
+}
+
+.ag-cell[col-id='actions'] .actions-cell-content .add-row-btn:hover {
+  transform: scale(1.15);
+}
+
+.ag-cell[col-id='actions'] .actions-cell-content .delete-row-btn:hover {
+  transform: scale(1.15);
 }
 
 /* Qty column specific styling - Improved with visible borders */
-.ag-cell[col-id="qty"] {
+.ag-cell[col-id='qty'] {
   text-align: right !important;
   font-weight: 500 !important;
   background-color: #f8fafc !important;
@@ -750,15 +1315,17 @@ color: #1e293b;
   min-width: 80px !important;
   max-width: 150px !important;
   /* ✅ VISIBLE BORDERS - Consistent with other cells */
-  border-right: var(--ag-cell-vertical-border-width) var(--ag-row-border-style) var(--ag-row-border-color) !important;
-  border-bottom: var(--ag-cell-horizontal-border-width) var(--ag-row-border-style) var(--ag-row-border-color) !important;
+  border-right: var(--ag-cell-vertical-border-width) var(--ag-row-border-style)
+    var(--ag-row-border-color) !important;
+  border-bottom: var(--ag-cell-horizontal-border-width) var(--ag-row-border-style)
+    var(--ag-row-border-color) !important;
   border-left: none !important;
   border-top: none !important;
   font-size: 13px !important;
 }
 
 /* Qty column header styling with visible borders */
-.ag-header-cell[col-id="qty"] {
+.ag-header-cell[col-id='qty'] {
   text-align: center !important;
   font-weight: 700 !important;
   background: #f3f4f6 !important;
@@ -767,13 +1334,15 @@ color: #1e293b;
   min-width: 80px !important;
   max-width: 120px !important;
   /* ✅ VISIBLE BORDERS - Consistent with other headers */
-  border-right: var(--ag-cell-vertical-border-width) var(--ag-row-border-style) var(--ag-row-border-color) !important;
-  border-bottom: var(--ag-cell-horizontal-border-width) var(--ag-row-border-style) var(--ag-row-border-color) !important;
+  border-right: var(--ag-cell-vertical-border-width) var(--ag-row-border-style)
+    var(--ag-row-border-color) !important;
+  border-bottom: var(--ag-cell-horizontal-border-width) var(--ag-row-border-style)
+    var(--ag-row-border-color) !important;
   font-size: 14px !important;
 }
 
 /* Qty column hover effect */
-.ag-cell[col-id="qty"]:hover {
+.ag-cell[col-id='qty']:hover {
   background-color: #f1f5f9 !important;
   color: #1e293b !important;
 }
@@ -786,45 +1355,120 @@ color: #1e293b;
   border-right: 1px solid #d1d5db !important; /* Consistent with other columns */
 }
 
-/* Ensure horizontal scrolling works properly */
+/* ========================================
+   SCROLLBAR CONFIGURATION - FUTURE PROOF
+   ======================================== */
+
+/* Main body viewport - handles both scrolling directions */
+.ag-body-viewport {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  /* Optimize horizontal scrolling performance */
+  scroll-behavior: smooth;
+  will-change: scroll-position;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
+}
+
+/* Horizontal scroll viewport - AG Grid's horizontal scrollbar container */
 .ag-body-horizontal-scroll-viewport {
   overflow-x: auto !important;
-  min-width: max-content !important;
-  width: max-content !important;
-  /* Force scrollbar to always be visible */
+  overflow-y: hidden !important;
   scrollbar-width: auto !important;
   scrollbar-color: #cbd5e1 #f1f5f9 !important;
-  /* Ensure proper scrolling behavior */
-  -webkit-overflow-scrolling: touch;
-  -moz-overflow-scrolling: touch;
 }
 
-.ag-body-horizontal-scroll {
-  min-width: max-content !important;
-  width: max-content !important;
-  display: block !important;
-}
-
-/* Force horizontal scrollbar styling for all browsers */
+/* Custom scrollbar for horizontal scroll viewport - Webkit */
 .ag-body-horizontal-scroll-viewport::-webkit-scrollbar {
   height: 12px !important;
-  background-color: #f1f5f9 !important;
-}
-
-.ag-body-horizontal-scroll-viewport::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1 !important;
-  border-radius: 6px !important;
-  border: 2px solid #f1f5f9 !important;
 }
 
 .ag-body-horizontal-scroll-viewport::-webkit-scrollbar-track {
-  background-color: #f1f5f9 !important;
+  background: #f1f5f9 !important;
+  border-radius: 10px !important;
 }
 
-/* Firefox-specific scrollbar styling */
-.ag-body-horizontal-scroll-viewport {
-  scrollbar-width: auto !important;
-  scrollbar-color: #cbd5e1 #f1f5f9 !important;
+.ag-body-horizontal-scroll-viewport::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+  border-radius: 10px !important;
+  border: 2px solid #f1f5f9 !important;
+  transition: background 0.2s ease !important;
+}
+
+.ag-body-horizontal-scroll-viewport::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8 !important;
+}
+
+/* Vertical scroll viewport - AG Grid's vertical scrollbar container */
+.ag-body-vertical-scroll-viewport {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  /* Firefox scrollbar styling */
+  scrollbar-width: thin !important;
+  scrollbar-color: #94a3b8 #e2e8f0 !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Webkit/Chrome scrollbar styling - Horizontal */
+.ag-body-horizontal-scroll-viewport::-webkit-scrollbar,
+.ag-body-viewport::-webkit-scrollbar-horizontal {
+  height: 14px;
+  background-color: #f1f5f9;
+}
+
+.ag-body-horizontal-scroll-viewport::-webkit-scrollbar-thumb,
+.ag-body-viewport::-webkit-scrollbar-thumb:horizontal {
+  background-color: #94a3b8;
+  border-radius: 8px;
+  border: 3px solid #f1f5f9;
+  min-width: 40px;
+}
+
+.ag-body-horizontal-scroll-viewport::-webkit-scrollbar-thumb:hover,
+.ag-body-viewport::-webkit-scrollbar-thumb:horizontal:hover {
+  background-color: #64748b;
+}
+
+.ag-body-horizontal-scroll-viewport::-webkit-scrollbar-track,
+.ag-body-viewport::-webkit-scrollbar-track:horizontal {
+  background-color: #f1f5f9;
+  border-radius: 8px;
+}
+
+/* Webkit/Chrome scrollbar styling - Vertical */
+.ag-body-vertical-scroll-viewport::-webkit-scrollbar,
+.ag-body-viewport::-webkit-scrollbar-vertical {
+  width: 14px;
+  background-color: #f1f5f9;
+}
+
+.ag-body-vertical-scroll-viewport::-webkit-scrollbar-thumb,
+.ag-body-viewport::-webkit-scrollbar-thumb:vertical {
+  background-color: #94a3b8;
+  border-radius: 8px;
+  border: 3px solid #f1f5f9;
+  min-height: 40px;
+}
+
+.ag-body-vertical-scroll-viewport::-webkit-scrollbar-thumb:hover,
+.ag-body-viewport::-webkit-scrollbar-thumb:vertical:hover {
+  background-color: #64748b;
+}
+
+.ag-body-vertical-scroll-viewport::-webkit-scrollbar-track,
+.ag-body-viewport::-webkit-scrollbar-track:vertical {
+  background-color: #f1f5f9;
+  border-radius: 8px;
+}
+
+/* Corner where scrollbars meet */
+.ag-body-viewport::-webkit-scrollbar-corner {
+  background-color: #f1f5f9;
 }
 
 /* Remove right spacer */
@@ -832,213 +1476,131 @@ color: #1e293b;
   display: none !important;
 }
 
-/* Edited row highlighting - Subtle */
+/* ========================================
+   ROW STATES (Edited & New)
+   ======================================== */
+@keyframes newRowHighlight {
+  0% {
+    background-color: #dbeafe;
+    transform: scale(1.02);
+  }
+  to {
+    background-color: #f8fbff;
+    transform: scale(1);
+  }
+}
+
 .ag-row.edited-row {
   background: #f8fafc !important;
   border-left: 2px solid #e2e8f0 !important;
-  position: relative;
 }
 
 .ag-row.edited-row:hover {
   background: #f1f5f9 !important;
 }
 
-/* New row styling - Enhanced */
-.new-row-text {
-  color: #6b7280 !important;
-  font-style: italic !important;
-}
-
-.new-row-placeholder {
-  color: #9ca3af !important;
-  font-style: italic !important;
-  font-size: 12px !important;
-  user-select: none !important;
-  pointer-events: none !important;
-  opacity: 0.8 !important;
-}
-
 .ag-row.new-row {
   background: #f8fbff !important;
   border-left: 4px solid #007bff !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  height: 28px !important;
-  min-height: 28px !important;
-  max-height: 28px !important;
-  animation: newRowHighlight 0.5s ease-out !important;
-}
-
-@keyframes newRowHighlight {
-  0% {
-    background-color: #dbeafe !important;
-    transform: scale(1.02);
-  }
-  100% {
-    background-color: #f8fbff !important;
-    transform: scale(1);
-  }
+  animation: newRowHighlight 0.5s ease-out;
 }
 
 .ag-row.new-row .ag-cell {
   background: #f8fbff !important;
-  height: 100% !important;
-  min-height: 100% !important;
-  max-height: 100% !important;
-  margin: 0 !important;
-  padding: 4px 8px !important;
-  line-height: 1.2 !important;
-  border-bottom: 1px solid #bfdbfe !important;
-  display: flex !important;
-  align-items: center !important;
-  box-sizing: border-box !important;
+  /* Use same border as normal rows for consistency */
+  border-bottom: 1px solid #d1d5db !important;
 }
 
-.ag-row.new-row .ag-cell[col-id="part"] {
+.ag-row.new-row .ag-cell[col-id='part'] {
   background: #ffffff !important;
   border: 2px solid #007bff !important;
   border-radius: 2px !important;
 }
 
-
-
-/* Part text styles - Clean */
-.part-text {
-  color: #374151 !important;
-  cursor: default;
-  text-decoration: none !important;
-  font-weight: normal !important;
+/* Sub-row styling - children under material headers */
+.ag-row.subrow {
+  background: #f0fdf4 !important;
 }
 
-/* Text selection styling for editable cells */
-.ag-cell ::selection {
-  background-color: #3b82f6 !important;
-  color: white !important;
+.ag-row.subrow .ag-cell {
+  background: #f0fdf4 !important;
+  color: #065f46 !important;
+  font-weight: 500;
+  border-bottom: 1px solid #d1fae5 !important;
 }
 
-.ag-cell ::-moz-selection {
-  background-color: #3b82f6 !important;
-  color: white !important;
+.ag-row.subrow:hover {
+  background: #dcfce7 !important;
 }
 
-/* Specific selection styling for part column */
-.ag-cell[col-id="part"] ::selection {
-  background-color: #007bff !important;
-  color: white !important;
+.ag-row.subrow:hover .ag-cell {
+  background: #dcfce7 !important;
 }
 
-.ag-cell[col-id="part"] ::-moz-selection {
-  background-color: #007bff !important;
-  color: white !important;
+/* ========================================
+   SELECTED ROW STYLING - HIGHLY VISIBLE
+   ======================================== */
+
+/* Selected row - Simple, clean selection styling */
+.ag-row.ag-row-selected {
+  background: #dbeafe !important;
+  border-left: 3px solid #3b82f6 !important;
 }
 
-/* Ensure part column allows text selection */
-.ag-cell[col-id="part"] {
-  user-select: text !important;
-  -webkit-user-select: text !important;
-  -moz-user-select: text !important;
-  -ms-user-select: text !important;
-  cursor: text !important;
+.ag-row.ag-row-selected .ag-cell {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  font-weight: 500 !important;
 }
 
-/* Exception: Clickable parts should show pointer cursor */
-.ag-cell[col-id="part"] .part-link.clickable {
-  cursor: pointer !important;
+/* Selected rows - no hover effect needed since they're already visually distinct */
+.ag-row.ag-row-selected:hover {
+  background: #dbeafe !important;
 }
 
-/* Override text cursor for clickable parts in part column */
-.ag-cell[col-id="part"] .clickable {
-  cursor: pointer !important;
+.ag-row.ag-row-selected:hover .ag-cell {
+  background: #dbeafe !important;
+  color: #1e40af !important;
 }
 
-/* Part column when editing */
-.ag-cell[col-id="part"].ag-cell-edit-input {
+/* Override any other row classes that might interfere */
+.ag-row.ag-row-selected.edited-row,
+.ag-row.ag-row-selected.new-row {
+  background: #dbeafe !important;
+  border-left: 3px solid #3b82f6 !important;
+}
+
+/* ========================================
+   PART COLUMN & CLICKABLE ELEMENTS
+   ======================================== */
+
+/* Part column editing */
+.ag-cell[col-id='part'] {
+  user-select: text;
+  cursor: text;
+}
+
+.ag-cell[col-id='part'].ag-cell-edit-input {
   background-color: #ffffff !important;
   border: 2px solid #007bff !important;
   border-radius: 2px !important;
 }
 
-/* Selection styling for autocomplete input */
+/* Text selection */
+.ag-cell ::selection,
 .autocomplete-input ::selection {
-  background-color: #007bff !important;
-  color: white !important;
+  background-color: #3b82f6;
+  color: white;
 }
 
-.autocomplete-input ::-moz-selection {
-  background-color: #007bff !important;
-  color: white !important;
-}
-
-/* Simple rule: Any clickable element shows pointer cursor */
-.clickable {
-  cursor: pointer !important;
-}
-
-/* Force pointer cursor for clickable elements in AG Grid cells */
-.ag-cell .clickable {
-  cursor: pointer !important;
-}
-
-/* Most aggressive cursor override for clickable parts */
-.ag-cell[col-id="part"] span.clickable,
-.ag-cell[col-id="part"] .part-link.clickable,
-.ag-cell[col-id="part"] span[style*="cursor: pointer"] {
-  cursor: pointer !important;
-  pointer-events: auto !important;
-}
-
-/* Ultra-specific rule for clickable parts */
-.ag-cell[col-id="part"] .clickable-part,
-.ag-cell[col-id="part"] span.clickable-part {
-  cursor: pointer !important;
-  pointer-events: auto !important;
-}
-
-/* Override any inline styles for clickable parts */
-.ag-cell[col-id="part"] span[style*="cursor: pointer"] {
-  cursor: pointer !important;
-}
-
-/* Force pointer cursor on hover for clickable parts */
-.ag-cell[col-id="part"] .clickable:hover,
-.ag-cell[col-id="part"] .clickable-part:hover {
-  cursor: pointer !important;
-}
-
-/* Force pointer cursor regardless of grid focus state */
-.ag-theme-alpine .ag-cell[col-id="part"] .clickable,
-.ag-theme-alpine .ag-cell[col-id="part"] .clickable-part,
-.ag-theme-alpine .ag-cell[col-id="part"] .part-link.clickable {
-  cursor: pointer !important;
-}
-
-/* Override AG Grid's focus-based cursor styles */
-.ag-theme-alpine.ag-focus-managed .ag-cell[col-id="part"] .clickable,
-.ag-theme-alpine.ag-focus-managed .ag-cell[col-id="part"] .clickable-part,
-.ag-theme-alpine.ag-focus-managed .ag-cell[col-id="part"] .part-link.clickable {
-  cursor: pointer !important;
-}
-
-/* Clickable part links - Minimal */
-.part-link.clickable {
-  color: #3b82f6 !important;
-  text-decoration: underline !important;
-  font-weight: 500 !important;
-  cursor: pointer !important;
-}
-
-/* Part cell content layout - simplified */
-.part-cell-content {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  height: 28px;
-  overflow: hidden;
+.ag-cell[col-id='part'] ::selection {
+  background-color: #007bff;
+  color: white;
 }
 
 /* Add/Delete row button styling */
-.add-row-btn, .delete-row-btn {
+.add-row-btn,
+.delete-row-btn {
   background: #10b981;
   color: white;
   border: none;
@@ -1109,181 +1671,197 @@ color: #1e293b;
   box-shadow: 0 4px 8px rgba(220, 38, 38, 0.4) !important;
 }
 
-/* Ensure no gaps between rows */
-.ag-body-viewport {
-  overflow-x: auto;
-  overflow-y: auto;
-  background: white;
-  line-height: 1;
-  border-collapse: collapse;
-}
-
-/* Force cells to fill entire row height */
-.ag-body-viewport .ag-cell {
-  height: 100% !important;
-  min-height: 100% !important;
-  max-height: 100% !important;
-  display: flex !important;
-  align-items: center !important;
-  box-sizing: border-box !important;
-}
-
-/* Clean border styling - Consistent grid lines */
-.ag-theme-alpine .ag-row {
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-}
-
-/* Force row content to fill entire height */
-.ag-body-viewport .ag-row > * {
-  height: 100% !important;
-  min-height: 100% !important;
-  max-height: 100% !important;
-}
+/* ========================================
+   ROW & VIEWPORT LAYOUT
+   ======================================== */
 
 .ag-body-viewport-wrapper {
   overflow: hidden;
   background: white;
 }
 
-/* Fix scrolling issues and prevent black areas */
-.ag-body-vertical-scroll-viewport {
-  background: white;
-  overflow-y: auto;
+.ag-theme-alpine .ag-row {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  height: var(--ag-row-height) !important;
+  min-height: var(--ag-row-height) !important;
+  max-height: var(--ag-row-height) !important;
+  box-sizing: border-box !important;
+  transition: background-color 0.15s ease !important;
 }
 
-.ag-body-horizontal-scroll-viewport {
-  background: white;
-  overflow-x: auto;
+/* Row hover highlighting - Works via JavaScript-synced class for pinned columns */
+.ag-theme-alpine .ag-row:hover:not(.ag-row-selected),
+.ag-theme-alpine .ag-row.ag-row-hover:not(.ag-row-selected) {
+  background-color: #f1f5f9 !important;
 }
 
-.ag-body-vertical-scroll {
-  background: white;
+.ag-theme-alpine .ag-row:hover:not(.ag-row-selected) .ag-cell,
+.ag-theme-alpine .ag-row.ag-row-hover:not(.ag-row-selected) .ag-cell {
+  background-color: #f1f5f9 !important;
 }
 
+/* Ensure actions column gets hover effect */
+.ag-theme-alpine .ag-row:hover:not(.ag-row-selected) .ag-cell[col-id='actions'],
+.ag-theme-alpine .ag-row.ag-row-hover:not(.ag-row-selected) .ag-cell[col-id='actions'] {
+  background-color: #f1f5f9 !important;
+}
+
+.ag-body-viewport .ag-cell,
+.ag-body-viewport .ag-row > * {
+  height: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Ensure consistent row heights - prevent empty rows or extra spacing */
+.ag-row {
+  height: var(--ag-row-height) !important;
+  min-height: var(--ag-row-height) !important;
+  max-height: var(--ag-row-height) !important;
+}
+
+/* ========================================
+   GRID VIEWPORT & BACKGROUND
+   ======================================== */
+.ag-root-wrapper,
+.ag-root,
+.ag-body,
+.ag-body-viewport-wrapper,
+.ag-body-vertical-scroll-viewport,
+.ag-body-horizontal-scroll-viewport,
+.ag-body-vertical-scroll,
 .ag-body-horizontal-scroll {
   background: white;
-}
-
-/* Ensure grid content is always visible */
-.ag-root-wrapper {
-  background: white;
   line-height: 1;
 }
 
-.ag-root {
-  background: white;
-  line-height: 1;
-}
-
-/* Ensure no gaps in the grid body */
-.ag-body {
-  line-height: 1;
-  border-collapse: collapse;
-}
-
-.ag-body-viewport-wrapper {
-  line-height: 1;
-  border-collapse: collapse;
-}
-
-/* Override AG Grid's internal cell height calculation */
+/* Cell height and alignment */
 .ag-theme-alpine .ag-cell-wrapper {
   height: 100% !important;
-  min-height: 100% !important;
-  max-height: 100% !important;
   display: flex !important;
   align-items: center !important;
+  overflow: hidden !important;
 }
 
 .ag-theme-alpine .ag-cell-value {
-  height: 100% !important;
-  min-height: 100% !important;
-  max-height: 100% !important;
-  display: flex !important;
-  align-items: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  display: block !important;
 }
 
-/* Fix for Firefox 102 ESR scrolling issues */
+/* Firefox optimization */
 @-moz-document url-prefix() {
-  .ag-body-viewport {
-    background: white !important;
-    -moz-transform: translateZ(0);
-  }
-  
+  .ag-body-viewport,
   .ag-body-vertical-scroll-viewport {
-    background: white !important;
+    transform: translateZ(0);
     -moz-transform: translateZ(0);
+    will-change: scroll-position;
+    backface-visibility: hidden;
   }
-  
+
+  /* Additional Firefox horizontal scroll optimization */
+  .ag-body-horizontal-scroll-viewport,
+  .ag-grid-section,
   .ag-grid-container-wrapper {
-    background: white !important;
+    transform: translateZ(0);
+    -moz-transform: translateZ(0);
+    will-change: scroll-position;
+    backface-visibility: hidden;
+    overscroll-behavior-x: contain;
   }
 }
 
-
-
-/* AG Grid resize handle - Clean */
-.ag-theme-alpine .ag-header-cell-resize {
-  background: #3b82f6 !important;
-  width: 3px !important;
-  opacity: 0.8;
+/* Wrapper for side buttons - Container for separate buttons */
+.side-buttons-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* Distinct gap between buttons */
+  margin: 0;
+  background: #f8fafc; /* Light background to fill the column track */
+  border-left: 1px solid #babfc7; /* Standard AG Grid border color for pinned columns */
+  z-index: 10;
+  width: 32px;
+  padding-top: 0;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.02); /* Subtle shadow to enhance depth */
 }
 
-.ag-theme-alpine .ag-header-cell-resize:hover {
-  background: #1d4ed8 !important;
-  width: 4px !important;
-  opacity: 1;
-}
-
-/* Grid-integrated Toggle Columns Button - Keep original position */
+/* Container reset */
 .grid-toggle-button-container {
   flex-shrink: 0;
-  width: 32px;
-  background: #f3f4f6 !important; /* Match AG Grid header background exactly */
-  border: 1px solid #e2e8f0;
-  border-left: none; /* No left border - grid provides it */
-  border-radius: 0 6px 6px 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 8px;
-  z-index: 10;
-  box-shadow: inset 2px 0 4px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  background: transparent !important;
+  border: none;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
 }
 
+/* Button Styling - Distinct Square Buttons */
 .grid-toggle-columns-btn {
-  background: #f3f4f6;
-  color: #374151;
-  border: 1px solid #e5e7eb;
-  width: 28px;
-  height: 160px;
-  border-radius: 4px;
+  background: #f3f4f6; /* Match grid header background */
+  color: #374151; /* Match grid header text color */
+  border: 1px solid #d1d5db; /* Match grid header border */
+  border-left: none; /* Attached to grid */
+  width: 100%;
+  height: 140px;
+  border-radius: 0 4px 4px 0; /* Slight rounding on outer edge for button feel */
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 700; /* Match grid header font weight */
   position: relative;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05); /* Shadow to pop */
 }
 
+/* Hover State */
+/* Hover State - Disabled */
 .grid-toggle-columns-btn:hover {
-  background: #e5e7eb;
-  border-color: #d1d5db;
+  background: #e5e7eb; /* Slightly darker on hover */
   color: #1f2937;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  transform: none;
 }
 
-/* Active state when panel is open */
+/* Active State */
+.grid-toggle-columns-btn.active,
 .grid-toggle-button-container.panel-open .grid-toggle-columns-btn {
-  background: #d1d5db;
-  border-color: #9ca3af;
-  color: #374151;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #bfdbfe;
+  box-shadow: inset 0 0 0 1px #bfdbfe;
+}
+
+/* Active indicator strip */
+.grid-toggle-columns-btn.active::after,
+.grid-toggle-button-container.panel-open .grid-toggle-columns-btn::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #2563eb;
+  border-radius: 0 4px 4px 0;
+}
+
+/* Remove specific first/last child styling since they are separate now */
+.side-buttons-wrapper .grid-toggle-button-container:first-child .grid-toggle-columns-btn,
+.side-buttons-wrapper .grid-toggle-button-container:last-child .grid-toggle-columns-btn {
+  border-bottom: 1px solid #e2e8f0;
+  border-top: 1px solid #e2e8f0;
+  border-radius: 0 4px 4px 0;
+}
+
+/* Fix for active state border overrides */
+.grid-toggle-columns-btn.active {
+  border-color: #2563eb;
 }
 
 .toggle-button-content {
@@ -1313,13 +1891,28 @@ color: #1e293b;
   color: inherit;
 }
 
+.group-count-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 10px;
+  min-width: 16px;
+  text-align: center;
+  line-height: 1.2;
+}
+
 /* Grid Column Visibility Panel - positioned next to toggle button */
 .grid-column-visibility-panel-container {
   position: absolute;
   top: 60px; /* Below the toggle button */
   right: 40px; /* Next to the toggle button, not overlapping columns */
   z-index: 10000;
-  max-height: calc(100vh - 150px);
+  max-height: calc(100dvh - 150px);
   overflow-y: auto;
 }
 
@@ -1329,71 +1922,389 @@ color: #1e293b;
   border-right: 1px solid #d1d5db !important; /* Consistent with other columns */
 }
 
-/* Ensure Part and Supplier columns have consistent cell backgrounds */
-.ag-theme-alpine .ag-cell[col-id="part"],
-.ag-theme-alpine .ag-cell[col-id="supplier"] {
-  background: white !important;
-  background-color: white !important;
+/* Ensure Part/Material/Supplier columns stay visible */
+.ag-theme-alpine .ag-cell[col-id='part'],
+.ag-theme-alpine .ag-cell[col-id='bomLinkPart'],
+.ag-theme-alpine .ag-cell[col-id='material'],
+.ag-theme-alpine .ag-cell[col-id^='material'],
+.ag-theme-alpine .ag-cell[col-id='supplier'] {
+  color: #1f2937 !important;
   border-right: 1px solid #d1d5db !important; /* Consistent with other columns */
 }
 
-.first-sku-column-header {
-  background-color: #fff9c4 !important; /* Yellow background for first SKU header */
-  background: #fff9c4 !important; /* Alternative background property */
-  color: #374151 !important; /* Default text color */
-  font-weight: 700 !important;
-  border-right: 1px solid #d1d5db !important; /* Consistent with other columns */
+/* Override for selected rows - all columns should inherit row background and text color */
+.ag-row.ag-row-selected .ag-cell[col-id='supplier'],
+.ag-row.ag-row-selected .ag-cell[col-id='bomLinkPart'],
+.ag-row.ag-row-selected .ag-cell[col-id='material'],
+.ag-row.ag-row-selected .ag-cell[col-id^='material'],
+.ag-row.ag-row-selected .ag-cell[col-id='color'] {
+  background: #dbeafe !important;
+  background-color: #dbeafe !important;
+  color: #1e40af !important;
 }
 
-/* Force yellow background for first SKU column cells */
-.ag-theme-alpine .ag-header-cell.first-sku-column-header {
+.ag-row.ag-row-selected:hover .ag-cell[col-id='supplier'],
+.ag-row.ag-row-selected:hover .ag-cell[col-id='bomLinkPart'],
+.ag-row.ag-row-selected:hover .ag-cell[col-id='material'],
+.ag-row.ag-row-selected:hover .ag-cell[col-id^='material'],
+.ag-row.ag-row-selected:hover .ag-cell[col-id='color'] {
+  background: #dbeafe !important;
+  background-color: #dbeafe !important;
+  color: #1e40af !important;
+}
+
+/* Override for subrows - supplier and part columns should inherit subrow green background */
+.ag-row.subrow .ag-cell[col-id='supplier'],
+.ag-row.subrow .ag-cell[col-id='part'] {
+  background: #f0fdf4 !important;
+  background-color: #f0fdf4 !important;
+  color: #065f46 !important;
+}
+
+.ag-row.subrow:hover .ag-cell[col-id='supplier'],
+.ag-row.subrow:hover .ag-cell[col-id='part'] {
+  background: #dcfce7 !important;
+  background-color: #dcfce7 !important;
+}
+
+/* ========================================
+   SKU COLUMN HEADERS - BRUTE FORCE STYLING
+   ======================================== */
+
+/* 1. Yellow background for the FIRST SKU column header */
+.first-sku-column-header,
+.ag-header-cell.first-sku-column-header,
+.ag-theme-alpine .ag-header-cell.first-sku-column-header,
+div.ag-header-cell.first-sku-column-header {
   background-color: #fff9c4 !important;
   background: #fff9c4 !important;
 }
 
-/* All SKU column headers - multi-line with line-by-line truncation */
-.ag-theme-alpine .ag-header-cell[col-id*="sku"] {
+/* 2. Yellow background for FIRST SKU column cells */
+.first-sku-column-cell,
+.ag-cell.first-sku-column-cell,
+.ag-theme-alpine .ag-cell.first-sku-column-cell,
+div.ag-cell.first-sku-column-cell {
+  background-color: #fff9c4 !important;
+  background: #fff9c4 !important;
+}
+
+/* Disabled SKU column headers (isEditable === false - view only) */
+.sku-column-disabled-header,
+.ag-header-cell.sku-column-disabled-header,
+div.ag-header-cell.sku-column-disabled-header {
+  background-color: #f3f4f6 !important;
+  background: #f3f4f6 !important;
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+}
+
+/* Disabled SKU column cells (isEditable === false - view only) */
+.sku-column-disabled-cell,
+.ag-cell.sku-column-disabled-cell,
+.ag-theme-alpine .ag-cell.sku-column-disabled-cell,
+div.ag-cell.sku-column-disabled-cell {
+  background-color: #f9fafb !important;
+  background: #f9fafb !important;
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+.sku-cell-disabled-placeholder {
+  color: #9ca3af !important;
+  font-style: italic !important;
+  text-align: center !important;
+  padding: 4px !important;
+  user-select: none !important;
+}
+
+/* 3. ALL SKU column headers - BRUTE FORCE multi-line with ellipsis */
+.ag-theme-alpine .ag-header-cell[col-id*='sku'],
+.ag-header-cell[col-id*='sku'],
+div.ag-header-cell[col-id*='sku'] {
   font-weight: 700 !important;
   border-right: 1px solid #d1d5db !important;
-  white-space: pre !important;
-  line-height: 1.1 !important;
   overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  max-height: 120px !important;
+  padding: 4px 8px !important;
+  height: 110px !important;
+  min-height: 110px !important;
+  max-height: 110px !important;
 }
 
-/* SKU header text - prevent word wrapping, truncate with ellipsis */
-.ag-theme-alpine .ag-header-cell[col-id*="sku"] .ag-header-cell-text {
-  white-space: pre !important;
-  line-height: 1.1 !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  display: block !important;
-  max-height: 120px !important;
+/* 6. SKU header text fallback - for non-custom headers */
+/* Hide default header text when using custom component */
+.ag-theme-alpine .ag-header-cell[col-id*='sku'] .ag-header-cell-text,
+.ag-header-cell[col-id*='sku'] .ag-header-cell-text,
+div.ag-header-cell[col-id*='sku'] .ag-header-cell-text,
+.ag-header-cell[col-id*='sku'] span.ag-header-cell-text {
+  display: none !important;
 }
 
-/* General rule for all header cells to ensure bold text and left alignment */
-.ag-theme-alpine .ag-header-cell-text {
+/* 7. SKU header cell label container - BRUTE FORCE */
+.ag-theme-alpine .ag-header-cell[col-id*='sku'] .ag-header-cell-label,
+.ag-header-cell[col-id*='sku'] .ag-header-cell-label,
+div.ag-header-cell[col-id*='sku'] .ag-header-cell-label {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* 6. SKU header cell comp wrapper - BRUTE FORCE */
+.ag-theme-alpine .ag-header-cell[col-id*='sku'] .ag-header-cell-comp-wrapper,
+.ag-header-cell[col-id*='sku'] .ag-header-cell-comp-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+/* ========================================
+   NON-SKU COLUMN HEADERS - STANDARD STYLING
+   ======================================== */
+
+/* Standard header text styling for non-SKU columns */
+.ag-theme-alpine .ag-header-cell:not([col-id*='sku']) .ag-header-cell-text {
   font-weight: 700 !important;
   text-align: left !important;
+  line-height: 1.4 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100%;
+  padding: 4px 0 !important;
+  margin: 0 !important;
+  white-space: normal !important;
+  word-wrap: break-word !important;
 }
 
-/* All header cells left aligned */
+/* ========================================
+   FIXED HEADER HEIGHT - ALL COLUMNS
+   ======================================== */
+
+/* Fixed header row height - increased to accommodate 6 lines (with destination) */
+.ag-theme-alpine .ag-header-row {
+  height: 110px !important;
+  min-height: 110px !important;
+  max-height: 110px !important;
+}
+
+/* Fixed header cell height - all columns same height (increased for 6 lines) */
 .ag-theme-alpine .ag-header-cell {
+  height: 110px !important;
+  min-height: 110px !important;
+  max-height: 110px !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  box-sizing: border-box !important;
   text-align: left !important;
 }
 
-/* Target first SKU column cells specifically */
-.ag-theme-alpine .ag-cell[style*="background-color: rgb(255, 249, 196)"],
-.ag-theme-alpine .ag-cell[style*="backgroundColor: #fff9c4"] {
-  background-color: #fff9c4 !important;
-  background: #fff9c4 !important;
+/* Non-SKU columns padding - exclude actions column */
+.ag-theme-alpine .ag-header-cell:not([col-id*='sku']):not([col-id='actions']) {
+  padding: 8px 16px !important;
 }
 
-/* First SKU column cell class - Direct targeting */
-.ag-theme-alpine .ag-cell.first-sku-column-cell {
-  background-color: #fff9c4 !important;
-  background: #fff9c4 !important;
+/* Actions column header - match cell padding for aligned look */
+.ag-theme-alpine .ag-header-cell[col-id='actions'] {
+  padding: 6px 4px !important;
+  border-right: 1px solid #d1d5db !important;
+  border-bottom: 1px solid #d1d5db !important;
+}
+
+/* SKU columns need tighter padding for multi-line display */
+.ag-theme-alpine .ag-header-cell[col-id*='sku'] {
+  padding: 6px 10px !important;
+}
+
+/* ========================================
+   PINNED COLUMN BORDERS
+   ======================================== */
+
+/* Ensure actions column header has visible right border when pinned */
+.ag-theme-alpine .ag-pinned-left-header .ag-header-cell[col-id='actions'],
+.ag-theme-alpine .ag-pinned-left-cols-container .ag-header-cell[col-id='actions'] {
+  border-right: 1px solid #d1d5db !important;
+}
+
+/* Ensure right-pinned columns have a distinct left border to separate from body */
+.ag-theme-alpine .ag-pinned-right-cols-container,
+.ag-theme-alpine .ag-pinned-right-header {
+  border-left: 1px solid #babfc7 !important;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.05); /* Add subtle shadow for depth */
+}
+
+/* Ensure cells inside right-pinned container don't lose their borders */
+.ag-theme-alpine .ag-pinned-right-cols-container .ag-cell {
+  border-left: 1px solid transparent !important; /* Prevent double borders */
+}
+
+/* Specific fix for 'part' column when pinned right */
+.ag-theme-alpine .ag-pinned-right-cols-container .ag-cell[col-id='part'] {
+  border-left: none !important; /* Let container handle the main border */
+}
+
+/* Section header rows - Remove vertical borders except for actions column */
+.ag-theme-alpine .ag-row.section-header-row .ag-cell {
+  background-color: #eff6ff !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  border-right: none !important;
+  border-left: none !important;
+  --ag-cell-vertical-border-width: 0 !important;
+}
+
+.ag-theme-alpine .ag-row.section-header-row {
+  border-bottom: 1px solid #cbd5e1 !important;
+}
+
+/* Full-width section headers (keep fixed position even if Feature column moves) */
+.ag-theme-alpine .ag-row.section-header-row .ag-full-width-row {
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+/* Full-width grouped headers align with section header layout */
+.ag-theme-alpine .ag-row.group-header-row .ag-full-width-row {
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+.section-fullwidth-row {
+  display: grid;
+  grid-template-columns: var(--actions-col-width, 60px) 1fr;
+  align-items: stretch;
+  height: var(--ag-row-height, 28px);
+  width: calc(100% + var(--actions-col-width, 60px));
+  position: relative;
+  left: calc(-1 * var(--actions-col-width, 60px));
+  background-color: #eff6ff;
+  border-bottom: none;
+}
+
+.section-fullwidth-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: var(--actions-pad, 4px);
+  gap: var(--actions-gap, 4px);
+  border-right: 1px solid #e2e8f0;
+}
+
+.section-fullwidth-content {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  height: 100%;
+}
+
+.section-fullwidth-content .hier-header {
+  height: 100%;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.section-fullwidth-content .hier-title {
+  line-height: 1.2;
+}
+
+.group-fullwidth-row {
+  display: grid;
+  grid-template-columns: var(--actions-col-width, 60px) 1fr;
+  align-items: stretch;
+  height: var(--ag-row-height, 28px);
+  width: calc(100% + var(--actions-col-width, 60px));
+  position: relative;
+  left: calc(-1 * var(--actions-col-width, 60px));
+  background-color: var(--group-row-bg, #f8fafc);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.group-fullwidth-row.group-level-0 {
+  --group-row-bg: #f0f9ff;
+}
+
+.group-fullwidth-row.group-level-1 {
+  --group-row-bg: #f0fdf4;
+}
+
+.group-fullwidth-row.group-level-2 {
+  --group-row-bg: #fef3c7;
+}
+
+.group-fullwidth-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: var(--actions-pad, 4px);
+  gap: var(--actions-gap, 4px);
+  border-right: 1px solid #e2e8f0;
+}
+
+.group-fullwidth-content {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  height: 100%;
+}
+
+.group-fullwidth-content .hier-header {
+  height: 100%;
+  border-left-width: 3px;
+}
+
+.group-fullwidth-content .hier-arrow {
+  margin-right: 4px;
+  width: 14px;
+}
+
+.section-fullwidth-content .section-header-add.add-row-btn {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
+  margin-left: 6px;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Keep actions column border visible */
+.ag-theme-alpine .ag-row.section-header-row .ag-cell[col-id='actions'] {
+  border-right: 1px solid #e2e8f0 !important;
+  --ag-cell-vertical-border-width: 1px !important;
+}
+
+/* Disable hover highlighting for section header rows */
+.ag-theme-alpine .ag-row.section-header-row:hover {
+  background-color: #eff6ff !important;
+  cursor: default !important;
+}
+
+.ag-theme-alpine .ag-row.section-header-row:hover .ag-cell {
+  background-color: #eff6ff !important;
+}
+
+/* Prevent selection styling for section header rows */
+.ag-theme-alpine .ag-row.section-header-row.ag-row-selected {
+  background-color: #eff6ff !important;
+  border-left: none !important;
+}
+
+.ag-theme-alpine .ag-row.section-header-row.ag-row-selected .ag-cell {
+  background-color: #eff6ff !important;
+  color: inherit !important;
+  font-weight: bold !important;
 }
 
 /* Force red text for matching values and inherit backgrounds - High specificity */
@@ -1402,8 +2313,8 @@ color: #1e293b;
   background-color: inherit;
 }
 
-.ag-theme-alpine .ag-cell[style*="color: rgb(211, 47, 47)"],
-.ag-theme-alpine .ag-cell[style*="color: #d32f2f"] {
+.ag-theme-alpine .ag-cell[style*='color: rgb(211, 47, 47)'],
+.ag-theme-alpine .ag-cell[style*='color: #d32f2f'] {
   color: #d32f2f !important;
   font-weight: 600 !important;
 }
@@ -1461,38 +2372,286 @@ color: #1e293b;
   z-index: 2;
 }
 
+/* Group By Panel Styles */
+.group-by-panel {
+  position: absolute;
+  top: 190px;
+  right: 40px;
+  z-index: 10000;
+  max-height: calc(100dvh - 150px);
+  overflow-y: auto;
+}
+
+.active-groups-section {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.active-groups-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.active-groups-header .section-title {
+  margin-bottom: 0;
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.active-groups-list {
+  margin-bottom: 12px;
+}
+
+.active-group-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  border-left: 3px solid #3b82f6;
+}
+
+.group-level-badge {
+  background: #3b82f6;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.group-name {
+  flex: 1;
+  font-size: 13px;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.remove-group-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 12px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-group-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.clear-all-groups-btn {
+  width: auto;
+  padding: 8px 12px;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.active-groups-header .clear-all-groups-btn {
+  flex-shrink: 0;
+}
+
+.clear-all-groups-btn:hover {
+  background: #fecaca;
+  border-color: #f87171;
+}
+
+.available-fields-section {
+  margin-top: 12px;
+}
+
+/* Responsive improvements for medium screens */
+@media (max-width: 1200px) and (min-width: 769px) {
+  .controls-row {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .left-controls-group {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .right-controls-group {
+    flex: 0 1 auto;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .criteria-display {
+    min-width: 150px;
+    max-width: 400px;
+  }
+
+  .last-saved-display {
+    min-width: 200px;
+    max-width: 300px;
+  }
+
+  .save-section {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+}
+
 /* Responsive improvements */
 @media (max-width: 768px) {
   .app-container {
+    height: 100dvh;
+    min-height: 100dvh;
     padding: 15px;
-    margin: 10px;
+    margin: 0;
   }
-  
+
+  /* Mobile header improvements */
+  .app-header {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 12px;
+    padding: 12px 16px;
+    text-align: center;
+  }
+
+  .app-header h2 {
+    font-size: 20px;
+    margin-bottom: 8px;
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .header-left {
+    grid-column: 1;
+    grid-row: 2;
+    justify-content: center;
+  }
+
+  .header-right {
+    grid-column: 1;
+    grid-row: 3;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .user-info {
+    justify-content: center;
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  .nav-button {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
   .controls-row {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
   }
-  
-  .column-visibility-controls {
+
+  .left-controls-group {
     flex-direction: column;
+    gap: 12px;
+  }
+
+  .right-controls-group {
+    flex-direction: column;
+    gap: 12px;
     align-items: stretch;
   }
-  
+
+  .search-filter-section {
+    max-width: 100%;
+  }
+
+  .search-filter-container {
+    max-width: 100%;
+  }
+
+  .search-input-wrapper {
+    min-width: 150px;
+  }
+
   .criteria-display {
     min-width: auto;
+    text-align: center;
+    padding: 8px 12px;
   }
-  
+
+  .save-section {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .last-saved-display {
+    min-width: auto;
+    max-width: 100%;
+    text-align: center;
+  }
+
   /* Adjust grid toggle button for mobile */
+  .side-buttons-wrapper {
+    gap: 8px;
+  }
+
   .grid-toggle-button-container {
     width: 28px;
   }
-  
+
   .grid-toggle-columns-btn {
     width: 26px;
-    height: 60px;
+    height: 108px;
+    min-height: 108px;
     font-size: 10px;
+    overflow: hidden;
   }
-  
+
+  .toggle-button-content {
+    gap: 4px;
+    padding: 6px 2px;
+  }
+
+  .toggle-button-text {
+    font-size: 9px;
+    line-height: 1.2;
+    letter-spacing: 0.5px;
+  }
+
   .grid-column-visibility-panel-container {
     position: fixed !important;
     right: 10px !important;
@@ -1500,13 +2659,13 @@ color: #1e293b;
     left: 10px !important;
     width: auto !important;
   }
-  
+
   /* Hide arrow on mobile */
   .grid-column-visibility-panel-container .column-visibility-panel::before,
   .grid-column-visibility-panel-container .column-visibility-panel::after {
     display: none !important;
   }
-  
+
   .grid-column-visibility-panel-container .column-visibility-panel {
     width: auto !important;
     max-width: 320px !important;
@@ -1514,7 +2673,128 @@ color: #1e293b;
   }
 }
 
-/* Expired count display - circular badge */
+/* Small mobile devices */
+@media (max-width: 480px) {
+  .app-container {
+    padding: 10px;
+    margin: 0;
+  }
+
+  .app-header {
+    padding: 10px 12px;
+  }
+
+  .app-header h2 {
+    font-size: 18px;
+  }
+
+  .user-info {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  .nav-button {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .search-input-wrapper {
+    min-width: 120px;
+  }
+
+  .grid-toggle-columns-btn {
+    height: 96px;
+    min-height: 96px;
+  }
+
+  .search-input {
+    font-size: 12px;
+  }
+
+  .search-filter-btn {
+    font-size: 10px;
+    padding: 4px 8px;
+    min-width: 60px;
+  }
+
+  .criteria-display {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+
+  .last-saved-display {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+
+  .save-changes-btn {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+}
+
+/* ========================================
+   GLOBAL ANIMATIONS
+   ======================================== */
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 1px 3px rgba(220, 38, 38, 0.4);
+  }
+  50% {
+    box-shadow:
+      0 1px 3px rgba(220, 38, 38, 0.4),
+      0 0 0 4px rgba(220, 38, 38, 0.1);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes overlayAppear {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* ========================================
+   HEADER & USER INFO
+   ======================================== */
+
+.user-info:hover .username {
+  color: #1d4ed8;
+}
+
+.user-info i {
+  transition: transform 0.2s ease;
+}
+
+.user-info:hover i {
+  transform: scale(1.1);
+}
+
+.user-info.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.user-info.loading i {
+  animation: spin 1s linear infinite;
+}
+
+/* ========================================
+   BADGES & COUNTS
+   ======================================== */
 .expired-count {
   color: white !important;
   font-size: 10px !important;
@@ -1531,15 +2811,295 @@ color: #1e293b;
   margin-left: 6px !important;
   line-height: 1 !important;
   box-shadow: 0 1px 3px rgba(220, 38, 38, 0.4) !important;
-}
-.ag-header-cell-text {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
+  animation: pulse 2s infinite;
 }
 
+/* ========================================
+   FOCUS STATES (Accessibility)
+   ======================================== */
+.nav-button:focus,
+.user-info:focus,
+.btn:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* ========================================
+   MODAL STYLES (Shared)
+   ======================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  animation: overlayAppear 0.2s ease-out;
+}
+
+.modal-container {
+  background: white;
+  border-radius: 12px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border: 1px solid #e2e8f0;
+  animation: modalEnter 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  background: #f3f4f6;
+  color: #1e293b;
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #d1d5db;
+}
+
+.close-button {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.close-button:hover {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.modal-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.modal-shell {
+  width: min(92vw, 980px);
+  min-height: 360px;
+}
+
+.modal-container.app-modal-shell.modal-shell:not(.coo-analysis-modal) {
+  width: min(92vw, 980px);
+  height: auto;
+  min-height: 360px;
+}
+
+
+.modal-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #ffffff;
+}
+
+.modal-loading-text {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.modal-loader {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #dbeafe;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: modal-spin 0.8s linear infinite;
+}
+
+@keyframes modal-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* SKU header wrapper - container for multi-line header */
+.sku-header-wrapper {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  padding: 2px 0 !important;
+  box-sizing: border-box !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+}
+
+/* SKU line styling - each line with ellipsis that expands with column width */
 .sku-line {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  font-family: inherit !important;
+  color: #374151 !important;
+  line-height: 1.3 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Minimal CSS for autocomplete dropdown visibility - only what's needed */
+.ag-cell-inline-editing,
+.ag-cell.ag-cell-inline-editing {
+  overflow: visible !important;
+  z-index: 1000 !important;
+}
+
+.ag-row .ag-cell-inline-editing,
+.ag-row .ag-cell.ag-cell-inline-editing {
+  overflow: visible !important;
+}
+
+.ag-cell-inline-editing .ag-cell-wrapper,
+.ag-cell.ag-cell-inline-editing .ag-cell-wrapper {
+  overflow: visible !important;
+}
+
+.ag-cell-inline-editing .autocomplete-container,
+.ag-cell.ag-cell-inline-editing .autocomplete-container {
+  overflow: visible !important;
+  z-index: 1000 !important;
+}
+
+.ag-cell-inline-editing app-autocomplete-cell-editor,
+.ag-cell.ag-cell-inline-editing app-autocomplete-cell-editor {
+  overflow: visible !important;
+  z-index: 1000 !important;
+}
+
+.ag-cell-inline-editing .autocomplete-dropdown,
+.ag-cell.ag-cell-inline-editing .autocomplete-dropdown {
+  z-index: 999999 !important;
+  display: block !important;
+  visibility: visible !important;
+}
+
+/* ========================================
+   SKU CELL ACTIONS FOR NEW ROWS
+   ======================================== */
+.sku-cell-action-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0 4px;
+}
+
+.sku-cell-action-wrapper.filled {
+  justify-content: space-between;
+}
+
+.sku-cell-value {
+  font-weight: 600;
+  color: #111827;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-right: 4px;
+}
+
+.sku-paste-part-btn {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(2px);
+  pointer-events: none;
+}
+
+.sku-cell-action-wrapper:hover .sku-paste-part-btn {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.sku-paste-part-btn:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1e40af;
+}
+
+.sku-delete-btn {
+  background: transparent;
+  color: #9ca3af;
+  border: none;
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sku-cell-action-wrapper:hover .sku-delete-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sku-delete-btn:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+/* ========================================
+   SKU CELL DISPLAY (EXISTING ROWS)
+   ======================================== */
+.sku-cell-display {
+  white-space: pre-line;
+  line-height: 1.5;
+  padding: 4px 0;
+  display: flex;
+  align-items: center;
+}
+
+.sku-cell-text {
+  flex: 1;
+}
+
+.sku-cell-text-highlight {
+  color: #ff0000;
+}
+
+.sku-cell-text-disconnected {
+  text-decoration: line-through;
+  opacity: 0.8;
 }
