@@ -1,6 +1,10 @@
-// Product BOM constants: centralizes BOM type, field names, labels, and validation keys used by the Product MBOM composer.
 // BOM and API core values.
 export const BOM_TYPE_PRODUCTMBOM = 'MBOM';
+export const BOM_TYPE_PRODUCTSBOM = 'SBOM';
+export const BOM_TYPE_MATERIALEBOM = 'EBOM';
+export const BOM_TYPE_MATERIALMBOM = 'MATERIAL_MBOM';
+export const BOM_TYPE_MATERIALSBOM = 'MATERIAL_SBOM';
+export const BOM_TYPE_COO_ANALYSIS = 'COOANALYSIS';
 export const DEFAULT_BOM_TYPE = BOM_TYPE_PRODUCTMBOM;
 export const BOM_LINK_KEY = 'bom-link';
 export const ENUM_MBOM_LINE_ITEM = 'enumMBOM001';
@@ -56,7 +60,7 @@ export const FIELD_MATERIAL_COLOR_SERVICE_DESCRIPTION = 'materialColorServiceDes
 export const FIELD_MATERIAL_COLOR_SERVICE_MESSAGE = 'materialColorServiceMessage';
 export const FIELD_MATERIAL_COLOR_MANUFACTURERS_PART_NUMBER =
   'materialColorManufacturersPartNumber';
-//testing
+
 // Request attributes and headers.
 export const ATTR_PART_NUMBER = FIELD_PART_NUMBER;
 export const ATTR_PTCMATERIAL_NAME = 'ptcmaterialName';
@@ -82,9 +86,22 @@ export const TITLE_REQUIRED_FIELD_ERROR = 'Required field error';
 export const TITLE_DELETE_ROW = 'Delete';
 export const TITLE_ADD_ROW = 'Add';
 
+// Export keys.
+export const EXCLUDED_FIELDS_EXPORT: readonly string[] = [COL_ACTIONS];
+export const EXCEL_HEADER_SECTION = 'Section';
+export const EXCEL_SHEET_NAME = 'BOM Export';
+export const EXCEL_FILE_NAME_PREFIX = 'BOM_Composer_Export_';
+export const JDE_BOM_EXCEL_SHEET_NAME = 'Export BOM to JDE';
+export const JDE_BOM_EXCEL_FILE_NAME_PREFIX = 'Export_BOM_to_JDE_';
+export const JDE_BOM_EMAIL_TOOLTIP = 'Report will be emailed to the requested user';
+export const JDE_BOM_EMAIL_SUCCESS = 'Export BOM to JDE report email request submitted';
+export const JDE_BOM_EMAIL_NO_DATA = 'No BOM rows available to email.';
+export const JDE_BOM_EMAIL_ERROR = 'Failed to email Export BOM to JDE report. Please try again.';
+
 // Duplicate validation categories.
 export const DUPLICATE_TYPE_ENUM_MBOM_001 = ENUM_MBOM_LINE_ITEM;
 export const DUPLICATE_TYPE_NOT_ENUM_MBOM_001 = 'notEnumMBOM001';
+export const DUPLICATE_TYPE_SBOM = 'sbom';
 export const DUPLICATE_TYPE_FEATURE_UNIQUENESS = 'feature-uniqueness';
 export const DUPLICATE_TYPE_DUPLICATE_FEATURE = 'duplicate-feature';
 export const DUPLICATE_TYPE_DUPLICATE_PART = 'duplicate-part';
@@ -110,6 +127,9 @@ export const MSG_NO_DUPLICATE_FOUND = 'No duplicate Feature+Part+SKU combination
 export const MSG_DUPLICATE_PART_FEATURE_COMBO =
   'Duplicate Part + Feature combination found. Each Part + Feature must be unique.';
 export const MSG_NO_DUPLICATE_PART_FEATURE = 'No duplicate Part + Feature combinations found.';
+export const MSG_EXPORT_EXCEL_ERROR = 'Error exporting to Excel. Please try again.';
+export const MSG_EXPORT_EXCEL_SUCCESS = 'Excel file exported successfully';
+export const MSG_EXPORT_EXCEL_SUCCESS_SELECTED = 'Excel file exported successfully (';
 export const MSG_MATERIAL_COLORS_SAVED_MOCK = 'Material colors saved (mock)';
 
 // SKU filter labels and empty-state messages.
@@ -117,11 +137,29 @@ export const SKU_FILTER_LABEL_ALL = 'ALL - View only';
 export const SKU_FILTER_LABEL_HD_EDITABLE = 'HD source - Editable';
 export const SKU_FILTER_LABEL_HD_VIEW_ONLY = 'HD source - View only';
 export const SKU_FILTER_LABEL_NON_HD = 'Non HD source - View only';
+export const SKU_FILTER_LABEL_EDITABLE_SKUS = 'Editable SKUs';
+/** EBOM/MATERIALMBOM SKU Views dropdown labels (based on skuInfo) */
+export const SKU_FILTER_LABEL_ALL_VIEW_ONLY = 'All - view only';
+export const SKU_FILTER_LABEL_EDITABLE_NON_RELEASED = 'Editable - Non-released';
+export const SKU_FILTER_LABEL_NON_EDITABLE_RELEASED = 'Non-editable - Released';
 export const SKU_FILTER_EMPTY_HD_EDITABLE = 'No HD editable SKUs found. Editing is disabled.';
+export const SKU_FILTER_EMPTY_RELEASED = 'No released SKUs found.';
+export const SKU_FILTER_EMPTY_NON_RELEASED = 'No non-released SKUs found. Editing is disabled.';
 export const SKU_FILTER_EMPTY_HD_VIEW_ONLY = 'No HD source view-only SKUs found.';
 export const SKU_FILTER_EMPTY_NON_HD = 'No non-HD source SKUs found.';
+export const SKU_FILTER_EMPTY_EDITABLE = 'No editable SKUs found. Editing is disabled.';
 
 // Field groups for grid edit and validation behavior.
+export const EBOM_SERVICE_FIELDS: readonly string[] = [
+  FIELD_MATERIAL_COLOR_THIRTY_CHARACTER_DESCRIPTION,
+  FIELD_MATERIAL_COLOR_SIXTY_CHARACTER_DESCRIPTION,
+  FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_ONE,
+  FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_TWO,
+  FIELD_MATERIAL_COLOR_SERVICE_EQUIVALENT,
+  FIELD_MATERIAL_COLOR_SERVICE_DESCRIPTION,
+  FIELD_MATERIAL_COLOR_SERVICE_MESSAGE,
+];
+
 export const EDITABLE_AUTOPOPULATED_FIELDS: readonly string[] = [
   FIELD_MATERIAL,
   FIELD_MATERIAL_DESCRIPTION,
@@ -138,6 +176,21 @@ export const PART_LOOKUP_POPULATED_FIELDS: readonly string[] = [
   FIELD_BOM_LINK_START_DATE,
   FIELD_BOM_LINK_END_DATE,
   FIELD_QUANTITY,
+];
+
+export const EBOM_CORE_FIELDS: readonly string[] = [
+  FIELD_PART_NUMBER,
+  FIELD_BOM_LINK_PART,
+  FIELD_BOM_LINK_START_DATE,
+  FIELD_BOM_LINK_END_DATE,
+  FIELD_QUANTITY,
+];
+
+export const SBOM_EDITABLE_FIELDS: readonly string[] = [
+  FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
+  FIELD_QUANTITY,
+  FIELD_BOM_LINK_START_DATE,
+  FIELD_BOM_LINK_END_DATE,
 ];
 
 export const NEW_ROW_EDITABLE_FIELDS: readonly string[] = [
