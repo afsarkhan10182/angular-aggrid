@@ -45,4 +45,4 @@ Thumbs.db
 # generate_mock_data.js
 public/mock.json
 public/api/*.json
-/scripts/*
+scripts/post-build.js
