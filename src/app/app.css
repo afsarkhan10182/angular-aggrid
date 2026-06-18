@@ -1,0 +1,976 @@
+/**
+ * Root App styles
+ * --------------------------------------------------------------------------
+ */
+.ag-grid-section {
+  position: relative;
+}
+
+/* -----------------------------------------------------------------------------
+ * Reusable hierarchy header styles (rendered inside AG Grid cellRenderer HTML)
+ *
+ * NOTE: AG Grid cell renderers produce DOM that is not stamped with this
+ * component's emulated encapsulation attributes. Use ::ng-deep so these class
+ * styles actually apply inside the grid.
+ * -------------------------------------------------------------------------- */
+:host ::ng-deep .hier-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+:host ::ng-deep .hier-clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+:host ::ng-deep .hier-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  padding: 0 8px;
+  font-weight: 600;
+  background: var(--bg, transparent);
+  border-left: 4px solid var(--border, transparent);
+  box-sizing: border-box;
+  overflow: hidden;
+  transition:
+    background-color 0.15s ease,
+    border-left-color 0.15s ease;
+}
+
+:host ::ng-deep .hier-header:hover {
+  background: var(--bg-hover, var(--bg, transparent));
+  border-left-color: var(--border-hover, var(--border, transparent));
+}
+
+:host ::ng-deep .hier-arrow {
+  margin-right: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  width: 16px;
+  text-align: center;
+  display: inline-block;
+  color: var(--arrow-color, #1e40af);
+  flex: 0 0 auto;
+}
+
+:host ::ng-deep .hier-title {
+  display: block;
+  flex: 1 1 auto;
+  max-width: 100%;
+  font-size: var(--title-size, 13px);
+  font-weight: 600;
+  color: var(--title-color, #1e293b);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+:host ::ng-deep .hier-title-highlight {
+  color: #ff0000;
+}
+
+:host ::ng-deep .direct-text-highlight {
+  color: #ff0000;
+}
+
+:host ::ng-deep .hier-count {
+  margin-left: 6px;
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+  flex: 0 0 auto;
+}
+
+:host ::ng-deep .hier-indent {
+  display: inline-block;
+  width: var(--indent, 0px);
+}
+
+:host ::ng-deep .hier-indent-16 {
+  --indent: 16px;
+}
+
+:host ::ng-deep .hier-header-fullwidth {
+  height: 100%;
+  padding: 0 8px;
+}
+
+:host ::ng-deep .section-header {
+  --bg: transparent;
+  --bg-hover: #e0f2fe;
+  --title-size: 13px;
+  --title-color: #0f172a;
+  --arrow-color: #1e40af;
+  border-left-width: 0;
+  padding: 0 6px;
+  column-gap: 2px;
+}
+
+:host ::ng-deep .section-header .hier-arrow {
+  margin-right: 4px;
+  width: 14px;
+}
+
+:host ::ng-deep .material-header {
+  --bg: #f0fdf4;
+  --bg-hover: #dcfce7;
+  --border: #10b981;
+  --border-hover: #059669;
+  --title-size: 13px;
+  --title-color: #065f46;
+  --arrow-color: #065f46;
+}
+
+:host ::ng-deep .parent-row-header {
+  --bg: #eff6ff;
+  --bg-hover: #dbeafe;
+  --border: #3b82f6;
+  --border-hover: #1d4ed8;
+  --title-size: 12px;
+  --title-color: #1e40af;
+  --arrow-color: #1e40af;
+  padding: 0 6px;
+  border-radius: 2px;
+  margin: 0;
+  border-left-width: 3px;
+  font-weight: 500;
+}
+
+:host ::ng-deep .direct-row {
+  height: 100%;
+  padding: 0 6px;
+  align-items: center;
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+:host ::ng-deep .direct-row .direct-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+:host ::ng-deep .direct-row .direct-link-icon,
+:host ::ng-deep .material-header .material-link-icon {
+  margin-right: 6px;
+  font-size: 12px;
+  color: #0f766e;
+  flex: 0 0 auto;
+  cursor: pointer;
+  user-select: none;
+}
+
+.loading-spinner-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.95);
+  z-index: 10000;
+  border-radius: 4px;
+}
+
+.loading-spinner {
+  text-align: center;
+}
+
+.loading-spinner p {
+  margin-top: 16px;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+
+.spinner {
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.ag-grid-container-wrapper.loading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Shared Grid Styles - Common styles for AG-Grid components */
+
+/* Parent row styling */
+.ag-row.parent-row {
+  background-color: #f8f9fa !important;
+  border-left: 3px solid #007bff !important;
+}
+
+.ag-row.parent-row .ag-cell {
+  background-color: #f8f9fa !important;
+  font-weight: 600;
+}
+
+/* Subrow styling */
+.ag-row.subrow {
+  background-color: #fafbfc !important;
+  border-left: 3px solid #28a745 !important;
+}
+
+.ag-row.subrow .ag-cell {
+  background-color: #fafbfc !important;
+  padding-left: 20px;
+}
+
+/* Toggle switch styling - Force override browser defaults */
+.toggle-switch-container {
+  display: inline-flex !important;
+  align-items: center !important;
+  margin-left: 8px;
+  gap: 8px;
+  background: #f8fafc !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  border: 1px solid #e2e8f0 !important;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.toggle-text {
+  font-size: 12px !important;
+  color: #374151 !important;
+  white-space: nowrap !important;
+  font-weight: 500 !important;
+  flex-shrink: 0 !important;
+  margin-right: 0 !important;
+}
+
+.toggle-switch {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  background: transparent !important;
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+.toggle-switch input[type='checkbox'] {
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+  visibility: hidden !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: none !important;
+}
+
+.toggle-slider {
+  position: relative !important;
+  cursor: pointer !important;
+  background-color: #d1d5db !important;
+  transition: 0.3s ease !important;
+  border-radius: 12px !important;
+  border: 1px solid #9ca3af !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  display: block !important;
+  width: 50px !important;
+  height: 24px !important;
+  flex-shrink: 0 !important;
+}
+
+.toggle-slider:before {
+  position: absolute !important;
+  content: '' !important;
+  height: 18px !important;
+  width: 18px !important;
+  left: 2px !important;
+  bottom: 2px !important;
+  background-color: white !important;
+  transition: 0.3s ease !important;
+  border-radius: 50% !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid #d1d5db !important;
+  display: block !important;
+}
+
+.toggle-switch input[type='checkbox']:checked + .toggle-slider {
+  background-color: #10b981 !important;
+  border-color: #059669 !important;
+}
+
+.toggle-switch input[type='checkbox']:focus + .toggle-slider {
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+}
+
+.toggle-switch input[type='checkbox']:checked + .toggle-slider:before {
+  transform: translateX(26px) !important;
+  -webkit-transform: translateX(26px) !important;
+  -moz-transform: translateX(26px) !important;
+}
+
+/* Ensure toggle switch is visible and properly styled */
+.toggle-switch-container:hover {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.toggle-switch:hover .toggle-slider {
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15) !important;
+}
+
+.toggle-switch input[type='checkbox']:checked + .toggle-slider:hover {
+  background-color: #059669 !important;
+}
+
+/* Additional overrides to ensure the checkbox doesn't show */
+.toggle-switch input[type='checkbox']::-webkit-outer-spin-button,
+.toggle-switch input[type='checkbox']::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+.toggle-switch input[type='checkbox']::-moz-focus-inner {
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+/* Highlight expired rows */
+.ag-row.expired-row {
+  background-color: #fee2e2 !important;
+}
+
+.ag-row.expired-row .ag-cell {
+  background-color: #fee2e2 !important;
+}
+
+/* Search Filter Section Styling - :host scopes to app so these override global and prevent overlap */
+:host .controls-section {
+  position: relative;
+  z-index: 3000;
+  overflow: visible;
+}
+
+:host .search-filter-section {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 auto;
+  overflow: visible;
+}
+
+:host .search-filter-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  max-width: 320px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+:host .sku-filter-container {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  max-width: none;
+  min-width: 0;
+  flex-shrink: 0;
+  overflow: visible;
+  position: relative;
+  z-index: 3010;
+}
+
+:host .search-filter-container:hover,
+:host .sku-filter-container:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+:host .search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 0 8px;
+  transition: all 0.2s ease;
+  flex: 1;
+  height: 30px;
+  min-width: 120px;
+  max-width: 100%;
+}
+
+:host .sku-filter-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  flex-shrink: 0;
+}
+
+:host .sku-filter-select-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 200px;
+  min-width: 200px;
+  max-width: 200px;
+}
+
+:host .sku-filter-select {
+  height: 30px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  background: #f9fafb;
+  font-size: 13px;
+  padding: 0 30px 0 8px;
+  color: #111827;
+  outline: none;
+  cursor: pointer;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  line-height: 1.2;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+:host .sku-filter-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+:host .sku-filter-select option:disabled {
+  color: #9ca3af;
+}
+
+:host .sku-filter-select option:checked {
+  background: #dbeafe;
+  color: #1e3a8a;
+  font-weight: 600;
+}
+
+:host .sku-filter-select-arrow {
+  position: absolute;
+  right: 8px;
+  color: #6b7280;
+  pointer-events: none;
+  transition: transform 0.2s ease;
+}
+
+:host .sku-filter-select-wrapper.open .sku-filter-select-arrow {
+  transform: rotate(180deg);
+}
+
+:host .search-input-wrapper:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+:host .search-input {
+  width: 100%;
+  min-width: 0;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: #374151;
+  background: transparent;
+  font-family: inherit;
+  line-height: 1;
+  padding-left: 10px;
+}
+
+:host .search-input::placeholder {
+  color: #9ca3af;
+  font-style: normal;
+}
+
+:host .clear-search-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #6b7280;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+:host .clear-search-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+:host .search-filter-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  padding: 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.2);
+  white-space: nowrap;
+  height: 30px;
+  width: 30px;
+  min-width: 30px;
+  flex-shrink: 0;
+}
+
+:host .search-filter-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+:host .search-filter-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+:host .search-filter-btn:disabled {
+  background: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Responsive adjustments for the controls row - :host ensures app.css wins over global */
+:host .controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: #fafbfc;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  min-height: 60px;
+}
+
+/* Prevent search and SKU view overlapping: allow wrap and shrink */
+@media (max-width: 1200px) and (min-width: 769px) {
+  :host .controls-row {
+    gap: 12px;
+  }
+
+  :host .left-controls-group {
+    min-width: 0;
+    flex-basis: 100%;
+  }
+
+  :host .right-controls-group {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  :host .search-filter-section {
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
+  }
+
+  :host .search-filter-container {
+    max-width: 100%;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  :host .sku-filter-container {
+    max-width: 100%;
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+
+  :host .search-input-wrapper {
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 768px) {
+  :host .search-filter-section {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  :host .search-filter-container,
+  :host .sku-filter-container {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  :host .sku-filter-select-wrapper {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  :host .sku-filter-select {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+/* Left Controls Group - Criteria and Search */
+:host .left-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+:host .criteria-display {
+  flex: 0 1 auto;
+  min-width: 120px;
+  max-width: 500px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Right Controls Group - Show Expired, Last Saved, Save */
+:host .right-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  white-space: nowrap;
+}
+
+:host .save-section {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+/* Action Dropdown */
+.action-dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+.action-dropdown-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+
+.action-dropdown-btn.active {
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.action-dropdown-btn app-icon[name='chevron-down'] {
+  transition: transform 0.2s ease;
+}
+
+.action-dropdown-btn app-icon[name='chevron-down'].rotated {
+  transform: rotate(180deg);
+}
+
+.action-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+  min-width: 200px;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.action-dropdown-item {
+  width: 100%;
+  padding: 10px 16px;
+  background: white;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #1e293b;
+  transition: background-color 0.15s ease;
+}
+
+.action-dropdown-item:hover:not(.disabled) {
+  background: #f1f5f9;
+}
+
+.action-dropdown-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f8fafc;
+}
+
+.action-dropdown-item.disabled:hover {
+  background: #f8fafc;
+}
+
+.action-dropdown-item:first-child {
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+
+.action-dropdown-item:last-child {
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.action-dropdown-item:not(:last-child) {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.action-dropdown-item app-icon {
+  flex-shrink: 0;
+  color: #64748b;
+}
+
+.action-dropdown-item:not(.disabled):hover app-icon {
+  color: #475569;
+}
+
+/* Disconnected SKUs — same height as Mass Edit panel so grid height stays consistent */
+.disconnected-skus-panel {
+  background: #fef2f2;
+  border: 2px solid #fecaca;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  min-height: 136px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.disconnected-skus-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #fecaca;
+  min-height: 32px;
+}
+
+.disconnected-skus-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.disconnected-skus-close {
+  flex-shrink: 0;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.disconnected-skus-close:hover {
+  background: #dc2626;
+}
+
+.disconnected-skus-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-content: flex-start;
+  flex: 1;
+  min-height: 40px;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+.disconnected-skus-chip {
+  font-size: 12px;
+  padding: 4px 6px 4px 8px;
+  background: #fff;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+  color: #374151;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.disconnected-skus-chip-undo {
+  font-size: 11px;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #64748b;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.disconnected-skus-chip-undo:hover {
+  background: #f0fdf4;
+  color: #22c55e;
+  transform: scale(1.2);
+}
+
+/* Reconnect icon in grid cell; hover shows "Reconnect" tooltip */
+:host ::ng-deep .sku-reconnect-btn {
+  margin-left: 6px;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  background: transparent;
+  color: #64748b;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+:host ::ng-deep .sku-reconnect-btn:hover {
+  background: #f0fdf4;
+  color: #22c55e;
+  transform: scale(1.25);
+}
+
+/* -----------------------------------------------------------------------------
+ * Visual highlight for row state (UX)
+ * - Edited (touched/changed, not saved yet): light yellow
+ * - Clean / saved: default AG Grid styling (no highlight)
+ *
+ * AG Grid rows/cells are rendered outside Angular's emulated encapsulation
+ * attributes, so we need ::ng-deep for these styles to apply reliably.
+ * -------------------------------------------------------------------------- */
+:host ::ng-deep .ag-row.row-edited,
+:host ::ng-deep .ag-row.row-edited .ag-cell,
+:host ::ng-deep .ag-row.ag-row-inline-editing,
+:host ::ng-deep .ag-row.ag-row-inline-editing .ag-cell {
+  background-color: #fef3c7 !important; /* light yellow */
+}
+
+/* Fallback (in case encapsulation changes) */
+.ag-row.row-edited,
+.ag-row.row-edited .ag-cell,
+.ag-row.ag-row-inline-editing,
+.ag-row.ag-row-inline-editing .ag-cell {
+  background-color: #fef3c7 !important;
+}

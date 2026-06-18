@@ -40,3 +40,9 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Development files (not needed in production)
+# generate_mock_data.js
+public/mock.json
+public/api/*.json
+scripts/*
