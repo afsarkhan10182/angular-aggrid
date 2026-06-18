@@ -2,7 +2,6 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 function getProjectName() {
-  console.log(distDir)
   const angularJsonPath = path.join(__dirname, '..', 'angular.json');
   try {
     const angularJson = JSON.parse(fs.readFileSync(angularJsonPath, 'utf8'));
