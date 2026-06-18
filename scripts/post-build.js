@@ -16,7 +16,6 @@ function getProjectName() {
 }
 
 const projectName = getProjectName();
-console.log(projectName)
 const distDir = path.join(__dirname, '..', 'dist', projectName);
 const browserDir = path.join(distDir, 'browser');
 const indexHtmlPath = path.join(browserDir, 'index.html');
