@@ -1,3 +1,4 @@
+// Product BOM constants: centralizes BOM type, field names, labels, and validation keys used by the Product MBOM composer.
 // BOM and API core values.
 export const BOM_TYPE_PRODUCTMBOM = 'MBOM';
 export const DEFAULT_BOM_TYPE = BOM_TYPE_PRODUCTMBOM;

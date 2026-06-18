@@ -1,3 +1,4 @@
+// Product BOM linked BOM modal: displays linked BOM details opened from Product MBOM part rows without changing the main composer data.
 import { Component, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { BOM_LINK_KEY, FIELD_PART_NUMBER } from '../../constants';
 import { CommonModule } from '@angular/common';

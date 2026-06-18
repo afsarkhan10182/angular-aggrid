@@ -1,3 +1,4 @@
+// Product BOM utility service: contains shared row, hierarchy, styling, search, and value helpers used across the Product MBOM grid.
 import { Inject, Injectable } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { GridApi, ColDef } from 'ag-grid-community';

@@ -1,3 +1,4 @@
+// Product BOM data service: loads Product MBOM API data, SKU metadata, linked BOM details, and autocomplete lookup data for the composer.
 import {
   BOM_LINK_KEY,
   DEFAULT_BOM_TYPE,

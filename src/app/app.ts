@@ -1,3 +1,4 @@
+// Product BOM Composer controller: loads Product MBOM data, manages grid state, applies filters, and coordinates grid rendering for the Product BOM screen.
 import {
   ChangeDetectorRef,
   Component,

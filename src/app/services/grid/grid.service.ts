@@ -1,3 +1,4 @@
+// Product BOM grid renderer helpers: renders Product MBOM hierarchy rows, SKU cells, row expansion, search highlighting, and column visibility behavior.
 import {
   ENUM_MBOM_LINE_ITEM,
   VALUE_SPEC_NO,

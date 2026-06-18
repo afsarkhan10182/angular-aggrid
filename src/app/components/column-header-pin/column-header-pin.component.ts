@@ -1,3 +1,4 @@
+// Product BOM header component: renders Product MBOM grid headers with sorting, filtering, pinning, and SKU header presentation.
 import {
   Component,
   OnInit,

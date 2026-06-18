@@ -1,3 +1,4 @@
+// Product BOM validation service: validates Product MBOM required fields, duplicate rows, SKU selections, effective dates, and data consistency.
 import { Injectable } from '@angular/core';
 import {
   BOM_LINK_KEY,

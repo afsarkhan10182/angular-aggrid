@@ -1,3 +1,4 @@
+// Product BOM grid data transformer: converts API Product MBOM sections, parts, and SKU details into the hierarchical grid row model.
 import { Injectable } from '@angular/core';
 import {
   BOM_LINK_KEY,

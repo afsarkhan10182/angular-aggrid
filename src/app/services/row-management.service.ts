@@ -1,3 +1,4 @@
+// Product BOM row management service: manages Product MBOM row edit state, new-row creation, SKU value changes, validation state, and save preparation.
 import {
   BOM_LINK_KEY,
   LS_KEY_LAST_SAVED_AT,

@@ -1,3 +1,4 @@
+// Product BOM grid configuration: defines shared AG Grid defaults, row classes, and column behavior for the Product MBOM composer.
 import { Injectable, Renderer2, RendererFactory2 } from '@angular/core';
 import { GridApi, GridOptions, IRowNode, getGridElement } from 'ag-grid-community';
 import { SkuService } from '../sku.service';

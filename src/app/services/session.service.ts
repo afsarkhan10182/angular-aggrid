@@ -1,3 +1,4 @@
+// Product BOM session service: provides current user context shown by the composer header and used by API-backed UI flows.
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';

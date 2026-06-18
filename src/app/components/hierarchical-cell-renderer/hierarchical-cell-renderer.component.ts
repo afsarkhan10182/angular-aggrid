@@ -1,3 +1,4 @@
+// Product BOM hierarchy renderer: renders Product MBOM section, material, group, and part rows inside the AG Grid hierarchy.
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';

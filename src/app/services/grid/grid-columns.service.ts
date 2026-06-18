@@ -1,3 +1,4 @@
+// Product BOM grid column builder: defines Product MBOM column definitions, cell editors, headers, and SKU columns used by the composer grid.
 import { Injectable } from '@angular/core';
 import { ColDef } from 'ag-grid-community';
 import { AutocompleteCellEditorComponent } from '../../components/autocomplete-cell-editor/autocomplete-cell-editor.component';

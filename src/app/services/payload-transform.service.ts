@@ -1,3 +1,4 @@
+// Product BOM payload transformer: converts Product MBOM grid rows, edited fields, SKU values, and row metadata into the backend payload shape.
 import { Injectable } from '@angular/core';
 import {
   BOM_LINK_KEY,

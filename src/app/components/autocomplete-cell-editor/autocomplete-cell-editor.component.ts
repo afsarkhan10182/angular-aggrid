@@ -1,3 +1,4 @@
+// Product BOM autocomplete editor: supports Product MBOM part, material, feature, country, and SKU-aware lookup cells inside AG Grid.
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy, Inject } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
