@@ -207,6 +207,19 @@ export class DataService {
     return headers;
   }
 
+  private buildMultipartHeaders(): any {
+    const csrfToken = this.sessionService.getCsrfNonce();
+    const headers: any = {
+      accept: 'application/json',
+    };
+
+    if (csrfToken) {
+      headers[HEADER_CSRF_NONCE] = csrfToken;
+    }
+
+    return headers;
+  }
+
   loadData(): Observable<ApiData> {
     let apiUrl = environment.useMockApi
       ? environment.dataApiPath
@@ -617,6 +630,25 @@ export class DataService {
       catchError((error: HttpErrorResponse) => {
         return throwError(() => error);
       }),
+    );
+  }
+
+  emailJdeBomExcelReport(file: Blob, fileName: string, metadata: Record<string, string>): Observable<any> {
+    if (environment.useMockApi) {
+      return of({ success: true });
+    }
+
+    const apiUrl = `${this.utilService.getServiceHostUrl()}${environment.jdeBomEmailApiPath}`;
+    const formData = new FormData();
+    formData.append('file', file, fileName);
+    Object.entries(metadata).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        formData.append(key, value);
+      }
+    });
+
+    return this.http.post<any>(apiUrl, formData, { headers: this.buildMultipartHeaders() }).pipe(
+      catchError((error: HttpErrorResponse) => throwError(() => error)),
     );
   }
 

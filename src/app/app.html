@@ -133,6 +133,16 @@
               <app-icon name="file-excel" size="14"></app-icon>
               <span>Export</span>
             </button>
+            <button
+              (click)="exportBomToJdeEmail(); closeActionDropdown()"
+              class="action-dropdown-item"
+              [class.disabled]="isEmailingJdeBomReport"
+              [disabled]="isEmailingJdeBomReport"
+              [title]="getJdeBomEmailTooltip()"
+            >
+              <app-icon name="file-excel" size="14"></app-icon>
+              <span>Export BOM to JDE</span>
+            </button>
             <!-- Mass Edit -->
             <button
               (click)="openMassEdit(); closeActionDropdown()"

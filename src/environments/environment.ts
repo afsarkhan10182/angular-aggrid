@@ -9,6 +9,7 @@ export const environment = {
   dataApiPath: '/mock.json',
   cooAnalysisApiPath: '/api/coo-analysis.json',
   cooAnalysisExportApiPath: '/api/coo-analysis-export.json',
+  jdeBomEmailApiPath: '/api/jde-bom-email',
   credentials: {
     username: 'wcadmin',
     password: 'wcadmin',

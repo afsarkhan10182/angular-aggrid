@@ -313,13 +313,30 @@ export class UtilService {
       return Promise.reject(new Error('No columns found for export'));
     }
 
+    const excelData = this.buildRowsExcelData(columns, rows);
+    const columnWidths = columns.map((column) => ({ wch: column.width ?? 15 }));
+    return this.writeExcelWorkbook(excelData, sheetName, fileName, columnWidths);
+  }
+
+  exportRowsToExcelBlob(options: ExcelRowsExportOptions): Promise<Blob> {
+    const { columns, rows, sheetName = EXCEL_SHEET_NAME } = options;
+
+    if (!columns || columns.length === 0) {
+      return Promise.reject(new Error('No columns found for export'));
+    }
+
+    const excelData = this.buildRowsExcelData(columns, rows);
+    // console.table(excelData)
+    const columnWidths = columns.map((column) => ({ wch: column.width ?? 15 }));
+    return this.createExcelWorkbookBlob(excelData, sheetName, columnWidths);
+  }
+
+  private buildRowsExcelData(columns: ExcelExportColumn[], rows: any[]): any[] {
     const excelData: any[] = [columns.map((column) => column.headerName)];
     rows.forEach((row) => {
       excelData.push(columns.map((column) => this.formatCellValueForExport(row, column.field)));
     });
-
-    const columnWidths = columns.map((column) => ({ wch: column.width ?? 15 }));
-    return this.writeExcelWorkbook(excelData, sheetName, fileName, columnWidths);
+    return excelData;
   }
 
   getExcludedSearchFields(): Set<string> {
@@ -764,6 +781,26 @@ export class UtilService {
       fileName || `${EXCEL_FILE_NAME_PREFIX}${new Date().toISOString().split('T')[0]}.xlsx`;
 
     XLSX.writeFile(workbook, exportFileName);
+  }
+
+  private async createExcelWorkbookBlob(
+    excelData: any[],
+    sheetName: string,
+    columnWidths?: any[]
+  ): Promise<Blob> {
+    const XLSX = await import('xlsx');
+    const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+    if (columnWidths) {
+      worksheet['!cols'] = columnWidths;
+    }
+
+    const workbookArray = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    return new Blob([workbookArray], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
   }
 
   private buildExcelRowData(row: any, node: any, visibleColumns: any[]): any[] {
