@@ -17,15 +17,14 @@
 
 <%!
     public static final String JSPNAME = "bomComposer";
-    private static final Logger logger = LogManager.getLogger("rfa.trek.jsp.bomcomposer.bomComposer");
+    private static final Logger logger = LogManager.getLogger("rfa.trek.flexplmapps.bomcomposer.bomComposer");
 	%>
 
 <%
     String ids = request.getParameter("ids");
 	String refSKU = request.getParameter("referenceSKU");
 	String refSKUId = "";
-	if (FormatHelper.hasContent(refSKU))
-    {
+	if (FormatHelper.hasContent(refSKU)) {
 		LCSRevisableEntity sku = (LCSRevisableEntity) LCSQuery.findObjectById(refSKU);
         if (sku != null) {
             refSKUId = sku.getName();
