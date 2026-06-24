@@ -11,40 +11,26 @@
 			   com.lcs.wc.material.LCSMaterial,
 			   com.lcs.wc.material.LCSMaterialColorQuery,
 			   com.lcs.wc.db.FlexObject,
-			   com.test.*,
+			   org.apache.commons.lang3.StringEscapeUtils,
                com.lcs.wc.util.FormatHelper"
 %>
 
 <%!
     public static final String JSPNAME = "bomComposer";
     private static final Logger logger = LogManager.getLogger("rfa.trek.jsp.bomcomposer.bomComposer");
-
-    private static String escapeHtmlAttribute(Object value) {
-        if (value == null) {
-            return "";
-        }
-        return String.valueOf(value)
-            .replace("&", "&amp;")
-            .replace("\"", "&quot;")
-            .replace("'", "&#x27;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;");
-    }
 	%>
 
 <%
     String ids = request.getParameter("ids");
-	System.out.println("ids = "+ids);
 	String refSKU = request.getParameter("referenceSKU");
 	String refSKUId = "";
 	if (FormatHelper.hasContent(refSKU))
     {
-        LCSRevisableEntity sku = (LCSRevisableEntity) LCSQuery.findObjectById(refSKU);
+		LCSRevisableEntity sku = (LCSRevisableEntity) LCSQuery.findObjectById(refSKU);
         if (sku != null) {
             refSKUId = sku.getName();
-        }
-    }
-	System.out.println("refSKUId = "+refSKUId);
+		}
+	}
     String bomType = request.getParameter("bomType");
 	WTUser wtUser = (WTUser) SessionHelper.manager.getPrincipal();
 	String userName = wtUser.getFullName();
@@ -65,7 +51,7 @@
   <!-- ANGULAR_STYLES -->
 </head>
 <body>
-  <div id="angular-root" data-bomid="<%= escapeHtmlAttribute(ids) %>" data-username="<%= escapeHtmlAttribute(userName) %>" data-host="<%= escapeHtmlAttribute(windchillHost) %>" data-bomtype="<%= escapeHtmlAttribute(bomType) %>" data-refskuid="<%= escapeHtmlAttribute(refSKUId) %>"></div>
+  <div id="angular-root" data-bomid="<%= StringEscapeUtils.escapeHtml4(ids) %>" data-username="<%= StringEscapeUtils.escapeHtml4(userName) %>" data-host="<%= StringEscapeUtils.escapeHtml4(windchillHost) %>" data-bomtype="<%= StringEscapeUtils.escapeHtml4(bomType) %>" data-refskuid="<%= StringEscapeUtils.escapeHtml4(refSKUId) %>"></div>
   <app-root></app-root>
   <!-- ANGULAR_SCRIPTS -->
 </body>
