@@ -22,34 +22,76 @@ export class UtilService {
   ) {}
 
   /**
-   * Convert date from MM/DD/YYYY format to API format (YYYY/M/D)
-   * Example: "10/30/2025" -> "2025/10/30"
-   * @param dateStr - Date string in various formats
-   * @returns Formatted date string in YYYY/M/D format or empty string
+   * Convert date from MM/DD/YYYY or parseable date input to API format (YYYY/M/D).
+   * Examples: "10/30/2025" -> "2025/10/30", "2025/01/02" -> "2025/1/2".
+   * Leading zeroes are stripped from month/day. Invalid input returns an empty string.
+   * @param dateStr - Date string in MM/DD/YYYY, YYYY/M/D, or another parseable format
+   * @returns Formatted date string in YYYY/M/D format, or empty string for invalid input
    */
   convertDateToApiFormat(dateStr: string): string {
-    if (!dateStr) return '';
+    const trimmedDate = String(dateStr ?? '').trim();
+    if (!trimmedDate) return '';
 
-    if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(dateStr)) {
-      return dateStr;
+    const yyyymmddPattern = /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/;
+    const yyyymmddMatch = yyyymmddPattern.exec(trimmedDate);
+    if (yyyymmddMatch) {
+      const [, year, month, day] = yyyymmddMatch;
+      return this.formatApiDateParts(year, month, day);
+    }
+
+    const yyyymmddDashPattern = /^(\d{4})-(\d{1,2})-(\d{1,2})$/;
+    const yyyymmddDashMatch = yyyymmddDashPattern.exec(trimmedDate);
+    if (yyyymmddDashMatch) {
+      const [, year, month, day] = yyyymmddDashMatch;
+      return this.formatApiDateParts(year, month, day);
     }
 
     const mmddyyyyPattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
-    const match = mmddyyyyPattern.exec(dateStr);
-    if (match) {
-      const [, month, day, year] = match;
-      return `${year}/${Number.parseInt(month, 10)}/${Number.parseInt(day, 10)}`;
+    const mmddyyyyMatch = mmddyyyyPattern.exec(trimmedDate);
+    if (mmddyyyyMatch) {
+      const [, month, day, year] = mmddyyyyMatch;
+      return this.formatApiDateParts(year, month, day);
     }
 
-    const date = new Date(dateStr);
+    const date = new Date(trimmedDate);
     if (!Number.isNaN(date.getTime())) {
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-      return `${year}/${month}/${day}`;
+      return this.formatApiDateParts(
+        String(date.getFullYear()),
+        String(date.getMonth() + 1),
+        String(date.getDate()),
+      );
     }
 
-    return dateStr;
+    return '';
+  }
+
+  private formatApiDateParts(year: string, month: string, day: string): string {
+    const yearValue = Number.parseInt(year, 10);
+    const monthValue = Number.parseInt(month, 10);
+    const dayValue = Number.parseInt(day, 10);
+
+    if (!this.isValidDateParts(yearValue, monthValue, dayValue)) {
+      return '';
+    }
+
+    return yearValue + '/' + monthValue + '/' + dayValue;
+  }
+
+  private isValidDateParts(year: number, month: number, day: number): boolean {
+    if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+      return false;
+    }
+
+    if (month < 1 || month > 12 || day < 1 || day > 31) {
+      return false;
+    }
+
+    const date = new Date(year, month - 1, day);
+    return (
+      date.getFullYear() === year &&
+      date.getMonth() === month - 1 &&
+      date.getDate() === day
+    );
   }
 
   /**

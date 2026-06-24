@@ -1,6 +1,6 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
-import { App } from './app/app';
+import { AppComponent } from './app/app';
 import {
   ModuleRegistry,
   ClientSideRowModelModule,
@@ -48,7 +48,7 @@ ModuleRegistry.registerModules([
   HighlightChangesModule,
 ]);
 
-bootstrapApplication(App, appConfig).catch((err) => {
+bootstrapApplication(AppComponent, appConfig).catch((err) => {
   // Application bootstrap error - handle silently in production
   if (!environment.production) {
     throw err;

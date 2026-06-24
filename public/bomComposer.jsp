@@ -18,6 +18,18 @@
 <%!
     public static final String JSPNAME = "BOMComposer";
     private static final Logger logger = LogManager.getLogger("rfa.trek.jsp.bomcomposer.BOMComposer");
+
+    private static String escapeHtmlAttribute(Object value) {
+        if (value == null) {
+            return "";
+        }
+        return String.valueOf(value)
+            .replace("&", "&amp;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#x27;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;");
+    }
 	%>
 
 <%
@@ -25,11 +37,13 @@
 	System.out.println("ids = "+ids);
 	String refSKU = request.getParameter("referenceSKU");
 	String refSKUId = "";
-	if(FormatHelper.hasContent(refSKU))
-	{
-	LCSRevisableEntity sku = (LCSRevisableEntity) LCSQuery.findObjectById(refSKU);
-    refSKUId= sku.getName();
-	}
+	if (FormatHelper.hasContent(refSKU))
+    {
+        LCSRevisableEntity sku = (LCSRevisableEntity) LCSQuery.findObjectById(refSKU);
+        if (sku != null) {
+            refSKUId = sku.getName();
+        }
+    }
 	System.out.println("refSKUId = "+refSKUId);
     String bomType = request.getParameter("bomType");
 	WTUser wtUser = (WTUser) SessionHelper.manager.getPrincipal();
@@ -51,7 +65,7 @@
   <!-- ANGULAR_STYLES -->
 </head>
 <body>
-  <div id="angular-root" data-bomid="<%= ids %>" data-username="<%= userName %>" data-host="<%= windchillHost %>" data-bomtype="<%= bomType %>" data-refskuid="<%= refSKUId %>"></div>
+  <div id="angular-root" data-bomid="<%= escapeHtmlAttribute(ids) %>" data-username="<%= escapeHtmlAttribute(userName) %>" data-host="<%= escapeHtmlAttribute(windchillHost) %>" data-bomtype="<%= escapeHtmlAttribute(bomType) %>" data-refskuid="<%= escapeHtmlAttribute(refSKUId) %>"></div>
   <app-root></app-root>
   <!-- ANGULAR_SCRIPTS -->
 </body>

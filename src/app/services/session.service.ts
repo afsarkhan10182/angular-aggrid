@@ -20,18 +20,6 @@ export interface LoggedInUserModel {
 })
 export class SessionService {
 
-  getAuthUrl(): string {
-    return environment.useMockApi
-      ? environment.mockApiEndpoints.csrf
-      : `${this.utilService.getServiceHostUrl()}${environment.csrfUrl}`;
-  }
-
-  getUserApiUrl(): string {
-    return environment.useMockApi
-      ? environment.mockApiEndpoints.getUser
-      : `${this.utilService.getServiceHostUrl()}${environment.getUserUrl}`;
-  }
-
   private readonly sessionSubject = new BehaviorSubject<LoggedInUserModel | null>(null);
   public session$ = this.sessionSubject.asObservable();
 
@@ -44,6 +32,18 @@ export class SessionService {
     private readonly http: HttpClient,
     private readonly utilService: UtilService,
   ) {}
+
+  getAuthUrl(): string {
+    return environment.useMockApi
+      ? environment.mockApiEndpoints.csrf
+      : `${this.utilService.getServiceHostUrl()}${environment.csrfUrl}`;
+  }
+
+  getUserApiUrl(): string {
+    return environment.useMockApi
+      ? environment.mockApiEndpoints.getUser
+      : `${this.utilService.getServiceHostUrl()}${environment.getUserUrl}`;
+  }
 
   getCsrfToken(): Observable<string> {
     return this.http.get<any>(this.getAuthUrl()).pipe(
@@ -78,9 +78,8 @@ export class SessionService {
   }
 
   private getUserInfo(): Observable<LoggedInUserModel> {
-    const requestBody = {
-      userName: environment.credentials.username,
-    };
+    // User identity is resolved by the server-side Windchill session.
+    const requestBody = {};
 
     let headers: any = {
       'Content-Type': 'application/json',

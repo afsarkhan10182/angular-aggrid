@@ -155,7 +155,7 @@ export class GridColumnsService {
         minWidth: 100,
         sortable: true,
         resizable: true,
-        hide: field === 'ptcbomPartMarkUpDisplayName',
+        hide: field === 'ptcBomPartMarkupDisplayName',
         cellRenderer: (params: any) =>
           context.renderDataCellContent(params, Number(columnDef.width ?? 150)),
         tooltipValueGetter: (params: any) => context.getCellTooltipValue(params),

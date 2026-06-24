@@ -26,12 +26,14 @@ import { SkuService } from '../../services/sku.service';
 import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators';
 import { of, Subject, Subscription } from 'rxjs';
 
+type SearchMode = 'material' | 'partNumber' | 'bomFeature' | 'country' | 'service' | 'userList' | null;
+
 @Component({
   selector: 'app-autocomplete-cell-editor',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './autocomplete-cell-editor.component.html',
-  styleUrls: ['./autocomplete-cell-editor.component.css'],
+  styleUrl: './autocomplete-cell-editor.component.css',
   host: {
     '[style.display]': '"block"',
     '[style.width]': '"100%"',
@@ -56,18 +58,12 @@ export class AutocompleteCellEditorComponent
   public genericOptions: any[] = [];
   public showDropdown: boolean = false;
   public selectedIndex: number = -1;
-  public isMaterialSearch: boolean = false;
-  public isPartNumberSearch: boolean = false;
-  public isBomFeatureSearch: boolean = false;
-  public isCountrySearch: boolean = false;
-  public isServiceSearch: boolean = false;
-  public isUserListSearch: boolean = false;
+  public searchMode: SearchMode = null;
   public isLoadingMore: boolean = false;
 
   private params: any;
   private originalValue: string = '';
   private customFilterFunction?: (searchTerm: string, options: string[]) => string[];
-  private dataService: DataService;
   private searchSubject = new Subject<string>();
   private subscriptions: Subscription[] = [];
   private isDestroyed: boolean = false;
@@ -86,9 +82,32 @@ export class AutocompleteCellEditorComponent
 
   constructor(
     @Inject(DOCUMENT) private readonly document: Document,
+    private readonly dataService: DataService,
     private readonly skuService: SkuService,
-  ) {
-    this.dataService = null as any;
+  ) {}
+
+  public get isMaterialSearch(): boolean {
+    return this.searchMode === 'material';
+  }
+
+  public get isPartNumberSearch(): boolean {
+    return this.searchMode === 'partNumber';
+  }
+
+  public get isBomFeatureSearch(): boolean {
+    return this.searchMode === 'bomFeature';
+  }
+
+  public get isCountrySearch(): boolean {
+    return this.searchMode === 'country';
+  }
+
+  public get isServiceSearch(): boolean {
+    return this.searchMode === 'service';
+  }
+
+  public get isUserListSearch(): boolean {
+    return this.searchMode === 'userList';
   }
 
   private getFieldName(): string {
@@ -351,12 +370,7 @@ export class AutocompleteCellEditorComponent
     this.genericOptions = [];
     this.showDropdown = false;
     this.selectedIndex = -1;
-    this.isMaterialSearch = false;
-    this.isPartNumberSearch = false;
-    this.isBomFeatureSearch = false;
-    this.isCountrySearch = false;
-    this.isServiceSearch = false;
-    this.isUserListSearch = false;
+    this.searchMode = null;
     this.isLoadingMore = false;
     this.currentQuery = '';
     this.fromIndex = 1;
@@ -370,48 +384,53 @@ export class AutocompleteCellEditorComponent
 
     this.params = params;
 
-    this.dataService =
-      params.context?.dataService ||
-      params.params?.context?.dataService ||
-      (params.api?.gridOptionsService?.get
-        ? params.api.gridOptionsService.get('context')?.dataService
-        : null) ||
-      (params.api?.getContext ? params.api.getContext()?.dataService : null);
-
     this.value = params.value !== null && params.value !== undefined ? String(params.value) : '';
     this.originalValue = this.value;
     this.placeholder = params.placeholder || 'search materials...';
 
     const fieldName = this.getFieldName();
 
-    this.isPartNumberSearch =
+    const isPartNumberSearch =
       params.isPartNumberSearch === true ||
       fieldName === FIELD_BOM_LINK_PART ||
       fieldName === FIELD_PART_NUMBER ||
       fieldName === FIELD_PART;
-
-    this.isBomFeatureSearch = params.isBomFeatureSearch === true || fieldName === FIELD_BOM_LINK_FEATURE;
-    this.isCountrySearch =
+    const isBomFeatureSearch = params.isBomFeatureSearch === true || fieldName === FIELD_BOM_LINK_FEATURE;
+    const isCountrySearch =
       params.isCountrySearch === true || fieldName === FIELD_BOM_LINK_COUNTRY_OF_ORIGIN;
-    this.isServiceSearch =
+    const isServiceSearch =
       params.isServiceSearch === true ||
       fieldName === 'materialColorServiceSubstituteOne' ||
       fieldName === 'materialColorServiceSubstituteTwo' ||
       fieldName === 'materialColorServiceEquivalent';
-    this.isUserListSearch = params.isUserListSearch === true;
+    const isUserListSearch = params.isUserListSearch === true;
     this.userListAttributeName = params.userListAttributeName || fieldName || '';
     this.userListType = params.userListType || '';
 
-    this.isMaterialSearch =
-      !this.isPartNumberSearch &&
-      !this.isBomFeatureSearch &&
-      !this.isCountrySearch &&
-      !this.isServiceSearch &&
-      !this.isUserListSearch &&
+    const isMaterialSearch =
+      !isPartNumberSearch &&
+      !isBomFeatureSearch &&
+      !isCountrySearch &&
+      !isServiceSearch &&
+      !isUserListSearch &&
       (params.useApiSearch === true ||
         (this.dataService &&
           (this.placeholder.includes('material') || this.placeholder.includes('Material'))) ||
         (this.dataService && (fieldName === FIELD_MATERIAL || fieldName === FIELD_MATERIAL_DESCRIPTION)));
+
+    if (isPartNumberSearch) {
+      this.searchMode = 'partNumber';
+    } else if (isBomFeatureSearch) {
+      this.searchMode = 'bomFeature';
+    } else if (isCountrySearch) {
+      this.searchMode = 'country';
+    } else if (isServiceSearch) {
+      this.searchMode = 'service';
+    } else if (isUserListSearch) {
+      this.searchMode = 'userList';
+    } else if (isMaterialSearch) {
+      this.searchMode = 'material';
+    }
 
     let valuesParam = params.values;
     if (typeof valuesParam === 'function') {

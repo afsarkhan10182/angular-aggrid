@@ -21,7 +21,10 @@ import { AutocompleteCellEditorComponent } from './components/autocomplete-cell-
 import { IconComponent } from './components/icon/icon.component';
 import { ColumnHeaderPinComponent } from './components/column-header-pin/column-header-pin.component';
 import { HierarchicalCellRendererComponent } from './components/hierarchical-cell-renderer/hierarchical-cell-renderer.component';
-import { LinkedBomModalComponent } from './components/linked-bom-modal/linked-bom-modal.component';
+import {
+  LinkedBomModalComponent,
+  type LinkedBomData,
+} from './components/linked-bom-modal/linked-bom-modal.component';
 import { DataService } from './services/data.service';
 import { GridConfigService, GroupConfig } from './services/grid/grid-config.service';
 import { GridService, ColumnVisibilityConfig } from './services/grid/grid.service';
@@ -67,6 +70,7 @@ import {
   VALUE_SPEC_YES,
 } from './constants';
 import type {
+  BomLinkSku,
   SkuFilterOption,
   MbomSkuFilterOption,
   SkuInfo,
@@ -81,16 +85,15 @@ const MAX_BOM_LINK_LOAD_ROWS = 1000;
   selector: 'app-root',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     AgGridAngular,
     IconComponent,
     LinkedBomModalComponent,
   ],
   templateUrl: './app.html',
-  styleUrls: ['./app.css'],
+  styleUrl: './app.css',
 })
-export class App implements OnInit, OnDestroy, AfterViewInit {
+export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   public gridApi!: GridApi;
   private subscriptions: Subscription[] = [];
   private actionsColumnWidth = 60;
@@ -100,7 +103,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public draggedColumnIndex: number = -1;
   public dragOverIndex: number = -1;
   public panelColumnOrder: ExtendedColDef[] = []; // Used by moveColumn; kept in sync from grid
-  private autoScrollInterval: any = null;
+  private autoScrollInterval: ReturnType<typeof setInterval> | null = null;
   private readonly AUTO_SCROLL_THRESHOLD = 50; // pixels from edge
   private readonly AUTO_SCROLL_SPEED = 10; // pixels per interval
 
@@ -112,8 +115,8 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('actionDropdown') actionDropdown!: ElementRef;
   public showExpiredData = false;
   public showLinkedBomModal = false;
-  public selectedLinkedBomData: any = {};
-  public selectedLinkedBomSkuData: any[] = [];
+  public selectedLinkedBomData: LinkedBomData = { instances: [], columns: {} };
+  public selectedLinkedBomSkuData: BomLinkSku[] = [];
   public isLinkedBomLoading = false;
   public searchText: string = '';
   public saveMessage: string = '';
@@ -413,7 +416,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private checkAuthentication(): void {
-    if (!environment.enableHttpBasicAuth) {
+    if (environment.useMockApi) {
       this.loadInitialData();
       return;
     }
@@ -797,7 +800,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
    * Check if field is editable for existing rows based on BOM type
    * MBOM: Only bomLinkStartDate, bomLinkEndDate, and quantity are editable
    * Product MBOM:
-   *   - If MBOM line item (ptcbomPartMarkUp === 'enumMBOM001'): Only IncludeInSpecSheet editable
+   *   - If MBOM line item (ptcBomPartMarkup === 'enumMBOM001'): Only IncludeInSpecSheet editable
    *   - If NOT MBOM line item: IncludeInSpecSheet, quantity, and dates editable
    */
 
@@ -1643,7 +1646,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
     this.linkedBomRequestId++;
     this.isLinkedBomLoading = false;
     this.showLinkedBomModal = false;
-    this.selectedLinkedBomData = {};
+    this.selectedLinkedBomData = { instances: [], columns: {} };
     this.selectedLinkedBomSkuData = [];
   }
 

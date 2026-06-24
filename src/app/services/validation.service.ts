@@ -53,6 +53,8 @@ export type DuplicateType =
   | typeof DUPLICATE_TYPE_DUPLICATE_PART
   | null;
 
+const EMPTY_QUANTITY_VALUES = new Set<unknown>([undefined, null, '', 0, '0']);
+
 const DUPLICATE_TYPE_ERROR_MESSAGE_MAP: Readonly<Record<string, string>> = {
   [DUPLICATE_TYPE_FEATURE_UNIQUENESS]: MSG_DUPLICATE_FEATURE_SKU_SECTION_ONE,
   [DUPLICATE_TYPE_DUPLICATE_FEATURE]: MSG_DUPLICATE_FEATURE_SKU_SECTION,
@@ -102,12 +104,16 @@ export class ValidationService {
   /**
    * Check if a field has a value in a row (checks all possible field names)
    */
+  private isEmptyQuantity(value: unknown): boolean {
+    return EMPTY_QUANTITY_VALUES.has(value);
+  }
+
   private hasFieldValue(row: any, field: RequiredField): boolean {
     for (const key of field.keys) {
       const value = row[key];
 
       if (field.label === LABEL_QUANTITY) {
-        if (value === undefined || value === null || value === '' || value === 0 || value === '0') {
+        if (this.isEmptyQuantity(value)) {
           continue;
         }
         if (typeof value === 'string') {
@@ -461,13 +467,13 @@ export class ValidationService {
         const section = bomLink.sectionInternalName || bomLink.section || '';
         const partNumber = String(bomLink?.[FIELD_PART_NUMBER] || '').trim();
         const bomLinkFeature = String(bomLink.bomLinkFeature || '').trim();
-        const ptcbomPartMarkUp = bomLink.ptcbomPartMarkUp || '';
+        const ptcBomPartMarkup = bomLink.ptcBomPartMarkup || '';
         const isEmptyPartNumber = !partNumber || partNumber === '';
 
                 if (!section) continue;
         if (isMbom && (!bomLinkFeature || bomLinkFeature === '')) continue;
 
-        if (isMbom && ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM && isEmptyPartNumber) {
+        if (isMbom && ptcBomPartMarkup === ENUM_MBOM_LINE_ITEM && isEmptyPartNumber) {
           continue;
         }
 
@@ -475,7 +481,7 @@ export class ValidationService {
           section: section,
           [FIELD_PART_NUMBER]: partNumber,
           bomLinkFeature: bomLinkFeature,
-          ptcbomPartMarkUp: ptcbomPartMarkUp,
+          ptcBomPartMarkup: ptcBomPartMarkup,
         };
 
         // Extract SKU IDs from bomLink.skus array
@@ -494,11 +500,11 @@ export class ValidationService {
         rowLike._allSkuIds = skuIdsFromApi;
 
         // Add to existing rows (merge SKUs if same combination already exists)
-        // For MBOM with ptcbomPartMarkUp === "enumMBOM001": Key is Section+Feature (no PartNumber)
-        // For MBOM with ptcbomPartMarkUp !== "enumMBOM001": Key is Section+Part+Feature
+        // For MBOM with ptcBomPartMarkup === "enumMBOM001": Key is Section+Feature (no PartNumber)
+        // For MBOM with ptcBomPartMarkup !== "enumMBOM001": Key is Section+Part+Feature
         let existingKey: string;
-        if (isMbom && ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM) {
-          // Case 2: MBOM with ptcbomPartMarkUp === "enumMBOM001" - check Section+Feature only
+        if (isMbom && ptcBomPartMarkup === ENUM_MBOM_LINE_ITEM) {
+          // Case 2: MBOM with ptcBomPartMarkup === "enumMBOM001" - check Section+Feature only
           existingKey = `${section}::${bomLinkFeature}`;
         } else {
           // Normal case: Section+Part+Feature
@@ -506,7 +512,7 @@ export class ValidationService {
         }
 
         const existingIndex = existingRows.findIndex((r) => {
-          if (isMbom && r.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM) {
+          if (isMbom && r.ptcBomPartMarkup === ENUM_MBOM_LINE_ITEM) {
             return `${r.section}::${r.bomLinkFeature}` === existingKey;
           } else {
             return `${r.section}::${r[FIELD_PART_NUMBER]}::${r.bomLinkFeature}` === existingKey;
@@ -641,7 +647,7 @@ export class ValidationService {
       const section = row.section || '';
       const partNumber = String(row?.[FIELD_PART_NUMBER] || '').trim();
       const bomLinkFeature = String(row.bomLinkFeature || '').trim();
-      const ptcbomPartMarkUp = row.ptcbomPartMarkUp || '';
+      const ptcBomPartMarkup = row.ptcBomPartMarkup || '';
 
       if (!section || !bomLinkFeature) {
         continue;
@@ -657,7 +663,7 @@ export class ValidationService {
 
       const isEmptyPartNumber = !partNumber || partNumber === '';
 
-      if (isMbom && ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM) {
+      if (isMbom && ptcBomPartMarkup === ENUM_MBOM_LINE_ITEM) {
         if (isEmptyPartNumber) {
           continue;
         }
@@ -676,7 +682,7 @@ export class ValidationService {
         }
         const skuSet = partMap.get(bomLinkFeature)!;
         skuIdsToUse.forEach((skuId: string) => skuSet.add(skuId));
-      } else if (isMbom && ptcbomPartMarkUp !== ENUM_MBOM_LINE_ITEM) {
+      } else if (isMbom && ptcBomPartMarkup !== ENUM_MBOM_LINE_ITEM) {
         if (!isEmptyPartNumber) {
           if (!existingCombinationsNoPartWithPart.has(section)) {
             existingCombinationsNoPartWithPart.set(section, new Map());
@@ -907,7 +913,7 @@ export class ValidationService {
               const instanceSection = bomLink.sectionInternalName || bomLink.section || '';
               const instanceFeature = String(bomLink.bomLinkFeature || '').trim();
               const instancePartNumber = String(bomLink?.[FIELD_PART_NUMBER] || '').trim();
-              const instancePtcbomPartMarkUp = bomLink.ptcbomPartMarkUp || '';
+              const instancePtcBomPartMarkup = bomLink.ptcBomPartMarkup || '';
 
               if (
                 instanceSection === section &&
@@ -923,7 +929,7 @@ export class ValidationService {
                     section: instanceSection,
                     feature: instanceFeature,
                     partNumber: instancePartNumber,
-                    ptcbomPartMarkUp: instancePtcbomPartMarkUp,
+                    ptcBomPartMarkup: instancePtcBomPartMarkup,
                     isEmptyPartNumber: !instancePartNumber || instancePartNumber === '',
                   });
                 }

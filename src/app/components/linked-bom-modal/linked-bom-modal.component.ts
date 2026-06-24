@@ -2,20 +2,36 @@
 import { Component, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { BOM_LINK_KEY, FIELD_PART_NUMBER } from '../../constants';
 import { CommonModule } from '@angular/common';
+import type { BomLink, BomLinkSku } from '../../services/data.service';
+
+export type LinkedBomLink = Partial<BomLink> & Record<string, unknown>;
+
+export interface LinkedBomInstance extends Record<string, unknown> {
+  'bom-link'?: LinkedBomLink;
+}
+
+export interface LinkedBomData extends Record<string, unknown> {
+  instances: LinkedBomInstance[];
+  columns: Record<string, string>;
+  material?: string;
+  materialDescription?: string;
+  materialMasterId?: string;
+}
+
 
 @Component({
   selector: 'app-linked-bom-modal',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './linked-bom-modal.component.html',
-  styleUrls: ['./linked-bom-modal.component.css'],
+  styleUrl: './linked-bom-modal.component.css',
 })
 export class LinkedBomModalComponent {
   readonly bomLinkKey = BOM_LINK_KEY;
 
-  @Input() partData: any = {};
+  @Input() partData: LinkedBomData = { instances: [], columns: {} };
   // Kept for parent-template compatibility even though this modal view doesn't render SKU cards now.
-  @Input() skuData: any[] = [];
+  @Input() skuData: BomLinkSku[] = [];
   @Input() isLoading = false;
   @Output() modalClose = new EventEmitter<void>();
 
@@ -32,11 +48,11 @@ export class LinkedBomModalComponent {
     return this.getInstances().length > 0;
   }
 
-  getInstances(): any[] {
+  getInstances(): LinkedBomInstance[] {
     const rawInstances = Array.isArray(this.partData?.instances) ? this.partData.instances : [];
     if (rawInstances.length === 0) return [];
 
-    return rawInstances.filter((instance: any) => {
+    return rawInstances.filter((instance: LinkedBomInstance) => {
       if (!instance || typeof instance !== 'object' || !instance[BOM_LINK_KEY]) {
         return false;
       }
@@ -55,7 +71,7 @@ export class LinkedBomModalComponent {
 
   getMaterialTitle(): string {
     for (const instance of this.getInstances()) {
-      const materialValue = instance?.[BOM_LINK_KEY]?.material;
+      const materialValue = instance?.[BOM_LINK_KEY]?.['material'];
       if (materialValue != null && String(materialValue).trim() !== '') {
         return String(materialValue);
       }
@@ -79,7 +95,7 @@ export class LinkedBomModalComponent {
     return 'Material Details';
   }
 
-  getCellValue(instance: any, key: string): string {
+  getCellValue(instance: LinkedBomInstance, key: string): string {
     const bomLink = instance?.[BOM_LINK_KEY] ?? {};
     const value = bomLink[key] ?? instance?.[key];
     if (value === undefined || value === null) {
