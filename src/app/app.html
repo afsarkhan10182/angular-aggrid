@@ -134,11 +134,11 @@
               <span>Export</span>
             </button>
             <button
-              (click)="exportBomToJdeEmail(); closeActionDropdown()"
+              (click)="exportBomToJde(); closeActionDropdown()"
               class="action-dropdown-item"
-              [class.disabled]="isEmailingJdeBomReport"
-              [disabled]="isEmailingJdeBomReport"
-              [title]="getJdeBomEmailTooltip()"
+              [class.disabled]="isExportingJdeBom"
+              [disabled]="isExportingJdeBom"
+              [title]="getJdeBomExportTooltip()"
             >
               <app-icon name="file-excel" size="14"></app-icon>
               <span>Export BOM to JDE</span>

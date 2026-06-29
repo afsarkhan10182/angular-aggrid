@@ -91,12 +91,10 @@ export const EXCLUDED_FIELDS_EXPORT: readonly string[] = [COL_ACTIONS];
 export const EXCEL_HEADER_SECTION = 'Section';
 export const EXCEL_SHEET_NAME = 'BOM Export';
 export const EXCEL_FILE_NAME_PREFIX = 'BOM_Composer_Export_';
-export const JDE_BOM_EXCEL_SHEET_NAME = 'Export BOM to JDE';
-export const JDE_BOM_EXCEL_FILE_NAME_PREFIX = 'Export_BOM_to_JDE_';
-export const JDE_BOM_EMAIL_TOOLTIP = 'Report will be emailed to the requested user';
-export const JDE_BOM_EMAIL_SUCCESS = 'Export BOM to JDE report email request submitted';
-export const JDE_BOM_EMAIL_NO_DATA = 'No BOM rows available to email.';
-export const JDE_BOM_EMAIL_ERROR = 'Failed to email Export BOM to JDE report. Please try again.';
+export const JDE_BOM_EXPORT_TOOLTIP = 'Export BOM to JDE';
+export const JDE_BOM_EXPORT_SUCCESS = 'Export BOM to JDE request submitted';
+export const JDE_BOM_EXPORT_NO_DATA = 'No BOM rows available to export.';
+export const JDE_BOM_EXPORT_ERROR = 'Failed to export BOM to JDE. Please try again.';
 
 // Duplicate validation categories.
 export const DUPLICATE_TYPE_ENUM_MBOM_001 = ENUM_MBOM_LINE_ITEM;

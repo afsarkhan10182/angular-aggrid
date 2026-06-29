@@ -74,12 +74,10 @@ import {
   COLUMNS_REFRESH_ACTIONS,
   ROW_ID_UNKNOWN,
   EXCLUDED_FIELDS_EXPORT,
-  JDE_BOM_EMAIL_ERROR,
-  JDE_BOM_EMAIL_NO_DATA,
-  JDE_BOM_EMAIL_SUCCESS,
-  JDE_BOM_EMAIL_TOOLTIP,
-  JDE_BOM_EXCEL_FILE_NAME_PREFIX,
-  JDE_BOM_EXCEL_SHEET_NAME,
+  JDE_BOM_EXPORT_ERROR,
+  JDE_BOM_EXPORT_NO_DATA,
+  JDE_BOM_EXPORT_SUCCESS,
+  JDE_BOM_EXPORT_TOOLTIP,
   MSG_EXPORT_EXCEL_ERROR,
   MSG_EXPORT_EXCEL_SUCCESS,
   MSG_EXPORT_EXCEL_SUCCESS_SELECTED,
@@ -178,7 +176,7 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
   public constraintsData: any = null;
   public isSaving: boolean = false;
   public isMassEditing: boolean = false;
-  public isEmailingJdeBomReport: boolean = false;
+  public isExportingJdeBom: boolean = false;
   public readonly originalRowValues = new Map<string | number, any>();
   private readonly editedFields = new Map<string | number, Set<string>>();
   public readonly invalidRowIds = new Set<string | number>();
@@ -2835,125 +2833,67 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
       });
   }
 
-  getJdeBomEmailTooltip(): string {
-    return JDE_BOM_EMAIL_TOOLTIP;
+  getJdeBomExportTooltip(): string {
+    return JDE_BOM_EXPORT_TOOLTIP;
   }
 
-  downloadJdeBomTestExcel(): void {
-    const rows = this.buildJdeBomReportRows();
-    console.table(rows);
+  exportBomToJde(): void {
+    if (this.isExportingJdeBom) return;
 
-    if (rows.length === 0) {
-      this.showNotification(JDE_BOM_EMAIL_NO_DATA, NOTIFICATION_TYPE_INFO);
+    const payload = this.buildJdeBomExportPayload();
+    if (payload.length === 0) {
+      this.showNotification(JDE_BOM_EXPORT_NO_DATA, NOTIFICATION_TYPE_INFO);
       return;
     }
 
-    const datePart = new Date().toISOString().split('T')[0];
-    this.utilService
-      .exportRowsToExcel({
-        columns: this.getJdeBomReportColumns(),
-        rows,
-        fileName: `TEST_${JDE_BOM_EXCEL_FILE_NAME_PREFIX}${datePart}.xlsx`,
-        sheetName: JDE_BOM_EXCEL_SHEET_NAME,
-      })
-      .then(() => {
-        this.showNotification('Test Export BOM to JDE Excel downloaded', NOTIFICATION_TYPE_SUCCESS);
-      })
-      .catch(() => {
-        this.showNotification(MSG_EXPORT_EXCEL_ERROR, NOTIFICATION_TYPE_ERROR);
-      });
+    this.isExportingJdeBom = true;
+    const exportSub = this.dataService.exportJdeBomJson(payload).subscribe({
+      next: (response) => {
+        this.isExportingJdeBom = false;
+        this.showNotification(response?.message || JDE_BOM_EXPORT_SUCCESS, NOTIFICATION_TYPE_SUCCESS);
+      },
+      error: () => {
+        this.isExportingJdeBom = false;
+        this.showNotification(JDE_BOM_EXPORT_ERROR, NOTIFICATION_TYPE_ERROR);
+      },
+    });
+    this.subscriptions.push(exportSub);
   }
 
-  exportBomToJdeEmail(): void {
-    if (this.isEmailingJdeBomReport) return;
-
-    const rows = this.buildJdeBomReportRows();
-    if (rows.length === 0) {
-      this.showNotification(JDE_BOM_EMAIL_NO_DATA, NOTIFICATION_TYPE_INFO);
-      return;
-    }
-
-    const columns = this.getJdeBomReportColumns();
-    const datePart = new Date().toISOString().split('T')[0];
-    const fileName = `${JDE_BOM_EXCEL_FILE_NAME_PREFIX}${datePart}.xlsx`;
-
-    this.isEmailingJdeBomReport = true;
-    this.utilService
-      .exportRowsToExcelBlob({
-        columns,
-        rows,
-        fileName,
-        sheetName: JDE_BOM_EXCEL_SHEET_NAME,
-      })
-      .then((file) => {
-        const metadata = this.buildJdeBomEmailMetadata(fileName, rows.length);
-        const emailSub = this.dataService.emailJdeBomExcelReport(file, fileName, metadata).subscribe({
-          next: () => {
-            this.isEmailingJdeBomReport = false;
-            this.showNotification(JDE_BOM_EMAIL_SUCCESS, NOTIFICATION_TYPE_SUCCESS);
-          },
-          error: () => {
-            this.isEmailingJdeBomReport = false;
-            this.showNotification(JDE_BOM_EMAIL_ERROR, NOTIFICATION_TYPE_ERROR);
-          },
-        });
-        this.subscriptions.push(emailSub);
-      })
-      .catch(() => {
-        this.isEmailingJdeBomReport = false;
-        this.showNotification(JDE_BOM_EMAIL_ERROR, NOTIFICATION_TYPE_ERROR);
-      });
-  }
-
-  private getJdeBomReportColumns(): Array<{ field: string; headerName: string; width: number }> {
-    return [
-      { field: 'parent', headerName: 'Parent', width: 18 },
-      { field: 'parentDescription', headerName: 'Parent Description', width: 28 },
-      { field: 'child', headerName: 'Child', width: 18 },
-      { field: 'childDescription', headerName: 'Child Description', width: 32 },
-      { field: 'childType', headerName: 'Child Type', width: 16 },
-      { field: 'quantity', headerName: 'Quantity', width: 12 },
-      { field: 'unitOfMeasure', headerName: 'Unit of Measure', width: 18 },
-      { field: 'startEffectivityDate', headerName: 'Start Effectivity Date', width: 22 },
-      { field: 'endEffectivityDate', headerName: 'End Effectivity Date', width: 22 },
-      { field: 'branch', headerName: 'Branch', width: 12 },
-    ];
-  }
-
-  private buildJdeBomReportRows(): any[] {
+  private buildJdeBomExportPayload(): any[] {
     const sourceRows = this.getJdeBomSourceRows();
     const skuInfo = this.getFilteredSkuInfo();
-    const rows: any[] = [];
+    const payload: any[] = [];
 
     sourceRows.forEach((row) => {
       const skuParents = this.getJdeParentSkus(row, skuInfo);
       skuParents.forEach((sku) => {
-        rows.push({
-          parent: this.getJdeSkuNumber(sku),
-          parentDescription: this.getJdeSkuDescription(sku),
-          child: this.readFirstValue(row, [FIELD_PART_NUMBER, FIELD_BOM_LINK_PART, 'part', 'material']),
-          childDescription: this.readFirstValue(row, [
+        payload.push({
+          Parent: this.getJdeSkuNumber(sku),
+          ParentDescription: this.getJdeSkuDescription(sku),
+          Child: this.readFirstValue(row, [FIELD_PART_NUMBER, FIELD_BOM_LINK_PART, 'part', 'material']),
+          ChildDescription: this.readFirstValue(row, [
             'materialColorSixtyCharacterDescription',
             'materialColorThirtyCharacterDescription',
             FIELD_MATERIAL_DESCRIPTION,
             FIELD_MATERIAL,
           ]),
-          childType: this.readFirstValue(row, ['ptcbomPartMarkUpDisplayName', 'ptcbomPartMarkUp']),
-          quantity: this.readFirstValue(row, ['quantity', 'qty']),
-          unitOfMeasure: this.readFirstValue(row, [
+          ChildType: this.readFirstValue(row, ['ptcbomPartMarkUpDisplayName', 'ptcbomPartMarkUp']),
+          Quantity: this.readFirstValue(row, ['quantity', 'qty']),
+          UnitOfMeasure: this.readFirstValue(row, [
             'unitOfMeasure',
             'uom',
             'bomLinkUnitOfMeasure',
             'unitOfMeasureDisplayName',
           ]),
-          startEffectivityDate: this.readFirstValue(row, [FIELD_BOM_LINK_START_DATE, 'startDate']),
-          endEffectivityDate: this.readFirstValue(row, [FIELD_BOM_LINK_END_DATE, 'endDate']),
-          branch: '',
+          StartEffectivityDate: this.readFirstValue(row, [FIELD_BOM_LINK_START_DATE, 'startDate']),
+          EndEffectivityDate: this.readFirstValue(row, [FIELD_BOM_LINK_END_DATE, 'endDate']),
+          Branch: '',
         });
       });
     });
 
-    return rows;
+    return payload;
   }
 
   private getJdeBomSourceRows(): any[] {
@@ -3009,18 +2949,6 @@ export class App implements OnInit, OnDestroy, AfterViewInit {
 
   private getJdeSkuDescription(sku: any): string {
     return this.readFirstValue(sku, ['skuName', 'name', 'product', 'color']);
-  }
-
-  private buildJdeBomEmailMetadata(fileName: string, rowCount: number): Record<string, string> {
-    return {
-      reportName: JDE_BOM_EXCEL_SHEET_NAME,
-      fileName,
-      rowCount: String(rowCount),
-      requestedBy: String(this.currentUser?.userName || this.currentUser?.name || ''),
-      requestedUserEmail: String(this.currentUser?.emailId || ''),
-      bomType: String(this.dataService.getBomTypeFromResponse() || this.dataService.getBomType() || ''),
-      bomName: this.bomNamesFull || this.bomName || '',
-    };
   }
 
   private readFirstValue(source: any, fields: string[]): string {
