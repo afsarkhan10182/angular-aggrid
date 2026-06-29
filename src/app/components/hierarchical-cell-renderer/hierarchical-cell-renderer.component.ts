@@ -43,26 +43,38 @@ export class HierarchicalCellRendererComponent implements ICellRendererAngularCo
 
   handleClick(event: MouseEvent): void {
     const target = event.target as HTMLElement | null;
-    if (!target) return;
+    if (!target) {
+      return;
+    }
     const actionEl = target.closest('[data-action]') as HTMLElement | null;
-    if (!actionEl) return;
+    if (!actionEl) {
+      return;
+    }
 
     const action = actionEl.getAttribute('data-action');
     const parent = this.params?.context?.componentParent as any;
-    if (!action || !parent) return;
+    if (!action || !parent) {
+      return;
+    }
 
     const handlers: Record<string, () => void> = {
       'add-row': () => {
         const section = actionEl.getAttribute('data-section');
-        if (section) parent.addRowForSection(section);
+        if (section) {
+          parent.addRowForSection(section);
+        }
       },
       'toggle-section': () => {
         const section = actionEl.getAttribute('data-section');
-        if (section) parent.toggleSection(section);
+        if (section) {
+          parent.toggleSection(section);
+        }
       },
       'toggle-group': () => {
         const groupKey = actionEl.getAttribute('data-group-key');
-        if (groupKey) parent.toggleGroup(groupKey);
+        if (groupKey) {
+          parent.toggleGroup(groupKey);
+        }
       },
       'toggle-material': () => {
         const section = actionEl.getAttribute('data-section') || undefined;
@@ -133,7 +145,9 @@ export class HierarchicalCellRendererComponent implements ICellRendererAngularCo
   }
 
   private shouldHighlightRow(data: any): boolean {
-    if (!data) return false;
+    if (!data) {
+      return false;
+    }
     const refSkuId = this.dataService.getRefSkuId();
     return this.skuService.hasRefSkuValue(data, refSkuId);
   }
