@@ -6,8 +6,8 @@ export const environment = {
   production: false,
   csrfUrl: '/Windchill/servlet/rest/security/csrf',
   getUserUrl: '/Windchill/servlet/rest/trek/getUserDetails',
-  dataApiPath: '/Windchill/servlet/rest/trek/bomlink',
-  useMockApi: false,
+  dataApiPath: '/mock.json',
+  useMockApi: true,
   mockApiEndpoints: {
     csrf: '/api/csrf.json',
     getUser: '/api/getUser.json',
