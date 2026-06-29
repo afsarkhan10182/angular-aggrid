@@ -2,7 +2,6 @@
 import { Injectable } from '@angular/core';
 import {
   BOM_LINK_KEY,
-  BOM_TYPE_PRODUCTMBOM,
   FIELD_PART_NUMBER,
   REQUIRED_FIELDS_FOR_SAVE,
   DEFAULT_REQUIRED_FIELDS,
@@ -13,19 +12,10 @@ import {
   MSG_DUPLICATE_FEATURE_SKU_SECTION,
   MSG_DUPLICATE_SECTION_PART_SKU,
   MSG_DUPLICATE_FEATURE_SKU_SECTION_ONE,
-  MSG_DUPLICATE_FEATURE_FOR_SKU,
-  MSG_DUPLICATE_FEATURE_AND_PART_FOR_SKU,
   MSG_NO_DUPLICATE_FOUND,
-  MSG_DUPLICATE_PART_FEATURE_COMBO,
-  MSG_NO_DUPLICATE_PART_FEATURE,
-  ENUM_MBOM_LINE_ITEM,
-  VALUE_SPEC_NO,
-  DISPLAY_FALSE,
   DUPLICATE_TYPE_FEATURE_UNIQUENESS,
   DUPLICATE_TYPE_DUPLICATE_FEATURE,
   DUPLICATE_TYPE_DUPLICATE_PART,
-  DUPLICATE_TYPE_ENUM_MBOM_001,
-  DUPLICATE_TYPE_NOT_ENUM_MBOM_001,
   HEADER_FEATURE,
   LABEL_QUANTITY,
 } from '../constants';
@@ -46,8 +36,6 @@ export interface InvalidRow {
 }
 
 export type DuplicateType =
-  | typeof DUPLICATE_TYPE_ENUM_MBOM_001
-  | typeof DUPLICATE_TYPE_NOT_ENUM_MBOM_001
   | typeof DUPLICATE_TYPE_FEATURE_UNIQUENESS
   | typeof DUPLICATE_TYPE_DUPLICATE_FEATURE
   | typeof DUPLICATE_TYPE_DUPLICATE_PART
@@ -59,8 +47,6 @@ const DUPLICATE_TYPE_ERROR_MESSAGE_MAP: Readonly<Record<string, string>> = {
   [DUPLICATE_TYPE_FEATURE_UNIQUENESS]: MSG_DUPLICATE_FEATURE_SKU_SECTION_ONE,
   [DUPLICATE_TYPE_DUPLICATE_FEATURE]: MSG_DUPLICATE_FEATURE_SKU_SECTION,
   [DUPLICATE_TYPE_DUPLICATE_PART]: MSG_DUPLICATE_SECTION_PART_SKU,
-  [DUPLICATE_TYPE_NOT_ENUM_MBOM_001]: MSG_DUPLICATE_FEATURE_FOR_SKU,
-  [DUPLICATE_TYPE_ENUM_MBOM_001]: MSG_DUPLICATE_FEATURE_AND_PART_FOR_SKU,
 };
 
 export interface ValidationResult {
@@ -453,129 +439,15 @@ export class ValidationService {
     skuInfo: any[],
     apiData?: any
   ): ValidationResult {
-    const isMbom = this.dataService.getBomType() === BOM_TYPE_PRODUCTMBOM;
     const newRows = this.collectNewRows(rowData, displayData);
-    const existingRows = this.collectExistingDuplicateRows(rowData, newRows, isMbom, apiData);
 
     const duplicateNewRowsResult = this.validateDuplicateNewRows(newRows, skuInfo, apiData);
     if (!duplicateNewRowsResult.isValid) {
       return duplicateNewRowsResult;
     }
 
-
     const invalidRows = this.findDuplicateRowsAgainstApi(newRows, skuInfo, apiData);
     return this.buildDuplicateFeatureSkuResult(invalidRows);
-  }
-
-  private collectExistingDuplicateRows(rowData: any[], newRows: any[], isMbom: boolean, apiData?: any): any[] {
-    if (this.hasApiInstances(apiData)) {
-      return this.collectExistingRowsFromApi(apiData, isMbom);
-    }
-
-    const existingRows: any[] = [];
-    this.collectExistingRowsFromHierarchy(rowData, newRows, existingRows);
-    return existingRows;
-  }
-
-  private collectExistingRowsFromApi(apiData: any, isMbom: boolean): any[] {
-    const existingRows: any[] = [];
-    for (const instance of apiData.instances) {
-      const rowLike = this.createExistingRowFromApiInstance(instance, isMbom);
-      if (!rowLike) {
-        continue;
-      }
-      this.mergeExistingDuplicateRow(existingRows, rowLike, instance[BOM_LINK_KEY], isMbom);
-    }
-    return existingRows;
-  }
-
-  private createExistingRowFromApiInstance(instance: any, isMbom: boolean): any | null {
-    const bomLink = instance[BOM_LINK_KEY];
-    if (!bomLink) {
-      return null;
-    }
-
-    const section = bomLink.sectionInternalName || bomLink.section || '';
-    const partNumber = String(bomLink?.[FIELD_PART_NUMBER] || '').trim();
-    const bomLinkFeature = String(bomLink.bomLinkFeature || '').trim();
-    const ptcBomPartMarkup = bomLink.ptcBomPartMarkup || '';
-    if (this.shouldSkipExistingApiRow(section, partNumber, bomLinkFeature, ptcBomPartMarkup, isMbom)) {
-      return null;
-    }
-
-    const rowLike: any = { section, [FIELD_PART_NUMBER]: partNumber, bomLinkFeature, ptcBomPartMarkup };
-    const skuIdsFromApi = this.skuService.populateRowSkuFieldsFromSkus(rowLike, bomLink.skus, {
-      includeEmptyValues: true,
-    });
-    if (skuIdsFromApi.length === 0) {
-      return null;
-    }
-
-    rowLike._allSkuIds = skuIdsFromApi;
-    return rowLike;
-  }
-
-  private shouldSkipExistingApiRow(
-    section: string,
-    partNumber: string,
-    bomLinkFeature: string,
-    ptcBomPartMarkup: string,
-    isMbom: boolean,
-  ): boolean {
-    if (!section) {
-      return true;
-    }
-    if (isMbom && !bomLinkFeature) {
-      return true;
-    }
-    return isMbom && ptcBomPartMarkup === ENUM_MBOM_LINE_ITEM && !partNumber;
-  }
-
-  private mergeExistingDuplicateRow(existingRows: any[], rowLike: any, bomLink: any, isMbom: boolean): void {
-    const rowKey = this.getExistingDuplicateRowKey(rowLike, isMbom);
-    const existingRow = existingRows.find((row) => this.getExistingDuplicateRowKey(row, isMbom) === rowKey);
-    if (!existingRow) {
-      existingRows.push(rowLike);
-      return;
-    }
-
-    existingRow._allSkuIds = existingRow._allSkuIds || [];
-    rowLike._allSkuIds.forEach((skuId: string) => {
-      if (!existingRow._allSkuIds.includes(skuId)) {
-        existingRow._allSkuIds.push(skuId);
-      }
-    });
-    this.skuService.populateRowSkuFieldsFromSkus(existingRow, bomLink.skus, {
-      mergeOnlyWhenTargetEmpty: true,
-    });
-  }
-
-  private getExistingDuplicateRowKey(row: any, isMbom: boolean): string {
-    if (isMbom && row.ptcBomPartMarkup === ENUM_MBOM_LINE_ITEM) {
-      return `${row.section}::${row.bomLinkFeature}`;
-    }
-    return `${row.section}::${row[FIELD_PART_NUMBER]}::${row.bomLinkFeature}`;
-  }
-
-  private collectExistingRowsFromHierarchy(rowData: any[], newRows: any[], existingRows: any[]): void {
-    for (const row of rowData) {
-      if (this.isExistingDisplayDuplicateRow(row, newRows)) {
-        existingRows.push(row);
-      }
-      if (row.children && row.children.length > 0) {
-        this.collectExistingRowsFromHierarchy(row.children, newRows, existingRows);
-      }
-    }
-  }
-
-  private isExistingDisplayDuplicateRow(row: any, newRows: any[]): boolean {
-    if (!row.isDirectRow && !row.isSubRow) {
-      return false;
-    }
-    const isAlreadyNew = newRows.some(
-      (newRow) => newRow.newRowId === row.newRowId && row.newRowId !== undefined,
-    );
-    return !row.newRowId && !row.isNewRow && !isAlreadyNew;
   }
 
   private validateDuplicateNewRows(newRows: any[], skuInfo: any[], apiData?: any): ValidationResult {
@@ -778,86 +650,5 @@ export class ValidationService {
     map.get(key)!.push(value);
   }
 
-  private validateDuplicatePartAndFeatureOnly(
-    rowData: any[],
-    displayData: any[] = [],
-    apiData?: any
-  ): ValidationResult {
-    const newRows: any[] = [];
-    const existingCombinations = new Set<string>();
 
-    if (displayData && displayData.length > 0) {
-      for (const row of displayData) {
-        if (row.isNewRow || row.newRowId !== undefined) {
-          newRows.push(row);
-        }
-      }
-    }
-
-    if (apiData?.instances && Array.isArray(apiData.instances)) {
-      for (const instance of apiData.instances) {
-        const bomLink = instance[BOM_LINK_KEY];
-        if (!bomLink) continue;
-        const partNumber = String(bomLink?.[FIELD_PART_NUMBER] || '').trim();
-        const feature = String(bomLink.bomLinkFeature || '').trim();
-        if (partNumber && partNumber !== '') {
-          existingCombinations.add(`${partNumber.toLowerCase()}|${feature.toLowerCase()}`);
-        }
-      }
-    } else {
-      const collectRows = (rows: any[]) => {
-        for (const row of rows) {
-          if ((row.isDirectRow || row.isSubRow) && !row.isNewRow) {
-            const partNumber = String(row?.[FIELD_PART_NUMBER] || '').trim();
-            const feature = String(row.bomLinkFeature || '').trim();
-            if (partNumber && partNumber !== '') {
-              existingCombinations.add(`${partNumber.toLowerCase()}|${feature.toLowerCase()}`);
-            }
-          }
-          if (row.children?.length > 0) collectRows(row.children);
-        }
-      };
-      collectRows(rowData);
-    }
-
-    const newCombinationCounts = new Map<string, any[]>();
-    for (const row of newRows) {
-      const partNumber = String(row?.[FIELD_PART_NUMBER] || '').trim();
-      const feature = String(row.bomLinkFeature || '').trim();
-      if (!partNumber || partNumber === '') continue;
-      const key = `${partNumber.toLowerCase()}|${feature.toLowerCase()}`;
-      if (!newCombinationCounts.has(key)) newCombinationCounts.set(key, []);
-      newCombinationCounts.get(key)!.push(row);
-    }
-
-    const invalidRows: InvalidRow[] = [];
-    for (const [key, rows] of newCombinationCounts.entries()) {
-      if (rows.length > 1) {
-        rows.forEach((r) =>
-          invalidRows.push({
-            row: r,
-            missingFields: [],
-            rowId: this.getValidationRowId(r),
-            duplicateType: DUPLICATE_TYPE_DUPLICATE_PART,
-          })
-        );
-      } else if (existingCombinations.has(key)) {
-        invalidRows.push({
-          row: rows[0],
-          missingFields: [],
-          rowId: this.getValidationRowId(rows[0]),
-          duplicateType: DUPLICATE_TYPE_DUPLICATE_PART,
-        });
-      }
-    }
-
-    return {
-      isValid: invalidRows.length === 0,
-      message:
-        invalidRows.length > 0
-          ? MSG_DUPLICATE_PART_FEATURE_COMBO
-          : MSG_NO_DUPLICATE_PART_FEATURE,
-      invalidRows: invalidRows.length > 0 ? invalidRows : undefined,
-    };
-  }
 }

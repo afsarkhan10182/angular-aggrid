@@ -269,15 +269,6 @@ export class GridColumnsService {
     };
   }
 
-  private configureServiceSearchColumn(columnDef: ColDef): void {
-    columnDef.cellEditor = AutocompleteCellEditorComponent;
-    columnDef.cellEditorParams = () => ({
-      placeholder: 'search services...',
-      isServiceSearch: true,
-      context: { dataService: this.dataService },
-    });
-  }
-
   private configureMaterialSearchColumn(columnDef: ColDef): void {
     columnDef.cellEditor = AutocompleteCellEditorComponent;
     columnDef.cellEditorParams = () => ({
