@@ -1400,7 +1400,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
           this.invalidRowIds.clear();
           this.rowManagementService.showSaveMessage(result.message, this, NOTIFICATION_TYPE_SUCCESS);
 
-         // Delete this if not required because we are not doing a full reload in the save changes
           if (
             (this.isProductMbomOnlyMode() || this.isMaterialMbomMode()) &&
             (!this.displayData || this.displayData.length === 0)
