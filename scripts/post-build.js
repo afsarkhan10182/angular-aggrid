@@ -19,8 +19,8 @@ const projectName = getProjectName();
 const distDir = path.join(__dirname, '..', 'dist', projectName);
 const browserDir = path.join(distDir, 'browser');
 const indexHtmlPath = path.join(browserDir, 'index.html');
-const jspTemplatePath = path.join(__dirname, '..', 'public', 'BOMComposer.jsp');
-const outputJspPath = path.join(browserDir, 'BOMComposer.jsp');
+const jspTemplatePath = path.join(__dirname, '..', 'public', 'bomComposer.jsp');
+const outputJspPath = path.join(browserDir, 'bomComposer.jsp');
 
 function readFile(filePath) {
   try {
@@ -58,6 +58,8 @@ function extractMatches(html, pattern) {
 }
 
 function extractStyles(html) {
+  const noscriptBlocks = extractMatches(html, /<noscript>[\s\S]*?<\/noscript>/gi);
+  const htmlWithoutNoscript = html.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
   const styles = [];
   const patterns = [
     /<link[^>]*rel\s*=\s*["']stylesheet["'][^>]*>/gi,
@@ -65,18 +67,11 @@ function extractStyles(html) {
   ];
 
   patterns.forEach(pattern => {
-    styles.push(...extractMatches(html, pattern));
+    styles.push(...extractMatches(htmlWithoutNoscript, pattern));
   });
 
-  const noscriptMatches = extractMatches(html, /<noscript>[\s\S]*?<\/noscript>/gi);
-  const linkPattern = /<link[^>]*rel\s*=\s*["']stylesheet["'][^>]*>/gi;
-  noscriptMatches.forEach(noscript => {
-    styles.push(...extractMatches(noscript, linkPattern));
-  });
-
-  return [...new Set(styles)];
+  return [...new Set([...styles, ...noscriptBlocks])];
 }
-
 function extractPreloads(html) {
   return extractMatches(html, /<link[^>]*rel\s*=\s*["']modulepreload["'][^>]*>/gi);
 }
@@ -127,7 +122,7 @@ try {
 
   writeFile(outputJspPath, finalJsp);
 
-  console.log('Successfully injected Angular assets into BOMComposer.jsp');
+  console.log('Successfully injected Angular assets into bomComposer.jsp');
   console.log(`   Project: ${projectName}`);
   console.log(`   Output: ${outputJspPath}`);
   console.log(`   Styles: ${styles.length} file(s)`);
