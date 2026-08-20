@@ -620,7 +620,7 @@ export class DataService {
     );
   }
 
-  exportJdeBomJson(payload: any[]): Observable<{ status?: string; message?: string }> {
+  exportJdeBomJson(bomRows: any[]): Observable<{ status?: string; message?: string }> {
     if (environment.useMockApi) {
       return of({ status: 'success', message: 'CSV generated and email sent' });
     }
@@ -631,7 +631,7 @@ export class DataService {
       accept: '*/*',
     };
 
-    return this.http.post<{ status?: string; message?: string }>(apiUrl, payload, { headers }).pipe(
+    return this.http.post<{ status?: string; message?: string }>(apiUrl, { bomRows }, { headers }).pipe(
       catchError((error: HttpErrorResponse) => throwError(() => error)),
     );
   }

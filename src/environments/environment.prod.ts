@@ -5,7 +5,7 @@ export const environment = {
   dataApiPath: '/Windchill/servlet/rest/trek/bomlink',
   cooAnalysisApiPath: '/Windchill/servlet/rest/trek/COOAnalysis',
   cooAnalysisExportApiPath: '/Windchill/servlet/rest/trek/COOAnalysisExport',
-  jdeBomExportApiPath: '/Windchill/servlet/rest/revisedSJDEBOMKeerthi/exportJsonToCsv',
+  jdeBomExportApiPath: '/Windchill/servlet/rest/trekBOMExport/export',
   credentials: {
     username: '',
     password: '',
