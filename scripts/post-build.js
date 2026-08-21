@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-function getProjectName() {
+function getBrowserOutputDir() {
   const angularJsonPath = path.join(__dirname, '..', 'angular.json');
   try {
     const angularJson = JSON.parse(fs.readFileSync(angularJsonPath, 'utf8'));
@@ -9,15 +9,30 @@ function getProjectName() {
     if (projectNames.length === 0) {
       throw new Error('No projects found in angular.json');
     }
-    return projectNames[0];
+
+    const project = angularJson.projects[projectNames[0]];
+    const outputPath = project?.architect?.build?.options?.outputPath;
+
+    if (!outputPath) {
+      // Angular default: dist/<projectName>/browser
+      return path.join(__dirname, '..', 'dist', projectNames[0], 'browser');
+    }
+
+    if (typeof outputPath === 'string') {
+      return path.join(__dirname, '..', outputPath, 'browser');
+    }
+
+    const base = outputPath.base || 'dist';
+    const browser = outputPath.browser ?? 'browser';
+    return browser
+      ? path.join(__dirname, '..', base, browser)
+      : path.join(__dirname, '..', base);
   } catch (error) {
-    throw new Error(`Failed to read project name from angular.json: ${error.message}`);
+    throw new Error(`Failed to read outputPath from angular.json: ${error.message}`);
   }
 }
 
-const projectName = getProjectName();
-const distDir = path.join(__dirname, '..', 'dist', projectName);
-const browserDir = path.join(distDir, 'browser');
+const browserDir = getBrowserOutputDir();
 const indexHtmlPath = path.join(browserDir, 'index.html');
 const jspTemplatePath = path.join(__dirname, '..', 'public', 'BOMComposer.jsp');
 const outputJspPath = path.join(browserDir, 'BOMComposer.jsp');
@@ -102,6 +117,17 @@ function validateTemplate(template) {
   }
 }
 
+function removeNonRuntimeBuildArtifacts(outputDir) {
+  const artifacts = ['prerendered-routes.json', '3rdpartylicenses.txt'];
+  for (const fileName of artifacts) {
+    const filePath = path.join(outputDir, fileName);
+    if (fs.existsSync(filePath)) {
+      fs.rmSync(filePath, { force: true });
+      console.log(`   Removed: ${fileName}`);
+    }
+  }
+}
+
 try {
   if (!fs.existsSync(browserDir)) {
     throw new Error(`Build output directory not found: ${browserDir}\n   Please run "ng build" first.`);
@@ -126,9 +152,9 @@ try {
   }
 
   writeFile(outputJspPath, finalJsp);
+  removeNonRuntimeBuildArtifacts(browserDir);
 
   console.log('Successfully injected Angular assets into BOMComposer.jsp');
-  console.log(`   Project: ${projectName}`);
   console.log(`   Output: ${outputJspPath}`);
   console.log(`   Styles: ${styles.length} file(s)`);
   console.log(`   Modulepreloads: ${preloads.length} file(s)`);
