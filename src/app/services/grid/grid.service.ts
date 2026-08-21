@@ -135,7 +135,7 @@ export class GridService {
 
     if (!isDataRow || !hasPartNumber) return false;
 
-    const isMbomLineItem = node.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM;
+    const isMbomLineItem = node.ptcBomPartMarkup === ENUM_MBOM_LINE_ITEM;
     if (isMbomLineItem) return false;
 
     const specSheetExtra = String(node.bomLinkSpecSheetExtra || '').trim();
@@ -753,7 +753,7 @@ export class GridService {
       }
 
       if (isAlternateBom) {
-        const isMbomLineItem = child.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM;
+        const isMbomLineItem = child.ptcBomPartMarkup === ENUM_MBOM_LINE_ITEM;
         const specSheetExtra = String(child.bomLinkSpecSheetExtra || '').trim();
 
         if (!isMbomLineItem && specSheetExtra === VALUE_SPEC_NO) {

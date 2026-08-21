@@ -12,10 +12,12 @@
     </h2>
     <div class="header-right">
       <!-- User info display -->
-      <div class="user-info" *ngIf="currentUser">
-        <app-icon name="user" size="16"></app-icon>
-        <span class="username">{{ currentUser.fullName || currentUser.name }}</span>
-      </div>
+      @if (currentUser) {
+        <div class="user-info">
+          <app-icon name="user" size="16"></app-icon>
+          <span class="username">{{ currentUser.fullName || currentUser.name }}</span>
+        </div>
+      }
     </div>
   </div>
 
@@ -37,20 +39,23 @@
                 (keyup.enter)="applyGridSearch()"
                 #searchInput
               />
-              <button
-                *ngIf="searchText"
-                class="clear-search-btn"
-                (click)="clearSearch()"
-                title="Clear search"
-              >
-                <app-icon name="times" size="14"></app-icon>
-              </button>
+              @if (searchText) {
+                <button
+                  class="clear-search-btn"
+                  (click)="clearSearch()"
+                  title="Clear search"
+                  aria-label="Clear search"
+                >
+                  <app-icon name="times" size="14"></app-icon>
+                </button>
+              }
             </div>
             <button
               class="search-filter-btn"
               (click)="applyGridSearch()"
               [disabled]="!searchText"
               title="Search"
+              aria-label="Search"
             >
               <app-icon name="search" size="14"></app-icon>
             </button>
@@ -60,18 +65,20 @@
 
       <!-- Right Group: Show Expired, Last Saved, and Save -->
       <div class="right-controls-group">
-        <div class="toggle-switch-container" *ngIf="shouldShowExpiredToggle()">
-          <label class="toggle-switch">
-            <span class="toggle-text">Show Expired:</span>
-            <input
-              type="checkbox"
-              id="show-expired-toggle"
-              [(ngModel)]="showExpiredData"
-              (change)="toggleExpiredData()"
-            />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
+        @if (shouldShowExpiredToggle()) {
+          <div class="toggle-switch-container">
+            <label class="toggle-switch">
+              <span class="toggle-text">Show Expired:</span>
+              <input
+                type="checkbox"
+                id="show-expired-toggle"
+                [(ngModel)]="showExpiredData"
+                (change)="toggleExpiredData()"
+              />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        }
         <div class="save-section">
           <!-- Last Saved Display -->
           <div class="last-saved-display">
@@ -87,36 +94,39 @@
             [disabled]="editedRows.size === 0 || isSaving || isSkuFilterReadOnly()"
             [title]="getSaveButtonTooltip()"
           >
-            <ng-container *ngIf="!isSaving; else savingTpl">
+            @if (!isSaving) {
               <app-icon name="save" size="14"></app-icon>
               <span>Save</span>
-            </ng-container>
-            <ng-template #savingTpl>
+            } @else {
               <span class="btn-inline-spinner" aria-hidden="true"></span>
               <span>Saving</span>
-            </ng-template>
+            }
           </button>
         </div>
       </div>
     </div>
 
     <!-- Save Status Message -->
-    <div *ngIf="saveMessage" class="save-message" [class]="saveMessageType">
-      <span class="save-message-text">{{ saveMessage }}</span>
-      <button (click)="clearSaveMessage()" class="save-message-close" title="Close">
-        <span class="close-icon-text">×</span>
-      </button>
-    </div>
+    @if (saveMessage) {
+      <div class="save-message" [class]="saveMessageType">
+        <span class="save-message-text">{{ saveMessage }}</span>
+        <button (click)="clearSaveMessage()" class="save-message-close" title="Close" aria-label="Close message">
+          <span class="close-icon-text">×</span>
+        </button>
+      </div>
+    }
 
     <!-- AG Grid with Toggle Button Container -->
     <div class="ag-grid-section">
       <!-- Loading Spinner -->
-      <div *ngIf="isLoading" class="loading-spinner-container">
-        <div class="loading-spinner">
-          <div class="spinner"></div>
-          <p>Loading data...</p>
+      @if (isLoading) {
+        <div class="loading-spinner-container">
+          <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading data...</p>
+          </div>
         </div>
-      </div>
+      }
 
       <!-- AG Grid Container -->
       <div class="ag-grid-container-wrapper" [class.loading]="isLoading">
@@ -170,20 +180,20 @@
               <div class="toggle-button-content">
                 <app-icon name="layer-group" size="14"></app-icon>
                 <span class="toggle-button-text">GROUP BY</span>
-                <span *ngIf="activeGroupFields.length > 0" class="group-count-badge">{{
-                  activeGroupFields.length
-                }}</span>
+                @if (activeGroupFields.length > 0) {
+                  <span class="group-count-badge">{{ activeGroupFields.length }}</span>
+                }
               </div>
             </button>
           </div>
         </div>
 
         <!-- Column Visibility Panel - Positioned near grid toggle button -->
-        <div
-          *ngIf="showColumnVisibilityPanel"
-          class="grid-column-visibility-panel-container"
-          #columnPanel
-        >
+        @if (showColumnVisibilityPanel) {
+          <div
+            class="grid-column-visibility-panel-container"
+            #columnPanel
+          >
           <div
             class="column-visibility-panel"
             tabindex="-1"
@@ -200,7 +210,7 @@
                 <button (click)="clearAllColumns()" class="clear-all-btn">
                   <app-icon name="square" size="14"></app-icon> Clear All
                 </button>
-                <button (click)="showColumnVisibilityPanel = false" class="close-panel-btn">
+                <button (click)="showColumnVisibilityPanel = false" class="close-panel-btn" aria-label="Close visible columns panel">
                   <app-icon name="times" size="14"></app-icon>
                 </button>
               </div>
@@ -212,16 +222,15 @@
               (drop)="onDrop($event)"
               (dragleave)="stopAutoScroll()"
             >
-              <ng-container *ngFor="let col of getVisibleColumnsForPanel(); let i = index; trackBy: trackByColumnField">
+              @for (col of getVisibleColumnsForPanel(); track trackByColumnField($index, col); let i = $index) {
                 <!-- Drop indicator line -->
-                <div
-                  *ngIf="dragOverIndex === i && draggedColumnIndex !== i && draggedColumnIndex < i"
-                  class="drop-indicator"
-                ></div>
+                @if (dragOverIndex === i && draggedColumnIndex !== i && draggedColumnIndex < i) {
+                  <div class="drop-indicator"></div>
+                }
 
-                <div
-                  *ngIf="col.field && !isSkuColumn(col) && !isFieldGrouped(col.field)"
-                  class="column-checkbox"
+                @if (col.field && !isSkuColumn(col) && !isFieldGrouped(col.field)) {
+                  <div
+                    class="column-checkbox"
                   [class.dragging]="draggedColumnIndex === i"
                   [class.drag-over]="dragOverIndex === i && draggedColumnIndex !== i"
                   draggable="true"
@@ -247,22 +256,24 @@
                   </label>
                 </div>
 
+                }
+
                 <!-- Drop indicator line -->
-                <div
-                  *ngIf="dragOverIndex === i && draggedColumnIndex !== i && draggedColumnIndex > i"
-                  class="drop-indicator"
-                ></div>
-              </ng-container>
+                @if (dragOverIndex === i && draggedColumnIndex !== i && draggedColumnIndex > i) {
+                  <div class="drop-indicator"></div>
+                }
+              }
             </div>
           </div>
-        </div>
+          </div>
+        }
 
         <!-- Group By Panel - Positioned near group by button -->
-        <div
-          *ngIf="showGroupByPanel"
-          class="grid-column-visibility-panel-container group-by-panel"
-          #groupByPanel
-        >
+        @if (showGroupByPanel) {
+          <div
+            class="grid-column-visibility-panel-container group-by-panel"
+            #groupByPanel
+          >
           <div
             class="column-visibility-panel"
             (click)="$event.stopPropagation()"
@@ -270,13 +281,14 @@
           >
             <div class="column-visibility-header">
               <h4>Group By</h4>
-              <button (click)="showGroupByPanel = false" class="close-panel-btn">
+              <button (click)="showGroupByPanel = false" class="close-panel-btn" aria-label="Close group by panel">
                 <app-icon name="times" size="14"></app-icon>
               </button>
             </div>
 
             <!-- Active Groups -->
-            <div *ngIf="activeGroupFields.length > 0" class="active-groups-section">
+            @if (activeGroupFields.length > 0) {
+              <div class="active-groups-section">
               <div class="active-groups-header">
                 <div class="section-title">Active Groups:</div>
                 <button (click)="clearAllGroups()" class="clear-all-groups-btn">
@@ -284,35 +296,38 @@
                 </button>
               </div>
               <div class="active-groups-list">
-                <div
-                  *ngFor="let group of activeGroupFields; let i = index"
-                  class="active-group-item"
-                >
+                @for (group of activeGroupFields; track group.field; let i = $index) {
+                  <div class="active-group-item">
                   <span class="group-level-badge">{{ i + 1 }}</span>
                   <span class="group-name">{{ group.headerName }}</span>
-                  <button (click)="removeGroupField(group)" class="remove-group-btn" title="Remove">
+                  <button (click)="removeGroupField(group)" class="remove-group-btn" title="Remove" aria-label="Remove group">
                     <app-icon name="times" size="14"></app-icon>
                   </button>
-                </div>
+                  </div>
+                }
               </div>
-            </div>
+              </div>
+            }
 
             <!-- Available Fields -->
             <div class="available-fields-section">
               <div class="section-title">Group by Column:</div>
               <div class="column-checkboxes">
-                <ng-container *ngFor="let field of availableGroupFields">
-                  <div class="column-checkbox" *ngIf="!isFieldGrouped(field.field)">
-                    <label>
-                      <input type="checkbox" [checked]="false" (change)="addGroupField(field)" />
-                      <span class="column-name">{{ field.headerName }}</span>
-                    </label>
-                  </div>
-                </ng-container>
+                @for (field of availableGroupFields; track field.field) {
+                  @if (!isFieldGrouped(field.field)) {
+                    <div class="column-checkbox">
+                      <label>
+                        <input type="checkbox" [checked]="false" (change)="addGroupField(field)" />
+                        <span class="column-name">{{ field.headerName }}</span>
+                      </label>
+                    </div>
+                  }
+                }
               </div>
             </div>
           </div>
-        </div>
+          </div>
+        }
       } @placeholder {
         <div class="side-buttons-wrapper defer-placeholder">
           <div class="grid-toggle-button-container">

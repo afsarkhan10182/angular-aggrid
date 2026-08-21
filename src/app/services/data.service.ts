@@ -14,7 +14,6 @@ import {
   FIELD_MATERIAL_COLOR_SERVICE_SUBSTITUTE_TWO,
   MSG_LOAD_BOM_FAILED,
   MSG_LOAD_BOM_SERVER_ERROR,
-  MSG_MATERIAL_COLORS_SAVED_MOCK,
   PARAM_BOM_TYPE,
   FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
   SKU_FILTER_LABEL_ALL,
@@ -95,14 +94,14 @@ export interface BomLink {
   bomLinkCountryOfOrigin: string;
   partThirtyCharacterDescription: string;
   linkedBom?: string;
-  ptcbomPartMarkUp?: string; // MBOM markup type (e.g., 'enumMBOM001')
+  ptcBomPartMarkup?: string; // MBOM markup type (e.g., 'enumMBOM001')
 }
 
 export interface SkuInfo {
   skuId: string; // Changed from 'sku' to match actual API response
   product: string;
   productId?: string;
-  material?: string; // Material field for Product MBOM and Product MBOM
+  material?: string; // Material field for Product MBOM and Product SBOM
   manufacturer: string;
   color: string;
   size1: string;
@@ -657,10 +656,18 @@ export class DataService {
     const instances = response?.instances ?? {};
     const columns = response?.columns ?? {};
     const entries = Object.entries(instances) as [string, any][];
+    const pageSize = Math.max(1, toIndex - fromIndex + 1);
+    // Backend already returns one page for fromIndex/toIndex. Only client-slice
+    // when the payload clearly contains more than one page (e.g. mock full set).
+    const isAlreadyPaged = entries.length <= pageSize;
+    const pageEntries = isAlreadyPaged ? entries : entries.slice(fromIndex - 1, toIndex);
     const totalCount = response?.resultCount ?? entries.length;
-    const pageStart = response?.from ?? fromIndex;
-    const pageEnd = response?.to ?? toIndex;
-    const pageEntries = entries.slice(pageStart - 1, pageEnd);
+    const pageEnd =
+      typeof response?.to === 'number'
+        ? response.to
+        : isAlreadyPaged
+          ? fromIndex + pageEntries.length - 1
+          : Math.min(toIndex, entries.length);
 
     const results = pageEntries.map(([materialColorId, instance]) => ({
       materialColorId,
@@ -837,7 +844,7 @@ export class DataService {
    */
   saveMaterialColors(payload: { instances: { [key: string]: any } }): Observable<any> {
     if (environment.useMockApi) {
-      return of({ success: true, message: MSG_MATERIAL_COLORS_SAVED_MOCK });
+      return of({ success: true });
     }
 
     const apiUrl = `${this.utilService.getServiceHostUrl()}/Windchill/servlet/rest/trek/saveMaterialColors`;

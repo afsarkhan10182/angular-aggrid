@@ -26,12 +26,14 @@ import { SkuService } from '../../services/sku.service';
 import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators';
 import { of, Subject, Subscription } from 'rxjs';
 
+type SearchMode = 'material' | 'partNumber' | 'bomFeature' | 'country' | 'service' | 'userList' | null;
+
 @Component({
   selector: 'app-autocomplete-cell-editor',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './autocomplete-cell-editor.component.html',
-  styleUrls: ['./autocomplete-cell-editor.component.css'],
+  styleUrl: './autocomplete-cell-editor.component.css',
   host: {
     '[style.display]': '"block"',
     '[style.width]': '"100%"',
@@ -56,18 +58,12 @@ export class AutocompleteCellEditorComponent
   public genericOptions: any[] = [];
   public showDropdown: boolean = false;
   public selectedIndex: number = -1;
-  public isMaterialSearch: boolean = false;
-  public isPartNumberSearch: boolean = false;
-  public isBomFeatureSearch: boolean = false;
-  public isCountrySearch: boolean = false;
-  public isServiceSearch: boolean = false;
-  public isUserListSearch: boolean = false;
+  public searchMode: SearchMode = null;
   public isLoadingMore: boolean = false;
 
   private params: any;
   private originalValue: string = '';
   private customFilterFunction?: (searchTerm: string, options: string[]) => string[];
-  private dataService: DataService;
   private searchSubject = new Subject<string>();
   private subscriptions: Subscription[] = [];
   private isDestroyed: boolean = false;
@@ -86,9 +82,32 @@ export class AutocompleteCellEditorComponent
 
   constructor(
     @Inject(DOCUMENT) private readonly document: Document,
+    private readonly dataService: DataService,
     private readonly skuService: SkuService,
-  ) {
-    this.dataService = null as any;
+  ) {}
+
+  public get isMaterialSearch(): boolean {
+    return this.searchMode === 'material';
+  }
+
+  public get isPartNumberSearch(): boolean {
+    return this.searchMode === 'partNumber';
+  }
+
+  public get isBomFeatureSearch(): boolean {
+    return this.searchMode === 'bomFeature';
+  }
+
+  public get isCountrySearch(): boolean {
+    return this.searchMode === 'country';
+  }
+
+  public get isServiceSearch(): boolean {
+    return this.searchMode === 'service';
+  }
+
+  public get isUserListSearch(): boolean {
+    return this.searchMode === 'userList';
   }
 
   private getFieldName(): string {
@@ -270,58 +289,73 @@ export class AutocompleteCellEditorComponent
         })
       )
       .subscribe((payload: any) => {
-        if (this.isDestroyed || payload.requestId !== this._searchRequestId) return;
-        const response = payload.response;
-        if (!this.isDestroyed) {
-          const results = response.results || [];
-          const resultCount = response.resultCount || 0;
-
-          if (
-            this.isBomFeatureSearch ||
-            this.isCountrySearch ||
-            this.isServiceSearch ||
-            this.isUserListSearch
-          ) {
-            this.genericOptions = Array.isArray(results) ? results : [];
-            this.hasMore = response.hasMore || false;
-
-            if (this.genericOptions.length > 0) {
-              this.filteredOptions = this.genericOptions
-                .map((feature) => feature.displayValue || feature.name || '')
-                .filter((name) => name.length > 0);
-            } else {
-              this.filteredOptions = [];
-            }
-          } else {
-            this.totalResultCount = resultCount;
-            this.hasMore = response.hasMore ?? resultCount > this.toIndex;
-
-            if (Array.isArray(results) && results.length > 0) {
-              if (this.fromIndex === 1) {
-                this.materialOptions = results;
-              } else {
-                this.materialOptions = [...this.materialOptions, ...results];
-              }
-              this.buildFilteredOptionsFromMaterials();
-            } else if (this.fromIndex === 1) {
-              this.materialOptions = [];
-              this.filteredOptions = [];
-              this.filteredMaterialOptions = [];
-              this.totalResultCount = 0;
-              this.hasMore = false;
-            }
-          }
-
-          this.isLoadingMore = false;
-          const shouldShow = this.filteredOptions.length > 0;
-          this.showDropdown = shouldShow;
-
-          if (this.showDropdown) {
-            this.schedulePositionDropdown();
-          }
-        }
+        this.applySearchResponse(payload);
       });
     this.subscriptions.push(searchSub);
+  }
+
+  private applySearchResponse(payload: any): void {
+    if (this.isDestroyed || payload.requestId !== this._searchRequestId) {
+      return;
+    }
+
+    const response = payload.response;
+    const results = response.results || [];
+    const resultCount = response.resultCount || 0;
+
+    if (this.usesGenericSearchResults()) {
+      this.applyGenericSearchResults(results, response.hasMore);
+    } else {
+      this.applyMaterialSearchResults(results, resultCount, response.hasMore);
+    }
+
+    this.finishSearchResponse();
+  }
+
+  private usesGenericSearchResults(): boolean {
+    return (
+      this.isBomFeatureSearch ||
+      this.isCountrySearch ||
+      this.isServiceSearch ||
+      this.isUserListSearch
+    );
+  }
+
+  private applyGenericSearchResults(results: any[], hasMore: boolean): void {
+    this.genericOptions = Array.isArray(results) ? results : [];
+    this.hasMore = hasMore || false;
+    this.filteredOptions = this.genericOptions
+      .map((feature) => feature.displayValue || feature.name || '')
+      .filter((name) => name.length > 0);
+  }
+
+  private applyMaterialSearchResults(results: any[], resultCount: number, hasMore?: boolean): void {
+    this.totalResultCount = resultCount;
+    this.hasMore = hasMore ?? resultCount > this.toIndex;
+
+    if (Array.isArray(results) && results.length > 0) {
+      this.materialOptions =
+        this.fromIndex === 1 ? results : [...this.materialOptions, ...results];
+      this.buildFilteredOptionsFromMaterials();
+      return;
+    }
+
+    if (this.fromIndex === 1) {
+      this.materialOptions = [];
+      this.filteredOptions = [];
+      this.filteredMaterialOptions = [];
+      this.totalResultCount = 0;
+      this.hasMore = false;
+    }
+  }
+
+  private finishSearchResponse(): void {
+    this.isLoadingMore = false;
+    this.showDropdown = this.filteredOptions.length > 0;
+
+    if (this.showDropdown) {
+      this.schedulePositionDropdown();
+    }
   }
 
   ngAfterViewInit() {
@@ -343,6 +377,24 @@ export class AutocompleteCellEditorComponent
   }
 
   agInit(params: any): void {
+    this.resetEditorState();
+    this.params = params;
+    this.initializeEditorValue(params);
+
+    const fieldName = this.getFieldName();
+    this.searchMode = this.resolveSearchMode(params, fieldName);
+    this.userListAttributeName = params.userListAttributeName || fieldName || '';
+    this.userListType = params.userListType || '';
+    this.options = this.resolveInitialOptions(params);
+
+    if (params.filterFunction && typeof params.filterFunction === 'function') {
+      this.customFilterFunction = params.filterFunction;
+    }
+
+    this.initializeOptionsForField(fieldName);
+  }
+
+  private resetEditorState(): void {
     this.value = '';
     this.options = [];
     this.filteredOptions = [];
@@ -351,12 +403,7 @@ export class AutocompleteCellEditorComponent
     this.genericOptions = [];
     this.showDropdown = false;
     this.selectedIndex = -1;
-    this.isMaterialSearch = false;
-    this.isPartNumberSearch = false;
-    this.isBomFeatureSearch = false;
-    this.isCountrySearch = false;
-    this.isServiceSearch = false;
-    this.isUserListSearch = false;
+    this.searchMode = null;
     this.isLoadingMore = false;
     this.currentQuery = '';
     this.fromIndex = 1;
@@ -367,90 +414,94 @@ export class AutocompleteCellEditorComponent
     this.totalResultCount = 0;
     this.isDestroyed = false;
     this.originalValue = '';
+    this.customFilterFunction = undefined;
+  }
 
-    this.params = params;
-
-    this.dataService =
-      params.context?.dataService ||
-      params.params?.context?.dataService ||
-      (params.api?.gridOptionsService?.get
-        ? params.api.gridOptionsService.get('context')?.dataService
-        : null) ||
-      (params.api?.getContext ? params.api.getContext()?.dataService : null);
-
+  private initializeEditorValue(params: any): void {
     this.value = params.value !== null && params.value !== undefined ? String(params.value) : '';
     this.originalValue = this.value;
     this.placeholder = params.placeholder || 'search materials...';
+  }
 
-    const fieldName = this.getFieldName();
-
-    this.isPartNumberSearch =
+  private resolveSearchMode(params: any, fieldName: string): SearchMode {
+    if (
       params.isPartNumberSearch === true ||
       fieldName === FIELD_BOM_LINK_PART ||
       fieldName === FIELD_PART_NUMBER ||
-      fieldName === FIELD_PART;
+      fieldName === FIELD_PART
+    ) {
+      return 'partNumber';
+    }
 
-    this.isBomFeatureSearch = params.isBomFeatureSearch === true || fieldName === FIELD_BOM_LINK_FEATURE;
-    this.isCountrySearch =
-      params.isCountrySearch === true || fieldName === FIELD_BOM_LINK_COUNTRY_OF_ORIGIN;
-    this.isServiceSearch =
+    if (params.isBomFeatureSearch === true || fieldName === FIELD_BOM_LINK_FEATURE) {
+      return 'bomFeature';
+    }
+
+    if (params.isCountrySearch === true || fieldName === FIELD_BOM_LINK_COUNTRY_OF_ORIGIN) {
+      return 'country';
+    }
+
+    if (this.isServiceField(params, fieldName)) {
+      return 'service';
+    }
+
+    if (params.isUserListSearch === true) {
+      return 'userList';
+    }
+
+    return this.shouldUseMaterialSearch(params, fieldName) ? 'material' : null;
+  }
+
+  private isServiceField(params: any, fieldName: string): boolean {
+    return (
       params.isServiceSearch === true ||
       fieldName === 'materialColorServiceSubstituteOne' ||
       fieldName === 'materialColorServiceSubstituteTwo' ||
-      fieldName === 'materialColorServiceEquivalent';
-    this.isUserListSearch = params.isUserListSearch === true;
-    this.userListAttributeName = params.userListAttributeName || fieldName || '';
-    this.userListType = params.userListType || '';
+      fieldName === 'materialColorServiceEquivalent'
+    );
+  }
 
-    this.isMaterialSearch =
-      !this.isPartNumberSearch &&
-      !this.isBomFeatureSearch &&
-      !this.isCountrySearch &&
-      !this.isServiceSearch &&
-      !this.isUserListSearch &&
-      (params.useApiSearch === true ||
-        (this.dataService &&
-          (this.placeholder.includes('material') || this.placeholder.includes('Material'))) ||
-        (this.dataService && (fieldName === FIELD_MATERIAL || fieldName === FIELD_MATERIAL_DESCRIPTION)));
+  private shouldUseMaterialSearch(params: any, fieldName: string): boolean {
+    return (
+      params.useApiSearch === true ||
+      (this.dataService &&
+        (this.placeholder.includes('material') || this.placeholder.includes('Material'))) ||
+      (this.dataService && (fieldName === FIELD_MATERIAL || fieldName === FIELD_MATERIAL_DESCRIPTION))
+    );
+  }
 
+  private resolveInitialOptions(params: any): string[] {
     let valuesParam = params.values;
     if (typeof valuesParam === 'function') {
       valuesParam = valuesParam(params);
     }
 
-    if (valuesParam && Array.isArray(valuesParam)) {
-      this.options = valuesParam
-        .map((opt: any) => String(opt))
-        .filter((opt: string) => opt.length > 0);
-    } else if (params.options && Array.isArray(params.options)) {
-      this.options = params.options
-        .map((opt: any) => String(opt))
-        .filter((opt: string) => opt.length > 0);
-    } else if (typeof params.options === 'function') {
-      this.options = params
-        .options()
-        .map((opt: any) => String(opt))
-        .filter((opt: string) => opt.length > 0);
-    } else {
-      this.options = [];
+    if (Array.isArray(valuesParam)) {
+      return this.normalizeOptions(valuesParam);
     }
 
-    if (params.filterFunction && typeof params.filterFunction === 'function') {
-      this.customFilterFunction = params.filterFunction;
+    if (Array.isArray(params.options)) {
+      return this.normalizeOptions(params.options);
     }
 
-    const isColorOrSupplier = fieldName === FIELD_COLOR || fieldName === FIELD_SUPPLIER;
-    if (isColorOrSupplier) {
+    if (typeof params.options === 'function') {
+      return this.normalizeOptions(params.options());
+    }
+
+    return [];
+  }
+
+  private normalizeOptions(options: any[]): string[] {
+    return options.map((opt: any) => String(opt)).filter((opt: string) => opt.length > 0);
+  }
+
+  private initializeOptionsForField(fieldName: string): void {
+    if (this.isColorOrSupplierField(fieldName)) {
       this.refreshOptionsFromNodeData();
-    } else if (
-      this.options.length > 0 &&
-      !this.isMaterialSearch &&
-      !this.isPartNumberSearch &&
-      !this.isBomFeatureSearch &&
-      !this.isCountrySearch &&
-      !this.isServiceSearch &&
-      !this.isUserListSearch
-    ) {
+      return;
+    }
+
+    if (this.options.length > 0 && !this.usesApiSearch()) {
       this.filterOptions();
     }
   }
@@ -466,43 +517,50 @@ export class AutocompleteCellEditorComponent
 
   onInputChange(event: any): void {
     this.value = event.target.value || '';
+    this.refreshDependentOptionsWhenCleared();
+    this.syncGenericIdIfNeeded();
+    this.updateOptionsForInputValue();
+    this.selectedIndex = -1;
+    this.scheduleDropdownIfVisible();
+  }
 
-    const fieldName = this.getFieldName();
-    const isColorOrSupplier = fieldName === FIELD_COLOR || fieldName === FIELD_SUPPLIER;
-
-    if (isColorOrSupplier && !this.value) {
+  private refreshDependentOptionsWhenCleared(): void {
+    if (this.isColorOrSupplierField(this.getFieldName()) && !this.value) {
       this.refreshOptionsFromNodeData();
     }
+  }
 
-    const usesApiSearch =
-      this.isMaterialSearch ||
-      this.isPartNumberSearch ||
-      this.isBomFeatureSearch ||
-      this.isCountrySearch ||
-      this.isServiceSearch ||
-      this.isUserListSearch;
-
+  private syncGenericIdIfNeeded(): void {
     if (this.isIdBackedGenericSearch()) {
       this.syncGenericOptionIdFromCurrentValue();
     }
+  }
 
-    if (usesApiSearch) {
-      if (this.dataService) {
-        this.searchSubject.next(this.value);
-      }
-    } else {
-      // If value is cleared, or if it's a static list, optimize UX by showing all
-      if (!this.value && this.options.length > 0) {
-        this.filteredOptions = this.options.slice(0, 50);
-        this.showDropdown = this.filteredOptions.length > 0;
-      } else {
-        this.filterOptions();
-        this.showDropdown = this.filteredOptions.length > 0;
-      }
+  private updateOptionsForInputValue(): void {
+    if (this.usesApiSearch()) {
+      this.searchSubject.next(this.value);
+      return;
     }
 
-    this.selectedIndex = -1;
+    if (!this.value && this.options.length > 0) {
+      this.filteredOptions = this.options.slice(0, 50);
+      this.showDropdown = this.filteredOptions.length > 0;
+      return;
+    }
 
+    this.filterOptions();
+    this.showDropdown = this.filteredOptions.length > 0;
+  }
+
+  private usesApiSearch(): boolean {
+    return this.searchMode !== null && !!this.dataService;
+  }
+
+  private isColorOrSupplierField(fieldName: string): boolean {
+    return fieldName === FIELD_COLOR || fieldName === FIELD_SUPPLIER;
+  }
+
+  private scheduleDropdownIfVisible(): void {
     if (this.showDropdown) {
       this.schedulePositionDropdown();
     }
@@ -608,194 +666,238 @@ export class AutocompleteCellEditorComponent
   }
 
   private loadMoreResults(): void {
-    if (
-      this.isBomFeatureSearch ||
-      this.isCountrySearch ||
-      this.isServiceSearch ||
-      this.isUserListSearch ||
-      this.isLoadingMore ||
-      !this.hasMore ||
-      !this.dataService ||
-      !this.currentQuery
-    ) {
+    if (!this.canLoadMoreMaterialResults()) {
       return;
     }
 
     this.isLoadingMore = true;
     const queryForThisLoad = this.currentQuery;
     const loadMoreId = ++this._loadMoreRequestId;
-
-    this.fromIndex = this.toIndex + 1;
-    this.toIndex = this.fromIndex + (this.PAGE_SIZE - 1);
+    this.advanceMaterialPagination();
 
     const loadMoreSub = this.dataService
-      .searchMaterials(this.currentQuery, this.fromIndex, this.toIndex, this.isPartNumberSearch)
+      .searchMaterials(queryForThisLoad, this.fromIndex, this.toIndex, this.isPartNumberSearch)
       .subscribe({
-        next: (response) => {
-          if (
-            this.isDestroyed ||
-            queryForThisLoad !== this.currentQuery ||
-            loadMoreId !== this._loadMoreRequestId
-          ) {
-            this.isLoadingMore = false;
-            return;
-          }
-          const materials = response.results || [];
-          const resultCount = response.resultCount || 0;
-
-          this.hasMore = resultCount > this.toIndex;
-
-          if (Array.isArray(materials) && materials.length > 0) {
-            this.materialOptions = [...this.materialOptions, ...materials];
-            this.buildFilteredOptionsFromMaterials();
-          } else {
-            this.hasMore = false;
-          }
-
-          this.isLoadingMore = false;
-        },
-        error: () => {
-          this.isLoadingMore = false;
-          this.hasMore = false;
-        },
+        next: (response) => this.applyLoadMoreResponse(response, queryForThisLoad, loadMoreId),
+        error: () => this.failLoadMoreRequest(),
       });
     this.subscriptions.push(loadMoreSub);
+  }
+
+  private canLoadMoreMaterialResults(): boolean {
+    return (
+      (this.isMaterialSearch || this.isPartNumberSearch) &&
+      !this.isLoadingMore &&
+      this.hasMore &&
+      !!this.dataService &&
+      !!this.currentQuery
+    );
+  }
+
+  private advanceMaterialPagination(): void {
+    this.fromIndex = this.toIndex + 1;
+    this.toIndex = this.fromIndex + (this.PAGE_SIZE - 1);
+  }
+
+  private applyLoadMoreResponse(response: any, queryForThisLoad: string, loadMoreId: number): void {
+    if (this.isStaleLoadMoreResponse(queryForThisLoad, loadMoreId)) {
+      this.isLoadingMore = false;
+      return;
+    }
+
+    const materials = response.results || [];
+    const resultCount = response.resultCount || 0;
+    this.hasMore = resultCount > this.toIndex;
+
+    if (Array.isArray(materials) && materials.length > 0) {
+      this.materialOptions = [...this.materialOptions, ...materials];
+      this.buildFilteredOptionsFromMaterials();
+    } else {
+      this.hasMore = false;
+    }
+
+    this.isLoadingMore = false;
+  }
+
+  private isStaleLoadMoreResponse(queryForThisLoad: string, loadMoreId: number): boolean {
+    return (
+      this.isDestroyed ||
+      queryForThisLoad !== this.currentQuery ||
+      loadMoreId !== this._loadMoreRequestId
+    );
+  }
+
+  private failLoadMoreRequest(): void {
+    this.isLoadingMore = false;
+    this.hasMore = false;
   }
 
   selectOption(option: string, optionIndex?: number): void {
     this.value = option;
     this.closeDropdown();
 
-    let selectedMaterial: any = null;
-    if (this.isMaterialSearch || this.isPartNumberSearch) {
-      if (
-        optionIndex !== undefined &&
-        optionIndex >= 0 &&
-        optionIndex < this.filteredMaterialOptions.length
-      ) {
-        selectedMaterial = this.filteredMaterialOptions[optionIndex];
-      } else {
-        selectedMaterial = this.materialOptions.find((material) => {
-          if (this.isPartNumberSearch) {
-            return (material.materialColorPartNumber || '') === option;
-          }
-          const matLabel =
-            material.material ||
-            material.ptcmaterialName ||
-            material.materialName ||
-            material.name ||
-            '';
-          return matLabel === option;
-        });
-      }
+    if (!this.params?.node) {
+      return;
     }
 
-    if (this.params && this.params.node) {
-      const fieldName = this.getFieldName();
-      let clearSkuOnPartChange = false;
-      if (fieldName) {
-        if (PART_FIELD_KEYS.includes(fieldName)) {
-          const data = this.params.node.data || {};
-          const prevPart =
-            data[FIELD_PART_NUMBER] ??
-            data[FIELD_BOM_LINK_PART] ??
-            data[FIELD_PART] ??
-            '';
-          const isNewRow = !!data.isNewRow;
-          clearSkuOnPartChange =
-            isNewRow && String(prevPart ?? '').trim() !== String(option ?? '').trim();
-        }
+    const fieldName = this.getFieldName();
+    const selectedMaterial = this.findSelectedMaterial(option, optionIndex);
+    const clearSkuOnPartChange = this.shouldClearSkuOnPartChange(fieldName, option);
 
-        this.params.node.setDataValue(fieldName, option);
+    this.applySelectedValueToRow(fieldName, option, optionIndex);
+    this.applySelectionSideEffects(fieldName, option, selectedMaterial, clearSkuOnPartChange);
+    this.refreshSelectionCells(fieldName, selectedMaterial);
+    this.markNewRowAsEditedIfNeeded(fieldName);
+    this.stopEditingAsync();
+  }
 
-        if (fieldName === FIELD_BOM_LINK_FEATURE) {
-          // Store display value for UI
-          this.params.node.setDataValue(FIELD_FEATURE, option);
-          const selectedFeatureId = this.isBomFeatureSearch
-            ? this.getSelectedGenericOptionId(option, optionIndex)
-            : null;
-          if (this.params.node?.data) {
-            this.params.node.data.bomLinkFeatureId = selectedFeatureId
-              ? String(selectedFeatureId)
-              : '';
-          }
-        }
-
-        if (
-          (this.isServiceSearch || this.isCountrySearch || this.isUserListSearch) &&
-          this.genericOptions.length > 0
-        ) {
-          const selectedGenericId = this.getSelectedGenericOptionId(option, optionIndex);
-          if (fieldName) {
-            const idFieldName = `${fieldName}Id`;
-            if (this.params.node.data) {
-              this.params.node.data[idFieldName] = selectedGenericId || '';
-            }
-          }
-        }
-
-        if (fieldName === FIELD_PART_NUMBER || fieldName === FIELD_BOM_LINK_PART) {
-          this.params.node.setDataValue(FIELD_PART, option);
-          if (!option || String(option).trim() === '') {
-            this.clearAutopopulatedFieldsWhenPartCleared();
-          }
-        }
-      }
-
-      if (selectedMaterial) {
-        this.autoPopulateFields(selectedMaterial, { clearSkuOnPartChange });
-        if (
-          fieldName === FIELD_PART_NUMBER ||
-          fieldName === FIELD_BOM_LINK_PART ||
-          fieldName === FIELD_PART
-        ) {
-          this.markExistingRowAsEditedForPartChange(fieldName);
-        }
-      } else if (
-        !this.isMaterialSearch &&
-        !this.isPartNumberSearch &&
-        !this.isBomFeatureSearch &&
-        !this.isCountrySearch &&
-        !this.isServiceSearch &&
-        !this.isUserListSearch
-      ) {
-        this.triggerFeatureAutoPopulation(option);
-      }
-
-      if (
-        clearSkuOnPartChange &&
-        !selectedMaterial &&
-        (fieldName === FIELD_PART_NUMBER || fieldName === FIELD_BOM_LINK_PART || fieldName === FIELD_PART)
-      ) {
-        this.clearSkuValuesForRow();
-      }
-
-      if (this.params.api) {
-        const columnsToRefresh = [fieldName];
-        if (selectedMaterial && (this.isMaterialSearch || this.isPartNumberSearch)) {
-          if (
-            fieldName === FIELD_MATERIAL ||
-            fieldName === FIELD_MATERIAL_DESCRIPTION ||
-            fieldName === FIELD_PART_NUMBER ||
-            fieldName === FIELD_BOM_LINK_PART
-          ) {
-            columnsToRefresh.push(...COLUMNS_REFRESH_AFTER_PART);
-          }
-        }
-        this.params.api.refreshCells({
-          rowNodes: [this.params.node],
-          columns: columnsToRefresh,
-          force: true,
-        });
-      }
-
-      this.markNewRowAsEditedIfNeeded(fieldName);
-      setTimeout(() => {
-        if (this.params && this.params.api) {
-          this.params.api.stopEditing();
-        }
-      }, 0);
+  private findSelectedMaterial(option: string, optionIndex?: number): any {
+    if (!this.isMaterialSearch && !this.isPartNumberSearch) {
+      return null;
     }
+
+    if (
+      optionIndex !== undefined &&
+      optionIndex >= 0 &&
+      optionIndex < this.filteredMaterialOptions.length
+    ) {
+      return this.filteredMaterialOptions[optionIndex];
+    }
+
+    return this.materialOptions.find((material) => this.materialMatchesOption(material, option));
+  }
+
+  private materialMatchesOption(material: any, option: string): boolean {
+    if (this.isPartNumberSearch) {
+      return (material.materialColorPartNumber || '') === option;
+    }
+
+    const materialLabel =
+      material.material || material.ptcmaterialName || material.materialName || material.name || '';
+    return materialLabel === option;
+  }
+
+  private shouldClearSkuOnPartChange(fieldName: string, option: string): boolean {
+    if (!PART_FIELD_KEYS.includes(fieldName)) {
+      return false;
+    }
+
+    const data = this.params.node.data || {};
+    const previousPart = data[FIELD_PART_NUMBER] ?? data[FIELD_BOM_LINK_PART] ?? data[FIELD_PART] ?? '';
+    return !!data.isNewRow && String(previousPart ?? '').trim() !== String(option ?? '').trim();
+  }
+
+  private applySelectedValueToRow(fieldName: string, option: string, optionIndex?: number): void {
+    if (!fieldName) {
+      return;
+    }
+
+    this.params.node.setDataValue(fieldName, option);
+    this.applyFeatureSelection(fieldName, option, optionIndex);
+    this.applyGenericSelectionId(fieldName, option, optionIndex);
+    this.applyPartSelection(fieldName, option);
+  }
+
+  private applyFeatureSelection(fieldName: string, option: string, optionIndex?: number): void {
+    if (fieldName !== FIELD_BOM_LINK_FEATURE) {
+      return;
+    }
+
+    this.params.node.setDataValue(FIELD_FEATURE, option);
+    const selectedFeatureId = this.isBomFeatureSearch
+      ? this.getSelectedGenericOptionId(option, optionIndex)
+      : null;
+    if (this.params.node?.data) {
+      this.params.node.data.bomLinkFeatureId = selectedFeatureId ? String(selectedFeatureId) : '';
+    }
+  }
+
+  private applyGenericSelectionId(fieldName: string, option: string, optionIndex?: number): void {
+    if (!this.isIdBackedGenericSearch() || this.genericOptions.length === 0) {
+      return;
+    }
+
+    const selectedGenericId = this.getSelectedGenericOptionId(option, optionIndex);
+    if (this.params.node.data) {
+      this.params.node.data[`${fieldName}Id`] = selectedGenericId || '';
+    }
+  }
+
+  private applyPartSelection(fieldName: string, option: string): void {
+    if (fieldName !== FIELD_PART_NUMBER && fieldName !== FIELD_BOM_LINK_PART) {
+      return;
+    }
+
+    this.params.node.setDataValue(FIELD_PART, option);
+    if (!option || String(option).trim() === '') {
+      this.clearAutopopulatedFieldsWhenPartCleared();
+    }
+  }
+
+  private applySelectionSideEffects(
+    fieldName: string,
+    option: string,
+    selectedMaterial: any,
+    clearSkuOnPartChange: boolean,
+  ): void {
+    if (selectedMaterial) {
+      this.autoPopulateFields(selectedMaterial, { clearSkuOnPartChange });
+      this.markPartChangeAsEditedIfNeeded(fieldName);
+      return;
+    }
+
+    if (!this.usesApiSearch()) {
+      this.triggerFeatureAutoPopulation(option);
+    }
+
+    if (clearSkuOnPartChange && PART_FIELD_KEYS.includes(fieldName)) {
+      this.clearSkuValuesForRow();
+    }
+  }
+
+  private markPartChangeAsEditedIfNeeded(fieldName: string): void {
+    if (PART_FIELD_KEYS.includes(fieldName)) {
+      this.markExistingRowAsEditedForPartChange(fieldName);
+    }
+  }
+
+  private refreshSelectionCells(fieldName: string, selectedMaterial: any): void {
+    if (!this.params.api) {
+      return;
+    }
+
+    this.params.api.refreshCells({
+      rowNodes: [this.params.node],
+      columns: this.getSelectionRefreshColumns(fieldName, selectedMaterial),
+      force: true,
+    });
+  }
+
+  private getSelectionRefreshColumns(fieldName: string, selectedMaterial: any): string[] {
+    const columnsToRefresh = [fieldName];
+    if (selectedMaterial && this.isMaterialOrPartSearch() && this.isMaterialOrPartField(fieldName)) {
+      columnsToRefresh.push(...COLUMNS_REFRESH_AFTER_PART);
+    }
+    return columnsToRefresh;
+  }
+
+  private isMaterialOrPartSearch(): boolean {
+    return this.isMaterialSearch || this.isPartNumberSearch;
+  }
+
+  private isMaterialOrPartField(fieldName: string): boolean {
+    return (
+      fieldName === FIELD_MATERIAL ||
+      fieldName === FIELD_MATERIAL_DESCRIPTION ||
+      fieldName === FIELD_PART_NUMBER ||
+      fieldName === FIELD_BOM_LINK_PART
+    );
+  }
+
+  private stopEditingAsync(): void {
+    setTimeout(() => {
+      this.params?.api?.stopEditing();
+    }, 0);
   }
 
   private markNewRowAsEditedIfNeeded(fieldName: string): void {
@@ -907,49 +1009,61 @@ export class AutocompleteCellEditorComponent
    * responseColumns, it is not filled (no error). Internal IDs (colorId, materialSupplierMasterId) are set for save.
    */
   private autoPopulateFields(material: any, options?: { clearSkuOnPartChange?: boolean }): void {
-    if (!this.params || !this.params.node) return;
+    if (!this.params?.node) {
+      return;
+    }
+
+    const flatInstance = material?.flatInstance;
+    if (!flatInstance || typeof flatInstance !== 'object') {
+      return;
+    }
 
     const originalData = { ...this.params.node.data };
-    const flatInstance = material?.flatInstance;
-    const responseColumns = material?.responseColumns;
+    const setSkip = this.getGridContext()?.setSkipEditTracking;
 
-    if (!flatInstance || typeof flatInstance !== 'object') return;
-
-    if (material?.materialColorId && this.params.node?.data) {
-      this.params.node.data.materialColorId = material.materialColorId;
-      this.params.node.setDataValue('materialColorId', material.materialColorId);
-    }
-
-    const ctx = this.getGridContext();
-    const setSkip = ctx?.setSkipEditTracking;
     try {
       setSkip?.(true);
+      this.applyMaterialColorId(material);
+      this.applyFlatInstanceColumns(flatInstance, material?.responseColumns, originalData);
+      this.applyFlatInstanceIdentifiers(flatInstance, originalData);
+      this.refreshDependentDropdownData(flatInstance, material);
+      this.applySkuUpdatesFromMaterial(material, originalData, options?.clearSkuOnPartChange === true);
+    } finally {
+      setTimeout(() => setSkip?.(false), 0);
+    }
+  }
 
-    const columnKeys =
-      responseColumns && typeof responseColumns === 'object'
-        ? Object.keys(responseColumns)
-        : Object.keys(flatInstance);
+  private applyMaterialColorId(material: any): void {
+    if (!material?.materialColorId || !this.params.node?.data) {
+      return;
+    }
 
+    this.params.node.data.materialColorId = material.materialColorId;
+    this.params.node.setDataValue('materialColorId', material.materialColorId);
+  }
+
+  private applyFlatInstanceColumns(flatInstance: any, responseColumns: any, originalData: any): void {
+    const columnKeys = this.resolveResponseColumnKeys(flatInstance, responseColumns);
     columnKeys.forEach((key) => {
-      if (!(key in flatInstance)) return;
-      const value = flatInstance[key];
-      if (originalData[key] === value) return;
-      this.params.node.setDataValue(key, value);
+      if (!(key in flatInstance) || originalData[key] === flatInstance[key]) {
+        return;
+      }
+      this.params.node.setDataValue(key, flatInstance[key]);
     });
+  }
 
-    if (flatInstance.colorId != null && String(flatInstance.colorId) !== '') {
-      const colorId = String(flatInstance.colorId);
-      this.params.node.data.colorId = colorId;
-      this.params.node.setDataValue('colorId', colorId);
-    }
-    if (flatInstance.childId != null && String(flatInstance.childId) !== '') {
-      const childId = String(flatInstance.childId);
-      this.params.node.data.childId = childId;
-      this.params.node.setDataValue('childId', childId);
-    }
+  private resolveResponseColumnKeys(flatInstance: any, responseColumns: any): string[] {
+    return responseColumns && typeof responseColumns === 'object'
+      ? Object.keys(responseColumns)
+      : Object.keys(flatInstance);
+  }
 
-    const partValue = flatInstance.materialColorPartNumber != null ? String(flatInstance.materialColorPartNumber) : '';
-    const materialValue = flatInstance.material != null ? String(flatInstance.material) : '';
+  private applyFlatInstanceIdentifiers(flatInstance: any, originalData: any): void {
+    this.setStringValueIfPresent('colorId', flatInstance.colorId);
+    this.setStringValueIfPresent('childId', flatInstance.childId);
+
+    const partValue = this.toNonEmptyString(flatInstance.materialColorPartNumber);
+    const materialValue = this.toNonEmptyString(flatInstance.material);
 
     if (partValue) {
       this.setPartIdentifiers(partValue);
@@ -963,6 +1077,25 @@ export class AutocompleteCellEditorComponent
     if (flatInstance.color != null && originalData[FIELD_COLOR_DESCRIPTION] !== flatInstance.color) {
       this.params.node.setDataValue(FIELD_COLOR_DESCRIPTION, String(flatInstance.color));
     }
+  }
+
+  private setStringValueIfPresent(fieldName: string, value: any): void {
+    if (value == null || String(value) === '') {
+      return;
+    }
+
+    const stringValue = String(value);
+    this.params.node.data[fieldName] = stringValue;
+    this.params.node.setDataValue(fieldName, stringValue);
+  }
+
+  private toNonEmptyString(value: any): string {
+    return value != null ? String(value) : '';
+  }
+
+  private refreshDependentDropdownData(flatInstance: any, material: any): void {
+    const partValue = this.toNonEmptyString(flatInstance.materialColorPartNumber);
+    const materialValue = this.toNonEmptyString(flatInstance.material);
 
     if (this.isPartNumberSearch && partValue && this.dataService) {
       this.fetchAllPartsForDropdowns(partValue, material);
@@ -970,28 +1103,33 @@ export class AutocompleteCellEditorComponent
     if (!this.isPartNumberSearch && materialValue) {
       this.fetchAllMaterialsForDropdowns(material);
     }
+  }
 
-    const clearSkuOnPartChange = options?.clearSkuOnPartChange === true;
+  private applySkuUpdatesFromMaterial(
+    material: any,
+    originalData: any,
+    clearSkuOnPartChange: boolean,
+  ): void {
     if (clearSkuOnPartChange) {
       this.clearSkuValuesForRow();
+      return;
     }
 
     const skuInfoPart = this.dataService?.getSkuInfo();
-    if (!clearSkuOnPartChange && material.skus && Array.isArray(material.skus) && skuInfoPart?.length > 0) {
-      const skuUpdates = this.skuService.buildSkuFieldUpdates({
-        skuInfo: skuInfoPart,
-        sourceSkus: material.skus,
-      });
-      this.skuService.applySkuFieldUpdates({
-        row: this.params?.node?.data,
-        updates: skuUpdates,
-        setDataValue: (fieldName, value) => this.params.node.setDataValue(fieldName, value),
-        shouldApply: (update) => originalData[update.fieldName] !== update.value,
-      });
+    if (!material.skus || !Array.isArray(material.skus) || !skuInfoPart?.length) {
+      return;
     }
-    } finally {
-      setTimeout(() => setSkip?.(false), 0);
-    }
+
+    const skuUpdates = this.skuService.buildSkuFieldUpdates({
+      skuInfo: skuInfoPart,
+      sourceSkus: material.skus,
+    });
+    this.skuService.applySkuFieldUpdates({
+      row: this.params?.node?.data,
+      updates: skuUpdates,
+      setDataValue: (fieldName, value) => this.params.node.setDataValue(fieldName, value),
+      shouldApply: (update) => originalData[update.fieldName] !== update.value,
+    });
   }
 
   private triggerFeatureAutoPopulation(partNumber: string): void {
@@ -1288,140 +1426,218 @@ export class AutocompleteCellEditorComponent
   }
 
   private fetchAllMaterialsForDropdowns(selectedMaterial: any): void {
-    if (!this.params || !this.params.node || !selectedMaterial?.flatInstance) return;
-
-    const fi = selectedMaterial.flatInstance;
-    const colorName = fi.color ?? '';
-    const supplierName = fi.supplier ?? '';
-    const partNumber = fi.materialColorPartNumber ?? selectedMaterial.materialColorPartNumber ?? '';
-
-    const availableColors = colorName ? [colorName] : [];
-    const availableSuppliers = supplierName ? [supplierName] : [];
-    const availablePartNumbers = partNumber ? [partNumber] : [];
-
-    this.params.node.setDataValue('_availableColors', availableColors);
-    this.params.node.setDataValue('_availableSuppliers', availableSuppliers);
-
-    if (availablePartNumbers.length > 0) {
-      this.params.node.setDataValue('_availablePartNumbers', availablePartNumbers);
+    if (!this.params?.node || !selectedMaterial?.flatInstance) {
+      return;
     }
 
+    const values = this.getSelectedMaterialDropdownValues(selectedMaterial);
+    this.applyAvailableDropdownValues(values);
+    this.syncColorAndSupplierValues(values);
+    this.syncPartNumberValue(values.partNumber);
+  }
+
+  private getSelectedMaterialDropdownValues(selectedMaterial: any): {
+    colorName: string;
+    supplierName: string;
+    partNumber: string;
+  } {
+    const flatInstance = selectedMaterial.flatInstance;
+    return {
+      colorName: flatInstance.color ?? '',
+      supplierName: flatInstance.supplier ?? '',
+      partNumber: flatInstance.materialColorPartNumber ?? selectedMaterial.materialColorPartNumber ?? '',
+    };
+  }
+
+  private applyAvailableDropdownValues(values: {
+    colorName: string;
+    supplierName: string;
+    partNumber: string;
+  }): void {
+    this.params.node.setDataValue('_availableColors', values.colorName ? [values.colorName] : []);
+    this.params.node.setDataValue(
+      '_availableSuppliers',
+      values.supplierName ? [values.supplierName] : [],
+    );
+
+    if (values.partNumber) {
+      this.params.node.setDataValue('_availablePartNumbers', [values.partNumber]);
+    }
+  }
+
+  private syncColorAndSupplierValues(values: { colorName: string; supplierName: string }): void {
     const currentData = this.params.node.data || {};
     const existingColor = currentData[FIELD_COLOR] || currentData[FIELD_COLOR_DESCRIPTION] || '';
     const existingSupplier = currentData[FIELD_SUPPLIER] || '';
 
-    if (colorName && existingColor !== colorName) {
-      this.params.node.setDataValue(FIELD_COLOR, colorName);
-      this.params.node.setDataValue(FIELD_COLOR_DESCRIPTION, colorName);
+    if (values.colorName && existingColor !== values.colorName) {
+      this.params.node.setDataValue(FIELD_COLOR, values.colorName);
+      this.params.node.setDataValue(FIELD_COLOR_DESCRIPTION, values.colorName);
     }
 
-    if (supplierName && existingSupplier !== supplierName) {
-      this.params.node.setDataValue(FIELD_SUPPLIER, supplierName);
+    if (values.supplierName && existingSupplier !== values.supplierName) {
+      this.params.node.setDataValue(FIELD_SUPPLIER, values.supplierName);
+    }
+  }
+
+  private syncPartNumberValue(partNumber: string): void {
+    const partFieldName = this.resolvePartFieldName();
+    const existingPartNumber = this.getExistingPartNumber(partFieldName);
+    if (!partNumber || existingPartNumber === partNumber) {
+      return;
     }
 
+    this.params.node.setDataValue(partFieldName, partNumber);
+    this.params.api?.refreshCells({
+      rowNodes: [this.params.node],
+      columns: [partFieldName],
+      force: true,
+    });
+  }
+
+  private resolvePartFieldName(): string {
     const fieldName = this.getFieldName();
-    const partFieldName =
-      fieldName === FIELD_BOM_LINK_PART || fieldName === FIELD_PART_NUMBER ? fieldName : FIELD_BOM_LINK_PART;
-    const existingPartNumber =
+    return fieldName === FIELD_BOM_LINK_PART || fieldName === FIELD_PART_NUMBER
+      ? fieldName
+      : FIELD_BOM_LINK_PART;
+  }
+
+  private getExistingPartNumber(partFieldName: string): string {
+    const currentData = this.params.node.data || {};
+    return (
       currentData[partFieldName] ||
       currentData[FIELD_BOM_LINK_PART] ||
       currentData[FIELD_PART_NUMBER] ||
       currentData[FIELD_PART] ||
-      '';
-    if (partNumber && existingPartNumber !== partNumber) {
-      this.params.node.setDataValue(partFieldName, partNumber);
-      if (this.params.api) {
-        this.params.api.refreshCells({
-          rowNodes: [this.params.node],
-          columns: [partFieldName],
-          force: true,
-        });
-      }
-    }
+      ''
+    );
   }
 
   private fetchAllPartsForDropdowns(partNumber: string, selectedMaterial: any): void {
-    if (!this.params || !this.params.node || !selectedMaterial || !this.dataService || !partNumber)
+    if (!this.canFetchPartDropdownOptions(partNumber, selectedMaterial)) {
       return;
-
-    const fi = selectedMaterial.flatInstance;
-    const initialColorValue = fi?.color ?? selectedMaterial.color ?? '';
-    const initialSupplierValue = fi?.supplier ?? selectedMaterial.supplier ?? '';
-
-    if (initialColorValue) {
-      this.params.node.setDataValue('_availableColors', [initialColorValue]);
     }
 
-    if (initialSupplierValue) {
-      this.params.node.setDataValue('_availableSuppliers', [initialSupplierValue]);
-    }
+    const initialValues = this.getInitialPartDropdownValues(selectedMaterial);
+    this.applyInitialPartDropdownValues(initialValues);
 
     const materialsSub = this.dataService.searchMaterials(partNumber, 1, 1000, true).subscribe({
-      next: (response) => {
-        if (!this.isDestroyed && this.params && this.params.node) {
-          const allParts = response.results || [];
-
-          const uniqueColors = new Set<string>();
-          const uniqueSuppliers = new Set<string>();
-
-          allParts.forEach((part: any) => {
-            const fi = part.flatInstance;
-            const colorName = fi?.color ?? part.color ?? '';
-            const supplierName = fi?.supplier ?? part.supplier ?? '';
-            if (colorName) uniqueColors.add(colorName);
-            if (supplierName) uniqueSuppliers.add(supplierName);
-          });
-
-          if (initialColorValue && !uniqueColors.has(initialColorValue)) {
-            uniqueColors.add(initialColorValue);
-          }
-          if (initialSupplierValue && !uniqueSuppliers.has(initialSupplierValue)) {
-            uniqueSuppliers.add(initialSupplierValue);
-          }
-
-          const availableColors = Array.from(uniqueColors).sort();
-          const availableSuppliers = Array.from(uniqueSuppliers).sort();
-
-          this.params.node.setDataValue('_availableColors', availableColors);
-          this.params.node.setDataValue('_availableSuppliers', availableSuppliers);
-
-          const currentData = this.params.node.data || {};
-          const existingColor = currentData[FIELD_COLOR] || currentData[FIELD_COLOR_DESCRIPTION] || '';
-          const existingSupplier = currentData[FIELD_SUPPLIER] || '';
-
-          if (availableColors.length === 1 && initialColorValue) {
-            if (existingColor !== initialColorValue) {
-              this.params.node.setDataValue(FIELD_COLOR, initialColorValue);
-              this.params.node.setDataValue(FIELD_COLOR_DESCRIPTION, initialColorValue);
-            }
-          } else if (availableColors.length > 1) {
-            if (existingColor && !availableColors.includes(existingColor)) {
-              this.params.node.setDataValue(FIELD_COLOR, '');
-              this.params.node.setDataValue(FIELD_COLOR_DESCRIPTION, '');
-            }
-          }
-
-          if (availableSuppliers.length === 1 && initialSupplierValue) {
-            if (existingSupplier !== initialSupplierValue) {
-              this.params.node.setDataValue(FIELD_SUPPLIER, initialSupplierValue);
-            }
-          } else if (availableSuppliers.length > 1) {
-            if (existingSupplier && !availableSuppliers.includes(existingSupplier)) {
-              this.params.node.setDataValue(FIELD_SUPPLIER, '');
-            }
-          }
-
-          if (this.params.api) {
-            this.params.api.refreshCells({
-              rowNodes: [this.params.node],
-              columns: [...COLUMNS_REFRESH_AFTER_PART],
-              force: true,
-            });
-          }
-        }
-      },
+      next: (response) => this.applyPartDropdownOptions(response, initialValues),
       error: () => {},
     });
     this.subscriptions.push(materialsSub);
   }
+
+  private canFetchPartDropdownOptions(partNumber: string, selectedMaterial: any): boolean {
+    return !!this.params?.node && !!selectedMaterial && !!this.dataService && !!partNumber;
+  }
+
+  private getInitialPartDropdownValues(selectedMaterial: any): {
+    colorName: string;
+    supplierName: string;
+  } {
+    const flatInstance = selectedMaterial.flatInstance;
+    return {
+      colorName: flatInstance?.color ?? selectedMaterial.color ?? '',
+      supplierName: flatInstance?.supplier ?? selectedMaterial.supplier ?? '',
+    };
+  }
+
+  private applyInitialPartDropdownValues(values: { colorName: string; supplierName: string }): void {
+    if (values.colorName) {
+      this.params.node.setDataValue('_availableColors', [values.colorName]);
+    }
+
+    if (values.supplierName) {
+      this.params.node.setDataValue('_availableSuppliers', [values.supplierName]);
+    }
+  }
+
+  private applyPartDropdownOptions(
+    response: any,
+    initialValues: { colorName: string; supplierName: string },
+  ): void {
+    if (this.isDestroyed || !this.params?.node) {
+      return;
+    }
+
+    const availableOptions = this.buildPartDropdownOptions(response.results || [], initialValues);
+    this.params.node.setDataValue('_availableColors', availableOptions.colors);
+    this.params.node.setDataValue('_availableSuppliers', availableOptions.suppliers);
+
+    this.reconcileColorSelection(availableOptions.colors, initialValues.colorName);
+    this.reconcileSupplierSelection(availableOptions.suppliers, initialValues.supplierName);
+    this.refreshPartDependentCells();
+  }
+
+  private buildPartDropdownOptions(
+    parts: any[],
+    initialValues: { colorName: string; supplierName: string },
+  ): { colors: string[]; suppliers: string[] } {
+    const colors = new Set<string>();
+    const suppliers = new Set<string>();
+
+    parts.forEach((part: any) => {
+      const flatInstance = part.flatInstance;
+      const colorName = flatInstance?.color ?? part.color ?? '';
+      const supplierName = flatInstance?.supplier ?? part.supplier ?? '';
+      if (colorName) colors.add(colorName);
+      if (supplierName) suppliers.add(supplierName);
+    });
+
+    if (initialValues.colorName) {
+      colors.add(initialValues.colorName);
+    }
+    if (initialValues.supplierName) {
+      suppliers.add(initialValues.supplierName);
+    }
+
+    return {
+      colors: Array.from(colors).sort(),
+      suppliers: Array.from(suppliers).sort(),
+    };
+  }
+
+  private reconcileColorSelection(availableColors: string[], initialColorValue: string): void {
+    const currentData = this.params.node.data || {};
+    const existingColor = currentData[FIELD_COLOR] || currentData[FIELD_COLOR_DESCRIPTION] || '';
+
+    if (availableColors.length === 1 && initialColorValue && existingColor !== initialColorValue) {
+      this.params.node.setDataValue(FIELD_COLOR, initialColorValue);
+      this.params.node.setDataValue(FIELD_COLOR_DESCRIPTION, initialColorValue);
+      return;
+    }
+
+    if (availableColors.length > 1 && existingColor && !availableColors.includes(existingColor)) {
+      this.params.node.setDataValue(FIELD_COLOR, '');
+      this.params.node.setDataValue(FIELD_COLOR_DESCRIPTION, '');
+    }
+  }
+
+  private reconcileSupplierSelection(availableSuppliers: string[], initialSupplierValue: string): void {
+    const currentData = this.params.node.data || {};
+    const existingSupplier = currentData[FIELD_SUPPLIER] || '';
+
+    if (availableSuppliers.length === 1 && initialSupplierValue && existingSupplier !== initialSupplierValue) {
+      this.params.node.setDataValue(FIELD_SUPPLIER, initialSupplierValue);
+      return;
+    }
+
+    if (
+      availableSuppliers.length > 1 &&
+      existingSupplier &&
+      !availableSuppliers.includes(existingSupplier)
+    ) {
+      this.params.node.setDataValue(FIELD_SUPPLIER, '');
+    }
+  }
+
+  private refreshPartDependentCells(): void {
+    this.params.api?.refreshCells({
+      rowNodes: [this.params.node],
+      columns: [...COLUMNS_REFRESH_AFTER_PART],
+      force: true,
+    });
+  }
+
 }

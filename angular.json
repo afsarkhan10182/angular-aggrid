@@ -16,6 +16,10 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
+            "outputPath": {
+              "base": "dist",
+              "browser": ""
+            },
             "browser": "src/main.ts",
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
@@ -42,6 +46,7 @@
                   "maximumError": "25kB"
                 }
               ],
+              "extractLicenses": false,
               "outputHashing": "all",
               "baseHref": "./",
               "fileReplacements": [

@@ -12,6 +12,7 @@ import {
   FIELD_BOM_LINK_FEATURE,
   FIELD_BOM_LINK_PART,
   FIELD_BOM_LINK_COUNTRY_OF_ORIGIN,
+  FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
   FIELD_BOM_LINK_START_DATE,
   FIELD_BOM_LINK_END_DATE,
   FIELD_PART_NUMBER,
@@ -77,7 +78,9 @@ export class GridColumnsService {
 
     const checkboxSelection = (params: any) => {
       const data = params?.data;
-      if (!data) return false;
+      if (!data) {
+        return false;
+      }
       return !(
         data.isSectionHeader ||
         data.isGroupHeader ||
@@ -136,10 +139,32 @@ export class GridColumnsService {
             },
           }),
         }),
+      [FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET]: () =>
+        this.createAutocompleteColumn({
+          headerName: columnMapping[FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET],
+          field: FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
+          width: 150,
+          minWidth: 100,
+          context,
+          cellEditor: AutocompleteCellEditorComponent,
+          cellEditorParams: () => {
+            const values = [
+              '',
+              ...this.dataService.getIncludeInSpecSheetOptions(context.constraintsData),
+            ];
+            return {
+              values,
+              placeholder: 'Select...',
+              filterFunction: this.utilService.createAutocompleteFilter(),
+            };
+          },
+        }),
     };
 
     Object.keys(columnMapping).forEach((field) => {
-      if (field === FIELD_FEATURE || field === FIELD_BOM_LINK_FEATURE) return;
+      if (field === FIELD_FEATURE || field === FIELD_BOM_LINK_FEATURE) {
+        return;
+      }
 
       const specialColumnBuilder = specialColumnBuilders[field];
       if (specialColumnBuilder) {
@@ -155,7 +180,7 @@ export class GridColumnsService {
         minWidth: 100,
         sortable: true,
         resizable: true,
-        hide: field === 'ptcbomPartMarkUpDisplayName',
+        hide: field === 'ptcBomPartMarkupDisplayName',
         cellRenderer: (params: any) =>
           context.renderDataCellContent(params, Number(columnDef.width ?? 150)),
         tooltipValueGetter: (params: any) => context.getCellTooltipValue(params),
@@ -177,7 +202,9 @@ export class GridColumnsService {
         [FIELD_BOM_LINK_END_DATE]: () => this.configureDateColumn(columnDef, field, context),
       };
       const customizeField = fieldCustomizers[field];
-      if (customizeField) customizeField();
+      if (customizeField) {
+        customizeField();
+      }
 
       columns.push(columnDef);
     });
@@ -242,7 +269,9 @@ export class GridColumnsService {
       },
     });
     columnDef.valueSetter = (params: any) => {
-      if (!params.data || !params.colDef?.field) return false;
+      if (!params.data || !params.colDef?.field) {
+        return false;
+      }
       const fieldName = params.colDef.field;
       const newVal = params.newValue == null || params.newValue === '' ? '' : String(params.newValue).trim();
       params.data[fieldName] = newVal;
@@ -259,15 +288,6 @@ export class GridColumnsService {
       }
       return true;
     };
-  }
-
-  private configureServiceSearchColumn(columnDef: ColDef): void {
-    columnDef.cellEditor = AutocompleteCellEditorComponent;
-    columnDef.cellEditorParams = () => ({
-      placeholder: 'search services...',
-      isServiceSearch: true,
-      context: { dataService: this.dataService },
-    });
   }
 
   private configureMaterialSearchColumn(columnDef: ColDef): void {
@@ -305,7 +325,9 @@ export class GridColumnsService {
       return context.isFieldEditable(field, params);
     };
     columnDef.valueSetter = (params: any) => {
-      if (!params.data || !params.colDef?.field) return false;
+      if (!params.data || !params.colDef?.field) {
+        return false;
+      }
       const v = params.newValue;
       params.data[params.colDef.field] = v === null || v === undefined || v === '' ? '' : String(v);
       return true;
@@ -333,7 +355,9 @@ export class GridColumnsService {
       columnDef.valueGetter = (params: any) =>
         params.data?.colorDescription || params.data?.color || '';
       columnDef.valueSetter = (params: any) => {
-        if (!params.data) return false;
+        if (!params.data) {
+          return false;
+        }
         params.data.color = params.newValue || '';
         params.data.colorDescription = params.newValue || '';
         return true;
@@ -395,10 +419,16 @@ export class GridColumnsService {
       );
     };
     columnDef.valueGetter = (params: any) => {
-      if (!params.data) return undefined;
+      if (!params.data) {
+        return undefined;
+      }
       const value = params.data[field];
-      if (!value || value === '') return undefined;
-      if (value instanceof Date) return value;
+      if (!value || value === '') {
+        return undefined;
+      }
+      if (value instanceof Date) {
+        return value;
+      }
       return this.gridConfigService.parseDateString(String(value)) || undefined;
     };
     columnDef.cellEditorParams = {
@@ -408,12 +438,16 @@ export class GridColumnsService {
       format: 'mm/dd/yyyy',
     };
     columnDef.valueFormatter = (params: any) => {
-      if (!params.data) return '';
+      if (!params.data) {
+        return '';
+      }
       const rawValue = params.data[field];
       return this.gridConfigService.formatDateToMMDDYYYY(rawValue);
     };
     columnDef.valueParser = (params: any) => {
-      if (!params.newValue) return '';
+      if (!params.newValue) {
+        return '';
+      }
       return this.gridConfigService.convertDateEditorValueToString(params.newValue);
     };
     columnDef.valueSetter = (params: any) => {
@@ -621,18 +655,28 @@ export class GridColumnsService {
 
       for (let i = headerIndex + 1; i < nextHeaderIndex; i++) {
         const row = displayData[i];
-        if (!this.isDisplayBodyRow(row)) continue;
+        if (!this.isDisplayBodyRow(row)) {
+          continue;
+        }
         const candidateId = getRowAnchorId(row);
-        if (candidateId === null || candidateId === undefined || candidateId === '') continue;
-        if (`${candidateId}` !== `${anchorId}`) continue;
+        if (candidateId === null || candidateId === undefined || candidateId === '') {
+          continue;
+        }
+        if (`${candidateId}` !== `${anchorId}`) {
+          continue;
+        }
         return i;
       }
     }
 
     return displayData.findIndex((row) => {
-      if (!this.isDisplayBodyRow(row)) return false;
+      if (!this.isDisplayBodyRow(row)) {
+        return false;
+      }
       const candidateId = getRowAnchorId(row);
-      if (candidateId === null || candidateId === undefined || candidateId === '') return false;
+      if (candidateId === null || candidateId === undefined || candidateId === '') {
+        return false;
+      }
       return `${candidateId}` === `${anchorId}`;
     });
   }

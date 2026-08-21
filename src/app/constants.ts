@@ -74,8 +74,8 @@ export const LABEL_FEATURE = 'Feature';
 export const LABEL_START_DATE = 'Start Date';
 export const LABEL_END_DATE = 'End Date';
 export const HEADER_FEATURE = 'Feature';
-export const PLACEHOLDER_SEARCH_BOM_FEATURES = 'search BOM features...';
-export const PLACEHOLDER_SEARCH_SERVICES = 'search services...';
+export const PLACEHOLDER_SEARCH_BOM_FEATURES = 'Search BOM features...';
+export const PLACEHOLDER_SEARCH_SERVICES = 'Search services...';
 export const TITLE_EXPIRED = 'Expired';
 export const TITLE_REQUIRED_FIELD = 'Required field';
 export const TITLE_REQUIRED_FIELD_ERROR = 'Required field error';
@@ -110,7 +110,6 @@ export const MSG_NO_DUPLICATE_FOUND = 'No duplicate Feature+Part+SKU combination
 export const MSG_DUPLICATE_PART_FEATURE_COMBO =
   'Duplicate Part + Feature combination found. Each Part + Feature must be unique.';
 export const MSG_NO_DUPLICATE_PART_FEATURE = 'No duplicate Part + Feature combinations found.';
-export const MSG_MATERIAL_COLORS_SAVED_MOCK = 'Material colors saved (mock)';
 
 // SKU filter labels and empty-state messages.
 export const SKU_FILTER_LABEL_ALL = 'ALL - View only';

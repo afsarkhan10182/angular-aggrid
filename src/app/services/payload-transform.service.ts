@@ -159,7 +159,7 @@ export class PayloadTransformService {
                 const instanceSection = bomLink.sectionInternalName || bomLink.section || '';
                 const instancePart = String(bomLink?.[FIELD_PART_NUMBER] || '').trim();
                 const instanceFeature = String(bomLink.bomLinkFeature || '').trim();
-                const instancePtcbomPartMarkUp = bomLink.ptcbomPartMarkUp || '';
+                const instancePtcBomPartMarkup = bomLink.ptcBomPartMarkup || '';
 
                 const isSectionMatch = instanceSection === section;
                 const instanceHasPartNumber = Boolean(instancePart && String(instancePart).trim() !== '');
@@ -179,7 +179,7 @@ export class PayloadTransformService {
                   }
                 } else if (isMbom) {
                   isFeatureMatch = instanceFeature === bomLinkFeature;
-                  const instanceIsEnumMBOM001 = instancePtcbomPartMarkUp === ENUM_MBOM_LINE_ITEM;
+                  const instanceIsEnumMBOM001 = instancePtcBomPartMarkup === ENUM_MBOM_LINE_ITEM;
                   requiresPartMatch = instanceHasPartNumber && Boolean(instanceIsEnumMBOM001);
                 }
 
@@ -379,7 +379,7 @@ export class PayloadTransformService {
     if (isMbom) {
       const existingPart = String(r?.[FIELD_PART_NUMBER] || '').trim();
       const existingHasPartNumber = existingPart !== '';
-      const existingIsEnumMBOM001 = r.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM;
+      const existingIsEnumMBOM001 = r.ptcBomPartMarkup === ENUM_MBOM_LINE_ITEM;
       return {
         isFeatureMatch: existingFeature === rowFeatureValue.trim(),
         requiresPartMatch: existingHasPartNumber && existingIsEnumMBOM001,
@@ -480,7 +480,7 @@ export class PayloadTransformService {
         }
 
         if (bomType === BOM_TYPE_PRODUCTMBOM) {
-          bomLink.ptcbomPartMarkUp = ENUM_MBOM_LINE_ITEM;
+          bomLink.ptcBomPartMarkup = ENUM_MBOM_LINE_ITEM;
         }
 
         let quantityValue: any = null;

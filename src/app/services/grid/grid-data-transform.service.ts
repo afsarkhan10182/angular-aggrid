@@ -20,7 +20,7 @@ interface BomLinkLike extends Record<string, unknown> {
   qty?: unknown;
   quantity?: unknown;
   part?: string;
-  ptcbomPartMarkUp?: string;
+  ptcBomPartMarkup?: string;
 }
 
 interface SkuItemLike extends Record<string, unknown> {
@@ -35,6 +35,7 @@ interface ApiInstanceLike extends Record<string, unknown> {
 interface ApiDataLike extends Record<string, unknown> {
   instances?: ApiInstanceLike[];
   sectionOrder?: string[];
+  sectionDetails?: Record<string, string>;
 }
 
 interface TreeRow {
@@ -155,6 +156,8 @@ export class GridDataTransformService {
   ): SectionMaterialGroup[] {
     const sections: Record<string, TreeRow[]> = {};
     const sectionDisplayNameMap: Record<string, string> = {};
+    const sectionDetails =
+      data.sectionDetails && typeof data.sectionDetails === 'object' ? data.sectionDetails : {};
     const instances = Array.isArray(data.instances) ? data.instances : [];
 
     const processedItems = instances
@@ -167,7 +170,7 @@ export class GridDataTransformService {
 
         let isCorrectMarkup = true;
         if (bomType === BOM_TYPE_PRODUCTMBOM) {
-          isCorrectMarkup = bomLink.ptcbomPartMarkUp === 'enumMBOM001';
+          isCorrectMarkup = bomLink.ptcBomPartMarkup === 'enumMBOM001';
         }
 
         return hasPartNumber && isCorrectMarkup;
@@ -175,7 +178,13 @@ export class GridDataTransformService {
       .map((item: ApiInstanceLike): TreeRow => {
         const bomLink = item[BOM_LINK_KEY] as BomLinkLike;
         const sectionInternalName = String(bomLink.sectionInternalName || bomLink.section || '');
-        const sectionDisplayName = String(bomLink.sectionDisplayName || '');
+        const sectionDisplayName = String(
+          bomLink.sectionDisplayName ||
+            (sectionInternalName && sectionDetails[sectionInternalName]) ||
+            (bomLink.sectionInternalName ? bomLink.section : '') ||
+            sectionInternalName ||
+            '',
+        );
 
         if (sectionInternalName && sectionDisplayName) {
           sectionDisplayNameMap[sectionInternalName] = sectionDisplayName;
@@ -185,6 +194,7 @@ export class GridDataTransformService {
           ...bomLink,
           part: bomLink[FIELD_PART_NUMBER] as string,
           [FIELD_PART_NUMBER]: bomLink[FIELD_PART_NUMBER],
+          ptcBomPartMarkup: bomLink.ptcBomPartMarkup,
           skus: bomLink.skus,
           linkedBom: bomLink.linkedBom,
           quantity: this.formatQuantityField(bomLink.quantity),
