@@ -12,6 +12,7 @@ import {
   FIELD_BOM_LINK_FEATURE,
   FIELD_BOM_LINK_PART,
   FIELD_BOM_LINK_COUNTRY_OF_ORIGIN,
+  FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
   FIELD_BOM_LINK_START_DATE,
   FIELD_BOM_LINK_END_DATE,
   FIELD_PART_NUMBER,
@@ -137,6 +138,26 @@ export class GridColumnsService {
               dataService: this.dataService,
             },
           }),
+        }),
+      [FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET]: () =>
+        this.createAutocompleteColumn({
+          headerName: columnMapping[FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET],
+          field: FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
+          width: 150,
+          minWidth: 100,
+          context,
+          cellEditor: AutocompleteCellEditorComponent,
+          cellEditorParams: () => {
+            const values = [
+              '',
+              ...this.dataService.getIncludeInSpecSheetOptions(context.constraintsData),
+            ];
+            return {
+              values,
+              placeholder: 'Select...',
+              filterFunction: this.utilService.createAutocompleteFilter(),
+            };
+          },
         }),
     };
 

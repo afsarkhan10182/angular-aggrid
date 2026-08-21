@@ -656,10 +656,18 @@ export class DataService {
     const instances = response?.instances ?? {};
     const columns = response?.columns ?? {};
     const entries = Object.entries(instances) as [string, any][];
+    const pageSize = Math.max(1, toIndex - fromIndex + 1);
+    // Backend already returns one page for fromIndex/toIndex. Only client-slice
+    // when the payload clearly contains more than one page (e.g. mock full set).
+    const isAlreadyPaged = entries.length <= pageSize;
+    const pageEntries = isAlreadyPaged ? entries : entries.slice(fromIndex - 1, toIndex);
     const totalCount = response?.resultCount ?? entries.length;
-    const pageStart = response?.from ?? fromIndex;
-    const pageEnd = response?.to ?? toIndex;
-    const pageEntries = entries.slice(pageStart - 1, pageEnd);
+    const pageEnd =
+      typeof response?.to === 'number'
+        ? response.to
+        : isAlreadyPaged
+          ? fromIndex + pageEntries.length - 1
+          : Math.min(toIndex, entries.length);
 
     const results = pageEntries.map(([materialColorId, instance]) => ({
       materialColorId,

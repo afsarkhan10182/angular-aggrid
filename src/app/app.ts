@@ -50,6 +50,7 @@ import {
   FIELD_ACTIONS,
   FIELD_BOM_LINK_START_DATE,
   FIELD_BOM_LINK_END_DATE,
+  FIELD_END_DATE,
   FIELD_BOM_LINK_FEATURE,
   FIELD_BOM_LINK_PART,
   FIELD_PART_NUMBER,
@@ -233,7 +234,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.showExpiredData = false;
     try {
-      localStorage.removeItem(LS_KEY_SHOW_EXPIRED_DATA);
+      const savedState = localStorage.getItem(LS_KEY_SHOW_EXPIRED_DATA);
+      this.showExpiredData = savedState === 'true';
     } catch {}
 
     this.defaultColDef = {
@@ -505,7 +507,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
           }
         }
 
-        this.rowData = this.transformToTreeData(data);
+        this.rowData = this.applyExpiredVisibility(this.transformToTreeData(data));
         this.storeOriginalValues();
         this.initializeColumns();
 
@@ -532,7 +534,21 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     this.subscriptions.push(loadSub);
   }
 
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void {
+    const constraintsSub = this.dataService.fetchIncludeInSpecSheetConstraints().subscribe({
+      next: (constraints) => {
+        this.constraintsData = constraints;
+        if (this.rowData?.length) {
+          this.initializeColumns();
+          if (this.gridApi) {
+            this.gridApi.setGridOption('columnDefs', this.columnDefs);
+          }
+        }
+      },
+      error: () => {},
+    });
+    this.subscriptions.push(constraintsSub);
+  }
 
   initializeColumns(): void {
     this.actionsColumnWidth = this.computeActionsColumnWidth();
@@ -917,6 +933,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   toggleExpiredData(): void {
+    try {
+      localStorage.setItem(LS_KEY_SHOW_EXPIRED_DATA, String(this.showExpiredData));
+    } catch {}
     this.loadData();
   }
 
@@ -2401,6 +2420,46 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       this.dataService.getBomType(),
       this.dataService.getSkuInfo(),
     );
+  }
+
+  private applyExpiredVisibility(rows: any[]): any[] {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const visit = (row: any): any | null => {
+      if (!row) {
+        return null;
+      }
+
+      if (Array.isArray(row.children) && row.children.length > 0) {
+        row.children = row.children.map((child: any) => visit(child)).filter(Boolean);
+      }
+
+      if (!row.isSectionHeader && !row.isGroupHeader) {
+        const endRaw = row[FIELD_BOM_LINK_END_DATE] || row[FIELD_END_DATE];
+        const endDate = this.parseExpiredDate(endRaw);
+        if (endDate) {
+          endDate.setHours(0, 0, 0, 0);
+          row.isExpired = endDate < today;
+        }
+      }
+
+      if (row.isExpired && !this.showExpiredData) {
+        return null;
+      }
+
+      return row;
+    };
+
+    return rows.map((row) => visit(row)).filter(Boolean);
+  }
+
+  private parseExpiredDate(value: unknown): Date | null {
+    if (value == null || value === '') {
+      return null;
+    }
+    const parsed = new Date(String(value).trim());
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 
   /**

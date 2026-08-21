@@ -35,6 +35,7 @@ interface ApiInstanceLike extends Record<string, unknown> {
 interface ApiDataLike extends Record<string, unknown> {
   instances?: ApiInstanceLike[];
   sectionOrder?: string[];
+  sectionDetails?: Record<string, string>;
 }
 
 interface TreeRow {
@@ -155,6 +156,8 @@ export class GridDataTransformService {
   ): SectionMaterialGroup[] {
     const sections: Record<string, TreeRow[]> = {};
     const sectionDisplayNameMap: Record<string, string> = {};
+    const sectionDetails =
+      data.sectionDetails && typeof data.sectionDetails === 'object' ? data.sectionDetails : {};
     const instances = Array.isArray(data.instances) ? data.instances : [];
 
     const processedItems = instances
@@ -175,7 +178,13 @@ export class GridDataTransformService {
       .map((item: ApiInstanceLike): TreeRow => {
         const bomLink = item[BOM_LINK_KEY] as BomLinkLike;
         const sectionInternalName = String(bomLink.sectionInternalName || bomLink.section || '');
-        const sectionDisplayName = String(bomLink.sectionDisplayName || '');
+        const sectionDisplayName = String(
+          bomLink.sectionDisplayName ||
+            (sectionInternalName && sectionDetails[sectionInternalName]) ||
+            (bomLink.sectionInternalName ? bomLink.section : '') ||
+            sectionInternalName ||
+            '',
+        );
 
         if (sectionInternalName && sectionDisplayName) {
           sectionDisplayNameMap[sectionInternalName] = sectionDisplayName;
