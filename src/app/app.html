@@ -60,6 +60,31 @@
               <app-icon name="search" size="14"></app-icon>
             </button>
           </div>
+          <div class="sku-filter-container" *ngIf="isMbomMode()">
+            <label class="sku-filter-label" for="sku-filter-select">{{ 'SKU Views:' }}</label>
+            <div class="sku-filter-select-wrapper" [class.open]="isSkuFilterSelectOpen">
+              <select
+                id="sku-filter-select"
+                class="sku-filter-select"
+                [(ngModel)]="selectedSkuFilter"
+                (pointerdown)="onSkuFilterSelectPointerDown($event)"
+                (change)="onSkuFilterChange()"
+                (blur)="onSkuFilterSelectBlur()"
+                (keydown.escape)="onSkuFilterSelectBlur()"
+                aria-label="SKU filter"
+              >
+                <option
+                  *ngFor="let option of skuFilterOptions"
+                  [value]="option.value"
+                  [disabled]="isSkuFilterOptionDisabled(option.value)"
+                  [title]="getSkuFilterOptionTooltip(option.value)"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+              <app-icon name="chevron-down" size="14" class="sku-filter-select-arrow"></app-icon>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -80,6 +105,24 @@
           </div>
         }
         <div class="save-section">
+        <div class="action-dropdown-container" #actionDropdown>
+          <button (click)="toggleActionDropdown()" class="action-dropdown-btn" [class.active]="showActionDropdown" title="Actions">
+            Actions
+            <app-icon name="chevron-down" size="20" [class.rotated]="showActionDropdown"></app-icon>
+          </button>
+          @if (showActionDropdown) {
+            <div class="action-dropdown-menu">
+              <button (click)="exportToExcel(); closeActionDropdown()" class="action-dropdown-item" title="Export selected rows, or all visible rows">
+                <app-icon name="file-excel" size="14"></app-icon>
+                <span>Export</span>
+              </button>
+              <button (click)="openMassEdit(); closeActionDropdown()" class="action-dropdown-item" title="Mass Edit Selected Rows">
+                <app-icon name="layer-group" size="14"></app-icon>
+                <span>Mass Edit</span>
+              </button>
+            </div>
+          }
+        </div>
           <!-- Last Saved Display -->
           <div class="last-saved-display">
             <app-icon name="clock" size="14"></app-icon>
@@ -117,6 +160,29 @@
     }
 
     <!-- AG Grid with Toggle Button Container -->
+    @if (massEditMode) {
+      <div class="mass-edit-panel">
+        <div class="mass-edit-header">
+          <h4>Mass Edit ({{ selectedRows.size }} rows selected)</h4>
+          <button (click)="closeMassEditMode()" class="close-mass-edit-btn" title="Close" aria-label="Close mass edit">×</button>
+        </div>
+        <div class="mass-edit-fields">
+          <label class="mass-edit-field">Start Date:
+            <input type="date" [(ngModel)]="massEditStartDate" class="mass-edit-input" />
+          </label>
+          <label class="mass-edit-field">End Date:
+            <input type="date" [(ngModel)]="massEditEndDate" class="mass-edit-input" />
+          </label>
+          <label class="mass-edit-field">Quantity:
+            <input type="number" [(ngModel)]="massEditQuantity" class="mass-edit-input" min="0" step="any" />
+          </label>
+          <button (click)="applyMassEdit()" class="apply-mass-edit-btn" [disabled]="isMassEditing">
+            <app-icon [name]="isMassEditing ? 'spinner' : 'check'" size="14"></app-icon>
+            {{ isMassEditing ? 'Applying...' : 'Apply All' }}
+          </button>
+        </div>
+      </div>
+    }
     <div class="ag-grid-section">
       <!-- Loading Spinner -->
       @if (isLoading) {

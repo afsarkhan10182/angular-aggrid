@@ -16,8 +16,8 @@
 %>
 
 <%!
-    public static final String JSPNAME = "bomComposer";
-    private static final Logger logger = LogManager.getLogger("rfa.trek.flexplmapps.bomcomposer.bomComposer");
+    public static final String JSPNAME = "BOMComposer";
+    private static final Logger logger = LogManager.getLogger("rfa.trek.jsp.bomcomposer.BOMComposer");
 	%>
 
 <%

@@ -82,6 +82,12 @@ export const TITLE_REQUIRED_FIELD_ERROR = 'Required field error';
 export const TITLE_DELETE_ROW = 'Delete';
 export const TITLE_ADD_ROW = 'Add';
 
+// Excel export.
+export const EXCLUDED_FIELDS_EXPORT: readonly string[] = [COL_ACTIONS, COL_CHECKBOX];
+export const EXCEL_HEADER_SECTION = 'Section';
+export const EXCEL_SHEET_NAME = 'BOM Export';
+export const EXCEL_FILE_NAME_PREFIX = 'BOM_Composer_Export_';
+
 // Duplicate validation categories.
 export const DUPLICATE_TYPE_ENUM_MBOM_001 = ENUM_MBOM_LINE_ITEM;
 export const DUPLICATE_TYPE_NOT_ENUM_MBOM_001 = 'notEnumMBOM001';
@@ -93,6 +99,9 @@ export const DUPLICATE_TYPE_DUPLICATE_PART = 'duplicate-part';
 export const MSG_SAVE_DISABLED_VIEW_ONLY = 'Save is disabled in view-only mode.';
 export const MSG_LOAD_BOM_FAILED = 'Failed to load BOM data. Please try again.';
 export const MSG_LOAD_BOM_SERVER_ERROR = 'Failed to load BOM data: Server error (500).';
+export const MSG_EXPORT_EXCEL_ERROR = 'Error exporting to Excel. Please try again.';
+export const MSG_EXPORT_EXCEL_SUCCESS = 'Excel file exported successfully';
+export const MSG_EXPORT_EXCEL_SUCCESS_SELECTED = 'Excel file exported successfully (';
 export const MSG_BOM_SEARCH_RESULTS_EXCEEDED =
   'Search Results exceeded 1000. Minimize SKU selection';
 export const MSG_VALIDATION_REQUIRED_FIELDS = 'Missing required fields. Hover over ⓘ to see details.';

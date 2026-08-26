@@ -4,6 +4,10 @@ import { DOCUMENT } from '@angular/common';
 import { GridApi, ColDef } from 'ag-grid-community';
 import {
   COL_ACTIONS,
+  EXCLUDED_FIELDS_EXPORT,
+  EXCEL_HEADER_SECTION,
+  EXCEL_SHEET_NAME,
+  EXCEL_FILE_NAME_PREFIX,
   FIELD_PART_NUMBER,
   FIELD_HAS_LINKED_BOM,
 } from '../constants';
@@ -274,6 +278,49 @@ export class UtilService {
 
     const protocol = this.document.location?.protocol || 'https:';
     return protocol + '//' + hostFromJsp;
+  }
+
+  async exportGridToExcel(
+    gridApi: GridApi,
+    options: {
+      excludedFields?: string[];
+      fileName?: string;
+      sheetName?: string;
+      excludeHeaderRows?: boolean;
+      selectedNodes?: any[];
+    } = {},
+  ): Promise<void> {
+    const columns = (gridApi.getColumns() || []).filter((column) => {
+      const field = column.getColId();
+      const context = column.getColDef().context as { excludeFromExport?: boolean } | undefined;
+      return column.isVisible() && !(options.excludedFields || [...EXCLUDED_FIELDS_EXPORT]).includes(field) && !context?.excludeFromExport;
+    });
+    if (!columns.length) throw new Error('No columns found for export');
+
+    const nodes: any[] = [];
+    if (options.selectedNodes?.length) nodes.push(...options.selectedNodes);
+    else gridApi.forEachNodeAfterFilterAndSort((node) => node.data && nodes.push(node));
+
+    const exportNodes = options.excludeHeaderRows === false
+      ? nodes
+      : nodes.filter((node) => node.data && !this.isHeaderRow(node.data));
+    const data = [
+      [EXCEL_HEADER_SECTION, ...columns.map((column) => column.getColDef().headerName || column.getColId())],
+      ...exportNodes.map((node) => [
+        this.getSectionValueForRow(node.data, node),
+        ...columns.map((column) => gridApi.getCellValue({ rowNode: node, colKey: column }) ?? ''),
+      ]),
+    ];
+
+    const XLSX = await import('xlsx');
+    const worksheet = XLSX.utils.aoa_to_sheet(data);
+    worksheet['!cols'] = [{ wch: 20 }, ...columns.map(() => ({ wch: 15 }))];
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, options.sheetName || EXCEL_SHEET_NAME);
+    XLSX.writeFile(
+      workbook,
+      options.fileName || `${EXCEL_FILE_NAME_PREFIX}${new Date().toISOString().slice(0, 10)}.xlsx`,
+    );
   }
 
   getExcludedSearchFields(): Set<string> {

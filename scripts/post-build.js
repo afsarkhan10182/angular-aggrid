@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const JSP_FILE_NAME = 'bomComposer.jsp';
+const JSP_FILE_NAME = 'BOMComposer.jsp';
 
 function getBrowserOutputDir() {
   const angularJsonPath = path.join(__dirname, '..', 'angular.json');

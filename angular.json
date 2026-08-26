@@ -25,7 +25,7 @@
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
-                "glob": "bomComposer.jsp",
+                "glob": "BOMComposer.jsp",
                 "input": "public",
                 "output": ""
               }

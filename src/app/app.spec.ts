@@ -85,6 +85,12 @@ describe('AppComponent', () => {
     flushEmptyBomResponse(firstRequest);
   }
 
+  function flushPendingOptions(): void {
+    httpMock
+      .match((request) => request.url.includes('bomLinkIncludeInSpecSheet'))
+      .forEach((request) => request.flush({ items: [] }));
+  }
+
   it('should create the app', () => {
     const fixture = TestBed.createComponent(AppComponent);
     flushInitialBomLoad();
@@ -102,6 +108,33 @@ describe('AppComponent', () => {
       'Search All Columns',
     );
     expect(compiled.querySelector('button.save-changes-btn')).not.toBeNull();
+    expect(compiled.querySelector('select.sku-filter-select')).not.toBeNull();
+    expect(compiled.querySelector('button.action-dropdown-btn')).not.toBeNull();
     expect(compiled.querySelector('ag-grid-angular')).not.toBeNull();
+    flushPendingOptions();
   });
+
+  it('should open Mass Edit with values shared by the selected rows', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    flushInitialBomLoad();
+    const component = fixture.componentInstance;
+    const massEditService = (component as any).massEditService;
+    spyOn(massEditService, 'populateMassEditFields').and.returnValue({
+      startDate: '2026-01-01',
+      endDate: '2026-12-31',
+      quantity: 2,
+      includeInSpecSheet: '',
+    });
+    component.selectedSkuFilter = 'hdEditable';
+    component.selectedRows.add({ materialKey: 'one' });
+    component.selectedRows.add({ materialKey: 'two' });
+
+    component.openMassEdit();
+
+    expect(component.massEditMode).toBeTrue();
+    expect(component.massEditStartDate).toBe('2026-01-01');
+    expect(component.massEditEndDate).toBe('2026-12-31');
+    expect(component.massEditQuantity).toBe(2);
+  });
+
 });

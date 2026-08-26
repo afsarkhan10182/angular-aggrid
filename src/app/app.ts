@@ -38,6 +38,7 @@ import {
   PayloadTransformService,
   TransformGridDataToApiOptions,
 } from './services/payload-transform.service';
+import { MassEditService, MassEditState } from './services/mass-edit.service';
 import { SkuService } from './services/sku.service';
 import { environment } from '../environments/environment';
 import {
@@ -50,6 +51,7 @@ import {
   FIELD_ACTIONS,
   FIELD_BOM_LINK_START_DATE,
   FIELD_BOM_LINK_END_DATE,
+  FIELD_QUANTITY,
   FIELD_END_DATE,
   FIELD_BOM_LINK_FEATURE,
   FIELD_BOM_LINK_PART,
@@ -66,6 +68,10 @@ import {
   MSG_BOM_SEARCH_RESULTS_EXCEEDED,
   COLUMNS_REFRESH_ACTIONS,
   ROW_ID_UNKNOWN,
+  EXCLUDED_FIELDS_EXPORT,
+  MSG_EXPORT_EXCEL_ERROR,
+  MSG_EXPORT_EXCEL_SUCCESS,
+  MSG_EXPORT_EXCEL_SUCCESS_SELECTED,
   LABEL_ROW,
   LABEL_ROWS,
   VALUE_SPEC_YES,
@@ -86,6 +92,7 @@ const MAX_BOM_LINK_LOAD_ROWS = 1000;
   selector: 'app-root',
   standalone: true,
   imports: [
+    CommonModule,
     FormsModule,
     AgGridAngular,
     IconComponent,
@@ -141,10 +148,15 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   public isLoading: boolean = true;
   public constraintsData: any = null;
   public isSaving: boolean = false;
+  public isMassEditing = false;
   public readonly originalRowValues = new Map<string | number, any>();
   private readonly editedFields = new Map<string | number, Set<string>>();
   public readonly invalidRowIds = new Set<string | number>();
   public readonly selectedRows = new Set<any>();
+  public massEditMode = false;
+  public massEditStartDate = '';
+  public massEditEndDate = '';
+  public massEditQuantity: number | null = null;
   public hasDisconnectEdits = false;
   public disconnectedSkuKeys = new Set<string>();
   public showDisconnectedSkusPanel = false;
@@ -161,7 +173,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   public get gridViewportHeight(): string {
     const offset =
-      this.hasDisconnectedSkusPanelVisible
+      this.massEditMode || this.hasDisconnectedSkusPanelVisible
         ? this.gridHeightOffsets.withEditPanels
         : this.saveMessage
           ? this.gridHeightOffsets.withSaveMessage
@@ -215,6 +227,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     private readonly gridColumnsService: GridColumnsService,
     private readonly gridDataTransformService: GridDataTransformService,
     private readonly payloadTransformService: PayloadTransformService,
+    private readonly massEditService: MassEditService,
     private readonly skuService: SkuService,
     @Inject(DOCUMENT) private readonly document: Document,
     private readonly renderer: Renderer2,
@@ -2528,6 +2541,99 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         this.selectedRows.add(node.data);
       }
     });
+    this.resetMassEdit();
+  }
+
+  openMassEdit(): void {
+    if (this.selectedRows.size <= 1) {
+      this.showNotification('Select more than 1 row to Mass Edit.', NOTIFICATION_TYPE_INFO);
+      return;
+    }
+    if (this.isSkuFilterReadOnly()) {
+      this.showSkuFilterEditableHint('Mass Edit');
+      return;
+    }
+
+    this.massEditMode = true;
+    const state = this.massEditService.populateMassEditFields(
+      [...this.selectedRows],
+      () => this.isMbomMode(),
+      () => false,
+      () => false,
+      () => false,
+    );
+    this.massEditStartDate = state.startDate;
+    this.massEditEndDate = state.endDate;
+    this.massEditQuantity = state.quantity;
+  }
+
+  closeMassEditMode(): void {
+    this.gridApi?.deselectAll();
+    this.selectedRows.clear();
+    this.resetMassEdit();
+  }
+
+  applyMassEdit(): void {
+    if (!this.gridApi || this.isMassEditing) return;
+
+    this.isMassEditing = true;
+    setTimeout(() => {
+      try {
+        const state: MassEditState = {
+          startDate: this.massEditStartDate,
+          endDate: this.massEditEndDate,
+          quantity: this.massEditQuantity,
+          includeInSpecSheet: '',
+        };
+        this.massEditService.applyMassEdit({
+          gridApi: this.gridApi,
+          selectedRows: this.selectedRows,
+          columnDefs: this.columnDefs,
+          state,
+          isMbomMode: () => this.isMbomMode(),
+          isSbomMode: () => false,
+          isEbomMode: () => false,
+          isMaterialMbomMode: () => false,
+          editedRows: this.editedRows,
+          editedFields: this.editedFields,
+          originalRowValues: this.originalRowValues,
+        });
+        this.massEditStartDate = '';
+        this.massEditEndDate = '';
+        this.massEditQuantity = null;
+      } finally {
+        this.isMassEditing = false;
+      }
+    });
+  }
+
+  exportToExcel(): void {
+    if (!this.gridApi) return;
+
+    const selectedNodes = this.gridApi.getSelectedNodes();
+    const hasSelectedRows = selectedNodes.length > 0;
+    this.utilService
+      .exportGridToExcel(this.gridApi, {
+        excludedFields: [...EXCLUDED_FIELDS_EXPORT],
+        fileName: `BOM_Composer_Export_${new Date().toISOString().slice(0, 10)}.xlsx`,
+        sheetName: 'BOM Export',
+        excludeHeaderRows: true,
+        selectedNodes: hasSelectedRows ? selectedNodes : undefined,
+      })
+      .then(() => {
+        const message = hasSelectedRows
+          ? `${MSG_EXPORT_EXCEL_SUCCESS_SELECTED}${selectedNodes.length} ${selectedNodes.length === 1 ? LABEL_ROW : LABEL_ROWS} selected)`
+          : MSG_EXPORT_EXCEL_SUCCESS;
+        this.showNotification(message, NOTIFICATION_TYPE_SUCCESS);
+      })
+      .catch(() => this.showNotification(MSG_EXPORT_EXCEL_ERROR, NOTIFICATION_TYPE_ERROR));
+  }
+
+  private resetMassEdit(): void {
+    this.massEditMode = false;
+    this.massEditStartDate = '';
+    this.massEditEndDate = '';
+    this.massEditQuantity = null;
   }
 
   disconnectPartFromSku(_rowData: any, _skuField: string, event?: any): void {
