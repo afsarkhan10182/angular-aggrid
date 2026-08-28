@@ -1,5 +1,6 @@
 // Product BOM grid renderer helpers: renders Product MBOM hierarchy rows, SKU cells, row expansion, search highlighting, and column visibility behavior.
 import {
+  BOM_TYPE_PRODUCTSBOM,
   ENUM_MBOM_LINE_ITEM,
   VALUE_SPEC_NO,
   COL_CHECKBOX,
@@ -91,7 +92,7 @@ export class GridService {
   flattenHierarchicalData(data: any[], config: HierarchicalDataConfig): any[] {
     const result: any[] = [];
     const bomType = config.getBomType();
-    const isAlternateBom = false;
+    const isAlternateBom = bomType === BOM_TYPE_PRODUCTSBOM;
 
     const processNode = (node: any) => {
       if (node.isSectionHeader) {
@@ -135,7 +136,7 @@ export class GridService {
 
     if (!isDataRow || !hasPartNumber) return false;
 
-    const isMbomLineItem = node.ptcBomPartMarkup === ENUM_MBOM_LINE_ITEM;
+    const isMbomLineItem = node.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM;
     if (isMbomLineItem) return false;
 
     const specSheetExtra = String(node.bomLinkSpecSheetExtra || '').trim();
@@ -221,7 +222,7 @@ export class GridService {
     config: HierarchicalDataConfig,
   ): any[] {
     const bomType = config.getBomType();
-    const isAlternateBom = false;
+    const isAlternateBom = bomType === BOM_TYPE_PRODUCTSBOM;
     const shouldApplySkuFilter = config.selectedSkuFilter !== 'all';
 
     let visibleSkuIds: Set<string> = new Set();
@@ -742,7 +743,7 @@ export class GridService {
     }
 
     const bomType = this.dataService.getBomType();
-    const isAlternateBom = false;
+    const isAlternateBom = bomType === BOM_TYPE_PRODUCTSBOM;
 
     return data.children.some((child: any) => {
       if (child.isMaterialHeader) return true;
@@ -753,7 +754,7 @@ export class GridService {
       }
 
       if (isAlternateBom) {
-        const isMbomLineItem = child.ptcBomPartMarkup === ENUM_MBOM_LINE_ITEM;
+        const isMbomLineItem = child.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM;
         const specSheetExtra = String(child.bomLinkSpecSheetExtra || '').trim();
 
         if (!isMbomLineItem && specSheetExtra === VALUE_SPEC_NO) {
@@ -797,12 +798,14 @@ export class GridService {
           return this.gridConfigService.isFieldEditableForNewRow(
             FIELD_BOM_LINK_FEATURE,
             config.isSkuFilterReadOnly,
+            config.isNonProductMbomMode,
           );
         }
-        return this.gridConfigService.isFieldEditableForExistingRow(
+        return this.gridConfigService.isFieldEditableInSbom(
           FIELD_BOM_LINK_FEATURE,
           params.data,
           config.isSkuFilterReadOnly,
+          config.isNonProductMbomMode,
         );
       },
       cellEditor: AutocompleteCellEditorComponent,
@@ -1162,11 +1165,30 @@ export class GridService {
     const value = params.value;
     if (!value && value !== 0) return '';
 
+    const skuField = params.colDef.field;
+    const isDisconnected =
+      typeof config.isSkuDisconnected === 'function' && config.isSkuDisconnected(data, skuField);
     const isHighlighted = config.shouldHighlightRow(data);
+    const isStruck = isDisconnected;
     const valueStr = String(value);
     const htmlValue = config.utilService.escapeHtml(valueStr).replaceAll('\n', '<br>');
+    const baseCanDisconnect = !config.isSkuFilterReadOnly();
+    const skuEditableForDisconnect =
+      typeof config.isSkuEditableForDisconnect !== 'function' || config.isSkuEditableForDisconnect(skuField);
+    const canDisconnect =
+      !isDisconnected &&
+      baseCanDisconnect &&
+      skuEditableForDisconnect &&
+      (typeof config.canDisconnectForRow !== 'function' || config.canDisconnectForRow(data));
 
-    return this.renderSkuCellDisplay(htmlValue, isHighlighted);
+    return this.renderSkuCellWithDelete(
+      htmlValue,
+      isHighlighted,
+      isStruck,
+      skuField,
+      canDisconnect,
+      isDisconnected,
+    );
   }
 
   private renderNewRowSkuCellInternal(params: any, config: any): string {
@@ -1183,19 +1205,31 @@ export class GridService {
     return state === 'release' || state === 'released' || state.startsWith('release');
   }
 
-  private renderSkuCellDisplay(
+  private renderSkuCellWithDelete(
     htmlValue: string,
     isHighlighted: boolean,
+    isStruck: boolean,
+    skuField: string,
+    canDisconnect: boolean,
+    isDisconnected: boolean,
   ): string {
+    const escapedSkuField = this.utilService.escapeHtml(skuField);
+    const actionBtn = canDisconnect
+      ? `<button type="button" class="sku-disconnect-btn" data-action="disconnect-sku" data-sku-field="${escapedSkuField}" title="Disconnect SKU">&#10005;</button>`
+      : isDisconnected
+        ? `<button type="button" class="sku-reconnect-btn" data-action="reconnect-sku" data-sku-field="${escapedSkuField}" title="Reconnect">&#8617;</button>`
+        : '';
     const textClasses = [
       'sku-cell-text',
       isHighlighted ? 'sku-cell-text-highlight' : '',
+      isStruck ? 'sku-cell-text-disconnected' : '',
     ]
       .filter(Boolean)
       .join(' ');
 
     return `<div class="sku-cell-display">
       <span class="${textClasses}">${htmlValue}</span>
+      ${actionBtn}
     </div>`;
   }
 }

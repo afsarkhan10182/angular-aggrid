@@ -1,6 +1,7 @@
 // Product BOM constants: centralizes BOM type, field names, labels, and validation keys used by the Product MBOM composer.
 // BOM and API core values.
 export const BOM_TYPE_PRODUCTMBOM = 'MBOM';
+export const BOM_TYPE_PRODUCTSBOM = 'SBOM';
 export const DEFAULT_BOM_TYPE = BOM_TYPE_PRODUCTMBOM;
 export const BOM_LINK_KEY = 'bom-link';
 export const ENUM_MBOM_LINE_ITEM = 'enumMBOM001';
@@ -125,9 +126,11 @@ export const SKU_FILTER_LABEL_ALL = 'ALL - View only';
 export const SKU_FILTER_LABEL_HD_EDITABLE = 'HD source - Editable';
 export const SKU_FILTER_LABEL_HD_VIEW_ONLY = 'HD source - View only';
 export const SKU_FILTER_LABEL_NON_HD = 'Non HD source - View only';
+export const SKU_FILTER_LABEL_EDITABLE_SKUS = 'Editable SKUs';
 export const SKU_FILTER_EMPTY_HD_EDITABLE = 'No HD editable SKUs found. Editing is disabled.';
 export const SKU_FILTER_EMPTY_HD_VIEW_ONLY = 'No HD source view-only SKUs found.';
 export const SKU_FILTER_EMPTY_NON_HD = 'No non-HD source SKUs found.';
+export const SKU_FILTER_EMPTY_EDITABLE = 'No editable SKUs found. Editing is disabled.';
 
 // Field groups for grid edit and validation behavior.
 export const EDITABLE_AUTOPOPULATED_FIELDS: readonly string[] = [
@@ -162,6 +165,13 @@ export const NEW_ROW_EDITABLE_FIELDS: readonly string[] = [
   FIELD_BOM_LINK_SPEC_SHEET_EXTRA,
   FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
   FIELD_BOM_LINK_COUNTRY_OF_ORIGIN,
+];
+
+export const SBOM_EDITABLE_FIELDS: readonly string[] = [
+  FIELD_BOM_LINK_START_DATE,
+  FIELD_BOM_LINK_END_DATE,
+  FIELD_QUANTITY,
+  FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
 ];
 
 // Field groups for mass edit actions.

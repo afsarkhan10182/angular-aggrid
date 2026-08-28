@@ -137,4 +137,63 @@ describe('AppComponent', () => {
     expect(component.massEditQuantity).toBe(2);
   });
 
+  it('should enable only the Product Service BOM mode for SBOM', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    flushInitialBomLoad();
+    const component = fixture.componentInstance;
+    spyOn((component as any).dataService, 'getBomType').and.returnValue('SBOM');
+    component.selectedSkuFilter = 'hdEditable';
+    const serviceRow = {
+      materialKey: 'service-row',
+      ptcbomPartMarkUp: 'service',
+      bomLinkSpecSheetExtra: 'Yes',
+    };
+
+    expect(component.isSbomMode()).toBeTrue();
+    expect(component.getBomComposerTitle()).toBe('SBOM Composer');
+    expect(component.skuFilterOptions.map((option) => option.value)).toEqual(['all', 'editableSkus']);
+    expect(
+      (component as any).validationService
+        .getRequiredFieldsForSave('SBOM')
+        .some((field: { label: string }) => field.label === 'Feature'),
+    ).toBeFalse();
+    const newRow = {
+      isNewRow: true,
+      newRowId: 1,
+      section: 'section-1',
+      materialColorPartNumber: 'PART-1',
+      bomLinkFeature: '',
+      sku1: 'connected',
+    };
+    const existingBomLink = {
+      section: 'section-1',
+      materialColorPartNumber: 'PART-1',
+      bomLinkFeature: '',
+      bomLinkSpecSheetExtra: 'No',
+      skus: [{ skuId: '1', value: '' }],
+    };
+    const validationService = (component as any).validationService;
+    expect(
+      validationService.validateDuplicateFeatureSkuCombination(
+        [newRow],
+        [],
+        [{ skuId: '1' }],
+        { instances: [{ 'bom-link': existingBomLink }] },
+      ).isValid,
+    ).toBeTrue();
+    existingBomLink.bomLinkSpecSheetExtra = 'Yes';
+    expect(
+      validationService.validateDuplicateFeatureSkuCombination(
+        [newRow],
+        [],
+        [{ skuId: '1' }],
+        { instances: [{ 'bom-link': existingBomLink }] },
+      ).isValid,
+    ).toBeFalse();
+    expect(component.canDisconnectForRow(serviceRow)).toBeTrue();
+    expect(
+      component.canDisconnectForRow({ ...serviceRow, ptcbomPartMarkUp: 'enumMBOM001' }),
+    ).toBeFalse();
+  });
+
 });

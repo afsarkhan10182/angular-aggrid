@@ -1,5 +1,6 @@
 // Product BOM row management service: manages Product MBOM row edit state, new-row creation, SKU value changes, validation state, and save preparation.
 import {
+  BOM_TYPE_PRODUCTSBOM,
   BOM_LINK_KEY,
   LS_KEY_LAST_SAVED_AT,
   VALUE_SPEC_YES,
@@ -497,6 +498,10 @@ export class RowManagementService {
     });
 
     const bomType = dataService.getBomType();
+    if (bomType === BOM_TYPE_PRODUCTSBOM) {
+      newRow.bomLinkSpecSheetExtra = VALUE_SPEC_YES;
+      newRow.bomLinkIncludeInSpecSheet = '';
+    }
 
     const insertIndex = rowIndex;
 

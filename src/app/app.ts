@@ -25,6 +25,7 @@ import {
   LinkedBomModalComponent,
   type LinkedBomData,
 } from './components/linked-bom-modal/linked-bom-modal.component';
+import { ServiceDataManagerModalComponent } from './components/service-data-manager-modal/service-data-manager-modal.component';
 import { DataService } from './services/data.service';
 import { GridConfigService, GroupConfig } from './services/grid/grid-config.service';
 import { GridService, ColumnVisibilityConfig } from './services/grid/grid.service';
@@ -43,6 +44,7 @@ import { SkuService } from './services/sku.service';
 import { environment } from '../environments/environment';
 import {
   BOM_TYPE_PRODUCTMBOM,
+  BOM_TYPE_PRODUCTSBOM,
   DEFAULT_BOM_TYPE,
   EDITABLE_AUTOPOPULATED_FIELDS,
   COL_ACTIONS,
@@ -55,6 +57,7 @@ import {
   FIELD_END_DATE,
   FIELD_BOM_LINK_FEATURE,
   FIELD_BOM_LINK_PART,
+  FIELD_BOM_LINK_SPEC_SHEET_EXTRA,
   FIELD_PART_NUMBER,
   FIELD_MATERIAL,
   FIELD_MATERIAL_DESCRIPTION,
@@ -80,6 +83,7 @@ import type {
   BomLinkSku,
   SkuFilterOption,
   MbomSkuFilterOption,
+  SbomSkuFilterOption,
   SkuInfo,
 } from './services/data.service';
 
@@ -97,6 +101,7 @@ const MAX_BOM_LINK_LOAD_ROWS = 1000;
     AgGridAngular,
     IconComponent,
     LinkedBomModalComponent,
+    ServiceDataManagerModalComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -140,9 +145,10 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   public highlightSkuFilter = false;
   public showActionDropdown = false;
   public readonly mbomSkuFilterOptions: Array<{ label: string; value: MbomSkuFilterOption }>;
+  public readonly sbomSkuFilterOptions: Array<{ label: string; value: SbomSkuFilterOption }>;
 
   public get skuFilterOptions(): Array<{ label: string; value: SkuFilterOption }> {
-    return this.mbomSkuFilterOptions;
+    return this.isMbomMode() ? this.mbomSkuFilterOptions : this.sbomSkuFilterOptions;
   }
 
   public isLoading: boolean = true;
@@ -157,12 +163,15 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   public massEditStartDate = '';
   public massEditEndDate = '';
   public massEditQuantity: number | null = null;
+  public massEditIncludeInSpecSheet = '';
   public hasDisconnectEdits = false;
   public disconnectedSkuKeys = new Set<string>();
   public showDisconnectedSkusPanel = false;
+  public showServiceDataManagerModal = false;
+  public serviceDataManagerModalMaterialColorIds: string[] = [];
 
   public get hasDisconnectedSkusPanelVisible(): boolean {
-    return false;
+    return this.isSbomMode() && this.disconnectedSkuKeys.size > 0 && this.showDisconnectedSkusPanel;
   }
 
   private readonly gridHeightOffsets = {
@@ -234,6 +243,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     private readonly cdr: ChangeDetectorRef,
   ) {
     this.mbomSkuFilterOptions = this.dataService.getMbomSkuFilterOptions();
+    this.sbomSkuFilterOptions = this.dataService.getSbomSkuFilterOptions();
 
     this.gridOptions.context = {
       componentParent: this,
@@ -586,6 +596,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       getCellTooltipValue: (params) => this.getCellTooltipValue(params),
       isFieldEditable: (field, params) => this.isFieldEditable(field, params),
       clearAutopopulateFieldsForRow: (data) => this.clearAutopopulateFieldsForRow(data),
+      canDisconnectForRow: (data) => this.canDisconnectForRow(data),
+      isSkuDisconnected: (row, skuField) => this.isSkuDisconnected(row, skuField),
+      isSkuEditableForDisconnect: (skuField) => this.isSkuEditableForDisconnect(skuField),
     });
     this.applyActionsColumnWidth(this.actionsColumnWidth);
 
@@ -681,7 +694,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private getFilteredSkuInfo(): any[] {
-    const valid: SkuFilterOption[] = ['all', 'hdEditable', 'hdViewOnly', 'nonHdSource'];
+    const valid: SkuFilterOption[] = this.isMbomMode()
+      ? ['all', 'hdEditable', 'hdViewOnly', 'nonHdSource']
+      : ['all', 'editableSkus'];
     if (!valid.includes(this.selectedSkuFilter)) {
       this.selectedSkuFilter = 'all';
     }
@@ -697,7 +712,12 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   public getSkuFilterLabel(option: SkuFilterOption): string {
-    return this.dataService.getSkuFilterLabel(option, this.mbomSkuFilterOptions);
+    return this.dataService.getSkuFilterLabel(
+      option,
+      this.mbomSkuFilterOptions,
+      this.sbomSkuFilterOptions,
+      () => this.isMbomMode(),
+    );
   }
 
   public onSkuFilterChange(): void {
@@ -744,7 +764,11 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   public isNonProductMbomMode(): boolean {
-    return false;
+    return this.isSbomMode();
+  }
+
+  public isSbomMode(): boolean {
+    return this.getCurrentBomType() === BOM_TYPE_PRODUCTSBOM;
   }
 
   public isMbomMode(): boolean {
@@ -768,7 +792,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   public getBomComposerTitle(): string {
-    return 'Product BOM Composer';
+    return this.isSbomMode() ? 'SBOM Composer' : 'Product BOM Composer';
   }
 
   public shouldShowExpiredToggle(): boolean {
@@ -780,6 +804,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   public isSkuFilterReadOnly(): boolean {
+    if (this.isSbomMode()) return false;
     return this.selectedSkuFilter !== 'hdEditable';
   }
 
@@ -810,7 +835,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       message = `Switch to "HD source - Editable" view to enable ${actionLabel}.`;
     } else if (this.isProductMbomOnlyMode() || this.isMaterialMbomMode()) {
       message = `Switch to "Editable - Non-released" view to enable ${actionLabel}.`;
-    } else if (!this.isNonProductMbomMode()) {
+    } else if (this.isSbomMode()) {
       message = `Switch to "Editable SKUs" view to enable ${actionLabel}.`;
     }
 
@@ -829,7 +854,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
    * Check if field is editable for existing rows based on BOM type
    * MBOM: Only bomLinkStartDate, bomLinkEndDate, and quantity are editable
    * Product MBOM:
-   *   - If MBOM line item (ptcBomPartMarkup === 'enumMBOM001'): Only IncludeInSpecSheet editable
+   *   - If MBOM line item (ptcbomPartMarkUp === 'enumMBOM001'): Only IncludeInSpecSheet editable
    *   - If NOT MBOM line item: IncludeInSpecSheet, quantity, and dates editable
    */
 
@@ -900,13 +925,15 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       return this.gridConfigService.isFieldEditableForNewRow(
         field,
         () => this.isSkuFilterReadOnly(),
+        () => this.isSbomMode(),
       );
     }
 
-    return this.gridConfigService.isFieldEditableForExistingRow(
+    return this.gridConfigService.isFieldEditableInSbom(
       field,
       params.data,
       () => this.isSkuFilterReadOnly(),
+      () => this.isSbomMode(),
     );
   }
 
@@ -1381,6 +1408,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
     if (this.handlePastePartButton(event, target, isReadOnlySkuFilter)) return;
     if (this.handleDeleteButton(event, target, isReadOnlySkuFilter)) return;
+    if (this.handleDisconnectButton(event, target, isReadOnlySkuFilter)) return;
+    if (this.handleReconnectButton(event, target, isReadOnlySkuFilter)) return;
 
     const clickedField = event.colDef?.field as string | undefined;
 
@@ -1521,6 +1550,30 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     return true;
   }
 
+  private handleDisconnectButton(event: any, target: HTMLElement, isReadOnlySkuFilter: boolean): boolean {
+    const disconnectButton = target?.closest('[data-action="disconnect-sku"]');
+    if (!(disconnectButton instanceof HTMLElement)) return false;
+
+    if (isReadOnlySkuFilter) return true;
+    const skuField = disconnectButton.dataset['skuField'];
+    if (skuField && event.data && this.canDisconnectForRow(event.data)) {
+      this.disconnectPartFromSku(event.data, skuField, event.event);
+    }
+    return true;
+  }
+
+  private handleReconnectButton(event: any, target: HTMLElement, isReadOnlySkuFilter: boolean): boolean {
+    const reconnectButton = target?.closest('[data-action="reconnect-sku"]');
+    if (!(reconnectButton instanceof HTMLElement)) return false;
+
+    if (isReadOnlySkuFilter) return true;
+    const skuField = reconnectButton.dataset['skuField'];
+    if (skuField && event.data) {
+      this.reconnectPartFromSku(event.data, skuField, event.event);
+    }
+    return true;
+  }
+
   private handleEditableCellClick(event: any, isReadOnlySkuFilter: boolean): void {
     if (!event.data || event.data.isSectionHeader) return;
 
@@ -1534,10 +1587,11 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     const isEditable =
       !isReadOnlySkuFilter &&
       (event.data.isNewRow ||
-        this.gridConfigService.isFieldEditableForExistingRow(
+        this.gridConfigService.isFieldEditableInSbom(
           field,
           event.data,
-          () => this.isSkuFilterReadOnly()
+          () => this.isSkuFilterReadOnly(),
+          () => this.isSbomMode(),
         ));
 
     if (isDateColumn && isEditable) {
@@ -1700,7 +1754,25 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     const bomType = this.dataService.getBomType() ?? '';
     const requiredFields = this.validationService.getRequiredFieldsForSave(bomType);
     const touchedRows = allDataRows.filter((row) => this.isRowTouched(row));
-    const requiredFieldsOrGetter = requiredFields;
+    const requiredFieldsOrGetter = bomType === BOM_TYPE_PRODUCTSBOM
+      ? (row: any) =>
+          requiredFields.filter((requiredField) =>
+            requiredField.keys.some((key) =>
+              row.isNewRow
+                ? this.gridConfigService.isFieldEditableForNewRow(
+                    key,
+                    () => this.isSkuFilterReadOnly(),
+                    () => this.isSbomMode(),
+                  )
+                : this.gridConfigService.isFieldEditableInSbom(
+                    key,
+                    row,
+                    () => this.isSkuFilterReadOnly(),
+                    () => this.isSbomMode(),
+                  ),
+            ),
+          )
+      : requiredFields;
     const validationResult = this.validationService.validateRows(
       touchedRows,
       requiredFieldsOrGetter,
@@ -2558,13 +2630,14 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     const state = this.massEditService.populateMassEditFields(
       [...this.selectedRows],
       () => this.isMbomMode(),
-      () => false,
+      () => this.isSbomMode(),
       () => false,
       () => false,
     );
     this.massEditStartDate = state.startDate;
     this.massEditEndDate = state.endDate;
     this.massEditQuantity = state.quantity;
+    this.massEditIncludeInSpecSheet = state.includeInSpecSheet;
   }
 
   closeMassEditMode(): void {
@@ -2583,7 +2656,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
           startDate: this.massEditStartDate,
           endDate: this.massEditEndDate,
           quantity: this.massEditQuantity,
-          includeInSpecSheet: '',
+          includeInSpecSheet: this.massEditIncludeInSpecSheet,
         };
         this.massEditService.applyMassEdit({
           gridApi: this.gridApi,
@@ -2591,7 +2664,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
           columnDefs: this.columnDefs,
           state,
           isMbomMode: () => this.isMbomMode(),
-          isSbomMode: () => false,
+          isSbomMode: () => this.isSbomMode(),
           isEbomMode: () => false,
           isMaterialMbomMode: () => false,
           editedRows: this.editedRows,
@@ -2601,6 +2674,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         this.massEditStartDate = '';
         this.massEditEndDate = '';
         this.massEditQuantity = null;
+        this.massEditIncludeInSpecSheet = '';
       } finally {
         this.isMassEditing = false;
       }
@@ -2629,33 +2703,180 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       .catch(() => this.showNotification(MSG_EXPORT_EXCEL_ERROR, NOTIFICATION_TYPE_ERROR));
   }
 
+  getIncludeInSpecSheetOptionsForMassEdit(): string[] {
+    return this.dataService.getIncludeInSpecSheetOptions(this.constraintsData);
+  }
+
   private resetMassEdit(): void {
     this.massEditMode = false;
     this.massEditStartDate = '';
     this.massEditEndDate = '';
     this.massEditQuantity = null;
+    this.massEditIncludeInSpecSheet = '';
   }
 
-  disconnectPartFromSku(_rowData: any, _skuField: string, event?: any): void {
+  disconnectPartFromSku(rowData: any, skuField: string, event?: any): void {
+    if (!rowData || !skuField || !this.gridApi) return;
+    if (this.isSkuFilterReadOnly() || !this.canDisconnectForRow(rowData)) return;
+    if (!this.isSkuEditableForDisconnect(skuField)) return;
     event?.preventDefault?.();
     event?.stopPropagation?.();
+    this.hasDisconnectEdits = true;
+    this.showDisconnectedSkusPanel = true;
+    this.disconnectedSkuKeys.add(this.getDisconnectedKey(rowData, skuField));
+    const rowId = this.utilService.getRowId(rowData);
+    if (rowId) this.editedRows.add(rowId);
+    const targetNode = this.utilService.findNodeByDataReference(this.gridApi, rowData);
+    if (targetNode) {
+      this.gridApi.refreshCells({ rowNodes: [targetNode], columns: [skuField], force: true });
+    }
   }
 
-  canDisconnectForRow(_row: any): boolean {
-    return false;
+  private clearRowEditStateIfReverted(rowId: string | number, row?: any): void {
+    this.rowManagementService.clearRowEditStateIfReverted({
+      rowId,
+      row,
+      disconnectedSkuKeys: this.disconnectedSkuKeys,
+      editedRows: this.editedRows,
+      editedFields: this.editedFields,
+      invalidRowIds: this.invalidRowIds,
+      getDisconnectRowToken: (candidate) => this.getDisconnectRowToken(candidate),
+    });
   }
 
-  getDisconnectedKey(_row: any, _skuField: string): string {
-    return '';
+  reconnectPartFromSku(rowData: any, skuField: string, event?: any): void {
+    if (!rowData || !skuField || !this.gridApi) return;
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const key = this.getDisconnectedKey(rowData, skuField);
+    if (!this.disconnectedSkuKeys.delete(key)) return;
+
+    if (this.disconnectedSkuKeys.size === 0) this.hasDisconnectEdits = false;
+    const rowId = this.utilService.getRowId(rowData);
+    if (rowId !== null) this.clearRowEditStateIfReverted(rowId, rowData);
+
+    const targetNode = this.utilService.findNodeByDataReference(this.gridApi, rowData);
+    if (targetNode) {
+      this.gridApi.refreshCells({
+        rowNodes: [targetNode],
+        columns: [skuField, ...COLUMNS_REFRESH_ACTIONS],
+        force: true,
+      });
+    }
   }
 
-  isSkuEditableForDisconnect(_skuField: string): boolean {
-    return false;
+  canDisconnectForRow(row: any): boolean {
+    if (!row || this.isSkuFilterReadOnly() || !this.isSbomMode() || row.isNewRow) return false;
+    if (row.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM) return false;
+    return String(row[FIELD_BOM_LINK_SPEC_SHEET_EXTRA] ?? '').trim() === VALUE_SPEC_YES;
+  }
+
+  private getDisconnectRowToken(row: any): string {
+    return this.utilService.getStableRowToken(row);
+  }
+
+  getDisconnectedKey(row: any, skuField: string): string {
+    return this.skuService.buildDisconnectedKey(this.getDisconnectRowToken(row), skuField);
+  }
+
+  isSkuDisconnected(row: any, skuField: string): boolean {
+    return this.disconnectedSkuKeys.has(this.getDisconnectedKey(row, skuField));
+  }
+
+  isSkuEditableForDisconnect(skuField: string): boolean {
+    return this.skuService.isSkuEditableForDisconnect(this.getFilteredSkuInfo(), skuField);
   }
 
   /** For tooltip: list of SKU names/labels that have values in this row. */
   getConnectedSkuLabelsForRow(row: any): string[] {
     return this.skuService.getConnectedSkuLabelsForRow(row, this.getFilteredSkuInfo());
+  }
+
+  closeDisconnectedSkusPanel(): void {
+    this.showDisconnectedSkusPanel = false;
+  }
+
+  getDisconnectedSkuList(): { part: string; skuId: string; key: string; row: any; skuField: string }[] {
+    return this.skuService.getDisconnectedSkuList({
+      gridApi: this.gridApi,
+      skuInfo: this.getFilteredSkuInfo(),
+      disconnectedSkuKeys: this.disconnectedSkuKeys,
+      getDisconnectedKey: (row, skuField) => this.getDisconnectedKey(row, skuField),
+      isEligibleRow: (row) => !!row && (row.isDirectRow || row.isSubRow || row.isNewRow),
+    });
+  }
+
+  reconnectSkuFromPanel(item: { key: string; row?: any; skuField?: string }, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    if (!item?.key || !this.disconnectedSkuKeys.delete(item.key)) return;
+    this.hasDisconnectEdits = this.disconnectedSkuKeys.size > 0;
+    const rowId = this.utilService.getRowId(item.row);
+    if (rowId !== null) this.clearRowEditStateIfReverted(rowId, item.row);
+    if (this.gridApi && item.skuField) {
+      this.gridApi.refreshCells({ columns: [item.skuField, ...COLUMNS_REFRESH_ACTIONS], force: true });
+    }
+  }
+
+  openServiceDataManagerModal(): void {
+    if (this.selectedRows.size <= 1) {
+      this.showNotification('Select more than 1 row for Service Data Manager.', NOTIFICATION_TYPE_INFO);
+      return;
+    }
+    if (this.editedRows.size > 0 || this.rowData.some((row) => row?.isNewRow === true)) {
+      if (!confirm('Any unsaved changes in the BOM Composer will be lost. Do you want to continue?')) return;
+    }
+    this.serviceDataManagerModalMaterialColorIds = [...new Set(
+      [...this.selectedRows]
+        .map((row) => typeof row?.materialColorId === 'string' ? row.materialColorId.trim() : '')
+        .filter(Boolean),
+    )];
+    if (this.serviceDataManagerModalMaterialColorIds.length === 0) {
+      this.showNotification('Selected rows do not contain Material Color IDs.', NOTIFICATION_TYPE_INFO);
+      return;
+    }
+    this.showServiceDataManagerModal = true;
+  }
+
+  closeServiceDataManagerModal(): void {
+    this.showServiceDataManagerModal = false;
+    this.serviceDataManagerModalMaterialColorIds = [];
+  }
+
+  onServiceDataManagerModalDataSaved(): void {
+    this.editedRows.clear();
+    this.editedFields.clear();
+    this.originalRowValues.clear();
+    this.loadData();
+  }
+
+  bulkDisconnectFromSkus(): void {
+    if (this.isSkuFilterReadOnly() || !this.isSbomMode()) return;
+    if (this.selectedRows.size === 0) {
+      this.showNotification('Select at least 1 row to disconnect SKUs.', NOTIFICATION_TYPE_INFO);
+      return;
+    }
+    const skuFields = this.skuService.getFieldNames(this.getFilteredSkuInfo());
+    const nodesToUpdate: any[] = [];
+    this.gridApi.getSelectedNodes().forEach((node: any) => {
+      if (!node.data || node.data.isNewRow || !this.canDisconnectForRow(node.data)) return;
+      let changed = false;
+      skuFields.forEach((skuField) => {
+        if (this.isSkuEditableForDisconnect(skuField) && this.skuService.hasValue(node.data[skuField])) {
+          this.disconnectedSkuKeys.add(this.getDisconnectedKey(node.data, skuField));
+          changed = true;
+        }
+      });
+      if (!changed) return;
+      this.hasDisconnectEdits = true;
+      this.showDisconnectedSkusPanel = true;
+      const rowId = this.utilService.getRowId(node.data);
+      if (rowId) this.editedRows.add(rowId);
+      nodesToUpdate.push(node);
+    });
+    if (nodesToUpdate.length > 0) {
+      this.gridApi.refreshCells({ rowNodes: nodesToUpdate, columns: skuFields, force: true });
+    }
   }
 
   ngOnDestroy(): void {

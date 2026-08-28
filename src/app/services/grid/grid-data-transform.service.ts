@@ -20,7 +20,7 @@ interface BomLinkLike extends Record<string, unknown> {
   qty?: unknown;
   quantity?: unknown;
   part?: string;
-  ptcBomPartMarkup?: string;
+  ptcbomPartMarkUp?: string;
 }
 
 interface SkuItemLike extends Record<string, unknown> {
@@ -170,7 +170,7 @@ export class GridDataTransformService {
 
         let isCorrectMarkup = true;
         if (bomType === BOM_TYPE_PRODUCTMBOM) {
-          isCorrectMarkup = bomLink.ptcBomPartMarkup === 'enumMBOM001';
+          isCorrectMarkup = bomLink.ptcbomPartMarkUp === 'enumMBOM001';
         }
 
         return hasPartNumber && isCorrectMarkup;
@@ -194,7 +194,7 @@ export class GridDataTransformService {
           ...bomLink,
           part: bomLink[FIELD_PART_NUMBER] as string,
           [FIELD_PART_NUMBER]: bomLink[FIELD_PART_NUMBER],
-          ptcBomPartMarkup: bomLink.ptcBomPartMarkup,
+          ptcbomPartMarkUp: bomLink.ptcbomPartMarkUp,
           skus: bomLink.skus,
           linkedBom: bomLink.linkedBom,
           quantity: this.formatQuantityField(bomLink.quantity),

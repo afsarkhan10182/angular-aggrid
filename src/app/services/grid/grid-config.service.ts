@@ -11,6 +11,9 @@ import {
   FIELD_BOM_LINK_START_DATE,
   FIELD_BOM_LINK_END_DATE,
   FIELD_BOM_LINK_FEATURE,
+  FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET,
+  FIELD_BOM_LINK_SPEC_SHEET_EXTRA,
+  SBOM_EDITABLE_FIELDS,
   NEW_ROW_EDITABLE_FIELDS,
 } from '../../constants';
 
@@ -569,14 +572,41 @@ export class GridConfigService {
     return EXISTING_ROW_EDITABLE_FIELDS.has(field);
   }
 
+  isFieldEditableInSbom(
+    field: string,
+    rowData: any,
+    isSkuFilterReadOnly: () => boolean,
+    isSbomMode: () => boolean,
+  ): boolean {
+    if (isSkuFilterReadOnly()) return false;
+    if (!isSbomMode()) return EXISTING_ROW_EDITABLE_FIELDS.has(field);
+    if (rowData?.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM) {
+      return field === FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET;
+    }
+    if (
+      field === FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET &&
+      this.hasDisplayValue(rowData?.[FIELD_BOM_LINK_SPEC_SHEET_EXTRA])
+    ) {
+      return false;
+    }
+    return SBOM_EDITABLE_FIELDS.includes(field);
+  }
+
   isFieldEditableForNewRow(
     field: string,
     isSkuFilterReadOnly: () => boolean,
+    isSbomMode: () => boolean = () => false,
   ): boolean {
     if (isSkuFilterReadOnly()) {
       return false;
     }
 
+    if (
+      isSbomMode() &&
+      [FIELD_BOM_LINK_SPEC_SHEET_EXTRA, FIELD_BOM_LINK_FEATURE, FIELD_BOM_LINK_INCLUDE_IN_SPEC_SHEET].includes(field)
+    ) {
+      return false;
+    }
     return NEW_ROW_EDITABLE_FIELDS.includes(field);
   }
 

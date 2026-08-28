@@ -1,6 +1,6 @@
 // Product BOM SKU helper: maps Product MBOM SKU metadata to grid columns, filters, cell values, and SKU matching behavior.
 import { Injectable } from '@angular/core';
-import { BOM_TYPE_PRODUCTMBOM, FIELD_PART_NUMBER } from '../constants';
+import { BOM_TYPE_PRODUCTMBOM, BOM_TYPE_PRODUCTSBOM, FIELD_PART_NUMBER } from '../constants';
 
 export interface SkuRowContext {
   section: string;
@@ -35,6 +35,7 @@ export class SkuService {
   private readonly partMatchRequirementByBomType: Readonly<
     Record<string, (rowPartNumber: string, instancePartNumber: string) => boolean>
   > = {
+    [BOM_TYPE_PRODUCTSBOM]: () => true,
     [BOM_TYPE_PRODUCTMBOM]: (rowPartNumber, instancePartNumber) =>
       this.hasValue(rowPartNumber) && this.hasValue(instancePartNumber),
   };

@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import {
   BOM_LINK_KEY,
   BOM_TYPE_PRODUCTMBOM,
+  BOM_TYPE_PRODUCTSBOM,
   COLUMN_RENAME_FOR_API,
   DEFAULT_BOM_TYPE,
   VALUE_SPEC_YES,
@@ -102,7 +103,7 @@ export class PayloadTransformService {
       const rowPartNumber = String(row?.[FIELD_PART_NUMBER] || '').trim();
 
       const bomType = this.dataService.getBomType() || DEFAULT_BOM_TYPE;
-      const isAlternateBom = false;
+      const isAlternateBom = bomType === BOM_TYPE_PRODUCTSBOM;
       const isEmptyFeature = !rowFeatureValue || rowFeatureValue.trim() === '';
       
       const shouldSearchForMatches = resolvedSection && (isAlternateBom || rowFeatureValue);
@@ -146,7 +147,7 @@ export class PayloadTransformService {
             const bomLinkFeature = String(row.bomLinkFeature || '').trim();
             
             const bomType = this.dataService.getBomType() || DEFAULT_BOM_TYPE;
-            const isAlternateBom = false;
+            const isAlternateBom = bomType === BOM_TYPE_PRODUCTSBOM;
             const isEmptyFeature = !bomLinkFeature || bomLinkFeature === '';
 
             const shouldSearchApiInstances = section && (isAlternateBom || bomLinkFeature);
@@ -159,7 +160,7 @@ export class PayloadTransformService {
                 const instanceSection = bomLink.sectionInternalName || bomLink.section || '';
                 const instancePart = String(bomLink?.[FIELD_PART_NUMBER] || '').trim();
                 const instanceFeature = String(bomLink.bomLinkFeature || '').trim();
-                const instancePtcBomPartMarkup = bomLink.ptcBomPartMarkup || '';
+                const instancePtcBomPartMarkup = bomLink.ptcbomPartMarkUp || '';
 
                 const isSectionMatch = instanceSection === section;
                 const instanceHasPartNumber = Boolean(instancePart && String(instancePart).trim() !== '');
@@ -379,7 +380,7 @@ export class PayloadTransformService {
     if (isMbom) {
       const existingPart = String(r?.[FIELD_PART_NUMBER] || '').trim();
       const existingHasPartNumber = existingPart !== '';
-      const existingIsEnumMBOM001 = r.ptcBomPartMarkup === ENUM_MBOM_LINE_ITEM;
+      const existingIsEnumMBOM001 = r.ptcbomPartMarkUp === ENUM_MBOM_LINE_ITEM;
       return {
         isFeatureMatch: existingFeature === rowFeatureValue.trim(),
         requiresPartMatch: existingHasPartNumber && existingIsEnumMBOM001,
@@ -480,7 +481,7 @@ export class PayloadTransformService {
         }
 
         if (bomType === BOM_TYPE_PRODUCTMBOM) {
-          bomLink.ptcBomPartMarkup = ENUM_MBOM_LINE_ITEM;
+          bomLink.ptcbomPartMarkUp = ENUM_MBOM_LINE_ITEM;
         }
 
         let quantityValue: any = null;
@@ -541,7 +542,7 @@ export class PayloadTransformService {
         }
 
         if (row.bomLinkIncludeInSpecSheet) {
-          const isAlternateBom = false;
+          const isAlternateBom = bomType === BOM_TYPE_PRODUCTSBOM;
           const isNewRow = row.isNewRow;
           
           if (!(isAlternateBom && isNewRow)) {

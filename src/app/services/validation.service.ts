@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import {
   BOM_LINK_KEY,
+  BOM_TYPE_PRODUCTSBOM,
   FIELD_PART_NUMBER,
   REQUIRED_FIELDS_FOR_SAVE,
   DEFAULT_REQUIRED_FIELDS,
@@ -18,6 +19,8 @@ import {
   DUPLICATE_TYPE_DUPLICATE_PART,
   HEADER_FEATURE,
   LABEL_QUANTITY,
+  VALUE_SPEC_NO,
+  DISPLAY_FALSE,
 } from '../constants';
 import { DataService } from './data.service';
 import { SkuService } from './sku.service';
@@ -243,7 +246,9 @@ export class ValidationService {
 
   getRequiredFieldsForSave(bomType: string): RequiredField[] {
     const fields = [...REQUIRED_FIELDS_FOR_SAVE];
-    return fields;
+    return bomType === BOM_TYPE_PRODUCTSBOM
+      ? fields.filter((field) => field.label !== HEADER_FEATURE)
+      : fields;
   }
 
   /**
@@ -466,13 +471,16 @@ export class ValidationService {
 
   private collectNewRowDuplicateDetails(newRows: any[], skuInfo: any[]): Map<string, any[]> {
     const newRowDetails = new Map<string, any[]>();
+    const isSbom = this.dataService.getBomType() === BOM_TYPE_PRODUCTSBOM;
     for (const row of newRows) {
       const details = this.getNewRowDuplicateDetails(row, skuInfo);
       if (!details) {
         continue;
       }
       for (const skuId of details.skuIds) {
-        const combinationKey = `${details.section}|${details.partNumber}|${details.bomLinkFeature}|${skuId}`;
+        const combinationKey = isSbom
+          ? `${details.section}|${details.partNumber}|${skuId}`
+          : `${details.section}|${details.partNumber}|${details.bomLinkFeature}|${skuId}`;
         this.addMapArrayValue(newRowDetails, combinationKey, { ...row, _checkSkuId: skuId });
       }
     }
@@ -483,7 +491,7 @@ export class ValidationService {
     const section = row.section || '';
     const bomLinkFeature = String(row.bomLinkFeature || '').trim();
     const partNumber = String(row?.[FIELD_PART_NUMBER] || '').trim();
-    if (!section || !partNumber || !bomLinkFeature) {
+    if (!section || !partNumber || (!bomLinkFeature && this.dataService.getBomType() !== BOM_TYPE_PRODUCTSBOM)) {
       return null;
     }
 
@@ -495,7 +503,11 @@ export class ValidationService {
   }
 
   private buildDuplicateNewRowsResult(combinationKey: string, rows: any[], apiData?: any): ValidationResult {
-    const [section, , feature, skuId] = combinationKey.split('|');
+    const parts = combinationKey.split('|');
+    const isSbom = this.dataService.getBomType() === BOM_TYPE_PRODUCTSBOM;
+    const [section, partNumber] = parts;
+    const feature = isSbom ? '' : parts[2];
+    const skuId = isSbom ? parts[2] : parts[3];
     const sectionDisplayName = this.resolveSectionDisplayName(section, rows[0], apiData);
     const invalidRows: InvalidRow[] = rows.map((duplicateRow) => ({
       row: duplicateRow,
@@ -506,7 +518,9 @@ export class ValidationService {
 
     return {
       isValid: false,
-      message: `Duplicate feature "${feature}" for the same SKU "${skuId}" and section "${sectionDisplayName}". Multiple new rows cannot have the same feature for the same SKU in the same section.`,
+      message: isSbom
+        ? `Duplicate part "${partNumber}" for the same SKU "${skuId}" and section "${sectionDisplayName}".`
+        : `Duplicate feature "${feature}" for the same SKU "${skuId}" and section "${sectionDisplayName}". Multiple new rows cannot have the same feature for the same SKU in the same section.`,
       invalidRows,
     };
   }
@@ -552,7 +566,7 @@ export class ValidationService {
     const section = this.resolveInternalSection(row, apiData);
     const partNumber = String(row?.[FIELD_PART_NUMBER] || '').trim();
     const bomLinkFeature = String(row.bomLinkFeature || '').trim();
-    if (!section || !partNumber || !bomLinkFeature) {
+    if (!section || !partNumber || (!bomLinkFeature && this.dataService.getBomType() !== BOM_TYPE_PRODUCTSBOM)) {
       return null;
     }
 
@@ -613,15 +627,36 @@ export class ValidationService {
     if (instanceSection !== rowData.section || instanceFeature !== rowData.bomLinkFeature) {
       return null;
     }
+    const partNumber = String(bomLink?.[FIELD_PART_NUMBER] || '').trim();
+    if (this.dataService.getBomType() === BOM_TYPE_PRODUCTSBOM && partNumber !== rowData.partNumber) {
+      return null;
+    }
     if (!this.skuService.bomLinkHasSkuId(bomLink, skuId)) {
       return null;
     }
 
-    const partNumber = String(bomLink?.[FIELD_PART_NUMBER] || '').trim();
-    return { bomLink, section: instanceSection, feature: instanceFeature, partNumber, ptcBomPartMarkup: bomLink.ptcBomPartMarkup || '', isEmptyPartNumber: !partNumber };
+    return {
+      bomLink,
+      section: instanceSection,
+      feature: instanceFeature,
+      partNumber,
+      specSheetExtra: String(bomLink.bomLinkSpecSheetExtra || '').trim(),
+      ptcbomPartMarkUp: bomLink.ptcbomPartMarkUp || '',
+      isEmptyPartNumber: !partNumber,
+    };
   }
 
   private getDuplicateTypeFromApiRecords(matchingRecords: any[], partNumber: string): DuplicateType {
+    if (this.dataService.getBomType() === BOM_TYPE_PRODUCTSBOM) {
+      if (matchingRecords.length === 0) return null;
+      const hasEmptyFeature = matchingRecords.some((record) => !record.feature);
+      if (!hasEmptyFeature) return DUPLICATE_TYPE_DUPLICATE_PART;
+      const visibleCount = matchingRecords.filter(
+        (record) => record.specSheetExtra !== VALUE_SPEC_NO && record.specSheetExtra !== DISPLAY_FALSE,
+      ).length;
+      const hiddenCount = matchingRecords.length - visibleCount;
+      return visibleCount > 0 || hiddenCount > 1 ? DUPLICATE_TYPE_DUPLICATE_PART : null;
+    }
     if (matchingRecords.length > 1) {
       return DUPLICATE_TYPE_FEATURE_UNIQUENESS;
     }

@@ -20,9 +20,11 @@ import {
   SKU_FILTER_LABEL_HD_EDITABLE,
   SKU_FILTER_LABEL_HD_VIEW_ONLY,
   SKU_FILTER_LABEL_NON_HD,
+  SKU_FILTER_LABEL_EDITABLE_SKUS,
   SKU_FILTER_EMPTY_HD_EDITABLE,
   SKU_FILTER_EMPTY_HD_VIEW_ONLY,
   SKU_FILTER_EMPTY_NON_HD,
+  SKU_FILTER_EMPTY_EDITABLE,
   LABEL_ALL,
 } from '../constants';
 import { Inject, Injectable } from '@angular/core';
@@ -94,7 +96,7 @@ export interface BomLink {
   bomLinkCountryOfOrigin: string;
   partThirtyCharacterDescription: string;
   linkedBom?: string;
-  ptcBomPartMarkup?: string; // MBOM markup type (e.g., 'enumMBOM001')
+  ptcbomPartMarkUp?: string; // MBOM markup type (e.g., 'enumMBOM001')
 }
 
 export interface SkuInfo {
@@ -144,7 +146,8 @@ export interface ApiData {
 }
 
 export type MbomSkuFilterOption = 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource';
-export type SkuFilterOption = MbomSkuFilterOption;
+export type SbomSkuFilterOption = 'all' | 'editableSkus';
+export type SkuFilterOption = MbomSkuFilterOption | SbomSkuFilterOption;
 
 /** Payload for attribute search on material-colors/search (part number or material name; only attribute differs). */
 export interface MaterialColorsSearchPayload {
@@ -1046,22 +1049,27 @@ export class DataService {
     ];
   }
 
+  getSbomSkuFilterOptions(): Array<{ label: string; value: SbomSkuFilterOption }> {
+    return [
+      { label: SKU_FILTER_LABEL_ALL, value: 'all' },
+      { label: SKU_FILTER_LABEL_EDITABLE_SKUS, value: 'editableSkus' },
+    ];
+  }
+
   getFilteredSkuInfo(
     selectedFilter: SkuFilterOption,
     isMbomMode: () => boolean,
   ): any[] {
     const skuInfo = this.getSkuInfo();
-    return this.filterSkuInfoByOption(
-      selectedFilter as MbomSkuFilterOption,
-      skuInfo,
-      'mbom',
-    );
+    return isMbomMode()
+      ? this.filterSkuInfoByOption(selectedFilter as MbomSkuFilterOption, skuInfo, 'mbom')
+      : this.filterSkuInfoByOption(selectedFilter as SbomSkuFilterOption, skuInfo, 'sbom');
   }
 
   filterSkuInfoByOption(
     option: SkuFilterOption,
     skuInfo: any[],
-    bomType: 'mbom',
+    bomType: 'mbom' | 'sbom',
   ): any[] {
     const mbomConfig: Record<string, { filter?: (sku: any) => boolean; emptyMessage?: string }> = {
       all: {},
@@ -1079,7 +1087,11 @@ export class DataService {
       },
     };
 
-    const config = mbomConfig[option];
+    const sbomConfig: Record<string, { filter?: (sku: any) => boolean }> = {
+      all: {},
+      editableSkus: { filter: (sku) => sku.isEditable === true },
+    };
+    const config = (bomType === 'mbom' ? mbomConfig : sbomConfig)[option];
 
     if (!config?.filter) {
       return skuInfo;
@@ -1096,7 +1108,7 @@ export class DataService {
     }
 
     const skuInfo = this.getSkuInfo();
-    return this.filterSkuInfoByOption(option, skuInfo, 'mbom').length === 0;
+    return this.filterSkuInfoByOption(option, skuInfo, isMbomMode() ? 'mbom' : 'sbom').length === 0;
   }
 
   getSkuFilterOptionTooltip(
@@ -1108,7 +1120,7 @@ export class DataService {
     }
 
     const skuInfo = this.getSkuInfo();
-    if (this.filterSkuInfoByOption(option, skuInfo, 'mbom').length > 0) {
+    if (this.filterSkuInfoByOption(option, skuInfo, isMbomMode() ? 'mbom' : 'sbom').length > 0) {
       return '';
     }
 
@@ -1119,12 +1131,12 @@ export class DataService {
     option: SkuFilterOption,
     isMbomModeFn: () => boolean,
   ): string {
-        const mbomMessages: Record<string, string> = {
+    const mbomMessages: Record<string, string> = {
       hdEditable: SKU_FILTER_EMPTY_HD_EDITABLE,
       hdViewOnly: SKU_FILTER_EMPTY_HD_VIEW_ONLY,
       nonHdSource: SKU_FILTER_EMPTY_NON_HD,
     };
-    return mbomMessages[option] || '';
+    return isMbomModeFn() ? mbomMessages[option] || '' : option === 'editableSkus' ? SKU_FILTER_EMPTY_EDITABLE : '';
   }
 
   getSkuFilterLabel(
@@ -1133,7 +1145,10 @@ export class DataService {
       label: string;
       value: 'all' | 'hdEditable' | 'hdViewOnly' | 'nonHdSource';
     }>,
+    sbomOptions: Array<{ label: string; value: SbomSkuFilterOption }>,
+    isMbomMode: () => boolean,
   ): string {
-    return mbomOptions.find((item) => item.value === option)?.label || LABEL_ALL;
+    const options = isMbomMode() ? mbomOptions : sbomOptions;
+    return options.find((item) => item.value === option)?.label || LABEL_ALL;
   }
 }

@@ -33,6 +33,9 @@ export interface GridColumnsBuildContext {
   isNonProductMbomMode: () => boolean;
   isProductMbomOnlyMode: () => boolean;
   isMaterialMbomMode: () => boolean;
+  canDisconnectForRow: (data: any) => boolean;
+  isSkuDisconnected: (row: any, skuField: string) => boolean;
+  isSkuEditableForDisconnect: (skuField: string) => boolean;
   getDataCellStyle: (params: any) => any;
   getFeatureValue: (data: any) => any;
   getHierarchicalCellStyle: (params: any) => any;
@@ -180,7 +183,7 @@ export class GridColumnsService {
         minWidth: 100,
         sortable: true,
         resizable: true,
-        hide: field === 'ptcBomPartMarkupDisplayName',
+        hide: field === 'ptcbomPartMarkUpDisplayName',
         cellRenderer: (params: any) =>
           context.renderDataCellContent(params, Number(columnDef.width ?? 150)),
         tooltipValueGetter: (params: any) => context.getCellTooltipValue(params),
@@ -216,6 +219,9 @@ export class GridColumnsService {
       isNonProductMbomMode: () => context.isNonProductMbomMode(),
       isProductMbomOnlyMode: () => context.isProductMbomOnlyMode(),
       isMaterialMbomMode: () => context.isMaterialMbomMode(),
+      canDisconnectForRow: (data) => context.canDisconnectForRow(data),
+      isSkuDisconnected: (row, skuField) => context.isSkuDisconnected(row, skuField),
+      isSkuEditableForDisconnect: (skuField) => context.isSkuEditableForDisconnect(skuField),
       getDataCellStyle: (params) => context.getDataCellStyle(params),
       getFeatureValue: (data) => context.getFeatureValue(data),
       renderHierarchicalCell: () => '',
