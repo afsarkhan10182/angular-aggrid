@@ -36,7 +36,9 @@
 	WTProperties wtproperties = WTProperties.getLocalProperties();
     String  windchillHost = wtproperties.getProperty("wt.rmi.server.hostname","");
 
-    String pageTitle = "Product BOM Composer";
+    String pageTitle = "SBOM".equals(bomType)
+        ? "SBOM Composer"
+        : "Product BOM Composer";
 %>
 <!DOCTYPE html>
 <html lang="en">
